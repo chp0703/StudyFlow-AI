@@ -4,12 +4,12 @@ Guide for teammates. Read before changing UI code.
 
 ## 1. What this is
 
-A deterministic React prototype of a student study workspace: Dashboard, Planner, Study, Review, Materials, plus an illustrative copilot. **Everything is demo data** held in memory (resets on reload). No backend, auth, persistence, file parsing, source retrieval or live AI.
+A deterministic React prototype of a student study workspace: AI homepage, Dashboard, Planner, Study, Review and Materials. Academic data remains demo data in memory. Conversation history alone is stored in this browser's IndexedDB, as explicitly approved for the history feature. There is no backend, auth, account sync, file parsing, source retrieval or live AI.
 
 Hard rules:
 - Keep the demo/source disclaimers. Never present illustrative data as verified learning evidence.
 - Do not claim mastery, upload completion, document extraction or live AI.
-- No analytics, external services or storage without explicit approval.
+- No analytics, external services or storage beyond the approved conversation-only IndexedDB history without explicit approval.
 - Keep dates, courses, quiz answers and messages clearly illustrative.
 
 ## 2. Stack and commands
@@ -33,6 +33,9 @@ index.html          document shell, favicons, noindex meta
 public/brand/       logo + favicons (served at /brand/...)
 src/main.tsx        mounts <App/>, imports index.css
 src/App.tsx         whole prototype: state, data, primitives, pages
+src/Assistant.tsx   multi-conversation assistant and history interface
+src/assistantDemo.ts typed demo response contract
+src/conversationHistory.ts typed conversation records and IndexedDB persistence
 src/brand.css       design tokens (--sf-*)
 src/index.css       Tailwind import, @theme, global + component CSS, responsive rules
 vite.config.ts      react + tailwind plugins only
@@ -42,8 +45,10 @@ Generated: `dist/`, `node_modules/` — never edit or commit.
 
 ## 4. Architecture
 
-- `App.tsx` is intentionally a single file. It owns navigation, demo state, modals, task editing, planner, timer, quiz, file-name list and copilot messages. Do not split it or add services unless a task requires it.
+- `App.tsx` owns navigation and non-chat demo state. The Assistant is separate because conversation history and persistence require isolated state.
 - Navigation is **state-based** (`page`: Dashboard · Planner · Study · Review · Materials). No router dependency.
+- Assistant conversations have stable UUIDs, independent composer drafts and clarification drafts. Restored pending proposals require review before demo acknowledgement. Transcript data never authorizes a backend write.
+- IndexedDB uses one record per conversation and a separate active-conversation key. If storage fails, the UI stays usable in memory and announces that reload persistence is unavailable. There is no account synchronization.
 - Reuse the local primitives `Button`, `Card`, `Modal` before writing new wrappers.
 - File selection stores only names and status labels; nothing is uploaded or parsed.
 - Icons: `lucide-react` only.
