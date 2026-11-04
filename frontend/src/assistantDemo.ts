@@ -1,7 +1,7 @@
 export type IntentCandidate = "CREATE_TASK" | "UPDATE_TASK" | "DELETE_TASK" | "SET_AVAILABILITY" | "GENERATE_STUDY_PLAN" | "RESCHEDULE_STUDY_BLOCK" | "GET_STUDY_PLAN" | "CREATE_STUDY_BLOCK"
 
 export type ResponseCategory = "MESSAGE" | "CLARIFICATION" | "PROPOSAL" | "UNSUPPORTED" | "ERROR"
-export type ApprovalStatus = "awaiting_approval" | "cancelled" | "demo_acknowledged"
+export type ApprovalStatus = "awaiting_approval" | "review_required" | "cancelled" | "demo_acknowledged"
 export type DemoScenario = "task" | "plan" | "view" | "reschedule"
 export type ValidationState = "missing_information" | "valid_demo_draft"
 
@@ -17,7 +17,8 @@ export type ActionProposal = {
 }
 
 export type ChatMessage = {
-  id: number
+  id: string
+  timestamp: string
   role: "user" | "assistant"
   category: ResponseCategory
   text: string
@@ -31,31 +32,10 @@ export type ChatMessage = {
   }
 }
 
-export const suggestions: {
-  scenario: DemoScenario
-  title: string
-  prompt: string
-}[] = [
-  {
-    scenario: "task",
-    title: "Thêm công việc mới",
-    prompt: "Tạo task làm bài OOP.",
-  },
-  {
-    scenario: "plan",
-    title: "Lập kế hoạch học tập",
-    prompt: "Lập kế hoạch học tập cho tôi.",
-  },
-  { scenario: "view", title: "Xem lịch học", prompt: "Xem lịch học hiện tại." },
-  {
-    scenario: "reschedule",
-    title: "Điều chỉnh buổi học",
-    prompt: "Điều chỉnh buổi học.",
-  },
-]
-
 // This deliberately recognizes only four demo entry points. It is not an NLP or API client.
-export function demoReply(input: string): Omit<ChatMessage, "id"> {
+export function demoReply(
+  input: string,
+): Omit<ChatMessage, "id" | "timestamp"> {
   const value = input.trim().toLocaleLowerCase("vi")
   if (/^(tạo task|thêm công việc)/u.test(value)) {
     return {
@@ -99,6 +79,6 @@ export function demoReply(input: string): Omit<ChatMessage, "id"> {
   return {
     role: "assistant",
     category: "UNSUPPORTED",
-    text: "Bản mẫu hiện hỗ trợ bốn luồng ở trên. Hãy chọn một gợi ý để xem cách tạo công việc, phác thảo kế hoạch, xem lịch mẫu hoặc điều chỉnh buổi học. Tin nhắn này chưa được gửi tới AI.",
+    text: "Bản mẫu hiện hỗ trợ tạo công việc, phác thảo kế hoạch, xem lịch mẫu và điều chỉnh buổi học. Hãy bắt đầu yêu cầu bằng một trong các cách đó. Tin nhắn này chưa được gửi tới AI.",
   }
 }
