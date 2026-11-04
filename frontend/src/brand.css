@@ -1,0 +1,17 @@
+/* StudyFlow AI — suggested desktop design tokens */
+:root {
+  --sf-primary-blue: #2563EB; /* Primary actions / active navigation */
+  --sf-sky-blue: #60A5FA; /* Highlights / icon gradient */
+  --sf-deep-navy: #0F172A; /* Logo text / headings */
+  --sf-muted-slate: #64748B; /* Secondary text */
+  --sf-soft-background: #F8FAFC; /* Application background */
+  --sf-border-gray: #E2E8F0; /* Cards / dividers */
+  --sf-success-green: #10B981; /* Completed tasks / verified status */
+  --sf-warning-amber: #F59E0B; /* Upcoming deadlines */
+  --sf-danger-red: #EF4444; /* Conflicts / overdue tasks */
+  --sf-accent-purple: #8B5CF6; /* Optional quiz and review accent */
+  --sf-white: #FFFFFF;
+  --sf-radius-card: 16px;
+  --sf-radius-button: 10px;
+  --sf-space-unit: 8px;
+}
