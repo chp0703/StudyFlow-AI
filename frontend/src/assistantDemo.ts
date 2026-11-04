@@ -31,29 +31,6 @@ export type ChatMessage = {
   }
 }
 
-export const suggestions: {
-  scenario: DemoScenario
-  title: string
-  prompt: string
-}[] = [
-  {
-    scenario: "task",
-    title: "Thêm công việc mới",
-    prompt: "Tạo task làm bài OOP.",
-  },
-  {
-    scenario: "plan",
-    title: "Lập kế hoạch học tập",
-    prompt: "Lập kế hoạch học tập cho tôi.",
-  },
-  { scenario: "view", title: "Xem lịch học", prompt: "Xem lịch học hiện tại." },
-  {
-    scenario: "reschedule",
-    title: "Điều chỉnh buổi học",
-    prompt: "Điều chỉnh buổi học.",
-  },
-]
-
 // This deliberately recognizes only four demo entry points. It is not an NLP or API client.
 export function demoReply(input: string): Omit<ChatMessage, "id"> {
   const value = input.trim().toLocaleLowerCase("vi")

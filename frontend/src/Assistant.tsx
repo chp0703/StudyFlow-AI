@@ -5,19 +5,9 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react"
-import {
-  ArrowRight,
-  CalendarDays,
-  Check,
-  Clock3,
-  Plus,
-  Send,
-  Sparkles,
-  X,
-} from "lucide-react"
+import { ArrowRight, Check, Plus, Send, Sparkles, X } from "lucide-react"
 import {
   demoReply,
-  suggestions,
   type ActionProposal,
   type ChatMessage,
   type DemoScenario,
@@ -55,6 +45,8 @@ export default function Assistant({
   const transcriptRef = useRef<HTMLDivElement>(null)
   const shouldScroll = useRef(true)
   const composerRef = useRef<HTMLTextAreaElement>(null)
+  const composition = useRef(false)
+  const submitting = useRef(false)
   const activeClarification =
     messages.at(-1)?.category === "CLARIFICATION" ? messages.at(-1)?.id : null
 
@@ -65,6 +57,12 @@ export default function Assistant({
         behavior: "smooth",
       })
   }, [messages])
+  useEffect(() => {
+    const composer = composerRef.current
+    if (!composer) return
+    composer.style.height = "auto"
+    composer.style.height = `${Math.min(composer.scrollHeight, 180)}px`
+  }, [input])
 
   function append(...items: Omit<ChatMessage, "id">[]) {
     shouldScroll.current = true
@@ -76,7 +74,11 @@ export default function Assistant({
 
   function send(value = input) {
     const text = value.trim()
-    if (!text) return
+    if (!text || composition.current || submitting.current) return
+    submitting.current = true
+    requestAnimationFrame(() => {
+      submitting.current = false
+    })
     setInput("")
     setFormError("")
     setDraft(emptyDraft)
@@ -87,7 +89,8 @@ export default function Assistant({
     if (
       event.key === "Enter" &&
       !event.shiftKey &&
-      !event.nativeEvent.isComposing
+      !event.nativeEvent.isComposing &&
+      !composition.current
     ) {
       event.preventDefault()
       send()
@@ -278,43 +281,25 @@ export default function Assistant({
       }`}
       aria-label="Trợ lý AI bản mẫu"
     >
-      <div className="assistant-topline">
-        <span>
-          <Sparkles size={16} aria-hidden="true" /> Bản mẫu tương tác · Chưa kết
-          nối AI
-        </span>
-        <button className="button secondary" onClick={newChat} type="button">
-          <Plus size={17} aria-hidden="true" /> Cuộc trò chuyện mới
-        </button>
-      </div>
+      {messages.length > 0 && (
+        <div className="assistant-topline">
+          <h1
+            className="assistant-thread-heading"
+            data-assistant-heading
+            tabIndex={-1}
+          >
+            Cuộc trò chuyện
+          </h1>
+          <button className="button secondary" onClick={newChat} type="button">
+            <Plus size={17} aria-hidden="true" /> Cuộc trò chuyện mới
+          </button>
+        </div>
+      )}
       {messages.length === 0 ? (
         <div className="assistant-welcome">
-          <div className="assistant-mark">
-            <Sparkles size={28} aria-hidden="true" />
-          </div>
-          <p className="assistant-eyebrow">STUDYFLOW ASSISTANT</p>
-          <h2>Hôm nay bạn muốn làm gì?</h2>
-          <p>
-            Bạn có thể thêm công việc, lên kế hoạch học hoặc điều chỉnh lịch học
-            bằng cách trò chuyện với StudyFlow AI.
-          </p>
-          <div className="assistant-suggestions" aria-label="Gợi ý bắt đầu">
-            {suggestions.map(({ scenario, title, prompt }) => (
-              <button key={scenario} type="button" onClick={() => send(prompt)}>
-                <span className="assistant-suggestion-icon">
-                  {scenario === "view" ? (
-                    <CalendarDays size={18} />
-                  ) : scenario === "reschedule" ? (
-                    <Clock3 size={18} />
-                  ) : (
-                    <Sparkles size={18} />
-                  )}
-                </span>
-                <span>{title}</span>
-                <ArrowRight size={16} aria-hidden="true" />
-              </button>
-            ))}
-          </div>
+          <h1 data-assistant-heading tabIndex={-1}>
+            Hôm nay bạn muốn làm gì?
+          </h1>
         </div>
       ) : (
         <div
@@ -441,12 +426,17 @@ export default function Assistant({
             ref={composerRef}
             value={input}
             onChange={(event) => setInput(event.target.value)}
+            onCompositionStart={() => {
+              composition.current = true
+            }}
+            onCompositionEnd={() => {
+              composition.current = false
+            }}
             onKeyDown={onComposerKeyDown}
-            rows={2}
-            placeholder="Hỏi về công việc hoặc kế hoạch học..."
+            rows={1}
+            placeholder="Hỏi StudyFlow AI..."
           />
           <div className="assistant-composer-bottom">
-            <span>Enter để gửi · Shift + Enter để xuống dòng</span>
             <button
               type="submit"
               aria-label="Gửi tin nhắn"
@@ -457,8 +447,8 @@ export default function Assistant({
           </div>
         </form>
         <p className="assistant-disclaimer">
-          Bản mẫu frontend: chưa kết nối AI, chưa đọc dữ liệu cá nhân và không
-          lưu thay đổi.
+          Bản mẫu chưa kết nối AI hoặc lưu thay đổi. Thử: “Tạo task làm bài
+          OOP.”
         </p>
       </div>
     </section>

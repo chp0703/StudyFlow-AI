@@ -35,8 +35,22 @@ import {
   Circle,
   ArrowLeft,
   ShieldCheck,
+  House,
 } from "lucide-react"
 import Assistant from "./Assistant"
+const demoToday = new Date()
+demoToday.setHours(12, 0, 0, 0)
+const demoDate = (offset: number) => {
+  const date = new Date(demoToday)
+  date.setDate(date.getDate() + offset)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+}
+const displayDemoDate = (offset: number) =>
+  new Date(
+    demoToday.getFullYear(),
+    demoToday.getMonth(),
+    demoToday.getDate() + offset,
+  ).toLocaleDateString("vi-VN", { day: "numeric", month: "long" })
 type Task = {
   id: number
   title: string
@@ -56,7 +70,7 @@ const initialTasks: Task[] = [
     done: true,
     effort: 60,
     priority: "Trung bình",
-    deadline: "2025-04-25",
+    deadline: demoDate(4),
   },
   {
     id: 2,
@@ -66,7 +80,7 @@ const initialTasks: Task[] = [
     done: false,
     effort: 60,
     priority: "Cao",
-    deadline: "2025-04-28",
+    deadline: demoDate(7),
   },
   {
     id: 3,
@@ -76,7 +90,7 @@ const initialTasks: Task[] = [
     done: false,
     effort: 60,
     priority: "Trung bình",
-    deadline: "2025-04-25",
+    deadline: demoDate(4),
   },
   {
     id: 4,
@@ -86,37 +100,37 @@ const initialTasks: Task[] = [
     done: false,
     effort: 60,
     priority: "Trung bình",
-    deadline: "2025-05-02",
+    deadline: demoDate(11),
   },
 ]
 const deadlines = [
   {
     title: "Báo cáo dự án",
     course: "Kỹ thuật phần mềm",
-    date: "25 tháng 4",
-    days: "còn 4 ngày",
+    date: displayDemoDate(4),
+    days: "Còn 4 ngày · dữ liệu mẫu",
     urgent: true,
   },
   {
     title: "Bài tập 3",
     course: "Giải tích",
-    date: "28 tháng 4",
-    days: "còn 7 ngày",
+    date: displayDemoDate(7),
+    days: "Còn 7 ngày · dữ liệu mẫu",
     urgent: false,
   },
   {
     title: "Thi giữa kỳ",
     course: "Mạng máy tính",
-    date: "2 tháng 5",
-    days: "còn 11 ngày",
+    date: displayDemoDate(11),
+    days: "Còn 11 ngày · dữ liệu mẫu",
     urgent: false,
   },
 ]
 const destinations = [
+  { name: "Assistant", label: "Trang chủ", icon: House },
   { name: "Dashboard", label: "Tổng quan", icon: LayoutDashboard },
   { name: "Planner", label: "Lập kế hoạch", icon: CalendarDays },
   { name: "Study", label: "Học tập", icon: BookOpen },
-  { name: "Assistant", label: "Trợ lý AI", icon: Sparkles },
 ]
 function Button({
   className = "",
@@ -209,13 +223,13 @@ function Modal({
 }
 
 export default function App() {
-  const [page, setPage] = useState("Dashboard"),
+  const [page, setPage] = useState("Assistant"),
     [tasks, setTasks] = useState(initialTasks),
     [query, setQuery] = useState(""),
     [modal, setModal] = useState(""),
     [notice, setNotice] = useState(""),
     [week, setWeek] = useState(0),
-    [selectedDay, setSelectedDay] = useState(0),
+    [selectedDay, setSelectedDay] = useState((demoToday.getDay() + 6) % 7),
     [period, setPeriod] = useState("Week")
   const [edit, setEdit] = useState<Task | null>(null),
     [name, setName] = useState(""),
@@ -223,7 +237,7 @@ export default function App() {
     [effort, setEffort] = useState(30),
     [remaining, setRemaining] = useState(30),
     [priority, setPriority] = useState("Trung bình"),
-    [deadline, setDeadline] = useState("2025-04-25"),
+    [deadline, setDeadline] = useState(demoDate(4)),
     [capacity, setCapacity] = useState(60),
     [proposalDuration, setProposalDuration] = useState(30)
   const [running, setRunning] = useState(false),
@@ -247,11 +261,13 @@ export default function App() {
   const [studyResponse, setStudyResponse] = useState("")
   const [plannerPrompt, setPlannerPrompt] = useState("")
   const [plannerSource, setPlannerSource] = useState("")
+  const [selectedDeadline, setSelectedDeadline] = useState(deadlines[0])
   const uploadRef = useRef<HTMLInputElement>(null)
   const plannerUploadRef = useRef<HTMLInputElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
   const mainHeadingRef = useRef<HTMLHeadingElement>(null)
   const firstPage = useRef(true)
+  const searchRequested = useRef(false)
   useEffect(() => {
     document.documentElement.lang = "vi"
   }, [])
@@ -261,7 +277,7 @@ export default function App() {
         Dashboard: "Tổng quan",
         Planner: "Lập kế hoạch",
         Study: "Học tập",
-        Assistant: "Trợ lý AI",
+        Assistant: "Trang chủ",
         Review: "Ôn tập",
         Materials: "Tài liệu",
       }[page] || page
@@ -270,7 +286,13 @@ export default function App() {
       firstPage.current = false
       return
     }
-    mainHeadingRef.current?.focus()
+    if (page === "Assistant")
+      document.querySelector<HTMLElement>("[data-assistant-heading]")?.focus()
+    else mainHeadingRef.current?.focus()
+    if (searchRequested.current && page === "Planner") {
+      searchRef.current?.focus()
+      searchRequested.current = false
+    }
     window.scrollTo({ top: 0, behavior: "instant" })
   }, [page])
   useEffect(() => {
@@ -282,12 +304,15 @@ export default function App() {
     const fn = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault()
-        searchRef.current?.focus()
+        if (page === "Assistant") {
+          searchRequested.current = true
+          setPage("Planner")
+        } else searchRef.current?.focus()
       }
     }
     document.addEventListener("keydown", fn)
     return () => document.removeEventListener("keydown", fn)
-  }, [])
+  }, [page])
   const go = (p: string) => {
     setPage(p)
     setQuery("")
@@ -295,15 +320,24 @@ export default function App() {
   const notify = (s: string) => {
     setNotice(s)
   }
-  const date = new Date(2025, 3, 21 + week * 7)
+  const monday = new Date(demoToday)
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7) + week * 7)
+  const date = monday
   const weekDays = Array.from(
     { length: 7 },
-    (_, i) => new Date(2025, 3, 21 + week * 7 + i),
+    (_, i) =>
+      new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i),
   )
   const plan = () => {
     setProposalDuration(30)
     setModal("proposal")
   }
+  const completedTasks = tasks.filter((task) => task.done).length
+  const filteredTasks = tasks.filter((task) =>
+    `${task.title} ${task.course}`
+      .toLocaleLowerCase("vi")
+      .includes(query.trim().toLocaleLowerCase("vi")),
+  )
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">
@@ -320,20 +354,22 @@ export default function App() {
             fetchPriority="high"
           />
         </div>
-        <div className="search-wrap">
-          <Search aria-hidden="true" size={17} />
-          <input
-            ref={searchRef}
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value)
-              if (page !== "Planner") setPage("Planner")
-            }}
-            placeholder="Tìm kiếm công việc..."
-            aria-label="Tìm kiếm công việc"
-          />
-          <kbd>⌘ K</kbd>
-        </div>
+        {page !== "Assistant" && (
+          <div className="search-wrap">
+            <Search aria-hidden="true" size={17} />
+            <input
+              ref={searchRef}
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                if (page !== "Planner") setPage("Planner")
+              }}
+              placeholder="Tìm kiếm công việc..."
+              aria-label="Tìm kiếm công việc"
+            />
+            <kbd>⌘ K</kbd>
+          </div>
+        )}
         <div className="top-actions">
           <Button
             className="icon-button notification"
@@ -361,7 +397,7 @@ export default function App() {
             <Button
               key={n.name}
               className={`nav-item ${page === n.name ? "active" : ""}`}
-              aria-label={n.name}
+              aria-label={n.label}
               aria-current={page === n.name ? "page" : undefined}
               onClick={() => go(n.name)}
             >
@@ -391,48 +427,51 @@ export default function App() {
           </Button>
         </div>
       </aside>
-      <main className="main-content" id="main-content" tabIndex={-1}>
-        <div className="page-heading">
-          <div>
-            <h1 ref={mainHeadingRef} tabIndex={-1}>
-              {{
-                Dashboard: "Tổng quan",
-                Planner: "Lập kế hoạch",
-                Study: "Học tập",
-                Assistant: "Trợ lý AI",
-                Review: "Ôn tập",
-                Materials: "Tài liệu",
-              }[page] || page}
-            </h1>
-            <p>
-              {page === "Dashboard"
-                ? "Tổng quan việc học và lịch trong tuần."
-                : page === "Planner"
-                  ? "Quản lý công việc, thời gian rảnh và kế hoạch đã xác nhận."
-                  : page === "Study"
-                    ? "Đọc tài liệu và ghi chú cho buổi học."
-                    : page === "Assistant"
-                      ? "Trao đổi về công việc và kế hoạch học trong bản mẫu tương tác."
+      <main
+        className={`main-content ${page === "Assistant" ? "home-content" : ""}`}
+        id="main-content"
+        tabIndex={-1}
+      >
+        {page !== "Assistant" && (
+          <div className="page-heading">
+            <div>
+              <h1 ref={mainHeadingRef} tabIndex={-1}>
+                {{
+                  Dashboard: "Tổng quan",
+                  Planner: "Lập kế hoạch",
+                  Study: "Học tập",
+                  Review: "Ôn tập",
+                  Materials: "Tài liệu",
+                }[page] || page}
+              </h1>
+              <p>
+                {page === "Dashboard"
+                  ? "Tổng quan việc học và lịch trong tuần."
+                  : page === "Planner"
+                    ? "Quản lý công việc, thời gian rảnh và lịch minh họa trong phiên."
+                    : page === "Study"
+                      ? "Đọc tài liệu và ghi chú cho buổi học."
                       : page === "Review"
                         ? "Luyện câu hỏi và xem lại câu trả lời."
                         : "Ghi chú và tài liệu môn học của bạn ở một nơi."}
-            </p>
+              </p>
+            </div>
+            {page === "Planner" ? (
+              <Button className="primary" onClick={plan}>
+                <Sparkles aria-hidden="true" size={16} />
+                Tạo kế hoạch học
+              </Button>
+            ) : page === "Study" ? (
+              <Button
+                className="primary"
+                onClick={() => uploadRef.current?.click()}
+              >
+                <Upload aria-hidden="true" size={16} />
+                Thêm tài liệu
+              </Button>
+            ) : null}
           </div>
-          {page === "Planner" ? (
-            <Button className="primary" onClick={plan}>
-              <Sparkles aria-hidden="true" size={16} />
-              Tạo kế hoạch học
-            </Button>
-          ) : page === "Study" ? (
-            <Button
-              className="primary"
-              onClick={() => uploadRef.current?.click()}
-            >
-              <Upload aria-hidden="true" size={16} />
-              Thêm tài liệu
-            </Button>
-          ) : null}
-        </div>
+        )}
         <div hidden={page !== "Assistant"}>
           <Assistant onOpenPlanner={() => go("Planner")} />
         </div>
@@ -450,7 +489,7 @@ export default function App() {
                   </span>
                   <div>
                     <strong>
-                      3 <span>/ 5</span>
+                      {completedTasks} <span>/ {tasks.length}</span>
                     </strong>
                     <p>Công việc đã hoàn thành</p>
                   </div>
@@ -459,11 +498,17 @@ export default function App() {
                   className="summary-progress"
                   role="progressbar"
                   aria-label="Công việc minh họa đã hoàn thành"
-                  aria-valuenow={3}
+                  aria-valuenow={completedTasks}
                   aria-valuemin={0}
-                  aria-valuemax={5}
+                  aria-valuemax={Math.max(tasks.length, 1)}
                 >
-                  <i />
+                  <i
+                    style={{
+                      width: `${
+                        tasks.length ? (completedTasks / tasks.length) * 100 : 0
+                      }%`,
+                    }}
+                  />
                 </div>
               </Card>
               <Card className="summary-card summary-rose">
@@ -479,7 +524,7 @@ export default function App() {
                       <CalendarDays aria-hidden="true" size={27} />
                     </span>
                     <div>
-                      <strong>2</strong>
+                      <strong>{deadlines.length}</strong>
                       <p>Hạn chót sắp tới</p>
                     </div>
                   </div>
@@ -513,15 +558,30 @@ export default function App() {
                 </div>
               </Card>
             </div>
+            <p className="workspace-demo-note">
+              Dữ liệu công việc và tiến độ trên trang này là ví dụ minh họa
+              trong phiên hiện tại.
+            </p>
             <div className="dashboard-today-grid">
               <Card
-                title="Việc cần làm hôm nay"
+                title="Công việc trong phiên"
                 action={
                   <span className="count-label">{tasks.length} CÔNG VIỆC</span>
                 }
               >
                 <div className="today-task-list">
-                  {tasks.slice(0, 4).map((task) => (
+                  {tasks.length === 0 && (
+                    <div className="empty-inline">
+                      <p>Chưa có công việc trong phiên mẫu.</p>
+                      <Button
+                        className="text-button"
+                        onClick={() => go("Planner")}
+                      >
+                        Mở Lập kế hoạch
+                      </Button>
+                    </div>
+                  )}
+                  {tasks.map((task) => (
                     <div
                       className={`today-task-row ${
                         task.done ? "complete" : ""
@@ -567,7 +627,10 @@ export default function App() {
                     <Button
                       className="deadline-row"
                       key={deadline.title}
-                      onClick={() => setModal("deadline")}
+                      onClick={() => {
+                        setSelectedDeadline(deadline)
+                        setModal("deadline")
+                      }}
                     >
                       <span
                         className={`deadline-dot ${
@@ -601,7 +664,118 @@ export default function App() {
                   Thời gian rảnh
                 </Button>
               </div>
+              <div>
+                <Button
+                  className="primary"
+                  onClick={() => {
+                    setEdit(null)
+                    setName("")
+                    setCourse("Giải tích")
+                    setEffort(30)
+                    setRemaining(30)
+                    setPriority("Trung bình")
+                    setDeadline(demoDate(4))
+                    setModal("task")
+                  }}
+                >
+                  Thêm công việc
+                </Button>
+              </div>
             </div>
+            <Card
+              className="planner-task-card"
+              title="Công việc mẫu"
+              action={
+                <span className="count-label">
+                  {filteredTasks.length} CÔNG VIỆC
+                </span>
+              }
+            >
+              {filteredTasks.length ? (
+                <div className="planner-task-list">
+                  {filteredTasks.map((task) => (
+                    <div className="planner-task-row" key={task.id}>
+                      <input
+                        type="checkbox"
+                        className="task-checkbox"
+                        checked={task.done}
+                        aria-label={`Đánh dấu ${task.title} ${
+                          task.done ? "chưa hoàn thành" : "hoàn thành"
+                        }`}
+                        onChange={() =>
+                          setTasks((items) =>
+                            items.map((item) =>
+                              item.id === task.id
+                                ? { ...item, done: !item.done }
+                                : item,
+                            ),
+                          )
+                        }
+                      />
+                      <div className="planner-task-info">
+                        <strong className={task.done ? "is-done" : ""}>
+                          {task.title}
+                        </strong>
+                        <span>
+                          {task.course} · {task.time}
+                        </span>
+                      </div>
+                      <span
+                        className={`priority-badge ${
+                          task.priority === "Cao" ? "is-high" : ""
+                        }`}
+                      >
+                        {task.priority}
+                      </span>
+                      <time dateTime={task.deadline}>
+                        Hạn{" "}
+                        {new Date(
+                          `${task.deadline}T12:00:00`,
+                        ).toLocaleDateString("vi-VN", {
+                          day: "numeric",
+                          month: "numeric",
+                          year: "numeric",
+                        })}
+                      </time>
+                      <Button
+                        className="secondary"
+                        onClick={() => {
+                          setEdit(task)
+                          setName(task.title)
+                          setCourse(task.course)
+                          setEffort(task.effort)
+                          setRemaining(task.effort)
+                          setPriority(task.priority)
+                          setDeadline(task.deadline)
+                          setModal("task")
+                        }}
+                      >
+                        Chỉnh sửa
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-inline">
+                  <p>
+                    {query.trim()
+                      ? "Không có công việc phù hợp với từ khóa."
+                      : "Chưa có công việc trong bản mẫu."}
+                  </p>
+                  <Button
+                    className="primary"
+                    onClick={() => {
+                      setEdit(null)
+                      setName("")
+                      setDeadline(demoDate(4))
+                      setModal("task")
+                    }}
+                  >
+                    Thêm công việc
+                  </Button>
+                </div>
+              )}
+            </Card>
             <input
               className="hidden"
               ref={plannerUploadRef}
@@ -612,11 +786,12 @@ export default function App() {
                 e.target.value = ""
               }}
             />
-            <Card className="planner-ai-panel" title="Lập lịch bằng AI">
+            <Card className="planner-ai-panel" title="Phác thảo lịch học">
               <div className="planner-ai-content">
                 <p>
-                  Tải ảnh hoặc tệp lên, sau đó mô tả cách bạn muốn điều chỉnh
-                  lịch. Trợ lý sẽ tạo đề xuất để bạn xem và xác nhận.
+                  Chọn tên tệp và mô tả mong muốn của bạn. Bản mẫu hiện chưa đọc
+                  nội dung tệp hoặc phân tích yêu cầu bằng AI; đề xuất bên dưới
+                  là ví dụ cố định để bạn xem và xác nhận trong phiên.
                 </p>
                 <div className="planner-ai-actions">
                   <Button
@@ -624,7 +799,7 @@ export default function App() {
                     onClick={() => plannerUploadRef.current?.click()}
                   >
                     <Upload aria-hidden="true" size={16} />
-                    {plannerSource ? "Đổi tệp" : "Tải ảnh hoặc tệp"}
+                    {plannerSource ? "Đổi tệp mẫu" : "Chọn tên tệp mẫu"}
                   </Button>
                   {plannerSource && <span>{plannerSource}</span>}
                 </div>
@@ -636,7 +811,7 @@ export default function App() {
                 />
                 <Button className="primary" onClick={plan}>
                   <Sparkles aria-hidden="true" size={16} />
-                  Tạo đề xuất lịch
+                  Xem đề xuất minh họa
                 </Button>
               </div>
             </Card>
@@ -688,7 +863,7 @@ export default function App() {
                     className="secondary"
                     onClick={() => {
                       setWeek(0)
-                      setSelectedDay(0)
+                      setSelectedDay((demoToday.getDay() + 6) % 7)
                     }}
                   >
                     Hôm nay
@@ -730,13 +905,15 @@ export default function App() {
                   }`}
                 >
                   <div className="schedule-header">
-                    <span className="schedule-timezone">GMT+1</span>
+                    <span className="schedule-timezone">Giờ địa phương</span>
                     {weekDays.map((d, i) =>
                       period === "Hôm nay" && i !== selectedDay ? null : (
                         <Button
                           key={i}
                           className={`schedule-day ${
-                            week === 0 && i === 0 ? "is-today" : ""
+                            week === 0 && i === (demoToday.getDay() + 6) % 7
+                              ? "is-today"
+                              : ""
                           }`}
                           onClick={() => {
                             setSelectedDay(i)
@@ -842,7 +1019,9 @@ export default function App() {
                         return (
                           <div
                             className={`schedule-cell ${
-                              week === 0 && day === 0 ? "today-column" : ""
+                              week === 0 && day === (demoToday.getDay() + 6) % 7
+                                ? "today-column"
+                                : ""
                             }`}
                             key={day}
                           >
@@ -899,7 +1078,7 @@ export default function App() {
                   ...Array.from(e.target.files || []).map((file) => ({
                     name: file.name,
                     course: "Chưa phân loại",
-                    status: "Đã thêm · chờ AI đọc nội dung",
+                    status: "Chỉ lưu tên tệp trong phiên · chưa đọc nội dung",
                   })),
                 ])
                 e.target.value = ""
@@ -912,12 +1091,12 @@ export default function App() {
                   <div>
                     <strong>
                       {files.length
-                        ? `${files.length} tài liệu đã tải lên`
-                        : "Chưa có tài liệu"}
+                        ? `${files.length} tên tệp đã chọn`
+                        : "Chưa chọn tệp"}
                     </strong>
                     <p>
-                      Tải tài liệu lên để tạo bài tập và hỏi đáp dựa trên nội
-                      dung của bạn.
+                      Bản mẫu chỉ ghi tên tệp. Bài tập và câu trả lời bên dưới
+                      không dựa trên nội dung của tệp đã chọn.
                     </p>
                   </div>
                   <Button
@@ -925,7 +1104,7 @@ export default function App() {
                     onClick={() => uploadRef.current?.click()}
                   >
                     <Upload aria-hidden="true" size={16} />
-                    Tải tài liệu
+                    Chọn tệp
                   </Button>
                 </div>
                 <div className="study-feature-grid">
@@ -942,8 +1121,8 @@ export default function App() {
                   >
                     <Sparkles aria-hidden="true" size={18} />
                     <span>
-                      <strong>AI tạo bài tập</strong>
-                      <small>Tạo câu hỏi luyện tập từ tài liệu</small>
+                      <strong>Bài tập minh họa</strong>
+                      <small>Câu hỏi có sẵn, chưa đọc tài liệu</small>
                     </span>
                     <ArrowRight aria-hidden="true" size={15} />
                   </Button>
@@ -954,12 +1133,14 @@ export default function App() {
                       if (!studyQuestion.trim()) return
                       setStudyMode("answer")
                       setStudyResponse(
-                        "Theo nội dung minh họa, hãy giữ y không đổi và lấy đạo hàm x². Kết quả là 2xy.",
+                        /đạo hàm|f\(x/iu.test(studyQuestion)
+                          ? "Với ví dụ f(x, y) = x²y, hãy giữ y không đổi và lấy đạo hàm x². Kết quả là 2xy. Đây là câu trả lời mẫu, không dựa trên tệp đã chọn."
+                          : "Bản mẫu chỉ hỗ trợ ví dụ đạo hàm riêng có sẵn. Câu hỏi của bạn chưa được gửi tới AI hoặc đối chiếu với tài liệu.",
                       )
                     }}
                   >
                     <label htmlFor="study-question-input">
-                      Hỏi về tài liệu
+                      Hỏi trong bản mẫu
                     </label>
                     <div>
                       <input
@@ -1481,7 +1662,7 @@ export default function App() {
               settings: "Cài đặt bản thử nghiệm",
               help: "Một chút hướng dẫn",
               manual: "Thêm ghi chú thủ công",
-              deadline: "Báo cáo dự án",
+              deadline: selectedDeadline.title,
             }[modal] || modal
           }
           close={() => setModal("")}
@@ -1514,7 +1695,7 @@ export default function App() {
                 )
                 setModal("")
                 notify(
-                  "Đã lưu công việc. Lịch đã xác nhận của bạn không thay đổi.",
+                  "Đã thêm công việc vào dữ liệu mẫu của phiên này. Lịch không đổi.",
                 )
               }}
             >
@@ -1576,11 +1757,11 @@ export default function App() {
                 </label>
               </div>
               <label>
-                Hạn chót · Europe/London
+                Hạn chót · ngày địa phương
                 <input
                   type="date"
                   required
-                  min="2025-04-21"
+                  min={demoDate(0)}
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
                 />
@@ -1641,7 +1822,7 @@ export default function App() {
                 onClick={() => {
                   setModal("")
                   notify(
-                    "Đã cập nhật thời gian rảnh. Các buổi học hiện có không thay đổi.",
+                    "Đã cập nhật thời gian rảnh trong bản mẫu. Các buổi học hiện có không thay đổi.",
                   )
                 }}
               >
@@ -1651,13 +1832,17 @@ export default function App() {
           ) : modal === "proposal" ? (
             <>
               <p>
-                Đây là đề xuất, không phải thay đổi lịch. Hãy xem lại khoảng ôn
-                tập bổ sung trước khi xác nhận.
+                Đây là đề xuất minh họa trong bộ nhớ. Bản mẫu chỉ kiểm tra thời
+                lượng rảnh và giờ bắt đầu của các công việc mẫu; chưa kiểm tra
+                lịch thực tế hay ghi lên máy chủ.
               </p>
               {plannerSource && (
                 <div className="info-banner">
                   <FileText aria-hidden="true" size={18} />
-                  <p>Nguồn lập lịch: {plannerSource}</p>
+                  <p>
+                    Tên tệp được chọn: {plannerSource}. Nội dung tệp chưa được
+                    đọc.
+                  </p>
                 </div>
               )}
               <label>
@@ -1673,7 +1858,12 @@ export default function App() {
                 <div>
                   <strong>Đạo hàm riêng · Giải tích</strong>
                   <p>
-                    Thứ 2, 21 tháng 4 · 17:00–
+                    {weekDays[0].toLocaleDateString("vi-VN", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                    })}{" "}
+                    · 17:00–
                     {proposalDuration === 30 ? "17:30" : "18:00"}
                   </p>
                 </div>
@@ -1713,15 +1903,15 @@ export default function App() {
                 <div className="constraint-list">
                   <span>
                     <Check aria-hidden="true" size={15} />
-                    Trong khoảng thời gian đã xác nhận
+                    Phù hợp với thời lượng rảnh mẫu
                   </span>
                   <span>
                     <Check aria-hidden="true" size={15} />
-                    Trước hạn chót ngày 28 tháng 4
+                    Trước hạn chót mẫu {displayDemoDate(7)}
                   </span>
                   <span>
                     <Check aria-hidden="true" size={15} />
-                    Không trùng với cam kết khác
+                    Không trùng giờ bắt đầu trong danh sách mẫu
                   </span>
                 </div>
               )}
@@ -1754,13 +1944,13 @@ export default function App() {
                         done: false,
                         effort: proposalDuration,
                         priority: "Trung bình",
-                        deadline: "2025-04-28",
+                        deadline: demoDate(7),
                       },
                     ])
                     setRevision(false)
                     setModal("")
                     notify(
-                      "Đã xác nhận kế hoạch. Nội dung ôn tập đã được thêm vào lịch.",
+                      "Đã thêm đề xuất vào dữ liệu mẫu của phiên này. Chưa lưu lên máy chủ.",
                     )
                   }}
                 >
@@ -1839,7 +2029,7 @@ export default function App() {
                   },
                 ])
                 setModal("")
-                notify("Manual note listed in your demo library.")
+                notify("Đã thêm tên ghi chú vào thư viện mẫu của phiên này.")
               }}
             >
               <p>
@@ -1889,17 +2079,18 @@ export default function App() {
               <Bell aria-hidden="true" size={28} />
               <h3>Bạn đã xem hết thông báo.</h3>
               <p>
-                Hạn chót tiếp theo của bạn là Báo cáo dự án, ngày 25 tháng 4.
+                Hạn chót minh họa tiếp theo là Báo cáo dự án, ngày{" "}
+                {displayDemoDate(4)}.
               </p>
             </div>
           ) : (
             <>
               <p>
                 {modal === "help"
-                  ? "Bắt đầu ở Tổng quan, sắp xếp công việc trong Lập kế hoạch, tập trung ở Học tập và kiểm tra mức độ hiểu bài trong Ôn tập. Phản hồi AI và dữ liệu đánh giá chỉ mang tính minh họa."
+                  ? "Bắt đầu ở Trang chủ để thử trò chuyện, xem dữ liệu mẫu trong Tổng quan, sắp xếp công việc trong Lập kế hoạch và tập trung ở Học tập. Trợ lý chưa kết nối AI hoặc lưu dữ liệu lâu dài."
                   : modal === "account"
                     ? "Sinh viên · Không gian thử nghiệm cá nhân. Không có tài khoản hoặc lưu trữ lâu dài nào được kết nối."
-                    : "Kỹ thuật phần mềm · Hạn chót ngày 25 tháng 4 năm 2025. Mở Lập kế hoạch để sắp xếp công việc."}
+                    : `${selectedDeadline.course} · Hạn chót mẫu ${selectedDeadline.date}. Mở Lập kế hoạch để xem công việc minh họa.`}
               </p>
               <Button className="secondary" onClick={() => setModal("")}>
                 Đã hiểu
