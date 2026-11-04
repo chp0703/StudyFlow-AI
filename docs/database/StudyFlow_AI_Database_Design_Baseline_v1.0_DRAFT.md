@@ -1,5 +1,7 @@
 # StudyFlow AI — Database Design Baseline v1.0 (DRAFT)
 
+> **Superseded for F1 integration by [StudyFlow_AI_Database_Design_Baseline_v1.1.md](StudyFlow_AI_Database_Design_Baseline_v1.1.md), which maps the agreed Official F1 Schema v1.1.** This file is retained as design history; its conflicting Course, SourceDocument, separate availability/busy, plan-allocation, TTL, and legacy lineage decisions are not implementation requirements.
+
 ## 1. Document control
 
 | Field | Value |
