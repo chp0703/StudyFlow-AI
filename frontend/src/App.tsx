@@ -36,6 +36,7 @@ import {
   ArrowLeft,
   ShieldCheck,
 } from "lucide-react"
+import Assistant from "./Assistant"
 type Task = {
   id: number
   title: string
@@ -115,6 +116,7 @@ const destinations = [
   { name: "Dashboard", label: "Tổng quan", icon: LayoutDashboard },
   { name: "Planner", label: "Lập kế hoạch", icon: CalendarDays },
   { name: "Study", label: "Học tập", icon: BookOpen },
+  { name: "Assistant", label: "Trợ lý AI", icon: Sparkles },
 ]
 function Button({
   className = "",
@@ -259,6 +261,7 @@ export default function App() {
         Dashboard: "Tổng quan",
         Planner: "Lập kế hoạch",
         Study: "Học tập",
+        Assistant: "Trợ lý AI",
         Review: "Ôn tập",
         Materials: "Tài liệu",
       }[page] || page
@@ -396,6 +399,7 @@ export default function App() {
                 Dashboard: "Tổng quan",
                 Planner: "Lập kế hoạch",
                 Study: "Học tập",
+                Assistant: "Trợ lý AI",
                 Review: "Ôn tập",
                 Materials: "Tài liệu",
               }[page] || page}
@@ -407,9 +411,11 @@ export default function App() {
                   ? "Quản lý công việc, thời gian rảnh và kế hoạch đã xác nhận."
                   : page === "Study"
                     ? "Đọc tài liệu và ghi chú cho buổi học."
-                    : page === "Review"
-                      ? "Luyện câu hỏi và xem lại câu trả lời."
-                      : "Ghi chú và tài liệu môn học của bạn ở một nơi."}
+                    : page === "Assistant"
+                      ? "Trao đổi về công việc và kế hoạch học trong bản mẫu tương tác."
+                      : page === "Review"
+                        ? "Luyện câu hỏi và xem lại câu trả lời."
+                        : "Ghi chú và tài liệu môn học của bạn ở một nơi."}
             </p>
           </div>
           {page === "Planner" ? (
@@ -426,6 +432,9 @@ export default function App() {
               Thêm tài liệu
             </Button>
           ) : null}
+        </div>
+        <div hidden={page !== "Assistant"}>
+          <Assistant onOpenPlanner={() => go("Planner")} />
         </div>
         {page === "Dashboard" && (
           <>
@@ -507,20 +516,33 @@ export default function App() {
             <div className="dashboard-today-grid">
               <Card
                 title="Việc cần làm hôm nay"
-                action={<span className="count-label">{tasks.length} CÔNG VIỆC</span>}
+                action={
+                  <span className="count-label">{tasks.length} CÔNG VIỆC</span>
+                }
               >
                 <div className="today-task-list">
                   {tasks.slice(0, 4).map((task) => (
-                    <div className={`today-task-row ${task.done ? "complete" : ""}`} key={task.id}>
+                    <div
+                      className={`today-task-row ${
+                        task.done ? "complete" : ""
+                      }`}
+                      key={task.id}
+                    >
                       <input
                         type="checkbox"
                         className="task-checkbox"
                         checked={task.done}
-                        aria-label={`Đánh dấu ${task.title} ${task.done ? "chưa hoàn thành" : "hoàn thành"}`}
+                        aria-label={`Đánh dấu ${task.title} ${
+                          task.done ? "chưa hoàn thành" : "hoàn thành"
+                        }`}
                         onChange={() =>
-                          setTasks(tasks.map((item) =>
-                            item.id === task.id ? { ...item, done: !item.done } : item,
-                          ))
+                          setTasks(
+                            tasks.map((item) =>
+                              item.id === task.id
+                                ? { ...item, done: !item.done }
+                                : item,
+                            ),
+                          )
                         }
                       />
                       <div className="task-info">
@@ -534,7 +556,11 @@ export default function App() {
               </Card>
               <Card
                 title="Deadline sắp tới"
-                action={<span className="count-label">{deadlines.length} HẠN CHÓT</span>}
+                action={
+                  <span className="count-label">
+                    {deadlines.length} HẠN CHÓT
+                  </span>
+                }
               >
                 <div className="deadline-list">
                   {deadlines.map((deadline) => (
@@ -543,7 +569,11 @@ export default function App() {
                       key={deadline.title}
                       onClick={() => setModal("deadline")}
                     >
-                      <span className={`deadline-dot ${deadline.urgent ? "urgent" : ""}`} />
+                      <span
+                        className={`deadline-dot ${
+                          deadline.urgent ? "urgent" : ""
+                        }`}
+                      />
                       <span className="deadline-info">
                         <strong>{deadline.title}</strong>
                         <small>{deadline.course}</small>
