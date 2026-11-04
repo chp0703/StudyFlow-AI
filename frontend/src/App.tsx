@@ -339,7 +339,7 @@ export default function App() {
       .includes(query.trim().toLocaleLowerCase("vi")),
   )
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${page === "Assistant" ? "assistant-app" : ""}`}>
       <a className="skip-link" href="#main-content">
         Bỏ qua đến nội dung chính
       </a>

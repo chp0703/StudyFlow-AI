@@ -264,3 +264,16 @@
 @media(max-width:800px) { .assistant-history-panel { display: none; }.assistant-history-drawer .assistant-history-panel { display: flex; }.assistant-toolbar .button { padding-inline: 10px; } }
 @media(max-width:480px) { .assistant-toolbar .button span { display: none; }.assistant-toolbar .button { min-width: 44px; padding: 10px; }.assistant-topline { gap: 6px; }.assistant-thread-heading { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.history-confirm { padding: 20px; } }
 @media(forced-colors:active) { .assistant-history-panel,.history-item.selected,.history-confirm { border: 1px solid ButtonText; } }
+
+/* The assistant owns its viewport; only its transcript and history list scroll. */
+.assistant-app { height: 100dvh; min-height: 0; display: grid; grid-template-rows: 72px minmax(0,1fr); overflow: hidden; }
+.assistant-app .topbar { position: relative; top: auto; }
+.assistant-app .home-content { height: 100%; min-height: 0; overflow: hidden; }
+.assistant-app .home-content > div:not([hidden]) { height: 100%; min-height: 0; }
+.assistant-app .assistant-shell { height: 100%; min-height: 0; }
+@media(max-width:800px) {
+  .assistant-app { grid-template-rows: auto auto minmax(0,1fr); }
+  .assistant-app .sidebar { min-height: 0; }
+  .assistant-app .home-content { height: 100%; min-height: 0; }
+  .assistant-app .assistant-shell { height: 100%; min-height: 0; }
+}
