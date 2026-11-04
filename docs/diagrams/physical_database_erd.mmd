@@ -1,0 +1,118 @@
+erDiagram
+    AUTH_USERS ||--|| USER_PROFILES : "authenticates"
+    USER_PROFILES ||--o{ TASK_CANDIDATES : owns
+    USER_PROFILES ||--o{ ACADEMIC_TASKS : owns
+    TASK_CANDIDATES ||--o| ACADEMIC_TASKS : promotes
+    USER_PROFILES ||--o{ TIME_WINDOWS : owns
+    USER_PROFILES ||--o{ STUDY_PLANS : owns
+    STUDY_PLANS ||--o{ STUDY_BLOCKS : contains
+    ACADEMIC_TASKS ||--o{ STUDY_BLOCKS : schedules
+    STUDY_PLANS ||--o{ STUDY_PLANS : previous_snapshot
+    USER_PROFILES ||--o{ PLAN_PROPOSALS : owns
+    PLAN_PROPOSALS ||--o| STUDY_PLANS : commits
+    USER_PROFILES ||--o{ PENDING_ACTIONS : owns
+    PENDING_ACTIONS ||--o{ PENDING_ACTIONS : depends_on
+    USER_PROFILES ||--o{ APPROVAL_ACTIONS : creates
+    USER_PROFILES ||--o{ IDEMPOTENCY_RECORDS : owns
+
+    USER_PROFILES {
+        uuid user_id PK
+        text timezone
+        text locale
+        uuid current_plan_id FK
+        integer schedule_revision
+        jsonb scheduling_policy
+    }
+    TASK_CANDIDATES {
+        uuid candidate_id PK
+        uuid user_id FK
+        integer version
+        text status
+        jsonb slots
+        uuid confirmed_task_id FK
+    }
+    ACADEMIC_TASKS {
+        uuid task_id PK
+        uuid user_id FK
+        uuid candidate_id UK
+        integer version
+        timestamptz deadline_at
+        text deadline_precision
+        date deadline_date
+        integer estimated_minutes
+        integer remaining_minutes
+        text status
+    }
+    TIME_WINDOWS {
+        uuid window_id PK
+        uuid user_id FK
+        integer version
+        text kind
+        text recurrence
+        timestamptz start_at
+        timestamptz end_at
+        smallint weekday
+        time start_time
+        time end_time
+    }
+    STUDY_PLANS {
+        uuid plan_id PK
+        uuid user_id FK
+        integer version UK
+        uuid previous_plan_id FK
+        uuid source_proposal_id UK
+        timestamptz approved_at
+    }
+    STUDY_BLOCKS {
+        uuid plan_id PK, FK
+        uuid block_id PK
+        uuid user_id FK
+        uuid task_id FK
+        timestamptz start_at
+        timestamptz end_at
+        boolean is_locked
+        timestamptz created_at
+    }
+    PLAN_PROPOSALS {
+        uuid proposal_id PK
+        uuid user_id FK
+        integer version
+        text status
+        uuid base_plan_id FK
+        jsonb generation_scope
+        jsonb payload
+        jsonb policy_snapshot
+        uuid committed_plan_id FK
+    }
+    PENDING_ACTIONS {
+        uuid action_id PK
+        uuid user_id FK
+        uuid conversation_id
+        integer version
+        text state
+        boolean requires_review
+        uuid candidate_id FK
+        uuid proposal_id FK
+        uuid depends_on_action_id FK
+    }
+    APPROVAL_ACTIONS {
+        uuid approval_action_id PK
+        uuid user_id FK
+        text target_type
+        uuid target_id
+        integer target_version
+        uuid target_candidate_id FK
+        uuid target_pending_action_id FK
+        uuid target_proposal_id FK
+        text decision
+        text source
+    }
+    IDEMPOTENCY_RECORDS {
+        uuid user_id PK, FK
+        text operation PK
+        text idempotency_key PK
+        text request_fingerprint
+        text state
+        jsonb result_reference_or_response
+        timestamptz expires_at
+    }
