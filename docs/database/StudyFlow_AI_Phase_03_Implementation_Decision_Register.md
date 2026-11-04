@@ -124,3 +124,59 @@ The SRS remains unchanged. Required formal revisions include `course_id` versus 
 ## Entry criteria for Stage 03.2
 
 Stage 03.2 may begin only after team approval of E-01 through E-05, E-07 through E-11, and E-14, plus formal SRS reconciliation for E-12. E-06 and E-08 require a concrete physical design review. Until then, no migrations, SQL, RPC functions, or backend scaffold should be created.
+
+## Phase 03.1A revision amendments
+
+These amendments address reviewer feedback. The register remains the single source of truth for status, owners, approval state, and unresolved questions; ADRs reference these IDs and provide rationale only.
+
+### E-03 amendment — direct RPC boundary and latency evaluation
+
+`PROPOSED`: FastAPI is the normal gateway, but it is not automatically a security boundary when authenticated users have EXECUTE on mutation RPCs. The team must choose between user-authorized RPCs (each RPC independently enforces all security and business rules) and backend-only mutation RPCs (separate trusted backend identity, not an undocumented service-role shortcut). Initial performance targets are `PROPOSED`, not SLOs: same-region p95 ≤300 ms for ordinary reads and ≤1000 ms for atomic mutation RPCs, excluding LLM and Scheduling Engine time. Benchmark with a representative F1 dataset, expected concurrency, warm-up, and at least 30 measured runs per operation.
+
+### E-05 amendment — privileges and exposed schemas
+
+`PROPOSED`: use physical names `app_private` for business tables/internal objects and `app_api` for explicitly exposed functions/read endpoints. Schema USAGE, table privileges, function EXECUTE, and RLS are separate controls. `SECURITY INVOKER` is preferred; any `SECURITY DEFINER` exception requires a least-privilege owner, fixed safe search path, schema-qualified references, restricted EXECUTE, explicit owner checks, and documented RLS behavior. Exact grants remain `TBD`.
+
+### E-10 amendment — consistent proposal input snapshot
+
+`PROPOSED`: a multi-statement `READ COMMITTED` transaction alone is not a consistent SchedulingContext snapshot. Use one read RPC/SQL snapshot, or explicitly use `REPEATABLE READ`. The engine must receive inputs and `schedule_revision` from the same snapshot. The persistence RPC reacquires the owner lock, reloads authoritative conditions, compares the revision, and rejects mismatches for regeneration. The race test is mandatory.
+
+### E-11 amendment — snapshot-scoped overlap
+
+`PROPOSED`: evaluate a GiST exclusion constraint over a half-open timestamp range keyed by `plan_id`; `btree_gist` may be required for UUID equality. Historical plans may overlap each other. Availability, BUSY, deadline, workload, and current-context validation remain RPC/service checks. Responsible owner: Database Architect; technical reviewer: Backend Architect; decision deadline: before Stage 03.2 physical design approval.
+
+### E-07 amendment — StudyBlock uniqueness exception
+
+The approved StudyBlock primary key is `(plan_id, block_id)`. A logical `block_id` may legitimately recur in multiple historical snapshots. Therefore a global `UNIQUE(user_id, block_id)` is prohibited. Same-owner composite foreign keys to StudyPlan and AcademicTask remain required, and logical identity continuity is preserved through the repeated `block_id`.
+
+### E-12 dedicated SRS reconciliation issue
+
+**Issue:** reconcile the SRS with schema v1.1 for course representation, PDF/OCR, unified TimeWindow, current-plan snapshots, TTL/EXPIRED states, manual/individual block operations, task update/cancel APIs, and StudySession/progress.
+**Status:** `PROPOSED — open`.
+**Accountable role:** Product/Requirements Owner.
+**Technical reviewer:** Backend/Database Architect.
+**Deliverables:** conflict matrix, proposed wording changes, traceability update, and team acceptance record; do not edit the SRS silently.
+**Milestone:** complete before Stage 03.2 physical design approval.
+**Dependencies:** E-01 through E-11 and product scope confirmation.
+
+### E-15 — Phase 03.1A review checklist
+
+| Review item | Status |
+|---|---|
+| Official schema remains unchanged | VERIFIED |
+| Baseline remains unchanged | VERIFIED |
+| Five ADRs reference this register for status | VERIFIED |
+| ADR created/updated dates reflect Git history | VERIFIED |
+| Owner-lock protocol explicitly remains PROPOSED | VERIFIED |
+| Direct RPC Option A/Option B analyzed | VERIFIED |
+| SECURITY INVOKER privileges separated from RLS/schema exposure | VERIFIED |
+| Consistent SchedulingContext snapshot requirement added | VERIFIED |
+| Rejection idempotency added | VERIFIED |
+| Approval lost-response retry ordering added | VERIFIED |
+| Global StudyBlock `(user_id, block_id)` uniqueness rejected | VERIFIED |
+| Snapshot-scoped overlap strategy and owner/deadline recorded | VERIFIED |
+| F1 deferred RPC operations explicitly excluded | VERIFIED |
+| Data API latency measurement plan added | VERIFIED |
+| SRS reconciliation owner and milestone recorded | VERIFIED |
+| Team approval gates complete | NOT COMPLETE — ADRs remain PROPOSED |
+| Stage 03.2 authorized | NOT AUTHORIZED |
