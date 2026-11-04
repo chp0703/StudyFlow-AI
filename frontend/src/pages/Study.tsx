@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+
 import {
   ArrowRight,
   BookOpen,
@@ -10,9 +11,13 @@ import {
   Upload,
   X,
 } from "lucide-react"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import Modal from "../components/ui/Modal"
+
 import type { StudyFile } from "../types/task"
 
 export default function Study({
@@ -21,16 +26,24 @@ export default function Study({
   notify: (message: string) => void
 }) {
   const [files, setFiles] = useState<StudyFile[]>([])
+
   const [running, setRunning] = useState(false)
+
   const [seconds, setSeconds] = useState(0)
+
   const [notes, setNotes] = useState("")
+
   const [saved, setSaved] = useState(false)
+
   const [modal, setModal] = useState<"" | "reflection" | "manual">("")
+
   const uploadRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!running) return
+
     const id = setInterval(() => setSeconds((v) => v + 1), 1000)
+
     return () => clearInterval(id)
   }, [running])
 
@@ -45,12 +58,16 @@ export default function Study({
         onChange={(e) => {
           setFiles((items) => [
             ...items,
+
             ...Array.from(e.target.files || []).map((file) => ({
               name: file.name,
+
               course: "Chưa phân loại",
+
               status: "Chỉ lưu tên tệp trong phiên · chưa đọc nội dung",
             })),
           ])
+
           e.target.value = ""
         }}
       />
@@ -62,7 +79,10 @@ export default function Study({
             <Button className="secondary" onClick={() => setModal("manual")}>
               Thêm ghi chú
             </Button>
-            <Button className="primary" onClick={() => uploadRef.current?.click()}>
+            <Button
+              className="primary"
+              onClick={() => uploadRef.current?.click()}
+            >
               <Upload aria-hidden="true" size={16} />
               Thêm tài liệu
             </Button>
@@ -123,6 +143,7 @@ export default function Study({
           className="primary"
           onClick={() => {
             setRunning(false)
+
             setModal("reflection")
           }}
         >
@@ -167,7 +188,9 @@ export default function Study({
             className="primary"
             onClick={() => {
               setSaved(true)
+
               setModal("")
+
               notify("Đã xác nhận kết quả buổi học.")
             }}
           >
@@ -180,16 +203,23 @@ export default function Study({
           <form
             onSubmit={(e) => {
               e.preventDefault()
+
               const data = new FormData(e.currentTarget)
+
               setFiles((items) => [
                 ...items,
+
                 {
                   name: String(data.get("title")),
+
                   course: "Chưa phân loại",
+
                   status: "Ghi chú thủ công · chưa xác minh",
                 },
               ])
+
               setModal("")
+
               notify("Đã thêm ghi chú.")
             }}
           >

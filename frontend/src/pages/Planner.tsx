@@ -1,168 +1,129 @@
 import { useState, type Dispatch, type SetStateAction } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+
+import { ChevronLeft, ChevronRight, Send } from "lucide-react"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
-import Modal from "../components/ui/Modal"
+
+import {
+  FIRST_HOUR,
+  LAST_HOUR,
+  runPlannerCommand,
+} from "../features/planner/plannerAgent"
+
 import type { Task } from "../types/task"
+
 import { today, toIsoDate } from "../utils/date"
 
-const emptyForm = {
-  title: "",
-  course: "",
-  priority: "Trung bình",
-  effort: 30,
-  deadline: toIsoDate(today),
-}
+const HINT =
+  "Ví dụ: thêm Ôn giải tích thứ 3 lúc 19h · dời Ôn giải tích sang thứ 5 lúc 9h · xóa Ôn giải tích"
+
 const todayIndex = (today.getDay() + 6) % 7
+
+const nowHour = new Date().getHours()
+
+const nowMinutes = new Date().getMinutes()
+
+const hours = Array.from(
+  { length: LAST_HOUR - FIRST_HOUR + 1 },
+
+  (_, i) => i + FIRST_HOUR,
+)
 
 export default function Planner({
   tasks,
+
   setTasks,
-  query,
-  notify,
 }: {
   tasks: Task[]
+
   setTasks: Dispatch<SetStateAction<Task[]>>
-  query: string
-  notify: (message: string) => void
 }) {
-  const [form, setForm] = useState(emptyForm)
-  const [editing, setEditing] = useState<Task | null>(null)
-  const [open, setOpen] = useState(false)
+  const [input, setInput] = useState("")
+
+  const [reply, setReply] = useState(HINT)
+
   const [week, setWeek] = useState(0)
-  const [period, setPeriod] = useState("Week")
-  const [selectedDay, setSelectedDay] = useState(todayIndex)
+
+  const weekLabel =
+    week === 0 ? "Tuần này" : week > 0 ? `+${week} tuần` : `${week} tuần`
 
   const monday = new Date(today)
+
   monday.setDate(monday.getDate() - todayIndex + week * 7)
+
   const weekDays = Array.from(
     { length: 7 },
+
     (_, i) =>
       new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i),
   )
-  const filteredTasks = tasks.filter((task) =>
-    `${task.title} ${task.course}`
-      .toLocaleLowerCase("vi")
-      .includes(query.trim().toLocaleLowerCase("vi")),
-  )
 
-  const openForm = (task: Task | null) => {
-    setEditing(task)
-    setForm(
-      task
-        ? {
-            title: task.title,
-            course: task.course,
-            priority: task.priority,
-            effort: task.effort,
-            deadline: task.deadline,
-          }
-        : emptyForm,
-    )
-    setOpen(true)
+  const eventAt = (date: Date, hour: number) =>
+    tasks.find((task) => task.date === toIsoDate(date) && task.hour === hour)
+
+  const send = () => {
+    const text = input.trim()
+
+    if (!text) return
+
+    const result = runPlannerCommand(text, tasks)
+
+    setTasks(result.tasks)
+
+    setReply(result.reply)
+
+    setInput("")
   }
-  const patch = (value: Partial<typeof emptyForm>) =>
-    setForm((f) => ({ ...f, ...value }))
 
   return (
-    <>
-      <div className="page-toolbar">
-        <div />
-        <div>
-          <Button className="primary" onClick={() => openForm(null)}>
-            Thêm công việc
-          </Button>
+    <div className="planner-page">
+      <Card className="planner-chat">
+        <div className="planner-chat-title">
+          <h2>Trợ lý lập kế hoạch</h2>
+          <p role="status" aria-live="polite" title={reply}>
+            {reply}
+          </p>
         </div>
-      </div>
-      <Card
-        className="planner-task-card"
-        title="Công việc"
-        action={
-          <span className="count-label">{filteredTasks.length} CÔNG VIỆC</span>
-        }
-      >
-        {filteredTasks.length ? (
-          <div className="planner-task-list">
-            {filteredTasks.map((task) => (
-              <div className="planner-task-row" key={task.id}>
-                <input
-                  type="checkbox"
-                  className="task-checkbox"
-                  checked={task.done}
-                  aria-label={`Đánh dấu ${task.title} ${
-                    task.done ? "chưa hoàn thành" : "hoàn thành"
-                  }`}
-                  onChange={() =>
-                    setTasks((items) =>
-                      items.map((item) =>
-                        item.id === task.id
-                          ? { ...item, done: !item.done }
-                          : item,
-                      ),
-                    )
-                  }
-                />
-                <div className="planner-task-info">
-                  <strong className={task.done ? "is-done" : ""}>
-                    {task.title}
-                  </strong>
-                  <span>
-                    {task.course} · {task.time}
-                  </span>
-                </div>
-                <span
-                  className={`priority-badge ${
-                    task.priority === "Cao" ? "is-high" : ""
-                  }`}
-                >
-                  {task.priority}
-                </span>
-                <time dateTime={task.deadline}>
-                  Hạn{" "}
-                  {new Date(`${task.deadline}T12:00:00`).toLocaleDateString(
-                    "vi-VN",
-                    { day: "numeric", month: "numeric", year: "numeric" },
-                  )}
-                </time>
-                <Button className="secondary" onClick={() => openForm(task)}>
-                  Chỉnh sửa
-                </Button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="empty-inline">
-            <p>
-              {query.trim()
-                ? "Không có công việc phù hợp với từ khóa."
-                : "Chưa có công việc nào."}
-            </p>
-            <Button className="primary" onClick={() => openForm(null)}>
-              Thêm công việc
-            </Button>
-          </div>
-        )}
+        <form
+          className="planner-chat-form"
+          onSubmit={(e) => {
+            e.preventDefault()
+
+            send()
+          }}
+        >
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Nhập yêu cầu lịch học của bạn..."
+            aria-label="Yêu cầu điều chỉnh lịch"
+          />
+          <Button
+            className="primary"
+            type="submit"
+            aria-label="Gửi yêu cầu"
+            disabled={!input.trim()}
+          >
+            <Send aria-hidden="true" size={16} />
+          </Button>
+        </form>
       </Card>
       <Card
-        className="dashboard-calendar"
+        className="dashboard-calendar planner-calendar"
         title="Lịch"
         action={
           <div className="dashboard-calendar-controls">
-            <span>
-              {monday.toLocaleDateString("vi-VN", {
-                month: "long",
-                year: "numeric",
-              })}
-            </span>
-            <Button
-              className="secondary"
-              onClick={() => {
-                setWeek(0)
-                setSelectedDay(todayIndex)
-              }}
-            >
-              Hôm nay
-            </Button>
+            <span className="calendar-week-label">{weekLabel}</span>
+            {week !== 0 && (
+              <Button
+                className="secondary calendar-today-btn"
+                onClick={() => setWeek(0)}
+              >
+                Hôm nay
+              </Button>
+            )}
             <Button
               className="icon-button"
               aria-label="Tuần trước"
@@ -177,170 +138,68 @@ export default function Planner({
             >
               <ChevronRight aria-hidden="true" size={18} />
             </Button>
-            <select
-              aria-label="Chế độ xem lịch"
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-            >
-              <option value="Week">Tuần</option>
-              <option value="Hôm nay">Ngày</option>
-            </select>
           </div>
         }
       >
         <div
           className="dashboard-calendar-scroll"
           role="region"
-          aria-label="Lịch trong tuần, cuộn ngang để xem tất cả các ngày"
+          aria-label="Lịch trong tuần"
           tabIndex={0}
         >
-          <div
-            className={`dashboard-schedule ${
-              period === "Hôm nay" ? "day-view" : ""
-            }`}
-          >
+          <div className="dashboard-schedule">
             <div className="schedule-header">
-              <span className="schedule-timezone">Giờ địa phương</span>
-              {weekDays.map((d, i) =>
-                period === "Hôm nay" && i !== selectedDay ? null : (
-                  <Button
-                    key={i}
-                    className={`schedule-day ${
-                      week === 0 && i === todayIndex ? "is-today" : ""
-                    }`}
-                    onClick={() => {
-                      setSelectedDay(i)
-                      setPeriod("Hôm nay")
-                    }}
-                  >
-                    <span>{["T2", "T3", "T4", "T5", "T6", "T7", "CN"][i]}</span>
-                    <strong>{d.getDate()}</strong>
-                  </Button>
-                ),
-              )}
-            </div>
-            {Array.from({ length: 10 }, (_, i) => i + 8).map((hour) => (
-              <div className="schedule-row" key={hour}>
-                <span className="schedule-hour">
-                  {String(hour).padStart(2, "0")}:00
+              {weekDays.map((_, i) => (
+                <span
+                  key={i}
+                  className={`schedule-day ${
+                    week === 0 && i === todayIndex ? "is-today" : ""
+                  }`}
+                >
+                  <strong>
+                    {["T2", "T3", "T4", "T5", "T6", "T7", "CN"][i]}
+                  </strong>
                 </span>
-                {weekDays.map((_, day) =>
-                  period === "Hôm nay" && day !== selectedDay ? null : (
+              ))}
+            </div>
+            {hours.map((hour) => (
+              <div className="schedule-row" key={hour}>
+                {weekDays.map((d, day) => {
+                  const event = eventAt(d, hour)
+
+                  return (
                     <div
                       className={`schedule-cell ${
                         week === 0 && day === todayIndex ? "today-column" : ""
                       }`}
                       key={day}
-                    />
-                  ),
-                )}
+                    >
+                      {event && (
+                        <div
+                          className={`schedule-event study priority-${
+                            { Cao: "high", Thấp: "low" }[event.priority] ??
+                            "mid"
+                          } ${event.done ? "is-done" : ""}`}
+                          title={`${event.title} · ${event.time}`}
+                        >
+                          <strong>{event.title}</strong>
+                          <small>{event.time}</small>
+                        </div>
+                      )}
+                      {week === 0 && day === todayIndex && hour === nowHour && (
+                        <i
+                          className="now-line"
+                          style={{ top: `${(nowMinutes / 60) * 100}%` }}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             ))}
           </div>
         </div>
       </Card>
-      {open && (
-        <Modal
-          title={editing ? "Chỉnh sửa công việc" : "Thêm công việc"}
-          close={() => setOpen(false)}
-        >
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              const title = form.title.trim()
-              if (!title) return
-              const task: Task = {
-                id: editing?.id ?? Date.now(),
-                title,
-                course: form.course.trim() || "Chưa phân loại",
-                time: editing?.time ?? "Chưa xếp lịch",
-                done: editing?.done ?? false,
-                effort: form.effort,
-                priority: form.priority,
-                deadline: form.deadline,
-              }
-              setTasks((items) =>
-                editing
-                  ? items.map((x) => (x.id === editing.id ? task : x))
-                  : [...items, task],
-              )
-              setOpen(false)
-              notify(editing ? "Đã lưu công việc." : "Đã thêm công việc.")
-            }}
-          >
-            <label>
-              Tên công việc
-              <input
-                required
-                value={form.title}
-                onChange={(e) => patch({ title: e.target.value })}
-                placeholder="Bạn muốn làm gì?"
-              />
-            </label>
-            <div className="form-grid">
-              <label>
-                Môn học
-                <input
-                  value={form.course}
-                  onChange={(e) => patch({ course: e.target.value })}
-                  placeholder="Ví dụ: Giải tích"
-                />
-              </label>
-              <label>
-                Mức ưu tiên
-                <select
-                  value={form.priority}
-                  onChange={(e) => patch({ priority: e.target.value })}
-                >
-                  {["Thấp", "Trung bình", "Cao"].map((c) => (
-                    <option key={c}>{c}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Thời lượng dự kiến (phút)
-                <input
-                  type="number"
-                  min="15"
-                  max="480"
-                  required
-                  value={form.effort}
-                  onChange={(e) => patch({ effort: +e.target.value })}
-                />
-              </label>
-            </div>
-            <label>
-              Hạn chót · ngày địa phương
-              <input
-                type="date"
-                required
-                min={toIsoDate(today)}
-                value={form.deadline}
-                onChange={(e) => patch({ deadline: e.target.value })}
-              />
-            </label>
-            <div className="modal-actions">
-              {editing && (
-                <Button
-                  className="danger-text"
-                  onClick={() => {
-                    setTasks((items) => items.filter((t) => t.id !== editing.id))
-                    setOpen(false)
-                  }}
-                >
-                  Xóa công việc
-                </Button>
-              )}
-              <Button className="secondary" onClick={() => setOpen(false)}>
-                Hủy
-              </Button>
-              <Button className="primary" type="submit">
-                {editing ? "Lưu thay đổi" : "Thêm công việc"}
-              </Button>
-            </div>
-          </form>
-        </Modal>
-      )}
-    </>
+    </div>
   )
 }
