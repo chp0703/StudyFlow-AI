@@ -1,4 +1,4 @@
-import type { ChatMessage, ActionProposal } from "./assistantDemo.ts"
+import type { ChatMessage, ActionProposal } from "../../types/assistant.ts"
 
 export const HISTORY_SCHEMA_VERSION = 1
 export type Draft = {

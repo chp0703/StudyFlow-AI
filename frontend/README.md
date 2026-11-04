@@ -1,6 +1,6 @@
 # StudyFlow AI
 
-React prototype of a student study workspace (dashboard, planner, study session, review, materials). Demo only: no backend, auth, persistence, file parsing or live AI.
+React prototype of a student study workspace (assistant, dashboard, planner, study). Prototype only: no backend, auth, persistence, file parsing or live AI.
 
 ```bash
 npm install
