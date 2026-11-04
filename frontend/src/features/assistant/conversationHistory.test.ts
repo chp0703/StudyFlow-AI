@@ -9,7 +9,7 @@ import {
   setProposalStatus,
   titleFromMessage,
 } from "./conversationHistory.ts"
-import type { ChatMessage } from "./assistantDemo.ts"
+import type { ChatMessage } from "../../types/assistant.ts"
 
 const clarification = (id: string): ChatMessage => ({
   id,

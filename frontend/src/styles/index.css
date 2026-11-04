@@ -146,7 +146,6 @@
 .card { box-shadow: 0 2px 14px #0f172a05; }
 .summary-card { min-height: 126px; }
 .summary-main strong { font-variant-numeric: tabular-nums; }
-.workspace-demo-note { color: var(--color-muted); font-size: 12px; margin: -8px 0 18px; }
 .today-task-row,.deadline-row { min-height: 70px; }
 .deadline-row:hover:not(:disabled) { background: #f8fbff; }
 .page-toolbar { margin-bottom: 16px; }

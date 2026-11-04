@@ -17,12 +17,12 @@ import {
   Trash2,
   X,
 } from "lucide-react"
-import {
-  demoReply,
-  type ActionProposal,
-  type ChatMessage,
-  type DemoScenario,
-} from "./assistantDemo"
+import { getAssistantReply } from "./assistantService"
+import type {
+  ActionProposal,
+  ChatMessage,
+  AssistantScenario,
+} from "../../types/assistant"
 import {
   appendMessages,
   clearConversations,
@@ -252,7 +252,7 @@ export default function Assistant({
       submitting.current = false
     })
     const user = message({ role: "user", category: "MESSAGE", text })
-    const assistant = message(demoReply(text))
+    const assistant = message(getAssistantReply(text))
     const starting = active ?? createConversation(text)
     const updated = appendMessages(starting, [user, assistant])
     shouldScroll.current = true
@@ -287,7 +287,7 @@ export default function Assistant({
   }
   function submitDraft(
     event: FormEvent<HTMLFormElement>,
-    scenario: DemoScenario,
+    scenario: AssistantScenario,
   ) {
     event.preventDefault()
     if (!active) return
@@ -460,7 +460,7 @@ export default function Assistant({
       </label>
     )
   }
-  function clarificationForm(scenario: DemoScenario) {
+  function clarificationForm(scenario: AssistantScenario) {
     if (scenario === "view") return null
     return (
       <form

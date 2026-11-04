@@ -1,39 +1,7 @@
-export type IntentCandidate = "CREATE_TASK" | "UPDATE_TASK" | "DELETE_TASK" | "SET_AVAILABILITY" | "GENERATE_STUDY_PLAN" | "RESCHEDULE_STUDY_BLOCK" | "GET_STUDY_PLAN" | "CREATE_STUDY_BLOCK"
+import type { ChatMessage } from "../../types/assistant"
 
-export type ResponseCategory = "MESSAGE" | "CLARIFICATION" | "PROPOSAL" | "UNSUPPORTED" | "ERROR"
-export type ApprovalStatus = "awaiting_approval" | "review_required" | "cancelled" | "demo_acknowledged"
-export type DemoScenario = "task" | "plan" | "view" | "reschedule"
-export type ValidationState = "missing_information" | "valid_demo_draft"
-
-export type ActionProposal = {
-  intent: IntentCandidate
-  title: string
-  details: {
-    label: string
-    value: string
-  }[]
-  caveat: string
-  status: ApprovalStatus
-}
-
-export type ChatMessage = {
-  id: string
-  timestamp: string
-  role: "user" | "assistant"
-  category: ResponseCategory
-  text: string
-  scenario?: DemoScenario
-  intent?: IntentCandidate
-  validation?: ValidationState
-  proposal?: ActionProposal
-  error?: {
-    code: string
-    detail: string
-  }
-}
-
-// This deliberately recognizes only four demo entry points. It is not an NLP or API client.
-export function demoReply(
+// This deliberately recognizes only four entry points. It is not an NLP or API client.
+export function getAssistantReply(
   input: string,
 ): Omit<ChatMessage, "id" | "timestamp"> {
   const value = input.trim().toLocaleLowerCase("vi")
@@ -63,7 +31,7 @@ export function demoReply(
       category: "MESSAGE",
       scenario: "view",
       intent: "GET_STUDY_PLAN",
-      text: "Bạn có thể mở trang Lập kế hoạch để xem lịch minh họa đang có trong ứng dụng. Dữ liệu ở đó là dữ liệu mẫu.",
+      text: "Bạn có thể mở trang Lập kế hoạch để xem lịch của bạn.",
     }
   }
   if (/^(điều chỉnh|đổi lịch|dời lịch)/u.test(value)) {

@@ -4,7 +4,7 @@ Guide for teammates. Read before changing UI code.
 
 ## 1. What this is
 
-A deterministic React prototype of a student study workspace: AI homepage, Dashboard, Planner, Study, Review and Materials. Academic data remains demo data in memory. Conversation history alone is stored in this browser's IndexedDB, as explicitly approved for the history feature. There is no backend, auth, account sync, file parsing, source retrieval or live AI.
+A deterministic React prototype of a student study workspace: AI homepage, Dashboard, Planner and Study. Academic data (tasks, files) lives in memory only and starts empty. Conversation history alone is stored in this browser's IndexedDB, as explicitly approved for the history feature. There is no backend, auth, account sync, file parsing, source retrieval or live AI.
 
 Hard rules:
 - Keep the demo/source disclaimers. Never present illustrative data as verified learning evidence.
@@ -31,13 +31,15 @@ Before opening a PR: `npm run format && npm run build`, and `npx tsc --noEmit`.
 ```text
 index.html          document shell, favicons, noindex meta
 public/brand/       logo + favicons (served at /brand/...)
-src/main.tsx        mounts <App/>, imports index.css
-src/App.tsx         whole prototype: state, data, primitives, pages
-src/Assistant.tsx   multi-conversation assistant and history interface
-src/assistantDemo.ts typed demo response contract
-src/conversationHistory.ts typed conversation records and IndexedDB persistence
-src/brand.css       design tokens (--sf-*)
-src/index.css       Tailwind import, @theme, global + component CSS, responsive rules
+src/main.tsx        mounts <App/>, imports styles/index.css
+src/App.tsx         shell: navigation, shared state, modals
+src/pages/          Dashboard, Planner, Study
+src/components/ui/  Button, Card, Modal
+src/features/assistant/  Assistant UI, assistantService (reply stub), conversationHistory (IndexedDB)
+src/types/          shared types (Task, assistant contract)
+src/utils/          date helpers
+src/styles/brand.css       design tokens (--sf-*)
+src/styles/index.css       Tailwind import, @theme, global + component CSS, responsive rules
 vite.config.ts      react + tailwind plugins only
 ```
 
@@ -46,7 +48,7 @@ Generated: `dist/`, `node_modules/` — never edit or commit.
 ## 4. Architecture
 
 - `App.tsx` owns navigation and non-chat demo state. The Assistant is separate because conversation history and persistence require isolated state.
-- Navigation is **state-based** (`page`: Dashboard · Planner · Study · Review · Materials). No router dependency.
+- Navigation is **state-based** (`page`: Assistant · Dashboard · Planner · Study). No router dependency.
 - Assistant conversations have stable UUIDs, independent composer drafts and clarification drafts. Restored pending proposals require review before demo acknowledgement. Transcript data never authorizes a backend write.
 - IndexedDB uses one record per conversation and a separate active-conversation key. If storage fails, the UI stays usable in memory and announces that reload persistence is unavailable. There is no account synchronization.
 - Reuse the local primitives `Button`, `Card`, `Modal` before writing new wrappers.
@@ -55,7 +57,7 @@ Generated: `dist/`, `node_modules/` — never edit or commit.
 
 ## 5. Styling
 
-- Styles live in `src/index.css`; tokens in `src/brand.css`. Match existing class naming (`.button`, `.primary`, `.secondary`, `.card`, `.tabs`, `.info-banner`, `.warning-banner`).
+- Styles live in `src/styles/index.css`; tokens in `src/styles/brand.css`. Match existing class naming (`.button`, `.primary`, `.secondary`, `.card`, `.tabs`, `.info-banner`, `.warning-banner`).
 - Use `--sf-*` tokens / semantic vars (`--color-primary`, `--color-ink`, `--color-line`…) before adding raw colours.
 - Global element defaults go in `@layer base` so Tailwind utilities can override them. Keep `@import`s at the top.
 - Palette: primary `#2563EB`, navy `#0F172A`, slate `#64748B`, background `#F8FAFC`, border `#E2E8F0`, success `#10B981`, warning `#F59E0B`, danger `#EF4444`, purple `#8B5CF6`.
