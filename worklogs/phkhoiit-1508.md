@@ -59,6 +59,7 @@
 - Khung giờ rảnh/bận trên lịch (lệnh `rảnh`/`bận`, bấm ô trống để điền sẵn lệnh, ngày `dd/mm`), chú thích màu kèm chữ.
 - Bảng công việc bên phải lịch (`features/planner/TaskPanel.tsx`): tìm kiếm, lọc Nháp/Đã xác nhận/Chưa xếp và theo tuần, lệnh `tạo công việc … hạn …`; đóng/mở bằng GSAP.
 - Lệnh `lập kế hoạch` tự xếp việc chưa xếp theo hạn nộp và ưu tiên, báo việc không vừa (`INSUFFICIENT_AVAILABILITY`); huy hiệu "Chờ duyệt" trên menu; cập nhật `DESIGN.md`.
+- Chạy `npm run format` cho `TaskPanel.tsx` và `Planner.tsx`.
 - Thêm skill `ui-ux-pro-max` vào `.claude/skills/` và quy tắc ghi worklog vào `CLAUDE.md`.
 
 **Kết quả:** PR #13 (`feat/pages`). `tsc --noEmit`, `npm run build` và `npm run format` pass; test `plannerAgent`, `proposal` và `conversationHistory` pass. Review PR #11 (docs kiến trúc Supabase + FastAPI) dưới dạng nhận xét.
