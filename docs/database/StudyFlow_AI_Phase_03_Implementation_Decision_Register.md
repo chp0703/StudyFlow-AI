@@ -137,6 +137,8 @@ These amendments address reviewer feedback. The register remains the single sour
 
 `PROPOSED`: use physical names `app_private` for business tables/internal objects and `app_api` for explicitly exposed functions/read endpoints. Schema USAGE, table privileges, function EXECUTE, and RLS are separate controls. `SECURITY INVOKER` is preferred; any `SECURITY DEFINER` exception requires a least-privilege owner, fixed safe search path, schema-qualified references, restricted EXECUTE, explicit owner checks, and documented RLS behavior. Exact grants remain `TBD`.
 
+**Unresolved approval-provenance decision:** Option A direct RPC may record only an explicit authenticated UI decision after target, version, state/context, and server-derived presentation binding checks. Client-provided CHAT source/message fields and LLM booleans are not trusted. CHAT-origin approval remains disabled unless the security and database owners approve a separately authenticated backend-attestation format and verifier that binds verified user, conversation/message, exact target/version, decision, expiry, and anti-replay value. No separate privileged backend role is approved at present.
+
 ### E-10 amendment — consistent proposal input snapshot
 
 `PROPOSED`: a multi-statement `READ COMMITTED` transaction alone is not a consistent SchedulingContext snapshot. Use one read RPC/SQL snapshot, or explicitly use `REPEATABLE READ`. The engine must receive inputs and `schedule_revision` from the same snapshot. The persistence RPC reacquires the owner lock, reloads authoritative conditions, compares the revision, and rejects mismatches for regeneration. The race test is mandatory.

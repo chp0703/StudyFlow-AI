@@ -37,7 +37,7 @@ All logical fields are represented in the physical dictionary. The following phy
 | Candidate promotion | Unique task `candidate_id`; candidate confirmation link matches task | One candidate creates at most one task | `CONFIRMED_FROM_SCHEMA` + physical design `PROPOSED` |
 | Task workload | `estimated_minutes > 0`; `0 <= remaining <= estimated`; status implications | AcademicTask invariants | `CONFIRMED_FROM_SCHEMA` |
 | Deadline precision | DATE requires date; DATETIME retains instant | Date-only semantics preserved | `CONFIRMED_FROM_SCHEMA` |
-| TimeWindow union | NONE/WEEKLY mutually exclusive field checks | Unified TimeWindow | `CONFIRMED_FROM_SCHEMA` |
+| TimeWindow union | NONE/WEEKLY mutually exclusive field checks; WEEKLY `start_time < 24:00:00`, `end_time > start_time`, `end_time <= 24:00:00` | Unified TimeWindow and F1 end-of-day boundary | `CONFIRMED_FROM_SCHEMA`; PostgreSQL representation `PROPOSED` |
 | Plan versions | Unique `(user_id,version)` and `source_proposal_id` | Immutable history | `CONFIRMED_FROM_SCHEMA` |
 | Current plan | Same-owner composite FK; staged circular dependency | One current plan | E-06 `PROPOSED` |
 | Block identity | PK `(plan_id,block_id)`; no global block-ID uniqueness | Logical identity across snapshots | `CONFIRMED_FROM_SCHEMA` |
@@ -82,7 +82,17 @@ Task update/cancel, manual StudyBlock creation, and individual StudyBlock resche
 
 ## 6. Security traceability
 
-The proposed `app_private`/`app_api` split is physical only. Option A from ADR-002 permits authenticated direct calls to explicitly granted mutation RPCs; therefore FastAPI is not the sole security boundary. Every RPC must independently enforce verified identity, owner, target, version, approval evidence, idempotency, and domain invariants. `SECURITY INVOKER` is preferred. Exact grants, RLS policy text, and any SECURITY DEFINER exception remain Stage 03.3 implementation decisions.
+`app_private` is unexposed through PostgREST; `app_api` exposes only allowlisted RPC/read entry points. Exposure, schema `USAGE`, table privileges, function `EXECUTE`, RLS, and `SECURITY INVOKER` execution context are separate controls. Under Option A, FastAPI is the normal gateway but not the exclusive gateway: authenticated users may directly invoke only allowlisted `app_api` RPCs.
+
+| Category | `authenticated` minimum | `anon` | Owner/migration role | RLS/direct API result |
+|---|---|---|---|---|
+| Approved reads | `USAGE app_api`, named read `EXECUTE`, required private-table `SELECT` | No private access | Owns/migrates objects; not a runtime caller | Owner `SELECT` RLS; direct allowlisted RPC permitted. |
+| UI approval and other mutations | `USAGE app_api`, named mutation `EXECUTE`, only required private-table `SELECT`/`INSERT`/`UPDATE` | No mutation `EXECUTE` | Owns/migrates objects; not a runtime caller | Owner RLS for each operation; direct UI RPC permitted. |
+| CHAT-origin approval | No direct user grant that accepts CHAT evidence | Denied | No separate backend role approved | Requires future approved backend attestation; otherwise reject. |
+
+`PUBLIC` receives no broad `EXECUTE`; no separate privileged backend role is approved. `SECURITY INVOKER` is preferred and requires the caller's underlying table privileges while RLS remains effective. A `SECURITY DEFINER` exception remains per-function `PROPOSED` work with a least-privilege owner, safe empty search path, schema-qualified references, restricted EXECUTE, owner checks, and documented RLS implications.
+
+Approval provenance is traceable to the RPC action itself: UI approval is valid only when the authenticated RPC call verifies its exact owner, target, version, state/context, and server-derived presentation binding. Client-provided CHAT source/message identifiers and LLM booleans are untrusted. Required authorization tests cover authorized authenticated RPC, anonymous mutation denial, cross-user references, forged versions/evidence/CHAT provenance, private-schema denial, allowed API RPC success, and RLS behavior within invoker execution.
 
 ## 7. Stage 03.2 checklist
 
@@ -95,10 +105,12 @@ The proposed `app_private`/`app_api` split is physical only. Option A from ADR-0
 - [x] PendingAction partial uniqueness documented.
 - [x] Idempotency uniqueness and replay behavior documented.
 - [x] TimeWindow union checks documented.
+- [x] PostgreSQL-preserved `24:00:00` end-time expansion and DST handling documented.
 - [x] Task, proposal, snapshot, overlap, and deletion rules documented.
 - [x] Index and migration dependency plans documented.
 - [x] RPC signatures and F1 exclusions documented.
 - [x] RLS/grant/schema exposure design documented.
+- [x] SECURITY INVOKER privilege matrix, approval provenance, and required authorization tests documented.
 - [x] Physical-only choices identified and labeled.
 - [ ] Team approval of remaining physical choices.
 - [ ] Stage 03.3 implementation authorization.

@@ -38,7 +38,7 @@ The Scheduling Engine remains a pure Python component. PostgreSQL supplies persi
 - Workload and duration values use `integer` minutes.
 - Status and kind values use `text` with CHECK constraints rather than undeclared enums, allowing contract validation and controlled migration evolution.
 - Nested contract objects use `jsonb`, validated by Pydantic/service schemas and scalar/database checks where safe.
-- `24:00` is not stored in a PostgreSQL `time` value or emitted in a timestamp. It is represented by an application-level end-of-day marker and expanded to the next local midnight before persistence as an instant.
+- PostgreSQL `time without time zone` is used for WEEKLY local times. PostgreSQL supports `24:00:00`; preserve that value in `end_time` as the local end-of-day boundary. `start_time` must be less than `24:00:00`, while `end_time` must be greater than `start_time` and no later than `TIME '24:00:00'`.
 
 ## 4. Complete column dictionary
 
@@ -110,15 +110,29 @@ The Scheduling Engine remains a pure Python component. PostgreSQL supplies persi
 | `start_at` | `start_at` | `timestamptz` | YES | NULL | Required only for NONE | — |
 | `end_at` | `end_at` | `timestamptz` | YES | NULL | Required only for NONE; `end>start` | — |
 | `weekday` | `weekday` | `smallint` | YES | NULL | WEEKLY only; CHECK 1..7 | Monday=1. |
-| `start_time` | `start_time` | `time` | YES | NULL | WEEKLY only | Local time. |
-| `end_time` | `end_time` | `time` | YES | NULL | WEEKLY only | End-day marker handled before persistence. |
+| `start_time` | `start_time` | `time without time zone` | YES | NULL | WEEKLY only; `< TIME '24:00:00'` | Local start time; `24:00:00` is prohibited. |
+| `end_time` | `end_time` | `time without time zone` | YES | NULL | WEEKLY only; `> start_time`; `<= TIME '24:00:00'` | Local end time; stored `24:00:00` is preserved. |
 | `valid_from` | `valid_from` | `date` | YES | NULL | Required for WEEKLY | Inclusive. |
 | `valid_until` | `valid_until` | `date` | YES | NULL | Null or `> valid_from` | Exclusive. |
 | `archived_at` | `archived_at` | `timestamptz` | YES | NULL | — | Archive, not hard delete by default. |
 | `created_at` | `created_at` | `timestamptz` | NO | server time | — | — |
 | `updated_at` | `updated_at` | `timestamptz` | NO | server time | — | — |
 
-NONE rows require absolute start/end and all weekly fields NULL. WEEKLY rows require weekday/start/end/valid_from and absolute fields NULL. Cross-midnight input is split in the application layer. PostgreSQL checks shape/ranges; IANA/DST validity is application validation.
+NONE rows require absolute start/end and all weekly fields NULL. WEEKLY rows require weekday/start/end/valid_from and absolute fields NULL. Cross-midnight input is split in the application layer, except that a same-day interval may end at the stored `24:00:00` boundary. PostgreSQL checks shape/ranges; IANA/DST validity is application validation.
+
+#### WEEKLY end-of-day expansion and validation
+
+For each weekly occurrence, combine its occurrence date and stored local time in the row's IANA `timezone`. For ordinary values, the local end date is the occurrence date. When `end_time = TIME '24:00:00'`, the local end date is the occurrence date plus one calendar day and the local end time is `00:00`. Resolve that local date/time using the stored IANA zone to produce the absolute `timestamptz` interval; API timestamps must never contain `T24:00`. This conversion preserves the original `24:00:00` database value rather than normalizing persistence to `00:00`.
+
+The F1 v1.1 DST rule remains unchanged: if either resolved local occurrence time is nonexistent or ambiguous in the stored IANA zone, reject the request/occurrence as `INVALID_PARAMETER` and ask for an unambiguous time. Do not infer an instant by shifting or selecting an offset. The calendar-day increment for `24:00:00` occurs before timezone resolution, so it remains correct across DST transitions.
+
+| Input | Result |
+|---|---|
+| `08:00`–`12:00` | Valid WEEKLY interval on the occurrence date. |
+| `23:00`–`24:00` | Valid; stores `end_time = 24:00:00`; expands to next local date at `00:00`. |
+| `00:00`–`01:00` | Valid WEEKLY interval on the occurrence date. |
+| `24:00`–`24:00` or any start `24:00` | Invalid: `start_time < TIME '24:00:00'` is required. |
+| Any end `<=` start (for example `08:00`–`08:00`) | Invalid: a WEEKLY interval must have `end_time > start_time`. |
 
 ### 4.5 `app_private.study_plans` — StudyPlan
 
@@ -277,7 +291,7 @@ The first plan uses version 1. Later plans use `previous_plan_id` equal to the c
 
 ## 8. Transaction and RPC design
 
-The approved architecture uses Option A: authenticated users may call specifically authorized RPCs directly. FastAPI remains the normal gateway but is not the only security boundary. Every mutation RPC independently resolves `auth.uid()`, checks ownership, versions, states, approval evidence, idempotency, and business invariants.
+The proposed Option A architecture allows authenticated users to call specifically authorized RPCs directly. FastAPI remains the normal gateway but is not the only security boundary. Every mutation RPC independently resolves `auth.uid()`, checks ownership, versions, states, approval evidence, idempotency, and business invariants.
 
 | RPC | Signature outline | Reads/writes | Lock | Idempotency/revision | Domain errors |
 |---|---|---|---|---|---|
@@ -294,19 +308,43 @@ The approved architecture uses Option A: authenticated users may call specifical
 
 The `engine_result` input is accepted only from the trusted FastAPI service after a consistent read snapshot and pure-engine execution; the RPC validates it before persistence. RPCs are not a substitute for Pydantic/domain validation.
 
+### Approval-evidence trust boundary
+
+An approval RPC records a UI-origin decision only when that RPC invocation is itself the authenticated user's explicit decision action and it verifies the caller-owned target, expected target version, required state/context, and the server-derived presentation/content binding. Arbitrary client values such as `source='CHAT'`, `source_message_id`, or an LLM-generated boolean are never approval evidence.
+
+For F1 Option A, direct authenticated RPC approval is restricted to `UI` origin. CHAT-origin approval is not accepted by a direct user call; it requires a separately authenticated backend-attestation mechanism that binds the verified user, conversation/message, exact target and version, decision, and expiry/non-replay identifier. The backend-attestation credential, format, and verifier are unresolved E-05 work and must be approved before CHAT approval is enabled. Until then, CHAT-origin approval is rejected rather than inferred.
+
 Deferred/unsupported RPCs: task update, task cancellation, manual StudyBlock creation, and individual StudyBlock rescheduling.
 
 ## 9. RLS, grants, and exposure
 
-`app_private` remains unexposed through PostgREST. `app_api` is the only proposed exposed schema. Option A requires authenticated users to receive EXECUTE only on approved functions. Schema USAGE, table privileges, function EXECUTE, and RLS policies are distinct:
+`app_private` is not exposed through PostgREST; `app_api` is the only proposed exposed schema and contains approved RPC/read entry points, not business tables. Exposure, PostgreSQL schema `USAGE`, table privileges, function `EXECUTE`, and RLS policies are independent controls. Exposing `app_api` does not grant `app_private` access, and a function grant does not supply a missing underlying table grant.
 
-- `authenticated` receives `USAGE` on `app_api` and EXECUTE on approved RPCs.
-- Direct table access is not granted through the exposed API schema.
-- SECURITY INVOKER functions require only the underlying `app_private` table privileges needed by their operation, plus RLS policies based on verified `auth.uid()`.
-- Any SECURITY DEFINER exception requires least-privilege ownership, `search_path=''`, schema-qualified objects, restricted EXECUTE, and explicit owner checks.
-- `anon`, PUBLIC, and service-role execution are not granted for user mutations.
+`SECURITY INVOKER` is the default. It runs with the caller's privileges, so each caller needs `USAGE` on `app_api`, `EXECUTE` on the allowlisted function, and only the `app_private` table privileges that function uses; the applicable RLS policy still limits rows to `auth.uid()`. No broad `PUBLIC` EXECUTE grant is allowed. `anon` has no mutation EXECUTE and no private-table privileges. The migration/function-owner role owns and migrates objects but is not a runtime user identity. No separate privileged backend role is approved under Option A.
 
-Exact grants and policies are implementation work for Stage 03.3 and must be tested with direct RPC calls, including malicious payloads and cross-user IDs.
+| RPC category | PostgREST direct invocation | Required schema USAGE | Minimum `app_private` table privileges for `authenticated` SECURITY INVOKER caller | Function EXECUTE | RLS requirement |
+|---|---|---|---|---|---|
+| Approved read (`search_tasks`, `get_study_plan`) | Permitted | `app_api` | `SELECT` on the tables read by that RPC | Allowlisted read RPC only | Owner `SELECT` policy on every read table. |
+| Candidate creation | Permitted | `app_api` | `SELECT` profile/context as validated; `INSERT` candidate and idempotency record | `create_task_candidate` only | Owner `SELECT`/`INSERT` policies; ownership derives from `auth.uid()`. |
+| Confirmation and approval/rejection mutations | Permitted for explicit UI-origin decision only | `app_api` | `SELECT` target/profile/context; `INSERT` task, approval, plan/block or idempotency rows as applicable; `UPDATE` candidate/proposal/profile as applicable | Named allowlisted mutation only | Owner `SELECT`/`INSERT`/`UPDATE` policy for every touched table; cross-user targets fail. |
+| TimeWindow/preferences mutations | Permitted for explicit UI-origin decision only | `app_api` | `SELECT` profile/window; `INSERT` or `UPDATE` window and idempotency; `UPDATE` profile | Named allowlisted mutation only | Owner policies on profile/window/idempotency; version and state checks remain in RPC. |
+| Proposal persistence | Permitted only if separately approved as user-callable; current `engine_result` contract remains trusted-backend input | `app_api` if exposed | `SELECT` scheduling inputs; `INSERT` proposal/idempotency | Only an explicitly approved function grant | Owner `SELECT`/`INSERT` policies and revision check. |
+
+The matrix specifies minimum operation classes, not final SQL grants; each function's exact touched-table set must be recorded before implementation. `DELETE` is granted to `authenticated` only where a future approved RPC actually deletes a row; no F1 RPC presently requires it. Direct table browsing or mutation through PostgREST remains denied because `app_private` is unexposed.
+
+Any `SECURITY DEFINER` exception is per-function and remains `PROPOSED`: a least-privilege function owner, `SET search_path = ''`, fully schema-qualified references, restricted non-PUBLIC EXECUTE, explicit owner checks, and documented RLS/bypass implications are mandatory. Exact SQL grants/policy text and any exception remain E-05 implementation decisions.
+
+### Required authorization tests
+
+1. An authenticated owner successfully invokes an allowlisted, authorized RPC.
+2. An anonymous caller cannot execute any mutation RPC.
+3. Cross-user task, candidate, and proposal references are rejected.
+4. Forged expected target versions are rejected.
+5. Fabricated approval evidence is rejected.
+6. An ordinary authenticated caller cannot fabricate CHAT origin or message evidence.
+7. Direct Data API access to `app_private` is denied.
+8. An allowed `app_api` RPC succeeds through PostgREST.
+9. RLS prevents cross-user row access during `SECURITY INVOKER` execution.
 
 ## 10. Index strategy
 
