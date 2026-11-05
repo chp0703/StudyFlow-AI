@@ -48,3 +48,9 @@ The following are `PROPOSED` evaluation targets, not SLOs: same-region p95 ≤30
 
 HTTP latency and pagination must be measured. Independent API calls cannot be treated as one transaction. RPC contracts, grants, direct-RPC authorization, rejection replay, approval replay, and error mapping require integration tests before implementation approval. See register E-03, E-05, E-10, E-12, E-13, and E-14.
 
+## Stage 03.2 implementation baseline
+
+**IMPLEMENTATION_BASELINE — selected for F1 implementation; not a claim of separate team approval.** The public database boundary is `app_api`, while `app_private` tables and helpers are unexposed. All user mutations use SECURITY INVOKER and derive owner from `auth.uid()`; no RPC accepts client `user_id` as authority. The final inventory is: `create_task_candidate`, `confirm_task`, `search_tasks`, `set_availability`, `set_busy_interval`, `set_scheduling_preferences`, `read_scheduling_context`, `persist_plan_proposal`, `get_study_plan`, `approve_study_plan`, and `reject_study_plan`. `generate_study_plan` is an application operation: read one consistent context, run the pure Python engine, then call revision-checked proposal persistence.
+
+All response envelopes carry `schema_version = "1.1"`; errors use the stable codes documented in the physical design. Helper functions for locks, idempotency, typed target validation, and attestation consumption are private and receive no frontend execute grant. `issue_chat_approval_attestation` is the sole server-only entry point and is executable only by `service_role` from an isolated backend client. Unsupported task update/cancel, manual block creation, individual block rescheduling, and StudySession operations return `UNSUPPORTED_OPERATION` at the application boundary.
+
