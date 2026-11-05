@@ -148,6 +148,63 @@ def _message(tx, owner, conversation, message):
              and record.get('conversation_id') == conversation, 'FORBIDDEN')
 
 
+def _verify_decision(tx, owner, ctx, candidate, candidate_id, expected_version, *, target_type='TASK_CANDIDATE', intent=None):
+    evidence = tx.get_decision(ctx.approval_action_id)
+    _require(isinstance(evidence, dict), 'APPROVAL_REQUIRED')
+    _require(evidence.get('user_id') == owner and evidence.get('conversation_id') == candidate['conversation_id'], 'FORBIDDEN')
+    decision = evidence.get('decision')
+    _require(isinstance(decision, dict)
+             and set(decision) == {'schema_version', 'conversation_id', 'action_reference', 'decision'}
+             and decision.get('schema_version') == '1.1'
+             and decision.get('conversation_id') == candidate['conversation_id']
+             and decision.get('decision') == 'APPROVE', 'APPROVAL_REQUIRED')
+    source = tx.get_decision_source(ctx.approval_action_id)
+    _require(isinstance(source, dict) and source.get('user_id') == owner
+             and source.get('conversation_id') == candidate['conversation_id']
+             and source.get('source') == evidence.get('source')
+             and source.get('source_message_id') == evidence.get('source_message_id')
+             and source.get('source_event_id') == evidence.get('source_event_id')
+             and _same_json(source.get('decision'), decision), 'FORBIDDEN')
+    ref = decision.get('action_reference')
+    _require(isinstance(ref, dict)
+             and set(ref) == {'action_id', 'action_version', 'target_type', 'target_id', 'target_version'}
+             and _uuid(ref.get('action_id')) and type(ref.get('action_version')) is int
+             and ref.get('action_version') >= 1 and ref.get('target_type') == target_type
+             and ref.get('target_id') == candidate_id and type(ref.get('target_version')) is int
+             and ref.get('target_version') == expected_version,
+             'ACTION_REVIEW_REQUIRED')
+    pending = tx.get_pending(ref['action_id'])
+    review = tx.get_review(ref['action_id'], ref['action_version'])
+    _require(isinstance(pending, dict) and isinstance(review, dict), 'ACTION_REVIEW_REQUIRED')
+    _require(pending.get('user_id') == owner and pending.get('conversation_id') == candidate['conversation_id']
+             and review.get('user_id') == owner and review.get('conversation_id') == candidate['conversation_id'], 'FORBIDDEN')
+    _require(pending.get('action_id') == ref['action_id'] and type(pending.get('version')) is int
+             and pending.get('version') == ref['action_version']
+             and (pending.get('candidate_id') == candidate_id if target_type == 'TASK_CANDIDATE' else
+             ref['action_id'] == candidate_id and ref['action_version'] == expected_version
+             and pending.get('intent') == intent and _same_json(pending.get('draft_arguments'), candidate['slots']['arguments']))
+             and pending.get('state') == 'AWAITING_CONFIRMATION'
+             and pending.get('requires_review') is False and review.get('action_id') == ref['action_id']
+             and type(review.get('action_version')) is int and review.get('action_version') == ref['action_version']
+             and review.get('target_id') == candidate_id and type(review.get('target_version')) is int
+             and review.get('target_version') == expected_version
+             and _same_json(review.get('displayed_slots' if target_type == 'TASK_CANDIDATE' else 'displayed_action'), candidate['slots']),
+             'ACTION_REVIEW_REQUIRED')
+    if evidence.get('source') == 'CHAT':
+        _require(evidence.get('source_message_id') == ctx.message_id, 'FORBIDDEN')
+        _message(tx, owner, candidate['conversation_id'], evidence.get('source_message_id'))
+    elif evidence.get('source') == 'UI':
+        _require(_uuid(evidence.get('source_event_id')), 'FORBIDDEN')
+        event = tx.get_ui_event(evidence.get('source_event_id'))
+        _require(isinstance(event, dict) and event.get('user_id') == owner
+                 and event.get('conversation_id') == candidate['conversation_id']
+                 and event.get('event_id') == evidence.get('source_event_id')
+                 and _same_json(event.get('decision'), decision), 'FORBIDDEN')
+    else:
+        raise TaskError('APPROVAL_REQUIRED')
+    return evidence, ref
+
+
 class TaskService:
     def __init__(self, store, *, clock=lambda: datetime.now(timezone.utc), id_factory=uuid4):
         self.store, self.clock, self.id_factory = store, clock, id_factory
@@ -227,56 +284,7 @@ class TaskService:
             _require(tx.find_task_by_candidate(candidate_id) is None, 'STALE_ENTITY_VERSION')
             _require(_SLOT_VALIDATOR.is_valid(candidate['slots']), 'INVALID_PARAMETER')
             _message(tx, owner, candidate['conversation_id'], candidate['source_message_id'])
-            evidence = tx.get_decision(ctx.approval_action_id)
-            _require(isinstance(evidence, dict), 'APPROVAL_REQUIRED')
-            _require(evidence.get('user_id') == owner and evidence.get('conversation_id') == candidate['conversation_id'], 'FORBIDDEN')
-            decision = evidence.get('decision')
-            _require(isinstance(decision, dict)
-                     and set(decision) == {'schema_version', 'conversation_id', 'action_reference', 'decision'}
-                     and decision.get('schema_version') == '1.1'
-                     and decision.get('conversation_id') == candidate['conversation_id']
-                     and decision.get('decision') == 'APPROVE', 'APPROVAL_REQUIRED')
-            source = tx.get_decision_source(ctx.approval_action_id)
-            _require(isinstance(source, dict) and source.get('user_id') == owner
-                     and source.get('conversation_id') == candidate['conversation_id']
-                     and source.get('source') == evidence.get('source')
-                     and source.get('source_message_id') == evidence.get('source_message_id')
-                     and source.get('source_event_id') == evidence.get('source_event_id')
-                     and _same_json(source.get('decision'), decision), 'FORBIDDEN')
-            ref = decision.get('action_reference')
-            _require(isinstance(ref, dict)
-                     and set(ref) == {'action_id', 'action_version', 'target_type', 'target_id', 'target_version'}
-                     and _uuid(ref.get('action_id')) and type(ref.get('action_version')) is int
-                     and ref.get('action_version') >= 1 and ref.get('target_type') == 'TASK_CANDIDATE'
-                     and ref.get('target_id') == candidate_id and type(ref.get('target_version')) is int
-                     and ref.get('target_version') == expected_version,
-                     'ACTION_REVIEW_REQUIRED')
-            pending = tx.get_pending(ref['action_id'])
-            review = tx.get_review(ref['action_id'], ref['action_version'])
-            _require(isinstance(pending, dict) and isinstance(review, dict), 'ACTION_REVIEW_REQUIRED')
-            _require(pending.get('user_id') == owner and pending.get('conversation_id') == candidate['conversation_id']
-                     and review.get('user_id') == owner and review.get('conversation_id') == candidate['conversation_id'], 'FORBIDDEN')
-            _require(pending.get('action_id') == ref['action_id'] and type(pending.get('version')) is int
-                     and pending.get('version') == ref['action_version']
-                     and pending.get('candidate_id') == candidate_id and pending.get('state') == 'AWAITING_CONFIRMATION'
-                     and pending.get('requires_review') is False and review.get('action_id') == ref['action_id']
-                     and type(review.get('action_version')) is int and review.get('action_version') == ref['action_version']
-                     and review.get('target_id') == candidate_id and type(review.get('target_version')) is int
-                     and review.get('target_version') == expected_version
-                     and _same_json(review.get('displayed_slots'), candidate['slots']),
-                     'ACTION_REVIEW_REQUIRED')
-            if evidence.get('source') == 'CHAT':
-                _require(evidence.get('source_message_id') == ctx.message_id, 'FORBIDDEN')
-                _message(tx, owner, candidate['conversation_id'], evidence.get('source_message_id'))
-            elif evidence.get('source') == 'UI':
-                _require(_uuid(evidence.get('source_event_id')), 'FORBIDDEN')
-                event = tx.get_ui_event(evidence.get('source_event_id'))
-                _require(isinstance(event, dict) and event.get('user_id') == owner
-                         and event.get('conversation_id') == candidate['conversation_id']
-                         and event.get('event_id') == evidence.get('source_event_id')
-                         and _same_json(event.get('decision'), decision), 'FORBIDDEN')
-            else:
-                raise TaskError('APPROVAL_REQUIRED')
+            evidence, ref = _verify_decision(tx, owner, ctx, candidate, candidate_id, expected_version)
             fields = _confirmed_fields(candidate['slots'])
             now = _timestamp(self.clock)
             task = {'task_id': str(self.id_factory()), 'user_id': owner, 'candidate_id': candidate_id,
