@@ -1,0 +1,10 @@
+/* Modal and toast. */
+.modal-frame { padding: 0; border: 0; background: transparent; color: var(--color-ink); width: min(600px,calc(100vw - 32px)); max-height: calc(100dvh - 40px); margin: auto; overflow: visible; }
+.modal-frame::backdrop { background: #0f172a80; }
+.modal { background: white; border: 1px solid var(--color-line); border-radius: 14px; padding: 28px; max-height: calc(100dvh - 40px); overflow-y: auto; box-shadow: 0 20px 60px #0f172a24; }
+.modal-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.modal-heading h2 { font-size: 21px; }
+.modal>p,.modal>form>p { color: var(--color-muted); margin-bottom: 24px; }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); max-width: calc(100vw - 32px); z-index: 80; display: flex; align-items: center; gap: 12px; background: var(--bg-card); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--color-line); box-shadow: 0 8px 24px -4px rgba(23, 32, 59, 0.18); color: var(--color-ink); padding: 10px 16px; border-radius: 12px; font-size: 13.5px; }
+.toast .icon-button { width: 28px; height: 28px; border-radius: 8px; color: var(--color-muted); padding: 0; display: grid; place-items: center; }
+.toast .icon-button:hover { background: var(--border); color: var(--color-ink); }

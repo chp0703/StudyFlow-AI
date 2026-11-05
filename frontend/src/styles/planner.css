@@ -1,0 +1,715 @@
+/* Week calendar. */
+.dashboard-calendar-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.dashboard-calendar-controls>span { font-size: 14px; color: var(--color-muted); margin-right: 12px; }
+.dashboard-calendar-controls select { width: auto; min-width: 90px; }
+.dashboard-calendar-scroll { overflow-x: auto; border-radius: 0 0 12px 12px; }
+.dashboard-schedule { min-width: 1050px; padding: 0 20px; }
+.schedule-header,.schedule-row { display: grid; grid-template-columns: 62px repeat(7,minmax(0,1fr)); }
+.schedule-header { align-items: center; padding: 16px 0; }
+.schedule-day { flex-direction: column; gap: 3px; padding: 6px; font-size: 13px; }
+.schedule-day>span { font-size: 12px; color: var(--color-muted); }
+.schedule-day>strong { font-size: 17px; min-height: 32px; min-width: 32px; display: grid; place-items: center; }
+.schedule-day.is-today>strong { border-radius: 50%; background: var(--color-primary); color: white; }
+.schedule-row { min-height: 96px; }
+.schedule-cell { min-height: 96px; padding: 4px; border-top: 1px solid var(--color-line); border-left: 1px solid var(--color-line); }
+.schedule-cell:last-child { border-right: 1px solid var(--color-line); }
+.today-column { background: #fbfcff; }
+.schedule-event { min-height: 86px; width: 100%; padding: 8px; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; text-align: left; gap: 4px; border-left: 3px solid #1d4ed8; border-radius: 5px; background: #eff6ff; color: #1e40af; }
+.schedule-event strong { font-size: 13px; font-weight: 600; line-height: 1.4; }
+.schedule-event span,.schedule-event small { font-size: 12px; line-height: 1.4; color: inherit; }
+.schedule-event.deadline { background: #fff1f2; border-color: #be123c; color: #9f1239; }
+.schedule-event:hover:not(:disabled) { background: #e0eaff; }
+.schedule-event.deadline:hover:not(:disabled) { background: #ffe4e6; }
+
+/* Planner fits the viewport: chat on top, calendar fills the rest and its hour rows shrink, so the page never scrolls. */
+.main-content:has(.planner-page) {
+  height: calc(100dvh - 58px);
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0 16px;
+  box-sizing: border-box;
+}
+.main-content:has(.planner-page) .page-heading {
+  margin-top: 2px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+.planner-page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: gap 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+.task-panel-wrap {
+  width: 300px;
+  flex-shrink: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1),
+              opacity 0.22s ease,
+              transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+  transform-origin: right center;
+  overflow: hidden;
+}
+.task-panel-wrap .task-panel {
+  width: 300px;
+  height: 100%;
+  flex: 1;
+}
+.planner-page.is-tasks-closed {
+  gap: 0;
+}
+.planner-page.is-tasks-closed .task-panel-wrap {
+  width: 0;
+  opacity: 0;
+  transform: translateX(16px);
+  pointer-events: none;
+}
+
+/* Request box sits on the calendar heading row, between the title and the week controls */
+.planner-heading-action {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: 24px;
+}
+.planner-chat-form {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+  min-width: 0;
+}
+.planner-chat-form input {
+  width: 100%;
+  min-height: 36px;
+  height: 36px;
+  padding: 0 44px 0 14px;
+  border: 1px solid var(--color-line);
+  border-radius: 100px;
+  background: var(--bg-card);
+  font-size: 13px;
+  color: var(--color-ink);
+  box-shadow: 0 1px 3px rgba(23, 32, 59, 0.03);
+}
+.planner-chat-form .button.primary {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.planner-chat-form .button.primary:disabled {
+  background: var(--border);
+  color: var(--color-muted);
+}
+.planner-heading-action .dashboard-calendar-controls {
+  margin-left: auto;
+}
+.planner-chat-form input:focus {
+  outline: 3px solid #dcdffb;
+  border-color: var(--color-primary);
+}
+/* Calendar Card styled with glassmorphism matching Assistant chat */
+.planner-calendar {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-line);
+  box-shadow: 0 4px 20px -2px rgba(23, 32, 59, 0.05);
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  overflow: hidden;
+}
+.planner-calendar .card-heading {
+  padding: 12px 20px;
+  border-bottom: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.planner-calendar .card-heading h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.planner-calendar .dashboard-calendar-scroll {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.planner-calendar .dashboard-schedule {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px 12px;
+}
+
+.planner-calendar .schedule-header,
+.planner-calendar .schedule-row {
+  display: grid;
+  grid-template-columns: 56px repeat(7, minmax(0, 1fr));
+}
+.planner-calendar .schedule-header-time {
+  width: 56px;
+  display: block;
+}
+.planner-calendar .schedule-hour {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 12px;
+  user-select: none;
+}
+.planner-calendar .schedule-header {
+  flex: none;
+  padding: 2px 0 4px;
+  border-bottom: 1px solid var(--color-line);
+}
+.planner-calendar .schedule-day {
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.planner-calendar .schedule-day > strong {
+  min-height: 24px;
+  min-width: 24px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-muted);
+  letter-spacing: 0.3px;
+  display: grid;
+  place-items: center;
+}
+.planner-calendar .schedule-day.is-today > strong {
+  color: white;
+  background: var(--gradient-brand);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(89, 108, 240, 0.35);
+}
+
+.planner-calendar .schedule-row {
+  flex: 1;
+  min-height: 46px;
+}
+.planner-calendar .schedule-cell {
+  position: relative;
+  min-height: 0;
+  padding: 3px 6px;
+  border-top: 0;
+  border-bottom: 0;
+  border-left: 0;
+  border-right: 1px solid rgba(229, 232, 244, 0.55);
+}
+.planner-calendar .schedule-cell:last-child {
+  border-right: 0;
+}
+.planner-calendar .today-column {
+  background: rgba(89, 108, 240, 0.04);
+}
+
+/* Event badges styled as sleek rounded chat-like cards */
+.planner-calendar .schedule-event {
+  position: relative;
+  min-height: 38px;
+  height: 100%;
+  padding: 6px 10px 6px 12px;
+  gap: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: hidden;
+  border: 0;
+  border-radius: 8px;
+  background: var(--evt-bg, #eef1fe);
+  color: var(--evt-ink, var(--indigo));
+  box-shadow: 0 1px 4px rgba(23, 32, 59, 0.05);
+  box-sizing: border-box;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.planner-calendar .schedule-event::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3.5px;
+  background: var(--evt, var(--primary));
+  border-radius: 8px 0 0 8px;
+}
+.planner-calendar .schedule-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(23, 32, 59, 0.08);
+}
+.planner-calendar .schedule-event strong {
+  max-width: 100%;
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--evt-ink, var(--indigo));
+}
+.planner-calendar .schedule-event small {
+  max-width: 100%;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+  color: var(--evt-ink, var(--indigo));
+}
+.planner-calendar .priority-high {
+  --evt: var(--pink);
+  --evt-bg: #fff0f3;
+  --evt-ink: #b81d36;
+}
+.planner-calendar .priority-mid {
+  --evt: var(--purple);
+  --evt-bg: #f5f0fe;
+  --evt-ink: #5b21b6;
+}
+.planner-calendar .priority-low {
+  --evt: var(--teal);
+  --evt-bg: #e8f8f6;
+  --evt-ink: #0f766e;
+}
+.planner-calendar .schedule-event.is-done {
+  --evt: #94a3b8;
+  --evt-bg: #f0f2fc;
+  --evt-ink: var(--text-secondary);
+}
+.planner-calendar .schedule-event.is-done strong {
+  text-decoration: line-through;
+}
+.now-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--pink);
+  pointer-events: none;
+  z-index: 1;
+}
+.now-line::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pink);
+}
+
+/* Calendar controls styled like chat buttons */
+.planner-calendar .dashboard-calendar-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.planner-calendar .calendar-week-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-muted);
+  margin-right: 4px;
+}
+.planner-calendar .dashboard-calendar-controls .button {
+  min-height: 32px;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid var(--color-line);
+  background: var(--bg-card);
+  color: var(--color-ink);
+}
+.planner-calendar .dashboard-calendar-controls .button:hover {
+  background: var(--color-info-bg);
+}
+.planner-calendar .dashboard-calendar-controls .icon-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+.planner-calendar .calendar-today-btn {
+  padding: 0 10px;
+}
+.planner-calendar .planner-task-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-left: 4px;
+}
+.planner-calendar .planner-task-toggle:hover {
+  background: rgba(89, 108, 240, 0.08);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.planner-calendar .planner-task-toggle.is-active {
+  background: rgba(89, 108, 240, 0.12);
+  border-color: rgba(89, 108, 240, 0.4);
+  color: var(--color-primary);
+}
+.planner-task-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: rgba(89, 108, 240, 0.15);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+.planner-calendar .planner-task-toggle.is-active .planner-task-count {
+  background: var(--color-primary);
+  color: white;
+}
+.task-panel-close {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+.task-panel-close:hover {
+  background: rgba(89, 108, 240, 0.1);
+  color: var(--color-primary);
+}
+
+/* Pending proposal: preview blocks, status line and approve/reject bar */
+.planner-status:empty {
+  display: none;
+}
+.planner-reply {
+  margin: 0;
+  padding: 6px 20px;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+.proposal-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px;
+  background: var(--color-info-bg);
+  border-block: 1px solid var(--color-line);
+  color: var(--color-info-text);
+}
+.proposal-bar.is-stale {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+.proposal-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 12.5px;
+}
+.proposal-text strong {
+  font-size: 13px;
+}
+.proposal-text span {
+  color: var(--color-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.proposal-bar .button {
+  min-height: 32px;
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.planner-calendar .schedule-event.is-proposed {
+  outline: 2px dashed var(--primary);
+  outline-offset: -2px;
+}
+.planner-calendar .schedule-event.is-removed {
+  opacity: 0.6;
+  outline: 2px dashed var(--pink);
+  outline-offset: -2px;
+}
+.planner-calendar .schedule-event.is-removed strong {
+  text-decoration: line-through;
+}
+
+/* Floating notice after approving schedule changes */
+.planner-notice-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.planner-notice {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px -4px rgba(23, 32, 59, 0.18);
+  font-size: 13.5px;
+  color: var(--color-ink);
+  max-width: calc(100% - 32px);
+}
+.planner-notice > span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.planner-notice-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.planner-notice-close:hover {
+  background: var(--border);
+  color: var(--color-ink);
+}
+
+/* Availability windows on the calendar: label + pattern, never colour alone. */
+.schedule-cell.is-free { background: rgba(34, 160, 107, 0.1); }
+.schedule-cell.is-busy {
+  background: repeating-linear-gradient(135deg, rgba(120, 130, 160, 0.16) 0 6px, transparent 6px 12px);
+}
+.schedule-cell.is-proposed { outline: 2px dashed var(--color-primary, #596cf0); outline-offset: -2px; }
+.window-tag {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-muted, #6b7390);
+  pointer-events: none;
+}
+.planner-calendar .schedule-cell:not(:has(.schedule-event)):hover { background-color: rgba(89, 108, 240, 0.07); cursor: cell; }
+
+.planner-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 0 20px;
+  margin: 2px 0 8px;
+  font-size: 12px;
+  color: var(--color-muted, #6b7390);
+}
+.planner-legend span:not(:last-child)::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 5px;
+  vertical-align: -2px;
+  border-radius: 3px;
+}
+.legend-free::before { background: rgba(34, 160, 107, 0.25); }
+.legend-busy::before { background: repeating-linear-gradient(135deg, rgba(120, 130, 160, 0.4) 0 3px, transparent 3px 6px); }
+.legend-proposed::before { border: 2px dashed var(--color-primary, #596cf0); box-sizing: border-box; }
+
+/* Task list panel, right of the calendar */
+.task-panel {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-line);
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px -2px rgba(23, 32, 59, 0.05);
+  overflow: hidden;
+  position: relative;
+}
+.task-panel .card-heading {
+  padding: 12px 18px;
+  min-height: 52px;
+  height: 52px;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--color-line);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.task-panel .card-heading h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-ink);
+  line-height: normal;
+  margin: 0;
+}
+.task-panel-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px 14px;
+}
+.task-panel-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.task-panel-search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--color-muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+.task-panel-search {
+  width: 100% !important;
+  min-height: 34px !important;
+  height: 34px !important;
+  padding: 0 10px 0 32px !important;
+  font-size: 13px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--color-line) !important;
+  background: white !important;
+  color: var(--color-ink) !important;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+.task-panel-search:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(89, 108, 240, 0.15);
+}
+.task-panel-filters { display: flex; flex-wrap: wrap; gap: 4px; }
+.task-panel-filters button {
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--color-line);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.task-panel-filters button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-ink);
+}
+.task-panel-filters button.is-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+.task-panel-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+.task-panel-list li {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  transition: background 0.15s, border-color 0.15s;
+}
+.task-panel-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; font-size: 12px; color: var(--color-muted); }
+.task-panel-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.status-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 100px; font-size: 11.5px; font-weight: 600; }
+.status-chip.is-draft { border: 1px dashed var(--color-primary); color: var(--color-primary); }
+.status-chip.is-confirmed { background: rgba(34, 160, 107, 0.12); }
+.status-chip.is-unscheduled { background: #f0f2fc; }
+.task-panel-empty { margin: 8px 0 0; font-size: 12.5px; color: var(--color-muted); line-height: 1.5; }
+
+.proposal-issues { font-size: 12px; margin-top: 2px; }
+.proposal-issues summary { cursor: pointer; font-weight: 600; }
+.proposal-issues ul { margin: 4px 0 0; padding-left: 18px; }
+
+.legend-confirmed::before { background: #8b5cf6; }
+.nav-badge {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: var(--color-primary);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+}
