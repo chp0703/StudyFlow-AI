@@ -1,0 +1,61 @@
+name: F1 database verification
+
+on:
+  push:
+    branches:
+      - feat/supabase-database-foundation
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  database-migrations-and-tests:
+    name: Local Supabase migrations and pgTAP
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pinned Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 3.0.0
+
+      - name: Show CLI version
+        run: supabase --version
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Show local service status
+        run: supabase status
+
+      - name: Replay migrations and seed locally
+        run: supabase db reset --yes
+
+      - name: Run pgTAP database tests
+        run: supabase test db
+
+  backend-contract-validation:
+    name: Backend contract checker
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install checker dependencies
+        run: python -m pip install --disable-pip-version-check -r contracts/requirements-check.txt
+
+      - name: Run Backend Contract checker
+        run: python contracts/check_contract.py
