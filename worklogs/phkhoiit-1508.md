@@ -323,3 +323,19 @@
 **Ghi chú**
 
 - Chưa xử lý các chỗ còn lệch v1.1: thẻ xác nhận công việc, nối chat với công việc, chia khối theo thời lượng, cấu hình lập lịch, lịch hiện hành/lịch sử.
+
+## 2026-11-06 — Frontend F1: lớp API (nhánh feat/f1-frontend-integration)
+
+**Mục tiêu:** bước 1 nối FE với BE: lớp gọi API có kiểu, tách khỏi giao diện.
+
+**Đã làm**
+
+- `frontend/src/api/`: `client.ts` (bearer token, `Idempotency-Key` cố định trước lần gửi đầu và giữ nguyên khi thử lại, lỗi theo catalog, thử lại một lần với lỗi tạm thời, bảng thông báo tiếng Việt), `endpoints.ts` (8 endpoint, tự lật trang), `types.ts` (kiểu DTO hợp đồng), `mappers.ts` (task → UI, khối học → sự kiện lịch, khung giờ lặp/một lần → ô rảnh/bận, đề xuất → bản xem trước lịch, presentation → tiêu đề và dòng chi tiết).
+- `Task.id` đổi thành `string` (UUID từ server); cập nhật `plannerAgent`, `TaskPanel` và các test.
+- Thêm `@supabase/supabase-js`; 15 test mới (client, mappers có dùng ví dụ hợp đồng).
+
+**Kết quả:** `tsc` sạch; 30 test `node --test` pass (api + planner + assistant). Chưa đổi giao diện nào.
+
+**Ghi chú**
+
+- Giờ hiển thị theo múi giờ trình duyệt (mặc định backend là Asia/Ho_Chi_Minh).

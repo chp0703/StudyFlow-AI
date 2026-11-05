@@ -172,7 +172,7 @@ export function runPlannerCommand(
   const isBusy = (date: string, hour: number) =>
     availability.some((w) => w.id === windowId(date, hour) && w.kind === "busy")
 
-  const freeHour = (date: string, from: number, ignoreId?: number) => {
+  const freeHour = (date: string, from: number, ignoreId?: string) => {
     for (let h = from; h <= LAST_HOUR; h++)
       if (
         !isBusy(date, h) &&
@@ -275,13 +275,13 @@ export function runPlannerCommand(
         (a, b) =>
           a.deadline.localeCompare(b.deadline) ||
           rank(a.priority) - rank(b.priority) ||
-          a.id - b.id,
+          Number(a.id) - Number(b.id),
       )
 
     if (!todo.length)
       return unchanged("Không có công việc chưa xếp. Hãy tạo công việc trước.")
 
-    const placed = new Map<number, Task>()
+    const placed = new Map<string, Task>()
 
     const issues: PlannerIssue[] = []
 
@@ -364,7 +364,7 @@ export function runPlannerCommand(
     const dup = tasks.some((t) => t.title.toLocaleLowerCase("vi") === m![1])
 
     const task: Task = {
-      id: Math.max(0, ...tasks.map((t) => t.id)) + 1,
+      id: String(Math.max(0, ...tasks.map((t) => Number(t.id))) + 1),
 
       title,
 
@@ -414,7 +414,7 @@ export function runPlannerCommand(
     const title = rest.charAt(0).toLocaleUpperCase("vi") + rest.slice(1)
 
     const task: Task = {
-      id: Math.max(0, ...tasks.map((t) => t.id)) + 1,
+      id: String(Math.max(0, ...tasks.map((t) => Number(t.id))) + 1),
 
       title,
 
