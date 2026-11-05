@@ -100,3 +100,18 @@
 - Hành động thứ hai trong cùng hội thoại trả `ACTION_REVIEW_REQUIRED` (hợp đồng chưa có mã riêng); cần nhóm xác nhận.
 - Cursor dùng khóa dẫn xuất từ khóa attestation đang hoạt động nên đổi khóa sẽ làm cursor đang mở mất hiệu lực.
 
+## 2026-11-05 — Backend F1: WP2b-4 (giờ rảnh/bận, preferences, danh sách khung giờ)
+
+**Mục tiêu:** giai đoạn 2b-4: ghi giờ rảnh/bận và policy qua phê duyệt gắn với PendingAction.
+
+**Đã làm**
+
+- Migration 016: `set_availability`, `set_busy_interval` (ADD/UPDATE/ARCHIVE, kiểm tra múi giờ, phút nguyên, một ngày địa phương, 24:00), `set_scheduling_preferences` (gộp patch vào policy đầy đủ, kiểm tra revision), `list_time_windows` (keyset, cursor ký); phê duyệt chỉ hợp lệ khi lệnh khớp đúng `normalized_command` đã trình bày.
+- Thêm `supabase/tests/12_wp2b4_windows_preferences.sql` (33 kiểm tra) và cập nhật `docs/implementation/WP2B_NOTES.md`.
+
+**Kết quả:** nhánh `feat/f1-mvp-intergration`. pgTAP local: 03, 04, 05, 06, 08, 09, 10, 11, 12 pass; 07 còn 22/58 lỗi (workflow, thuộc 2b-5).
+
+**Ghi chú**
+
+- Chưa có cảnh báo "lịch đã duyệt bị ảnh hưởng" khi đổi khung giờ; làm ở WP2c khi đã có plan/block trong snapshot.
+

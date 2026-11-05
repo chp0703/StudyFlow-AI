@@ -7,7 +7,7 @@ Split into reviewable stages; each stage ends with local pgTAP evidence and a pu
 | 2b-1 | Wrapper helpers, `ensure_user_context`, `record_source_message`, `claim/renew/release/complete_api_receipt` | done (migration 013, test 09) |
 | 2b-2 | `create_task_candidate`, domain idempotency + `lookup_operation_result`, `update_candidate_draft` | done (migration 014, test 10) |
 | 2b-3 | `prepare/review/cancel_pending_action`, `confirm_task`, `search_tasks` | done (migration 015, test 11) |
-| 2b-4 | `set_availability`, `set_busy_interval`, `set_scheduling_preferences`, `list_time_windows` | planned |
+| 2b-4 | `set_availability`, `set_busy_interval`, `set_scheduling_preferences`, `list_time_windows` | done (migration 016, test 12) |
 | 2b-5 | `get_workflow_context`, `get_workflow_continuation`, `initialize/checkpoint_workflow_continuation` | planned |
 
 ## 2b-1 decisions
@@ -73,3 +73,24 @@ Not run: slow wall-clock 120 s expiry, concurrency harness.
 ## Evidence (local pgTAP, 2b-3)
 
 03, 04, 05, 06, 08, 09, 10, 11 pass. 07: 24/58 fail (windows 2b-4, workflow 2b-5).
+
+## 2b-4 decisions
+
+- The three writers share `consume_pending_approval`: the approval must name a PENDING_ACTION and match the
+  action reference; the action must be un-reviewed and awaiting; its stored presentation must carry a
+  `normalized_command` equal to the command being executed. Only then is the ApprovalAction written and the
+  action completed, in the same subtransaction as the data write, `schedule_revision + 1` and the idempotency record.
+- Business validation (real time zone, whole minutes, one local day for one-off windows, `end > start`,
+  `valid_until > valid_from`, 24:00 ends) and version checks run before the approval is consumed, so a rejected
+  command leaves the action awaiting.
+- `set_availability` and `set_busy_interval` share one body keyed on kind; a window can only be edited or archived
+  through the routine of its own kind. ARCHIVE sets `archived_at` and bumps the version; nothing is deleted.
+- `set_scheduling_preferences` merges the patch into default policy plus stored policy, checks min/max/daily/break
+  and guards on `expected_schedule_revision`. Defaults are not hard caps (120-150 min, 600 min/day, no break is valid).
+- `list_time_windows` is keyset on `(created_at, window_id)` with the same signed, owner/filter-bound cursor as search.
+- **Not yet done (WP2c):** the contract says a window change must warn about affected approved blocks. The routines
+  return no warnings until plans and blocks exist in the snapshot reads.
+
+## Evidence (local pgTAP, 2b-4)
+
+03, 04, 05, 06, 08, 09, 10, 11, 12 pass. 07: 22/58 fail, all in workflow reads and continuations (2b-5).
