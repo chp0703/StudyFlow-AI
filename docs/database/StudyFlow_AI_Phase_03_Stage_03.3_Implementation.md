@@ -26,6 +26,7 @@ The exact contract source is `origin/feat/BE_contract_schema` at `b629a5e251be59
 - `READ COMMITTED` is the intended protocol isolation; callers must reload inputs after lock acquisition.
 - `app_private` is not in the exposed Supabase schema list. Public API access is through allow-listed `app_api` functions.
 - CHAT approval issuance is restricted to `service_role`; attestation data is one-time and short-lived. It is not a product TTL.
+- Issuance now validates the owner/conversation/action/version and exact target/version/state before creating the attestation; consumption repeats these checks under the owner lock.
 - Candidate confirmation and proposal approve/reject now consume CHAT attestations atomically through the private, narrowly scoped helper migration. TimeWindow/preferences CHAT approval remains gated until its PendingAction binding is supplied by the backend contract; those RPCs reject an attestation rather than treating an unbound value as proof.
 
 ## Idempotency coverage
