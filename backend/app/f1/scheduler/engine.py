@@ -1,17 +1,22 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import timedelta
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from .constraints import validate_context, validate_generated_result
 from .intervals import (
+    add_minutes,
+    ceil_to_minute,
     clip,
     duration_minutes,
+    max_instant,
     merge_intervals,
+    min_instant,
     pad,
     split_by_local_day,
     subtract_intervals,
+    to_utc,
 )
 from .models import (
     AcademicTask,
@@ -36,8 +41,24 @@ _PRIORITY_ORDER = {
 }
 
 
+def _aware(value: object) -> bool:
+    return (
+        isinstance(value, datetime)
+        and value.tzinfo is not None
+        and value.utcoffset() is not None
+    )
+
+
+def _ceil_to_minute(value: datetime) -> datetime:
+    return ceil_to_minute(value)
+
+
+def _effective_now(context: SchedulingContext) -> datetime:
+    return _ceil_to_minute(context.now)
+
+
 def _minutes(start, end) -> int:
-    return int((end - start).total_seconds() // 60)
+    return int((to_utc(end) - to_utc(start)).total_seconds() // 60)
 
 
 def _task_map(context: SchedulingContext) -> dict[object, AcademicTask]:
@@ -46,8 +67,15 @@ def _task_map(context: SchedulingContext) -> dict[object, AcademicTask]:
 
 def _retained_future_minutes(context: SchedulingContext) -> dict[object, int]:
     result: dict[object, int] = defaultdict(int)
+    if not _aware(context.now):
+        return result
     for block in context.retained_blocks:
-        if block.start_at >= context.now:
+        if (
+            _aware(block.start_at)
+            and _aware(block.end_at)
+            and to_utc(block.end_at) > to_utc(block.start_at)
+            and to_utc(block.start_at) >= to_utc(context.now)
+        ):
             result[block.task_id] += _minutes(block.start_at, block.end_at)
     return result
 
@@ -56,24 +84,29 @@ def _daily_usage(context: SchedulingContext, generated: list[EngineBlock]) -> di
     tz = ZoneInfo(context.timezone)
     usage: dict[object, int] = defaultdict(int)
     for block in context.retained_blocks:
-        usage[block.start_at.astimezone(tz).date()] += _minutes(block.start_at, block.end_at)
+        if to_utc(block.end_at) > to_utc(context.now):
+            usage[to_utc(block.start_at).astimezone(tz).date()] += _minutes(block.start_at, block.end_at)
     for block in generated:
-        usage[block.start_at.astimezone(tz).date()] += _minutes(block.start_at, block.end_at)
+        usage[to_utc(block.start_at).astimezone(tz).date()] += _minutes(block.start_at, block.end_at)
     return usage
 
 
 def _free_intervals(context: SchedulingContext, generated: list[EngineBlock]) -> list[Interval]:
-    scope = Interval(
-        max(context.generation_scope.start_at, context.now),
-        context.generation_scope.end_at,
-    )
+    scope_start = max_instant(context.generation_scope.start_at, _effective_now(context))
+    if to_utc(scope_start) >= to_utc(context.generation_scope.end_at):
+        return []
+    scope = Interval(scope_start, context.generation_scope.end_at)
     available: list[Interval] = []
     for value in context.available_intervals:
         clipped = clip(value, scope)
         if clipped is not None:
             available.append(clipped)
     busy = list(context.busy_intervals)
-    occupied = [Interval(block.start_at, block.end_at) for block in context.retained_blocks]
+    occupied = [
+        Interval(block.start_at, block.end_at)
+        for block in context.retained_blocks
+        if to_utc(block.end_at) > to_utc(context.now)
+    ]
     occupied.extend(Interval(block.start_at, block.end_at) for block in generated)
     protected = [pad(value, context.policy.break_minutes) for value in occupied]
     return subtract_intervals(merge_intervals(available), [*busy, *protected])
@@ -84,11 +117,11 @@ def _task_windows(
     task: AcademicTask,
     generated: list[EngineBlock],
 ) -> list[Interval]:
-    lower = max(context.now, context.generation_scope.start_at)
+    lower = max_instant(_effective_now(context), context.generation_scope.start_at)
     if task.available_from_at is not None:
-        lower = max(lower, task.available_from_at)
-    upper = min(context.generation_scope.end_at, task.deadline_at)
-    if lower >= upper:
+        lower = max_instant(lower, task.available_from_at)
+    upper = min_instant(context.generation_scope.end_at, task.deadline_at)
+    if to_utc(lower) >= to_utc(upper):
         return []
     boundary = Interval(lower, upper)
     windows: list[Interval] = []
@@ -96,7 +129,7 @@ def _task_windows(
         clipped = clip(value, boundary)
         if clipped is not None:
             windows.extend(split_by_local_day(clipped, context.timezone))
-    return sorted(windows, key=lambda value: (value.start_at, value.end_at))
+    return sorted(windows, key=lambda value: (to_utc(value.start_at), to_utc(value.end_at)))
 
 
 def _next_block(
@@ -109,8 +142,12 @@ def _next_block(
     tz = ZoneInfo(context.timezone)
     usage = _daily_usage(context, generated)
     for window in _task_windows(context, task, generated):
-        slot_minutes = duration_minutes(window)
-        local_day = window.start_at.astimezone(tz).date()
+        start_at = _ceil_to_minute(window.start_at)
+        if to_utc(start_at) >= to_utc(window.end_at):
+            continue
+        aligned_window = Interval(start_at, window.end_at)
+        slot_minutes = duration_minutes(aligned_window)
+        local_day = to_utc(start_at).astimezone(tz).date()
         daily_left = max(0, policy.max_daily_minutes - usage[local_day])
         candidate_minutes = min(
             remaining,
@@ -127,8 +164,8 @@ def _next_block(
             candidate_minutes = remaining
         return EngineBlock(
             task_id=task.task_id,
-            start_at=window.start_at,
-            end_at=window.start_at + timedelta(minutes=candidate_minutes),
+            start_at=start_at,
+            end_at=add_minutes(start_at, candidate_minutes),
         )
     return None
 
@@ -143,14 +180,14 @@ def _reason_codes(
         return ()
     if task.status not in (TaskStatus.TODO, TaskStatus.IN_PROGRESS):
         return ("TASK_NOT_ELIGIBLE",)
-    lower = max(context.now, context.generation_scope.start_at)
-    if task.deadline_at <= context.now:
+    lower = max_instant(_effective_now(context), context.generation_scope.start_at)
+    if to_utc(task.deadline_at) <= to_utc(context.now):
         return ("DEADLINE_PASSED",)
-    if context.generation_scope.end_at <= lower:
+    if to_utc(context.generation_scope.end_at) <= to_utc(lower):
         return ("OUTSIDE_HORIZON",)
-    if task.deadline_at <= lower:
+    if to_utc(task.deadline_at) <= to_utc(lower):
         return ("OUTSIDE_HORIZON",)
-    if task.available_from_at is not None and task.available_from_at >= min(task.deadline_at, context.generation_scope.end_at):
+    if task.available_from_at is not None and to_utc(task.available_from_at) >= to_utc(min_instant(task.deadline_at, context.generation_scope.end_at)):
         return ("OUTSIDE_HORIZON",)
 
     windows = _task_windows(context, task, generated)
@@ -166,7 +203,7 @@ def _reason_codes(
         return ("BLOCK_TOO_SHORT",)
     usage = _daily_usage(context, generated)
     tz = ZoneInfo(context.timezone)
-    if all(usage[value.start_at.astimezone(tz).date()] >= context.policy.max_daily_minutes for value in windows):
+    if all(usage[to_utc(value.start_at).astimezone(tz).date()] >= context.policy.max_daily_minutes for value in windows):
         return ("DAILY_LIMIT_REACHED",)
     return ("INSUFFICIENT_CAPACITY",)
 
@@ -184,25 +221,33 @@ def _coverage(summaries: list[TaskSchedulingSummary], has_generated: bool) -> Co
 def _summaries_without_generation(
     context: SchedulingContext,
 ) -> list[TaskSchedulingSummary]:
-    tasks = _task_map(context)
-    retained = _retained_future_minutes(context)
-    summaries: list[TaskSchedulingSummary] = []
-    for task_id in context.selected_task_ids:
-        task = tasks.get(task_id)
-        if task is None:
-            continue
-        unallocated = max(0, task.remaining_minutes - retained[task_id])
-        summaries.append(
-            TaskSchedulingSummary(
-                task_id=task_id,
-                remaining_minutes=task.remaining_minutes,
-                retained_future_minutes=retained[task_id],
-                newly_scheduled_minutes=0,
-                unallocated_minutes=unallocated,
-                reason_codes=("INVALID_CONTEXT",) if unallocated else (),
+    try:
+        tasks = _task_map(context)
+        retained = _retained_future_minutes(context)
+        summaries: list[TaskSchedulingSummary] = []
+        for task_id in context.selected_task_ids:
+            task = tasks.get(task_id)
+            if task is None:
+                continue
+            remaining = (
+                task.remaining_minutes
+                if type(task.remaining_minutes) is int and task.remaining_minutes >= 0
+                else 0
             )
-        )
-    return summaries
+            unallocated = max(0, remaining - retained[task_id])
+            summaries.append(
+                TaskSchedulingSummary(
+                    task_id=task_id,
+                    remaining_minutes=remaining,
+                    retained_future_minutes=retained[task_id],
+                    newly_scheduled_minutes=0,
+                    unallocated_minutes=unallocated,
+                    reason_codes=("INVALID_CONTEXT",) if unallocated else (),
+                )
+            )
+        return summaries
+    except Exception:
+        return []
 
 
 def generate_schedule(context: SchedulingContext) -> SchedulingResult:
@@ -223,7 +268,7 @@ def generate_schedule(context: SchedulingContext) -> SchedulingResult:
     retained = _retained_future_minutes(context)
     ordered_tasks = sorted(
         (tasks[task_id] for task_id in context.selected_task_ids),
-        key=lambda task: (task.deadline_at, _PRIORITY_ORDER[task.priority], str(task.task_id)),
+        key=lambda task: (to_utc(task.deadline_at), _PRIORITY_ORDER.get(task.priority, 99), str(task.task_id)),
     )
     generated: list[EngineBlock] = []
     summaries_by_id: dict[object, TaskSchedulingSummary] = {}
@@ -251,7 +296,7 @@ def generate_schedule(context: SchedulingContext) -> SchedulingResult:
         )
 
     summaries = [summaries_by_id[task_id] for task_id in context.selected_task_ids]
-    generated.sort(key=lambda item: (item.start_at, item.end_at, str(item.task_id)))
+    generated.sort(key=lambda item: (to_utc(item.start_at), to_utc(item.end_at), str(item.task_id)))
     result_issues = validate_generated_result(context, tuple(generated))
     warnings = tuple(
         Issue(
@@ -271,4 +316,3 @@ def generate_schedule(context: SchedulingContext) -> SchedulingResult:
         warnings=warnings,
         algorithm_version=ALGORITHM_VERSION,
     )
-

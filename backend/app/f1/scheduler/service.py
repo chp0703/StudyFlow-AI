@@ -42,7 +42,12 @@ class PlanningService:
             block_id_factory=self._block_id_factory,
         )
         if not (plan_diff.added or plan_diff.moved or plan_diff.removed):
-            return PlanningOutcome(replace(result, coverage=Coverage.NO_CHANGE), None)
+            unchanged_result = (
+                replace(result, coverage=Coverage.NO_CHANGE)
+                if result.coverage is Coverage.FULL
+                else result
+            )
+            return PlanningOutcome(unchanged_result, None)
 
         payload = ProposalPayload(
             study_blocks=snapshot,
@@ -52,4 +57,3 @@ class PlanningService:
             plan_diff=plan_diff,
         )
         return PlanningOutcome(result, payload)
-

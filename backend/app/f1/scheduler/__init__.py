@@ -14,6 +14,7 @@ from .models import (
     StudyBlock,
     TaskStatus,
 )
+from .normalization import normalize_time_windows
 
 __all__ = [
     "ALGORITHM_VERSION",
@@ -29,5 +30,5 @@ __all__ = [
     "StudyBlock",
     "TaskStatus",
     "generate_schedule",
+    "normalize_time_windows",
 ]
-

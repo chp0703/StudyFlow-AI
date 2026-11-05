@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 
-from .intervals import contains
+from .intervals import contains, to_utc
 from .models import (
     BlockIdFactory,
     EngineBlock,
@@ -37,11 +37,14 @@ def partition_blocks_for_replan(
     scope = Interval(generation_scope.start_at, generation_scope.end_at)
     selected = set(selected_task_ids)
 
-    for block in sorted(blocks, key=lambda item: (item.start_at, item.end_at, str(item.block_id))):
+    now_utc = to_utc(now)
+    for block in sorted(blocks, key=lambda item: (to_utc(item.start_at), to_utc(item.end_at), str(item.block_id))):
         interval = Interval(block.start_at, block.end_at)
-        if block.end_at <= now:
+        start_utc = to_utc(block.start_at)
+        end_utc = to_utc(block.end_at)
+        if end_utc <= now_utc:
             retained.append(block)
-        elif block.start_at < now < block.end_at:
+        elif start_utc < now_utc < end_utc:
             retained.append(block)
             if block.task_id in selected:
                 issues.append(Issue(
@@ -90,12 +93,46 @@ def materialize_snapshot(
         new_by_task[block.task_id].append(block)
 
     for task_id in sorted(set(old_by_task) | set(new_by_task), key=str):
-        old_blocks = sorted(old_by_task[task_id], key=lambda item: (item.start_at, item.end_at, str(item.block_id)))
-        new_blocks = sorted(new_by_task[task_id], key=lambda item: (item.start_at, item.end_at))
-        paired = min(len(old_blocks), len(new_blocks))
+        old_blocks = sorted(old_by_task[task_id], key=lambda item: (to_utc(item.start_at), to_utc(item.end_at), str(item.block_id)))
+        new_blocks = sorted(new_by_task[task_id], key=lambda item: (to_utc(item.start_at), to_utc(item.end_at)))
+        matched_old_indices: set[int] = set()
+        matched_new_indices: set[int] = set()
+
+        for new_idx, new in enumerate(new_blocks):
+            for old_idx, old in enumerate(old_blocks):
+                if old_idx in matched_old_indices:
+                    continue
+                if (
+                    old.task_id == new.task_id
+                    and to_utc(old.start_at) == to_utc(new.start_at)
+                    and to_utc(old.end_at) == to_utc(new.end_at)
+                    and not old.is_locked
+                ):
+                    matched_old_indices.add(old_idx)
+                    matched_new_indices.add(new_idx)
+                    snapshot.append(ProposedStudyBlock(
+                        block_id=old.block_id,
+                        user_id=user_id,
+                        task_id=task_id,
+                        start_at=new.start_at,
+                        end_at=new.end_at,
+                        is_locked=False,
+                    ))
+                    unchanged.append(old.block_id)
+                    break
+
+        remaining_old = [
+            old for idx, old in enumerate(old_blocks)
+            if idx not in matched_old_indices
+        ]
+        remaining_new = [
+            new for idx, new in enumerate(new_blocks)
+            if idx not in matched_new_indices
+        ]
+        paired = min(len(remaining_old), len(remaining_new))
         for index in range(paired):
-            old = old_blocks[index]
-            new = new_blocks[index]
+            old = remaining_old[index]
+            new = remaining_new[index]
             snapshot.append(ProposedStudyBlock(
                 block_id=old.block_id,
                 user_id=user_id,
@@ -104,11 +141,8 @@ def materialize_snapshot(
                 end_at=new.end_at,
                 is_locked=False,
             ))
-            if old.start_at == new.start_at and old.end_at == new.end_at:
-                unchanged.append(old.block_id)
-            else:
-                moved.append(old.block_id)
-        for new in new_blocks[paired:]:
+            moved.append(old.block_id)
+        for new in remaining_new[paired:]:
             block_id = block_id_factory()
             snapshot.append(ProposedStudyBlock(
                 block_id=block_id,
@@ -119,9 +153,9 @@ def materialize_snapshot(
                 is_locked=False,
             ))
             added.append(block_id)
-        removed.extend(block.block_id for block in old_blocks[paired:])
+        removed.extend(block.block_id for block in remaining_old[paired:])
 
-    snapshot.sort(key=lambda item: (item.start_at, item.end_at, str(item.task_id), str(item.block_id)))
+    snapshot.sort(key=lambda item: (to_utc(item.start_at), to_utc(item.end_at), str(item.task_id), str(item.block_id)))
     diff = PlanDiff(
         added=tuple(sorted(added, key=str)),
         moved=tuple(sorted(moved, key=str)),
@@ -129,4 +163,3 @@ def materialize_snapshot(
         unchanged=tuple(sorted(unchanged, key=str)),
     )
     return tuple(snapshot), diff
-

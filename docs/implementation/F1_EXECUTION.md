@@ -23,16 +23,22 @@ Never mark a gate complete from fixture-only checks. Cloud project credentials a
 ## Independent evidence so far (2026-11-05)
 
 - Integrated contract checker passed. Existing TV2 suite: 78 tests passed; planner unit suite: 24 tests passed.
-- Initial independent scheduler baseline before Argon: 29 methods, 8 failures and 40 errors. First Argon implementation passed those 29; follow-up review added three methods exposing 3 failures and 4 errors. WP1 remains under correction until the full 32-method suite and review pass.
-- Independent HTTP suite contains 27 methods. Runtime app is absent, so setup fails; no HTTP acceptance success is claimed.
-- SQL test files parse with pglast, including the boundary, golden canonical/HMAC and rollback cases. No PostgreSQL/pgTAP execution has yet occurred locally; CI is required for runtime evidence.
+- WP1 ACCEPTED for the pure planner/normalizer scope. Initial independent baseline: 29 methods, 8 failures and 40 errors. Two review rounds added archived/enum/malformed-ID cases and a valid DST-fold clock regression (start before actual now; elapsed workload mismatch). Final Argon correction passed all 33 independent methods, 24 planner unit tests, 78 TV2 tests, contract checker and five evaluation cases repeated 100 times with deterministic results and zero hard-constraint violations. A separate Sol review confirmed DST-fold block identity and locked-block retention. This is not DB/API/live-model acceptance.
+- Independent HTTP suite contains 29 methods, including completed-receipt replay across cold apps. Runtime app is absent, so setup fails; no HTTP acceptance success is claimed.
+- SQL files parse with pglast. Real Supabase CI baseline at commit 2bac72c replayed all eight existing migrations successfully; pgTAP executed 190 assertions with 128 failures: 03=5/18, 04=18/47, 05=36/44, 06=69/81. Missing secure boundary, infrastructure and approved atomic RPCs remain implementation work. Evidence: https://github.com/chp0703/StudyFlow-AI/actions/runs/42032340280 . This does not validate uncommitted scheduler changes or cloud deployment.
 - Vietnamese extractor dataset contains 40 validated cases. No live model evaluation has yet run.
 - User supplied shared-or-demo Supabase project ref `phomrutsdhdgejlskwcb`; public JWKS responded 200 with an ES256 key. Schema, permissions, migration history and existing data remain unverified. Do not reset or deploy blindly.
-- Review found missing private read/recovery seams in the approved RPC inventory. A concrete contract addendum is being prepared; do not invent new public operations or silently change approved contracts.
+- User approved all A/B/C/D in INTERNAL_RPC_ADDENDUM_PROPOSAL.md for package 1.0.1: six internal helpers, continuation infrastructure and signed first-GET profile initialization. Sol freezes independent tests before Gemini synchronizes schemas/mappings/fixtures. Public eight endpoints, ten operations and logical schema 1.1 remain unchanged. Approval does not establish implementation success.
 
 ## Work packages
 
 ### WP1 — scheduler correctness and TimeWindow normalization (TV4)
+
+Status: ACCEPTED. Implementation: initial Antigravity GUI turn, then official
+CLI Argon High conversation `8f23a737-bf8b-4ba2-b8d6-b8c4516835ff` with independent
+Sol correction/review. Argon performed native edits; Sol ran all tests and Git.
+UTC instant arithmetic preserves actual duration and PEP 495 fold while IANA
+local-day rules remain local. Full DB/service integration is subsequent work.
 
 Implementation owner: Argon High. Sol acceptance tests: `backend/tests/acceptance_sol/` (implementer must not edit).
 
