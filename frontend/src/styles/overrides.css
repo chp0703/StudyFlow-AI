@@ -7,7 +7,7 @@
 
 /* AI-first workspace and shared refinements */
 .topbar { height: 50px; gap: 16px; padding-inline: 20px; }
-.brand { width: 180px; }
+.brand { width: 160px; }
 .sidebar { top: 66px; width: 176px; padding: 10px 8px; }
 .nav-item { border-left-width: 0; border-radius: 10px; margin: 3px 0; padding-inline: 12px; }
 .nav-item.active { border-left-color: transparent; box-shadow: inset 3px 0 0 var(--color-primary); }
