@@ -1,146 +1,381 @@
 import { useEffect, useRef, useState } from "react"
+
+import gsap from "gsap"
+
+import { useGSAP } from "@gsap/react"
+
 import {
-  ArrowUpRight,
   Bell,
   BookOpen,
   CalendarDays,
   ChevronDown,
-  Check,
-  CircleHelp,
   House,
-  LayoutDashboard,
-  Search,
+  PanelLeft,
+  PanelLeftClose,
   Settings,
   X,
 } from "lucide-react"
+
 import Button from "./components/ui/Button"
+
+import HomeSummary from "./components/HomeSummary"
+
 import Modal from "./components/ui/Modal"
+
 import Assistant from "./features/assistant/Assistant"
-import Dashboard from "./pages/Dashboard"
+
 import Planner from "./pages/Planner"
+
 import Study from "./pages/Study"
+
+import type { Proposal, TimeWindow } from "./types/planner"
+
 import type { Task } from "./types/task"
 
 const destinations = [
   { name: "Assistant", label: "Trang chủ", icon: House },
-  { name: "Dashboard", label: "Tổng quan", icon: LayoutDashboard },
+
   { name: "Planner", label: "Lập kế hoạch", icon: CalendarDays },
+
   { name: "Study", label: "Học tập", icon: BookOpen },
 ]
 
-const pageInfo: Record<string, { title: string; description: string }> = {
-  Dashboard: {
-    title: "Tổng quan",
-    description: "Tổng quan việc học và hạn chót.",
-  },
+type PageInfo = {
+  title: string
+
+  description?: string
+}
+
+const pageInfo: Record<string, PageInfo> = {
   Planner: {
     title: "Lập kế hoạch",
-    description: "Quản lý công việc và lịch trong tuần.",
+
+    description: "Quản lý công việc và lịch học trong tuần.",
   },
+
   Study: {
     title: "Học tập",
-    description: "Tài liệu và ghi chú cho buổi học.",
+
+    description: "Tài liệu học tập, luyện đề và trao đổi cùng trợ lý AI.",
   },
 }
 
-const infoModals: Record<string, { title: string; text: string }> = {
+type ModalInfo = {
+  title: string
+
+  text: string
+}
+
+const infoModals: Record<string, ModalInfo> = {
   notifications: { title: "Thông báo của bạn", text: "Chưa có thông báo nào." },
+
   account: { title: "Tài khoản", text: "Chưa kết nối tài khoản." },
+
   settings: { title: "Cài đặt", text: "Chưa có cài đặt nào." },
+
   help: { title: "Trợ giúp & phản hồi", text: "Chưa có nội dung trợ giúp." },
 }
 
 export default function App() {
   const [page, setPage] = useState("Assistant")
+
   const [tasks, setTasks] = useState<Task[]>([])
-  const [query, setQuery] = useState("")
+
+  const [availability, setAvailability] = useState<TimeWindow[]>([])
+
+  // Pending schedule change awaiting the user's approval, and the committed schedule revision.
+
+  const [proposal, setProposal] = useState<Proposal | null>(null)
+
+  const [revision, setRevision] = useState(0)
+
   const [modal, setModal] = useState("")
+
   const [notice, setNotice] = useState("")
-  const searchRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!notice) return
+
+    const timer = window.setTimeout(() => setNotice(""), 3500)
+
+    return () => window.clearTimeout(timer)
+  }, [notice])
+
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem("studyflow_sidebar_open")
+
+      return saved !== null ? saved === "true" : true
+    } catch {
+      return true
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("studyflow_sidebar_open", String(sidebarOpen))
+    } catch {}
+  }, [sidebarOpen])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+        e.preventDefault()
+
+        setSidebarOpen((v) => !v)
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
+
   const mainHeadingRef = useRef<HTMLHeadingElement>(null)
+
+  const mainRef = useRef<HTMLElement>(null)
+
   const firstPage = useRef(true)
-  const searchRequested = useRef(false)
+
+  // Crossing a responsive breakpoint (window resize) re-flows the layout; ease the cards into place.
+
+  useEffect(() => {
+    const queries = [1250, 800, 480].map((w) =>
+      window.matchMedia(`(max-width: ${w}px)`),
+    )
+
+    const onChange = () => {
+      const cards = gsap.utils
+
+        .toArray<HTMLElement>(".card, .assistant-shell")
+
+        .filter((el) => el.offsetParent !== null)
+
+      gsap.from(cards, {
+        opacity: 0.4,
+
+        y: 14,
+
+        scale: 0.985,
+
+        duration: 0.45,
+
+        ease: "power2.out",
+
+        stagger: 0.04,
+
+        clearProps: "transform,opacity",
+      })
+    }
+
+    queries.forEach((q) => q.addEventListener("change", onChange))
+
+    return () =>
+      queries.forEach((q) => q.removeEventListener("change", onChange))
+  }, [])
+
+  const firstSidebar = useRef(true)
+
+  // Menu open/close: items cascade in when it opens; the reveal button and logo ease in when it closes.
+
+  useGSAP(
+    () => {
+      if (firstSidebar.current) {
+        firstSidebar.current = false
+
+        return
+      }
+
+      // GSAP drives the slide itself so it also runs when OS animations are off (CSS transitions are disabled then).
+
+      gsap.fromTo(
+        ".app-shell",
+
+        { "--sb-offset": sidebarOpen ? "24px" : "220px" },
+
+        {
+          "--sb-offset": sidebarOpen ? "220px" : "24px",
+
+          duration: 0.5,
+
+          ease: "power3.inOut",
+
+          clearProps: "--sb-offset",
+        },
+      )
+
+      gsap.fromTo(
+        ".sidebar",
+
+        { x: sidebarOpen ? -208 : 0, autoAlpha: sidebarOpen ? 0 : 1 },
+
+        {
+          x: sidebarOpen ? 0 : -208,
+
+          autoAlpha: sidebarOpen ? 1 : 0,
+
+          duration: 0.5,
+
+          ease: "power3.inOut",
+
+          clearProps: "transform,opacity,visibility",
+        },
+      )
+
+      if (sidebarOpen) {
+        gsap.from(".sidebar .nav-item", {
+          x: -16,
+
+          opacity: 0,
+
+          duration: 0.4,
+
+          ease: "power2.out",
+
+          stagger: 0.05,
+
+          delay: 0.12,
+
+          clearProps: "transform,opacity",
+        })
+      } else {
+        gsap.from(".sidebar-reveal-btn", {
+          scale: 0.4,
+
+          opacity: 0,
+
+          rotate: -90,
+
+          duration: 0.5,
+
+          ease: "back.out(2)",
+
+          delay: 0.15,
+
+          clearProps: "transform,opacity",
+        })
+
+        gsap.from(".brand", {
+          x: -6,
+
+          duration: 0.45,
+
+          ease: "power2.out",
+
+          clearProps: "transform",
+        })
+      }
+    },
+
+    { dependencies: [sidebarOpen] },
+  )
+
+  // Cards slide up each time a page opens.
+
+  useGSAP(
+    () => {
+      const cards = gsap.utils
+
+        .toArray<HTMLElement>(".card, .assistant-shell")
+
+        .filter((el) => el.offsetParent !== null)
+
+      gsap.from(cards, {
+        y: 48,
+
+        opacity: 0,
+
+        duration: 0.5,
+
+        ease: "power2.out",
+
+        stagger: 0.08,
+
+        clearProps: "transform,opacity",
+      })
+    },
+
+    { scope: mainRef, dependencies: [page] },
+  )
 
   useEffect(() => {
     document.documentElement.lang = "vi"
   }, [])
+
   useEffect(() => {
     document.title = `${
       destinations.find((d) => d.name === page)?.label ?? page
     } | StudyFlow AI`
+
     if (firstPage.current) {
       firstPage.current = false
+
       return
     }
+
     if (page === "Assistant")
       document.querySelector<HTMLElement>("[data-assistant-heading]")?.focus()
     else mainHeadingRef.current?.focus()
-    if (searchRequested.current && page === "Planner") {
-      searchRef.current?.focus()
-      searchRequested.current = false
-    }
+
     window.scrollTo({ top: 0, behavior: "instant" })
-  }, [page])
-  useEffect(() => {
-    const fn = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault()
-        if (page === "Assistant") {
-          searchRequested.current = true
-          setPage("Planner")
-        } else searchRef.current?.focus()
-      }
-    }
-    document.addEventListener("keydown", fn)
-    return () => document.removeEventListener("keydown", fn)
   }, [page])
 
   const go = (p: string) => {
     setPage(p)
-    setQuery("")
   }
+
   const info = pageInfo[page]
+
   const infoModal = infoModals[modal]
 
   return (
-    <div className={`app-shell ${page === "Assistant" ? "assistant-app" : ""}`}>
+    <div
+      className={`app-shell ${page === "Assistant" ? "assistant-app" : ""} ${
+        sidebarOpen ? "sidebar-open" : "sidebar-collapsed"
+      }`}
+    >
       <a className="skip-link" href="#main-content">
         Bỏ qua đến nội dung chính
       </a>
       <header className="topbar">
-        <div className="brand">
-          <img
-            className="brand-logo"
-            src="/brand/logo-horizontal-light-transparent.png"
-            alt="StudyFlow AI"
-            width={1600}
-            height={400}
-            fetchPriority="high"
-          />
-        </div>
-        {page !== "Assistant" && (
-          <div className="search-wrap">
-            <Search aria-hidden="true" size={17} />
-            <input
-              ref={searchRef}
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value)
-                if (page !== "Planner") setPage("Planner")
-              }}
-              placeholder="Tìm kiếm công việc..."
-              aria-label="Tìm kiếm công việc"
+        <div
+          className={`brand-container ${
+            !sidebarOpen ? "can-open-sidebar" : ""
+          }`}
+        >
+          <div
+            className="brand"
+            onClick={() => {
+              if (!sidebarOpen) setSidebarOpen(true)
+            }}
+          >
+            <img
+              className="brand-logo"
+              src="/brand/logo-horizontal-light-transparent.png"
+              alt="StudyFlow AI"
+              width={1840}
+              height={366}
+              fetchPriority="high"
             />
-            <kbd>⌘ K</kbd>
           </div>
-        )}
+          {!sidebarOpen && (
+            <Button
+              className="icon-button sidebar-reveal-btn"
+              aria-label="Mở thanh menu"
+              title="Mở menu (Ctrl+B)"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <PanelLeft aria-hidden="true" size={17} />
+            </Button>
+          )}
+        </div>
         <div className="top-actions">
           <Button
             className="icon-button notification"
             aria-label="Thông báo"
             onClick={() => setModal("notifications")}
           >
-            <Bell aria-hidden="true" size={19} />
+            <Bell aria-hidden="true" size={17} />
             <i />
           </Button>
           <span className="top-divider" />
@@ -151,13 +386,37 @@ export default function App() {
           >
             <span className="avatar">S</span>
             <span>Sinh viên</span>
-            <ChevronDown aria-hidden="true" size={14} />
+            <ChevronDown aria-hidden="true" size={13} />
           </Button>
         </div>
       </header>
-      <aside className="sidebar">
+      <aside
+        className="sidebar"
+        aria-hidden={!sidebarOpen}
+        tabIndex={sidebarOpen ? undefined : -1}
+      >
         <nav aria-label="Điều hướng chính">
-          {destinations.map((n) => (
+          <div className="sidebar-home-item">
+            <Button
+              className={`nav-item ${page === "Assistant" ? "active" : ""}`}
+              aria-label="Trang chủ"
+              aria-current={page === "Assistant" ? "page" : undefined}
+              onClick={() => go("Assistant")}
+            >
+              <House size={18} />
+              <span>Trang chủ</span>
+              {page === "Assistant" && <i />}
+            </Button>
+            <Button
+              className="sidebar-collapse-btn"
+              aria-label="Thu gọn thanh menu"
+              title="Thu gọn menu (Ctrl+B)"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <PanelLeftClose aria-hidden="true" size={15} />
+            </Button>
+          </div>
+          {destinations.slice(1).map((n) => (
             <Button
               key={n.name}
               className={`nav-item ${page === n.name ? "active" : ""}`}
@@ -165,8 +424,11 @@ export default function App() {
               aria-current={page === n.name ? "page" : undefined}
               onClick={() => go(n.name)}
             >
-              <n.icon size={19} />
+              <n.icon size={18} />
               <span>{n.label}</span>
+              {n.name === "Planner" && proposal && (
+                <span className="nav-badge">Chờ duyệt</span>
+              )}
               {page === n.name && <i />}
             </Button>
           ))}
@@ -180,18 +442,10 @@ export default function App() {
             <Settings aria-hidden="true" size={18} />
             <span>Cài đặt</span>
           </Button>
-          <Button
-            className="nav-item"
-            aria-label="Trợ giúp và phản hồi"
-            onClick={() => setModal("help")}
-          >
-            <CircleHelp aria-hidden="true" size={18} />
-            <span>Trợ giúp & phản hồi</span>
-            <ArrowUpRight aria-hidden="true" size={13} />
-          </Button>
         </div>
       </aside>
       <main
+        ref={mainRef}
         className={`main-content ${page === "Assistant" ? "home-content" : ""}`}
         id="main-content"
         tabIndex={-1}
@@ -202,26 +456,34 @@ export default function App() {
               <h1 ref={mainHeadingRef} tabIndex={-1}>
                 {info.title}
               </h1>
-              <p>{info.description}</p>
+              {info.description && <p>{info.description}</p>}
             </div>
           </div>
         )}
-        <div hidden={page !== "Assistant"}>
+        <div className="home-layout" hidden={page !== "Assistant"}>
           <Assistant onOpenPlanner={() => go("Planner")} />
+          <aside className="home-summary" aria-label="Tổng quan việc học">
+            <HomeSummary tasks={tasks} go={go} />
+          </aside>
         </div>
-        {page === "Dashboard" && (
-          <Dashboard tasks={tasks} setTasks={setTasks} go={go} />
-        )}
         {page === "Planner" && (
           <Planner
             tasks={tasks}
             setTasks={setTasks}
-            query={query}
+            availability={availability}
+            setAvailability={setAvailability}
+            proposal={proposal}
+            setProposal={setProposal}
+            revision={revision}
+            setRevision={setRevision}
             notify={setNotice}
           />
         )}
-        <div hidden={page !== "Study"}>
-          <Study notify={setNotice} />
+        <div
+          hidden={page !== "Study"}
+          className={page === "Study" ? "study-page-wrapper" : ""}
+        >
+          <Study />
         </div>
       </main>
       {infoModal && (
@@ -235,7 +497,6 @@ export default function App() {
       {notice && (
         <div className="toast">
           <span role="status">{notice}</span>
-          <Check aria-hidden="true" size={17} />
           <Button
             className="icon-button"
             aria-label="Đóng thông báo"

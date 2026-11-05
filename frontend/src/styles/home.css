@@ -1,0 +1,44 @@
+/* The assistant owns its viewport; only its transcript and history list scroll. */
+.assistant-app { height: 100dvh; min-height: 0; display: grid; grid-template-rows: 58px minmax(0,1fr); overflow: hidden; }
+.assistant-app .topbar { position: relative; top: auto; }
+.main-content:has(.home-layout),
+.assistant-app .home-content {
+  height: calc(100dvh - 58px);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-left: var(--sb-offset, 220px);
+  margin-right: 24px;
+  padding: 8px 0 16px;
+  box-sizing: border-box;
+}
+.assistant-app .home-content > div:not([hidden]) {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.assistant-app .assistant-shell { height: 100%; min-height: 0; }
+@media(max-width:800px) {
+  .assistant-app { grid-template-rows: auto auto minmax(0,1fr); height: auto; min-height: 100dvh; overflow: visible; }
+  .assistant-app .sidebar { min-height: 0; }
+  .main-content:has(.home-layout),
+  .assistant-app .home-content { height: auto; min-height: calc(100dvh - 140px); overflow: visible; margin-left: 0; margin-right: 0; padding: 8px 10px 12px; }
+  .assistant-app .assistant-shell { height: calc(100dvh - 160px); min-height: 520px; }
+}
+/* Home fits the viewport without page scroll: cards show under an empty chat and hide once a conversation starts. */
+.home-layout { display: flex; flex-direction: column; flex: 1; height: 100%; min-height: 0; }
+.home-layout .assistant-shell { flex: 1; min-height: 0; height: auto; border: 1px solid var(--color-line); border-radius: var(--radius-card); overflow: hidden; box-shadow: 0 4px 20px -2px rgba(23, 32, 59, 0.05); }
+.home-layout:has(.assistant-shell.has-messages) .home-summary { display: none; }
+.home-layout .assistant-topline { width: 100%; max-width: none; padding-inline: 24px; }
+.home-summary { flex: none; padding: 14px 0 0; border-top: 0; }
+.home-stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
+@media(max-width:800px) { .home-layout { height: auto; }.home-layout .assistant-shell { flex: none; height: calc(100dvh - 160px); }.home-stats { grid-template-columns: minmax(0,1fr); } }
+/* Chat header: back button left, conversation title centred, actions right. */
+.assistant-topline { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,auto) minmax(0,1fr); }
+.assistant-back { grid-column: 1; justify-self: start; }
+.assistant-thread-heading { grid-column: 2; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.assistant-toolbar { grid-column: 3; justify-self: end; }
+@media(max-width:480px) { .assistant-back span { display: none; }.assistant-back { min-width: 44px; padding: 10px; } }

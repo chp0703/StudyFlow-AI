@@ -1,80 +1,128 @@
 # DESIGN.md — StudyFlow AI
 
-Guide for teammates. Read before changing UI code.
+Hướng dẫn cho thành viên nhóm. Đọc trước khi sửa UI.
 
-## 1. What this is
+## 1. Dự án là gì
 
-A deterministic React prototype of a student study workspace: AI homepage, Dashboard, Planner and Study. Academic data (tasks, files) lives in memory only and starts empty. Conversation history alone is stored in this browser's IndexedDB, as explicitly approved for the history feature. There is no backend, auth, account sync, file parsing, source retrieval or live AI.
+Prototype React để mô phỏng không gian học tập của sinh viên, gồm 3 trang:
 
-Hard rules:
-- Keep the demo/source disclaimers. Never present illustrative data as verified learning evidence.
-- Do not claim mastery, upload completion, document extraction or live AI.
-- No analytics, external services or storage beyond the approved conversation-only IndexedDB history without explicit approval.
-- Keep dates, courses, quiz answers and messages clearly illustrative.
-
-## 2. Stack and commands
-
-React 19 · Vite 8 · TypeScript (strict) · Tailwind CSS v4 (`@tailwindcss/vite`) · `lucide-react` icons · oxfmt formatter. Node 22, npm.
-
-| Command | Purpose |
+| Trang | Nội dung |
 |---|---|
-| `npm install` | install |
-| `npm run dev` | dev server (`$PORT`, default 5173) |
-| `npm run build` | production build to `dist/` |
-| `npm run preview` | serve the build |
-| `npm run format` | format with oxfmt |
+| **Trang chủ** (`Assistant`) | Chat với trợ lý AI + 3 thẻ tóm tắt: Công việc hôm nay, Deadline 5 ngày tới, Thời gian học |
+| **Lập kế hoạch** (`Planner`) | Khung chat điều khiển lịch tuần (agent theo luật: thêm / dời / xóa) |
+| **Học tập** (`Study`) | Tài liệu, ghi chú và đồng hồ buổi học |
 
-Before opening a PR: `npm run format && npm run build`, and `npx tsc --noEmit`.
+Dữ liệu học tập (công việc, tệp) chỉ nằm trong bộ nhớ và bắt đầu rỗng. Riêng **lịch sử hội thoại** được lưu trong IndexedDB của trình duyệt (đã được duyệt cho riêng tính năng này). Không có backend, đăng nhập, đồng bộ tài khoản, đọc tệp, truy xuất nguồn hay AI thật.
 
-## 3. Layout
+Quy tắc bắt buộc:
+- Giữ các dòng tuyên bố demo/nguồn. Không trình bày dữ liệu minh họa như bằng chứng học tập đã xác minh.
+- Không tuyên bố đã thành thạo, đã tải lên, đã trích xuất tài liệu hay có AI thật.
+- Không thêm analytics, dịch vụ ngoài hoặc lưu trữ nào khác ngoài IndexedDB cho lịch sử hội thoại nếu chưa được duyệt.
+- Ngày, môn học, đáp án và tin nhắn mẫu phải rõ là minh họa.
+
+## 2. Công nghệ và lệnh
+
+React 19 · Vite 8 · TypeScript (strict) · Tailwind CSS v4 (`@tailwindcss/vite`) · icon `lucide-react` · animation `gsap` + `@gsap/react` · formatter oxfmt. Node 22, npm. Chuỗi giao diện bằng tiếng Việt.
+
+| Lệnh | Mục đích |
+|---|---|
+| `npm install` | cài đặt |
+| `npm run dev` | chạy dev (`$PORT`, mặc định 5173) |
+| `npm run build` | build production vào `dist/` |
+| `npm run preview` | chạy bản build |
+| `npm run format` | format bằng oxfmt |
+| `npx tsc --noEmit` | kiểm tra kiểu (không có script lint) |
+| `node --test <file>` | chạy test (không có `npm test`) |
+
+Test hiện có: `src/features/assistant/conversationHistory.test.ts`, `src/features/planner/plannerAgent.test.ts`.
+
+Trước khi mở PR: `npm run format && npm run build && npx tsc --noEmit`.
+
+## 3. Cấu trúc thư mục
 
 ```text
-index.html          document shell, favicons, noindex meta
-public/brand/       logo + favicons (served at /brand/...)
-src/main.tsx        mounts <App/>, imports styles/index.css
-src/App.tsx         shell: navigation, shared state, modals
-src/pages/          Dashboard, Planner, Study
-src/components/ui/  Button, Card, Modal
-src/features/assistant/  Assistant UI, assistantService (reply stub), conversationHistory (IndexedDB)
-src/types/          shared types (Task, assistant contract)
-src/utils/          date helpers
-src/styles/brand.css       design tokens (--sf-*)
-src/styles/index.css       Tailwind import, @theme, global + component CSS, responsive rules
-vite.config.ts      react + tailwind plugins only
+index.html                document shell, favicon, meta noindex
+public/brand/             logo + favicon (phục vụ tại /brand/...), lưu bằng Git LFS
+src/main.tsx              mount <App/>, import styles/index.css
+src/App.tsx               khung ứng dụng: điều hướng, state dùng chung (tasks), modal, toast
+src/pages/                Planner, Study
+src/components/           HomeSummary (3 thẻ tóm tắt); ui/ Button, Card, Modal
+src/features/assistant/   Assistant (UI), assistantService (trả lời mẫu), conversationHistory (IndexedDB)
+src/features/planner/     plannerAgent (lệnh chat -> chỉnh lịch)
+src/types/                kiểu dùng chung (Task, hợp đồng assistant)
+src/utils/                hàm ngày (date.ts)
+src/styles/               xem mục 5
+vite.config.ts            chỉ có plugin react + tailwind
 ```
 
-Generated: `dist/`, `node_modules/` — never edit or commit.
+Sinh tự động: `dist/`, `node_modules/` — không sửa, không commit.
 
-## 4. Architecture
+## 4. Kiến trúc
 
-- `App.tsx` owns navigation and non-chat demo state. The Assistant is separate because conversation history and persistence require isolated state.
-- Navigation is **state-based** (`page`: Assistant · Dashboard · Planner · Study). No router dependency.
-- Assistant conversations have stable UUIDs, independent composer drafts and clarification drafts. Restored pending proposals require review before demo acknowledgement. Transcript data never authorizes a backend write.
-- IndexedDB uses one record per conversation and a separate active-conversation key. If storage fails, the UI stays usable in memory and announces that reload persistence is unavailable. There is no account synchronization.
-- Reuse the local primitives `Button`, `Card`, `Modal` before writing new wrappers.
-- File selection stores only names and status labels; nothing is uploaded or parsed.
-- Icons: `lucide-react` only.
+- **Không có router.** `App.tsx` giữ `page` (`Assistant | Planner | Study`), `tasks` dùng chung và toast `notice`. Khi đổi trang, focus chuyển về tiêu đề trang.
+- **Vị trí state quan trọng.** `Assistant` và `Study` luôn được mount, chỉ thêm `hidden` khi không active để giữ bản nháp chat, tệp và đồng hồ. `Planner` bị unmount nên state riêng (phản hồi chat, tuần đang xem) bị reset khi đổi trang. `tasks` nằm ở `App` nên được giữ.
+- **Trang chủ** = `Assistant` + `components/HomeSummary` trong `.home-layout`. Ba thẻ ẩn khi cuộc trò chuyện có tin nhắn. Chọn một cuộc trò chuyện trong Lịch sử thì panel lịch sử tự đóng.
+- **Assistant** có state tách biệt: `Assistant.tsx` (UI) → `assistantService.ts` (`getAssistantReply`, stub dùng regex, không phải API client) → hợp đồng ở `src/types/assistant.ts`. Mỗi cuộc trò chuyện có UUID, bản nháp và bản nháp làm rõ riêng. Đề xuất được khôi phục phải được xem lại trước khi xác nhận demo. Nội dung hội thoại không bao giờ cho phép ghi vào backend.
+- **Lịch sử hội thoại**: `conversationHistory.ts` lưu mỗi cuộc trò chuyện một bản ghi IndexedDB và một khóa riêng cho cuộc đang mở. Nếu lưu trữ lỗi, UI vẫn chạy trong bộ nhớ và báo không giữ được sau khi tải lại. Không đổi tên các giá trị đã lưu như `demo_acknowledged`, `valid_demo_draft` nếu chưa có migration.
+- **Planner**: `runPlannerCommand(input, tasks)` trả về `{ tasks, reply }`; hiểu "thêm / dời / xóa", giờ từ 8 đến 17. `Task.date` và `Task.hour` đặt công việc lên lịch. Đây là bản theo luật, sẽ thay bằng agent thật sau.
+- **Phạm vi F1 (Planner)**: theo `docs/database/schema_F1.md` v1.1, luồng chính là công việc → giờ rảnh/bận → tự lập lịch → duyệt. Lệnh `thêm … lúc …`, `dời`, `xóa` (thêm/dời khối thủ công) nằm ngoài F1 v1.1; còn trong bản mẫu để thử giao diện, không đưa vào demo F1.
+- **Đề xuất → Duyệt → Lưu (Planner)**: lệnh chat không sửa lịch trực tiếp. `Planner` tạo một `Proposal` (`src/types/planner.ts`, `features/planner/proposal.ts`) giữ trạng thái kế tiếp và danh sách thay đổi; lịch hiển thị bản xem trước (viền nét đứt + chữ "Đề xuất", "Sẽ xóa") cùng thanh Duyệt/Từ chối. Chỉ khi Duyệt mới `setTasks` và tăng `revision`; nếu `revision` đã đổi thì đề xuất chuyển `STALE` và khóa nút Duyệt. `tasks`, `proposal`, `revision` nằm ở `App` nên giữ khi đổi trang. Lệnh mới xếp chồng lên đề xuất đang chờ. Thông báo duyệt lưu lịch hiển thị ngay trong thẻ Lịch và tự động ẩn sau 3.5s (giống thông báo xóa/thêm tài liệu).
+- **Khung giờ rảnh/bận (Planner)**: lệnh `rảnh|bận <ngày> từ Nh đến Mh` (và `xóa rảnh|bận <ngày>`) cũng đi qua luồng Đề xuất → Duyệt. Ô rảnh tô xanh, ô bận gạch chéo, đều kèm chữ "Rảnh"/"Bận"; bấm ô trống để điền sẵn lệnh thêm việc (hỗ trợ ngày `dd/mm`). Giờ bận bị bỏ qua khi xếp; xếp ngoài giờ rảnh chỉ cảnh báo trong phản hồi (quy tắc đề xuất, chưa chốt trong SRS).
+- **Bảng công việc (Planner)**: cột phải cạnh lịch (`features/planner/TaskPanel.tsx`), có tìm kiếm + lọc trạng thái. Trạng thái suy ra, không lưu: **Nháp** = thuộc đề xuất đang chờ, **Đã xác nhận** = đã xếp lên lịch và được duyệt, **Chưa xếp** = chưa có ngày/giờ. Mỗi trạng thái có icon + chữ. Lệnh `tạo công việc <tên> hạn <ngày> [N giờ]` tạo việc chưa xếp.
+- **Lập kế hoạch tự động (Planner)**: lệnh `lập kế hoạch` xếp các việc chưa xếp theo hạn nộp rồi mức ưu tiên, mỗi việc một khối 60 phút vào giờ trống sớm nhất (bỏ giờ bận; nếu ngày có khai giờ rảnh thì chỉ dùng giờ rảnh). Cùng đầu vào cho cùng kết quả. Việc không vừa trước hạn nằm trong mục "Chưa xếp được (n)" của thanh đề xuất (mã `INSUFFICIENT_AVAILABILITY`); phần xếp được vẫn xem trước và duyệt riêng. Quy tắc khối 60 phút là đề xuất, chưa chốt trong SRS.
+- **Chú thích, huy hiệu (Planner)**: đề xuất không tự hết hạn (schema F1 v1.1 đã bỏ `EXPIRED`), chỉ chuyển `STALE` khi lịch nền đổi. Hàng chú thích trên lịch có Đã xác nhận / Rảnh / Bận / Đề xuất; tuần không có việc thì hiện gợi ý lệnh mẫu. Bảng công việc có nút lọc "Tuần đang xem". Menu "Lập kế hoạch" hiện huy hiệu "Chờ duyệt" khi còn đề xuất chưa quyết định (đề xuất nằm ở `App` nên không mất khi đổi trang).
+- Dùng lại `Button`, `Card`, `Modal` (Modal là `<dialog>` gốc, có khôi phục focus) trước khi viết wrapper mới.
+- Chọn tệp chỉ lưu tên và nhãn trạng thái; không tải lên hay đọc nội dung.
+- Icon: chỉ dùng `lucide-react`.
+- **Animation**: dùng GSAP qua hook `useGSAP` (`@gsap/react`), không tự viết `useEffect` + `gsap` để tránh rò rỉ khi unmount. Hiện có một hiệu ứng: ở `App.tsx`, mỗi lần `page` đổi, các `.card` và khung chat trang chủ đang hiển thị trượt từ dưới lên (48px, 0.5s, lệch nhau 0.08s, `clearProps` để không để lại style). Vì `Assistant` và `Study` chỉ bị `hidden` chứ không unmount, hiệu ứng gắn vào việc đổi trang chứ không gắn vào lúc mount. Khi thêm hiệu ứng mới, chỉ animate `transform` và `opacity`.
 
-## 5. Styling
+## 5. Giao diện và CSS
 
-- Styles live in `src/styles/index.css`; tokens in `src/styles/brand.css`. Match existing class naming (`.button`, `.primary`, `.secondary`, `.card`, `.tabs`, `.info-banner`, `.warning-banner`).
-- Use `--sf-*` tokens / semantic vars (`--color-primary`, `--color-ink`, `--color-line`…) before adding raw colours.
-- Global element defaults go in `@layer base` so Tailwind utilities can override them. Keep `@import`s at the top.
-- Palette: primary `#2563EB`, navy `#0F172A`, slate `#64748B`, background `#F8FAFC`, border `#E2E8F0`, success `#10B981`, warning `#F59E0B`, danger `#EF4444`, purple `#8B5CF6`.
-- Light logo (`/brand/logo-horizontal-light-transparent.png`) on the light header.
+### Các file trong `src/styles/`
 
-## 6. Accessibility (non-negotiable)
+`index.css` chỉ chứa các `@import`. **Thứ tự import là thứ tự cascade** — rule sau ghi đè rule trước, nên không đổi thứ tự khi chưa kiểm tra.
 
-- Semantic HTML first; everything keyboard reachable.
-- Keep visible `:focus-visible`, the skip link, modal focus restore + Escape handling, and `aria-label` / `aria-current` / `aria-pressed`.
-- Never rely on colour alone for status, deadlines, completion or errors (add icon/text).
-- Minimum 44px interactive targets.
-- Respect `prefers-reduced-motion` and `forced-colors`; keep responsive breakpoints (1250 / 800 / 480px).
-- On page change, move focus to the page heading.
+| File | Nội dung |
+|---|---|
+| `tokens.css` | token thương hiệu `--sf-*`, bảng màu, `--bg-card`; khối `@theme` của Tailwind (`--color-*`, `--radius-card`) |
+| `base.css` | reset toàn cục (`@layer base`), nút (`.button`, `.primary`, `.secondary`…), ô nhập |
+| `layout.css` | khung ứng dụng: thanh trên, thanh bên, `.main-content`, tiêu đề trang |
+| `cards.css` | `.card`, `.card-heading`, thẻ tóm tắt (`.summary-*`) |
+| `overlays.css` | modal và toast |
+| `overrides.css` | breakpoint responsive, sau đó các tinh chỉnh dùng chung. Cố ý để tinh chỉnh đứng **sau** media query |
+| `assistant.css` | chat trợ lý |
+| `history.css` | panel lịch sử hội thoại |
+| `home.css` | bố cục trang chủ (chat + 3 thẻ), khung chat bo tròn |
+| `planner.css` | trang Lập kế hoạch: khung chat và lịch tuần vừa khít màn hình |
+| `study.css` | trang Học tập |
 
-## 7. Change workflow
+Mỗi trang có file CSS riêng; style dùng chung cho nhiều trang đặt trong `layout.css`, `cards.css`, `base.css`.
 
-1. Read the component and its CSS first; grep all callers when touching a shared class, state value or primitive.
-2. Smallest change that does the job — no new abstractions, routes, deps or persistence without a concrete need.
-3. `npm run format`, `npm run build`, then check the UI in the browser for layout/interaction changes.
-4. Report build failures honestly. Never commit secrets, `.env`, or `dist/`.
+### Quy tắc
+
+- Dùng token `--sf-*` hoặc biến ngữ nghĩa (`--color-primary`, `--color-ink`, `--color-line`…) trước khi thêm màu thô.
+- Đặt style phần tử toàn cục trong `@layer base` để tiện ích Tailwind ghi đè được. Giữ `@import` ở đầu file.
+- Dùng đúng tên class hiện có (`.button`, `.primary`, `.secondary`, `.card`, `.card-heading`).
+- Khi thêm class mới, kiểm tra nó thực sự được dùng; xóa CSS không còn tham chiếu thay vì để lại.
+- Bảng màu: primary `#596CF0`, indigo `#5064E9`, purple `#8B5CF6`, pink `#FF6B81`, orange `#FF9F43`, yellow `#FFE066`, teal `#22B8A7`; chữ chính `#17203B`, chữ phụ `#667085`; nền `#F7F8FF`; viền `#E5E8F4`.
+- Nền thẻ: `--bg-card` (`rgba(255,255,255,0.94)`) kèm làm mờ nhẹ; thẻ bo `var(--radius-card)` (16px). Gradient thương hiệu: `linear-gradient(115deg, #596cf0, #8b5cf6 58%, #d657c7)`.
+- Chrome (`.topbar`, `.sidebar`) là khối bo tròn nổi lên trên nền; đổi kích thước chúng phải kiểm tra lại `.main-content`.
+- Logo bản sáng (`/brand/logo-horizontal-light-transparent.png`) dùng trên thanh trên sáng.
+- Trang chủ và Lập kế hoạch vừa khít chiều cao màn hình, không cuộn trang: khung chat co giãn, ba thẻ ẩn khi chat; hàng giờ của lịch co lại. Giữ tính chất này khi sửa.
+
+## 6. Khả năng tiếp cận (bắt buộc)
+
+- Ưu tiên HTML ngữ nghĩa; mọi thứ dùng được bằng bàn phím.
+- Giữ `:focus-visible` nhìn thấy được, skip link, khôi phục focus cho modal + phím Escape, và `aria-label` / `aria-current` / `aria-pressed`.
+- Không chỉ dựa vào màu để biểu thị trạng thái, deadline, hoàn thành hay lỗi (thêm icon/chữ).
+- Vùng bấm tối thiểu 44px. Ngoại lệ hiện có: nút chuyển tuần trong lịch cao 32px; không thêm ngoại lệ mới nếu chưa cần.
+- Tôn trọng `forced-colors`; giữ các breakpoint 1250 / 800 / 480px. CSS (transition/animation) tôn trọng `prefers-reduced-motion` trong `overrides.css`. **Ngoại lệ có chủ đích:** hiệu ứng trượt thẻ bằng GSAP luôn chạy, không kiểm tra `prefers-reduced-motion`, theo quyết định của nhóm. Hiệu ứng mới có chuyển động lớn nên cân nhắc tắt khi người dùng chọn giảm chuyển động.
+- Khi đổi trang, chuyển focus về tiêu đề trang.
+
+## 7. Quy trình thay đổi
+
+1. Đọc component và CSS của nó trước; khi sửa class, giá trị state hoặc primitive dùng chung, grep mọi nơi gọi.
+2. Thay đổi nhỏ nhất đủ làm xong việc — không thêm abstraction, route, dependency hay lưu trữ nếu chưa có nhu cầu cụ thể.
+3. `npm run format`, `npm run build`, `npx tsc --noEmit`, rồi xem giao diện trên trình duyệt nếu đổi bố cục/tương tác.
+4. Báo lỗi build trung thực. Không commit secret, `.env`, `dist/`.
+5. Trước khi push, ghi một mục vào `worklogs/<github-username>.md` theo `worklogs/sample.md`.
