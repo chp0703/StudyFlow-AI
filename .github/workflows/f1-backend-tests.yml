@@ -12,8 +12,25 @@ permissions:
 
 jobs:
   independent-backend-tests:
+    name: ${{ matrix.suite }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: Approved contracts and application services
+            command: |
+              python -B contracts/check_contract.py
+              python -B -m unittest discover -s tests -v
+              python -B -m unittest discover -s backend/tests/acceptance_api_sol -p test_contract_addendum.py -v
+          - suite: Scheduler unit and independent acceptance
+            command: |
+              python -B -m unittest discover -s backend/tests/unit -t . -v
+              python -B -m unittest discover -s backend/tests/acceptance_sol -v
+              python -B backend/scripts/evaluate_planner.py
+          - suite: HTTP API independent acceptance
+            command: python -B -m unittest discover -s backend/tests/acceptance_api_sol -p test_http_contract.py -v
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,11 +38,5 @@ jobs:
           python-version: '3.12'
       - name: Install independent acceptance dependencies
         run: python -m pip install -r backend/requirements-acceptance.txt
-      - name: Validate approved contracts
-        run: python -B contracts/check_contract.py
-      - name: Verify application services
-        run: python -B -m unittest discover -s tests -v
-      - name: Verify scheduler and independent Sol regressions
-        run: python -B -m unittest discover -s backend/tests -v
-      - name: Evaluate fixed planner cases
-        run: python -B backend/scripts/evaluate_planner.py
+      - name: Run independent acceptance group
+        run: ${{ matrix.command }}
