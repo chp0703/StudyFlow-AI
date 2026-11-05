@@ -115,10 +115,10 @@ declare
     v_task uuid;
     v_title text;
     v_result jsonb;
+    v_approval jsonb;
+    v_source text := 'UI';
+    v_source_message_id uuid;
 begin
-    if p_attestation_id is not null then
-        raise exception using errcode='P0001', message='APPROVAL_REQUIRED';
-    end if;
     perform app_private.lock_owner(v_user);
     if p_idempotency_key is null or p_request_fingerprint is null then
         raise exception using errcode='P0001', message='INVALID_PARAMETER';
@@ -142,6 +142,17 @@ begin
     if v_candidate.version <> p_expected_candidate_version or v_candidate.status <> 'DRAFT' then
         raise exception using errcode='P0001', message='STALE_ENTITY_VERSION';
     end if;
+    if p_attestation_id is not null then
+        v_approval := app_private.consume_chat_attestation(
+            p_attestation_id, v_user, 'TASK_CANDIDATE', p_candidate_id,
+            p_expected_candidate_version, p_decision);
+        v_source := 'CHAT';
+        v_source_message_id := (v_approval->>'source_message_id')::uuid;
+    end if;
+    insert into app_private.approval_actions
+        (approval_action_id,user_id,target_type,target_id,target_version,decision,source,source_message_id,candidate_target_id)
+    values (extensions.gen_random_uuid(),v_user,'TASK_CANDIDATE',p_candidate_id,
+            p_expected_candidate_version,p_decision,v_source,v_source_message_id,p_candidate_id);
     if p_decision <> 'APPROVE' then
         update app_private.task_candidates set status='CANCELLED', version=version+1 where candidate_id=p_candidate_id;
         v_result := jsonb_build_object('schema_version','1.1','candidate_id',p_candidate_id,'status','CANCELLED');
@@ -348,16 +359,25 @@ as $$
 declare
     v_user uuid := app_private.require_owner(); v_prop app_private.plan_proposals%rowtype;
     v_plan uuid := extensions.gen_random_uuid(); v_version bigint; v_previous uuid; v_revision bigint; v_block jsonb;
+    v_approval jsonb; v_source text := 'UI'; v_source_message_id uuid;
 begin
-    if p_attestation_id is not null then
-        raise exception using errcode='P0001', message='APPROVAL_REQUIRED';
-    end if;
     if p_decision <> 'APPROVE' then raise exception using errcode='P0001', message='APPROVAL_REQUIRED'; end if;
     perform app_private.lock_owner(v_user);
     select * into v_prop from app_private.plan_proposals where proposal_id=p_proposal_id and user_id=v_user for update;
     if not found or v_prop.status <> 'PROPOSED' or v_prop.version <> p_expected_proposal_version then
         raise exception using errcode='P0001', message='STALE_PROPOSAL';
     end if;
+    if p_attestation_id is not null then
+        v_approval := app_private.consume_chat_attestation(
+            p_attestation_id, v_user, 'PLAN_PROPOSAL', p_proposal_id,
+            p_expected_proposal_version, p_decision);
+        v_source := 'CHAT';
+        v_source_message_id := (v_approval->>'source_message_id')::uuid;
+    end if;
+    insert into app_private.approval_actions
+        (approval_action_id,user_id,target_type,target_id,target_version,decision,source,source_message_id,proposal_target_id)
+    values (extensions.gen_random_uuid(),v_user,'PLAN_PROPOSAL',p_proposal_id,
+            p_expected_proposal_version,p_decision,v_source,v_source_message_id,p_proposal_id);
     select current_plan_id, schedule_revision into v_previous, v_revision from app_private.user_profiles where user_id=v_user for update;
     if p_expected_plan_version is not null and v_previous is not null and
        (select version from app_private.study_plans where plan_id=v_previous) <> p_expected_plan_version then
@@ -384,15 +404,26 @@ create or replace function app_api.reject_study_plan(
 )
 returns jsonb language plpgsql security invoker set search_path = ''
 as $$
-declare v_user uuid := app_private.require_owner();
+declare v_user uuid := app_private.require_owner(); v_approval jsonb; v_source text := 'UI'; v_source_message_id uuid;
 begin
-    if p_attestation_id is not null then
-        raise exception using errcode='P0001', message='APPROVAL_REQUIRED';
-    end if;
     perform app_private.lock_owner(v_user);
-    update app_private.plan_proposals set status='REJECTED'
-    where proposal_id=p_proposal_id and user_id=v_user and status='PROPOSED' and version=p_expected_proposal_version;
+    if p_attestation_id is not null then
+        v_approval := app_private.consume_chat_attestation(
+            p_attestation_id, v_user, 'PLAN_PROPOSAL', p_proposal_id,
+            p_expected_proposal_version, 'REJECT');
+        v_source := 'CHAT';
+        v_source_message_id := (v_approval->>'source_message_id')::uuid;
+    end if;
+    select 1 from app_private.plan_proposals
+    where proposal_id=p_proposal_id and user_id=v_user and status='PROPOSED'
+      and version=p_expected_proposal_version for update;
     if not found then raise exception using errcode='P0001', message='STALE_PROPOSAL'; end if;
+    insert into app_private.approval_actions
+        (approval_action_id,user_id,target_type,target_id,target_version,decision,source,source_message_id,proposal_target_id)
+    values (extensions.gen_random_uuid(),v_user,'PLAN_PROPOSAL',p_proposal_id,
+            p_expected_proposal_version,'REJECT',v_source,v_source_message_id,p_proposal_id);
+    update app_private.plan_proposals set status='REJECTED'
+    where proposal_id=p_proposal_id and user_id=v_user;
     return jsonb_build_object('schema_version','1.1','proposal_id',p_proposal_id,'status','REJECTED');
 end;
 $$;
