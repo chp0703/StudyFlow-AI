@@ -5,7 +5,7 @@
 | 2c-1 | `get_scheduling_context`, `get_study_plan` (reads) | done (migration 018, test 14) |
 | 2c-2 | `persist_plan_proposal` (+ generation idempotency, scope/policy cross-check) | done (migration 019, test 15) |
 | 2c-3 | `approve_study_plan`, `reject_study_plan`, durable STALE | done (migration 020, test 16) |
-| 2c-4 | window-change warnings for affected approved blocks | planned |
+| 2c-4 | window-change warnings for affected approved blocks | done (migration 021, tests 12) |
 
 ## 2c-1 decisions
 
@@ -46,3 +46,13 @@
 - Reject records a REJECT approval, marks the proposal REJECTED and cancels the action; revision is unchanged.
 - **Not re-checked:** availability/busy windows. The revision guard covers window edits made after generation;
   an engine bug that ignores windows would not be caught here.
+
+## 2c-4 decisions
+
+- `set_availability` (UPDATE/ARCHIVE), `set_busy_interval` (ADD/UPDATE) and `set_scheduling_preferences` return a
+  `APPROVED_BLOCKS_MAY_BE_AFFECTED` warning listing the current plan's future blocks. Adding availability or archiving
+  a busy interval can only free time, so they stay silent.
+- **Limit:** conservative, not exact. The change is not matched against recurring windows, so every future block is
+  listed. The warning is stored with the idempotent result, so replays carry it.
+- Approval does not yet reject blocks in the past or blocks that fall in busy/outside availability windows
+  (README: approval transaction). Past-block checks depend on the DB clock, so tests would need a controllable clock.

@@ -176,3 +176,18 @@
 **Ghi chú**
 
 - Chưa kiểm tra lại giờ rảnh/bận lúc duyệt; dựa vào revision guard.
+
+## 2026-11-05 — Backend F1: WP2c-4 (cảnh báo khi đổi khung giờ/policy)
+
+**Mục tiêu:** giai đoạn 2c-4, trả nợ cảnh báo "block đã duyệt có thể bị ảnh hưởng".
+
+**Đã làm**
+
+- Migration 021: `set_availability`, `set_busy_interval`, `set_scheduling_preferences` trả cảnh báo `APPROVED_BLOCKS_MAY_BE_AFFECTED` kèm danh sách block tương lai của kế hoạch hiện tại; cảnh báo được lưu cùng kết quả idempotent.
+- Mở rộng `supabase/tests/12_wp2b4_windows_preferences.sql` (5 kiểm tra mới) và `docs/implementation/WP2C_NOTES.md`.
+
+**Kết quả:** nhánh `feat/f1-mvp-intergration`; pgTAP local pass 14 bộ (465 kiểm tra).
+
+**Ghi chú**
+
+- Cảnh báo thận trọng (liệt kê mọi block tương lai), chưa đối chiếu chính xác với khung giờ lặp.

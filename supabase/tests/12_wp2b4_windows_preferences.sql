@@ -200,5 +200,35 @@ select ok(pg_temp.q_is(pg_temp.q_set('set_scheduling_preferences','SET_SCHEDULIN
 select ok(pg_temp.q_is(pg_temp.q_set('set_scheduling_preferences','SET_SCHEDULING_PREFERENCES',
  pg_temp.q_prefs('{"max_block_minutes":60}',pg_temp.q_rev()),'q12-prefs-00000003'),'INVALID_PARAMETER'),'a merged policy with max below min is rejected');
 select is(pg_temp.q_rev(),(select (res#>>'{data,schedule_revision}')::bigint from q12 where name='p1'),'rejected preferences do not change the revision');
+
+-- WP2c-4: warnings when approved future blocks may be affected (none while there is no plan).
+select ok(res->'warnings'='[]'::jsonb,'no warning while no plan exists') from q12 where name='p1';
+insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,deadline_at,deadline_precision,deadline_date,
+ deadline_timezone,estimated_minutes,remaining_minutes) values ('d1210000-0000-4000-8000-0000000000a1','d1210000-0000-4000-8000-000000000001',
+ extensions.gen_random_uuid(),'Bài tập',clock_timestamp()+interval '30 days','DATETIME',null,'UTC',120,120);
+insert into app_private.plan_proposals(proposal_id,user_id,base_schedule_revision,generation_scope,payload,algorithm_version,policy_snapshot)
+ values ('d1210000-0000-4000-8000-0000000000c1','d1210000-0000-4000-8000-000000000001',0,'{}','{}','q12-1','{}');
+insert into app_private.study_plans(plan_id,user_id,version,source_proposal_id)
+ values ('d1210000-0000-4000-8000-0000000000d1','d1210000-0000-4000-8000-000000000001',1,'d1210000-0000-4000-8000-0000000000c1');
+insert into app_private.study_blocks(plan_id,block_id,user_id,task_id,start_at,end_at) values
+ ('d1210000-0000-4000-8000-0000000000d1','d1210000-0000-4000-8000-0000000000e1','d1210000-0000-4000-8000-000000000001',
+  'd1210000-0000-4000-8000-0000000000a1',clock_timestamp()+interval '2 days',clock_timestamp()+interval '2 days 1 hour'),
+ ('d1210000-0000-4000-8000-0000000000d1','d1210000-0000-4000-8000-0000000000e2','d1210000-0000-4000-8000-000000000001',
+  'd1210000-0000-4000-8000-0000000000a1',clock_timestamp()-interval '2 days',clock_timestamp()-interval '2 days'+interval '1 hour');
+update app_private.user_profiles set current_plan_id='d1210000-0000-4000-8000-0000000000d1' where user_id='d1210000-0000-4000-8000-000000000001';
+insert into q12 values ('w_busy',pg_temp.q_set('set_busy_interval','SET_BUSY_INTERVAL',
+ pg_temp.q_add(jsonb_build_object('kind','BUSY','label','Việc mới','recurrence','NONE','timezone','Asia/Ho_Chi_Minh',
+ 'start_at','2026-11-07T09:00:00Z','end_at','2026-11-07T10:00:00Z','weekday',null,'start_time',null,'end_time',null,
+ 'valid_from',null,'valid_until',null)),'q12-busy-warn-0001'));
+select ok(res->>'outcome'='COMMITTED' and res#>>'{warnings,0,code}'='APPROVED_BLOCKS_MAY_BE_AFFECTED'
+ and res#>'{warnings,0,details,block_ids}'='["d1210000-0000-4000-8000-0000000000e1"]'::jsonb,
+ 'a new busy interval warns about future approved blocks only') from q12 where name='w_busy';
+insert into q12 values ('w_avail',pg_temp.q_set('set_availability','SET_AVAILABILITY',pg_temp.q_add(pg_temp.q_weekly('Thêm giờ rảnh',3)),'q12-avail-warn-001'));
+select ok(res->>'outcome'='COMMITTED' and res->'warnings'='[]'::jsonb,'adding availability cannot hurt approved blocks') from q12 where name='w_avail';
+insert into q12 values ('w_pref',pg_temp.q_set('set_scheduling_preferences','SET_SCHEDULING_PREFERENCES',
+ pg_temp.q_prefs('{"break_minutes":15}',pg_temp.q_rev()),'q12-prefs-warn-001'));
+select ok(res->>'outcome'='COMMITTED' and res#>>'{warnings,0,code}'='APPROVED_BLOCKS_MAY_BE_AFFECTED','a policy change warns too') from q12 where name='w_pref';
+select ok(app_private.matches_contract('set_busy_intervalResult',res) and app_private.matches_contract('set_scheduling_preferencesResult',(select res from q12 where name='w_pref')),
+ 'warning payloads stay contract-valid') from q12 where name='w_busy';
 select * from finish();
 rollback;
