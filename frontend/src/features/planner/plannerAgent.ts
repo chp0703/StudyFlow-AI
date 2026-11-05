@@ -252,6 +252,53 @@ export function runPlannerCommand(
     }
   }
 
+  // "tạo công việc Báo cáo hạn 20/11 3 giờ": an unscheduled task, placed later.
+
+  m = /^(?:thêm|tạo)\s+(?:công việc|việc)\s+(.+?)\s+hạn\s+(.+)$/u.exec(text)
+
+  if (m) {
+    const effortMatch = /(\d+)\s*giờ/u.exec(m[2])
+
+    const { date } = parseWhen(m[2].replace(effortMatch?.[0] ?? "", " "))
+
+    if (!date)
+      return unchanged(
+        "Cho mình biết hạn nộp. Ví dụ: tạo công việc Báo cáo hạn 20/11 3 giờ.",
+      )
+
+    const title = m[1].charAt(0).toLocaleUpperCase("vi") + m[1].slice(1)
+
+    const dup = tasks.some((t) => t.title.toLocaleLowerCase("vi") === m![1])
+
+    const task: Task = {
+      id: Math.max(0, ...tasks.map((t) => t.id)) + 1,
+
+      title,
+
+      course: "Chưa phân loại",
+
+      time: "Chưa xếp",
+
+      done: false,
+
+      effort: effortMatch ? Number(effortMatch[1]) * 60 : 60,
+
+      priority: "Trung bình",
+
+      deadline: date,
+    }
+
+    return {
+      tasks: [...tasks, task],
+
+      availability,
+
+      reply: `Đã tạo "${title}", hạn ${vnDate(date)}${
+        dup ? " (đã có công việc cùng tên)" : ""
+      }.`,
+    }
+  }
+
   m = /^(?:thêm|tạo|lên lịch|đặt)\s+(.+)$/u.exec(text)
 
   if (m) {

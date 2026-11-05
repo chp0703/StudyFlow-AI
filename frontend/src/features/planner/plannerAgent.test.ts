@@ -62,3 +62,14 @@ test("parses dd/mm dates", () => {
   const r = runPlannerCommand("thêm Ôn bài lúc 9h ngày 5/11", [])
   assert.match(r.tasks[0]?.date ?? "", /-11-05$/)
 })
+
+test("creates an unscheduled task with deadline and effort", () => {
+  const r = runPlannerCommand("tạo công việc Báo cáo hạn 20/12 3 giờ", [])
+  assert.equal(r.tasks[0].hour, undefined)
+  assert.equal(r.tasks[0].effort, 180)
+  assert.match(r.tasks[0].deadline, /-12-20$/)
+  assert.match(
+    runPlannerCommand("tạo công việc Báo cáo hạn 20/12", r.tasks).reply,
+    /cùng tên/,
+  )
+})

@@ -36,6 +36,8 @@ import {
   isStale,
 } from "../features/planner/proposal"
 
+import TaskPanel from "../features/planner/TaskPanel"
+
 import type { Proposal, TimeWindow } from "../types/planner"
 
 import type { Task } from "../types/task"
@@ -295,7 +297,9 @@ export default function Planner({
 
   const proposedWindows = new Set(
     proposal?.windowChanges
+
       .filter((c) => c.kind === "added")
+
       .map((c) => c.window.id),
   )
 
@@ -492,6 +496,7 @@ export default function Planner({
         >
           <div className="dashboard-schedule">
             <div className="schedule-header">
+              <span className="schedule-header-time" aria-hidden="true" />
               {weekDays.map((_, i) => (
                 <span
                   key={i}
@@ -507,6 +512,9 @@ export default function Planner({
             </div>
             {hours.map((hour) => (
               <div className="schedule-row" key={hour}>
+                <span className="schedule-hour" aria-hidden="true">
+                  {`${String(hour).padStart(2, "0")}:00`}
+                </span>
                 {weekDays.map((d, day) => {
                   const event = eventAt(d, hour)
 
@@ -582,6 +590,17 @@ export default function Planner({
           </div>
         )}
       </Card>
+
+      <TaskPanel
+        tasks={shown}
+        proposedIds={
+          new Set(
+            proposal?.changes
+              .filter((c) => c.kind !== "removed")
+              .map((c) => c.task.id),
+          )
+        }
+      />
     </div>
   )
 }
