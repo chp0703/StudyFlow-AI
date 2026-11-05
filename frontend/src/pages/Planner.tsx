@@ -1,4 +1,8 @@
-import { useState, type Dispatch, type SetStateAction } from "react"
+import { useRef, useState, type Dispatch, type SetStateAction } from "react"
+
+import gsap from "gsap"
+
+import { useGSAP } from "@gsap/react"
 
 import { ChevronLeft, ChevronRight, Send } from "lucide-react"
 
@@ -16,9 +20,6 @@ import type { Task } from "../types/task"
 
 import { today, toIsoDate } from "../utils/date"
 
-const HINT =
-  "Ví dụ: thêm Ôn giải tích thứ 3 lúc 19h · dời Ôn giải tích sang thứ 5 lúc 9h · xóa Ôn giải tích"
-
 const todayIndex = (today.getDay() + 6) % 7
 
 const nowHour = new Date().getHours()
@@ -35,16 +36,94 @@ export default function Planner({
   tasks,
 
   setTasks,
+
+  notify,
 }: {
   tasks: Task[]
 
   setTasks: Dispatch<SetStateAction<Task[]>>
+
+  notify?: (message: string) => void
 }) {
   const [input, setInput] = useState("")
 
-  const [reply, setReply] = useState(HINT)
+  const [reply, setReply] = useState("")
 
   const [week, setWeek] = useState(0)
+
+  const calendarRef = useRef<HTMLDivElement>(null)
+
+  const prevWeek = useRef(0)
+
+  const prevTasks = useRef(tasks)
+
+  // Changing week slides the calendar content in from the direction of travel.
+
+  useGSAP(
+    () => {
+      const dir = Math.sign(week - prevWeek.current)
+
+      prevWeek.current = week
+
+      if (dir) {
+        gsap.from(".schedule-day, .schedule-event", {
+          x: dir * 28,
+
+          opacity: 0,
+
+          duration: 0.35,
+
+          ease: "power2.out",
+
+          clearProps: "transform,opacity",
+        })
+      }
+    },
+
+    { scope: calendarRef, dependencies: [week] },
+  )
+
+  // Events the agent just added or moved pop in, so the change is easy to spot.
+
+  useGSAP(
+    () => {
+      const before = new Map(prevTasks.current.map((t) => [t.id, t]))
+
+      const changed = tasks
+
+        .filter((t) => {
+          const old = before.get(t.id)
+
+          return !old || old.date !== t.date || old.hour !== t.hour
+        })
+
+        .map((t) => `[data-task-id="${t.id}"]`)
+
+      prevTasks.current = tasks
+
+      if (changed.length) {
+        gsap.fromTo(
+          changed.join(","),
+
+          { scale: 0.85, opacity: 0.3 },
+
+          {
+            scale: 1,
+
+            opacity: 1,
+
+            duration: 0.5,
+
+            ease: "back.out(2)",
+
+            clearProps: "transform,opacity",
+          },
+        )
+      }
+    },
+
+    { scope: calendarRef, dependencies: [tasks] },
+  )
 
   const weekLabel =
     week === 0 ? "Tuần này" : week > 0 ? `+${week} tuần` : `${week} tuần`
@@ -74,18 +153,18 @@ export default function Planner({
 
     setReply(result.reply)
 
+    notify?.(result.reply)
+
     setInput("")
   }
 
   return (
     <div className="planner-page">
       <Card className="planner-chat">
-        <div className="planner-chat-title">
-          <h2>Trợ lý lập kế hoạch</h2>
-          <p role="status" aria-live="polite" title={reply}>
-            {reply}
-          </p>
-        </div>
+        <h2 className="planner-chat-title">Trợ lý lập kế hoạch</h2>
+        <span className="sr-only" role="status" aria-live="polite">
+          {reply}
+        </span>
         <form
           className="planner-chat-form"
           onSubmit={(e) => {
@@ -106,7 +185,7 @@ export default function Planner({
             aria-label="Gửi yêu cầu"
             disabled={!input.trim()}
           >
-            <Send aria-hidden="true" size={16} />
+            <Send aria-hidden="true" size={14} />
           </Button>
         </form>
       </Card>
@@ -142,6 +221,7 @@ export default function Planner({
         }
       >
         <div
+          ref={calendarRef}
           className="dashboard-calendar-scroll"
           role="region"
           aria-label="Lịch trong tuần"
@@ -180,6 +260,7 @@ export default function Planner({
                             { Cao: "high", Thấp: "low" }[event.priority] ??
                             "mid"
                           } ${event.done ? "is-done" : ""}`}
+                          data-task-id={event.id}
                           title={`${event.title} · ${event.time}`}
                         >
                           <strong>{event.title}</strong>

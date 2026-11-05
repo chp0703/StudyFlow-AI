@@ -1,4 +1,9 @@
 import { useState, useRef, useEffect, type FormEvent } from "react"
+
+import gsap from "gsap"
+
+import { useGSAP } from "@gsap/react"
+
 import {
   FileText,
   Upload,
@@ -13,89 +18,142 @@ import {
   HelpCircle,
   FolderOpen,
 } from "lucide-react"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import type { StudyFile } from "../types/task"
 
 // Question structure for Quiz
+
 type QuizQuestion = {
   id: number
+
   course: string
+
   question: string
+
   hint?: string
+
   options: string[]
+
   correctIndex: number
+
   explanation: string
 }
 
 const quizQuestions: QuizQuestion[] = [
   {
     id: 1,
+
     course: "Giải tích",
+
     question:
       "Nếu hàm số f(x, y) = x²y + 3xy², đạo hàm riêng ∂f/∂x bằng bao nhiêu?",
+
     hint: "Giữ y không đổi khi lấy đạo hàm theo biến x.",
+
     options: ["2xy + 3y²", "x² + 6xy", "2xy + 6xy", "2x + 6y"],
+
     correctIndex: 0,
+
     explanation:
       "Khi lấy đạo hàm riêng theo biến x, coi y là hằng số: d/dx(x²y) = 2xy và d/dx(3xy²) = 3y². Do đó ∂f/∂x = 2xy + 3y².",
   },
+
   {
     id: 2,
+
     course: "Mạng máy tính",
+
     question:
       "Trong mô hình OSI 7 tầng, tầng nào chịu trách nhiệm định tuyến (routing) gói tin giữa các mạng?",
+
     hint: "Tầng này hoạt động dựa trên địa chỉ IP logic.",
+
     options: [
       "Tầng Mạng (Network Layer - Tầng 3)",
+
       "Tầng Liên kết dữ liệu (Data Link - Tầng 2)",
+
       "Tầng Giao vận (Transport - Tầng 4)",
+
       "Tầng Phiên (Session - Tầng 5)",
     ],
+
     correctIndex: 0,
+
     explanation:
       "Tầng Mạng (Layer 3) chịu trách nhiệm đánh địa chỉ logic (IP) và tìm đường đi (định tuyến) tối ưu cho gói tin qua các mạng khác nhau.",
   },
+
   {
     id: 3,
+
     course: "Kỹ thuật phần mềm",
+
     question:
       "Nguyên lý nào trong SOLID quy định một lớp chỉ nên có một lý do duy nhất để thay đổi?",
+
     hint: "Tập trung vào tính đơn nhiệm của từng module/class.",
+
     options: [
       "Single Responsibility Principle (SRP)",
+
       "Open/Closed Principle (OCP)",
+
       "Liskov Substitution Principle (LSP)",
+
       "Dependency Inversion Principle (DIP)",
     ],
+
     correctIndex: 0,
+
     explanation:
       "Single Responsibility Principle (SRP) khẳng định mỗi lớp chỉ nên đảm nhận một trách nhiệm duy nhất để giảm độ phụ thuộc và dễ bảo trì.",
   },
+
   {
     id: 4,
+
     course: "Cơ sở dữ liệu",
+
     question:
       "Mệnh đề SQL nào được sử dụng để loại bỏ các hàng trùng lặp trong tập kết quả truy vấn?",
+
     hint: "Đặt ngay sau từ khóa SELECT.",
+
     options: [
       "SELECT DISTINCT",
+
       "SELECT UNIQUE",
+
       "GROUP BY ALL",
+
       "FILTER DUPLICATES",
     ],
+
     correctIndex: 0,
+
     explanation:
       "Từ khóa DISTINCT trong câu lệnh 'SELECT DISTINCT' dùng để loại bỏ các bản ghi trùng lặp và chỉ trả về các giá trị phân biệt.",
   },
+
   {
     id: 5,
+
     course: "Cấu trúc dữ liệu & Giải thuật",
+
     question:
       "Độ phức tạp thời gian trung bình (average-case) của thuật toán sắp xếp nhanh (QuickSort) là gì?",
+
     hint: "Dựa trên chiến lược chia để trị (Divide and Conquer).",
+
     options: ["O(n log n)", "O(n²)", "O(n)", "O(log n)"],
+
     correctIndex: 0,
+
     explanation:
       "Thuật toán QuickSort trong trường hợp trung bình chia đôi mảng qua mỗi bước phân hoạch, đạt độ phức tạp O(n log n). Trường hợp xấu nhất mới là O(n²).",
   },
@@ -103,25 +161,36 @@ const quizQuestions: QuizQuestion[] = [
 
 type StudyChatMessage = {
   id: string
+
   sender: "user" | "ai"
+
   text: string
+
   time: string
 }
 
 const defaultFiles: StudyFile[] = [
   {
     name: "Giai-tich-2-Chuong-4-Dao-ham.pdf",
+
     course: "Giải tích",
+
     status: "2.4 MB · 14 trang · Đã lập chỉ mục",
   },
+
   {
     name: "Mang-may-tinh-OSI-Model.docx",
+
     course: "Mạng máy tính",
+
     status: "1.2 MB · 8 trang · Đã lập chỉ mục",
   },
+
   {
     name: "Ky-thuat-phan-mem-SOLID.pdf",
+
     course: "Kỹ thuật phần mềm",
+
     status: "850 KB · 5 trang · Đã lập chỉ mục",
   },
 ]
@@ -132,31 +201,175 @@ export default function Study({
   notify: (message: string) => void
 }) {
   // === Card 1: Quiz State ===
+
   const [quizIndex, setQuizIndex] = useState(0)
+
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
+
   const [isAnswerChecked, setIsAnswerChecked] = useState(false)
+
+  const [showExplanationPopup, setShowExplanationPopup] = useState(false)
+
   const [score, setScore] = useState(0)
+
   const [quizCompleted, setQuizCompleted] = useState(false)
 
   const currentQ = quizQuestions[quizIndex]
 
   const handleSelectOption = (index: number) => {
     if (isAnswerChecked) return
+
     setSelectedOption(index)
   }
 
   const handleCheckAnswer = () => {
     if (selectedOption === null || isAnswerChecked) return
+
     setIsAnswerChecked(true)
+
+    setShowExplanationPopup(true)
+
     if (selectedOption === currentQ.correctIndex) {
       setScore((s) => s + 1)
     }
   }
 
+  const quizRef = useRef<HTMLDivElement>(null)
+
+  const popupRef = useRef<HTMLDivElement>(null)
+
+  const prevQuizIndex = useRef(0)
+
+  // The popup scales in from the card centre; closing plays the reverse before it unmounts.
+
+  const popupOpen = isAnswerChecked && showExplanationPopup
+
+  useGSAP(
+    () => {
+      if (!popupOpen) return
+
+      gsap.from(popupRef.current, {
+        opacity: 0,
+        duration: 0.2,
+        clearProps: "opacity",
+      })
+
+      gsap.from(".quiz-popup-card", {
+        scale: 0.9,
+
+        y: 24,
+
+        opacity: 0,
+
+        duration: 0.4,
+
+        ease: "back.out(1.6)",
+
+        clearProps: "transform,opacity",
+      })
+    },
+
+    { scope: quizRef, dependencies: [popupOpen] },
+  )
+
+  const closePopup = (after?: () => void) => {
+    if (!popupRef.current) {
+      setShowExplanationPopup(false)
+
+      after?.()
+
+      return
+    }
+
+    gsap.to(".quiz-popup-card", {
+      scale: 0.94,
+
+      y: 12,
+
+      opacity: 0,
+
+      duration: 0.2,
+
+      ease: "power2.in",
+    })
+
+    gsap.to(popupRef.current, {
+      opacity: 0,
+
+      duration: 0.2,
+
+      onComplete: () => {
+        setShowExplanationPopup(false)
+
+        after?.()
+      },
+    })
+  }
+
+  // The next question slides in: header first, then the options one by one.
+
+  useGSAP(
+    () => {
+      const changed = prevQuizIndex.current !== quizIndex
+
+      prevQuizIndex.current = quizIndex
+
+      if (!changed) return
+
+      const tl = gsap.timeline({
+        defaults: { ease: "power2.out", clearProps: "transform,opacity" },
+      })
+
+      tl.from(".quiz-meta, .quiz-question-title", {
+        x: 28,
+        opacity: 0,
+        duration: 0.35,
+        stagger: 0.06,
+      })
+
+        .from(
+          ".quiz-option-btn",
+          { y: 18, opacity: 0, duration: 0.35, stagger: 0.07 },
+          "-=0.2",
+        )
+
+        .from(".quiz-bottom-actions", { opacity: 0, duration: 0.3 }, "-=0.2")
+    },
+
+    { scope: quizRef, dependencies: [quizIndex] },
+  )
+
+  // The results screen eases in after the last question.
+
+  useGSAP(
+    () => {
+      if (quizCompleted)
+        gsap.from(".quiz-results-screen", {
+          scale: 0.96,
+
+          y: 16,
+
+          opacity: 0,
+
+          duration: 0.5,
+
+          ease: "power3.out",
+
+          clearProps: "transform,opacity",
+        })
+    },
+
+    { scope: quizRef, dependencies: [quizCompleted] },
+  )
+
   const handleNextQuestion = () => {
+    setShowExplanationPopup(false)
+
     if (quizIndex < quizQuestions.length - 1) {
       setQuizIndex((i) => i + 1)
+
       setSelectedOption(null)
+
       setIsAnswerChecked(false)
     } else {
       setQuizCompleted(true)
@@ -165,18 +378,27 @@ export default function Study({
 
   const handleRestartQuiz = () => {
     setQuizIndex(0)
+
     setSelectedOption(null)
+
     setIsAnswerChecked(false)
+
+    setShowExplanationPopup(false)
+
     setScore(0)
+
     setQuizCompleted(false)
   }
 
   // === Card 2: Documents (Tài liệu) State ===
+
   const [files, setFiles] = useState<StudyFile[]>(defaultFiles)
+
   const uploadRef = useRef<HTMLInputElement>(null)
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploaded = Array.from(e.target.files || [])
+
     if (!uploaded.length) return
 
     const newFiles: StudyFile[] = uploaded.map((f) => {
@@ -184,26 +406,35 @@ export default function Study({
         f.size > 1024 * 1024
           ? `${(f.size / (1024 * 1024)).toFixed(1)} MB`
           : `${Math.round(f.size / 1024)} KB`
+
       return {
         name: f.name,
+
         course: "Tài liệu mới",
+
         status: `${sizeStr} · Đã nạp thành công`,
       }
     })
 
     setFiles((prev) => [...prev, ...newFiles])
+
     notify(`Đã tải lên ${uploaded.length} tài liệu mới.`)
+
     e.target.value = ""
   }
 
   const handleDeleteFile = (fileName: string) => {
     setFiles((prev) => prev.filter((f) => f.name !== fileName))
+
     notify(`Đã xóa tài liệu: ${fileName}`)
   }
 
   // === Card 3: AI Q&A (Hỏi đáp) State ===
+
   const [chatMessages, setChatMessages] = useState<StudyChatMessage[]>([])
+
   const [chatInput, setChatInput] = useState("")
+
   const chatBottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -212,14 +443,19 @@ export default function Study({
 
   const sendQuestion = (queryText: string) => {
     const text = queryText.trim()
+
     if (!text) return
 
     const userMsg: StudyChatMessage = {
       id: crypto.randomUUID(),
+
       sender: "user",
+
       text,
+
       time: new Date().toLocaleTimeString("vi-VN", {
         hour: "2-digit",
+
         minute: "2-digit",
       }),
     }
@@ -227,6 +463,7 @@ export default function Study({
     let aiReplyText = ""
 
     const qLower = text.toLowerCase()
+
     if (qLower.includes("đạo hàm") || qLower.includes("giải tích")) {
       aiReplyText =
         "Đạo hàm riêng của hàm nhiều biến f(x, y) theo biến x là đạo hàm thông thường khi coi biến y là hằng số. Ký hiệu là ∂f/∂x. Ví dụ: với f(x,y) = x²y + 3xy², ta có ∂f/∂x = 2xy + 3y²."
@@ -241,25 +478,32 @@ export default function Study({
         "SOLID gồm 5 nguyên lý hướng đối tượng: Single Responsibility (Đơn nhiệm), Open/Closed (Mở rộng/Đóng sửa đổi), Liskov Substitution (Thay thế Liskov), Interface Segregation (Phân tách giao diện), và Dependency Inversion (Đảo ngược phụ thuộc)."
     } else {
       const activeDoc = files[0]?.name || "Tài liệu của bạn"
+
       aiReplyText = `Dựa trên tài liệu "${activeDoc}": Câu hỏi "${text}" liên quan đến các khái niệm cốt lõi của bài học. Hãy kết hợp tự luyện tập trắc nghiệm ở cột bên trái để nắm vững kiến thức!`
     }
 
     const aiMsg: StudyChatMessage = {
       id: crypto.randomUUID(),
+
       sender: "ai",
+
       text: aiReplyText,
+
       time: new Date().toLocaleTimeString("vi-VN", {
         hour: "2-digit",
+
         minute: "2-digit",
       }),
     }
 
     setChatMessages((prev) => [...prev, userMsg, aiMsg])
+
     setChatInput("")
   }
 
   const handleChatSubmit = (e: FormEvent) => {
     e.preventDefault()
+
     sendQuestion(chatInput)
   }
 
@@ -278,7 +522,7 @@ export default function Study({
       {/* ========================================================
           CỘT TRÁI: QUIZ (Mỗi lần hiển thị 1 câu với 4 đáp án)
          ======================================================== */}
-      <div className="study-left-col">
+      <div className="study-left-col" ref={quizRef}>
         <Card
           className="study-card study-quiz-card"
           title="Luyện tập trắc nghiệm"
@@ -291,6 +535,72 @@ export default function Study({
             </div>
           }
         >
+          {/* Popup giải thích đúng/sai hiện ngay trong card */}
+          {isAnswerChecked && showExplanationPopup && (
+            <div
+              ref={popupRef}
+              className="quiz-popup-backdrop"
+              onClick={() => closePopup()}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Kết quả câu trả lời"
+            >
+              <div
+                className={`quiz-popup-card ${
+                  selectedOption === currentQ.correctIndex
+                    ? "is-correct"
+                    : "is-wrong"
+                }`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="quiz-popup-header">
+                  <div className="quiz-popup-status">
+                    <span className="quiz-popup-status-icon">
+                      {selectedOption === currentQ.correctIndex ? (
+                        <Check size={18} aria-hidden="true" />
+                      ) : (
+                        <X size={18} aria-hidden="true" />
+                      )}
+                    </span>
+                    <strong>
+                      {selectedOption === currentQ.correctIndex
+                        ? "Chính xác!"
+                        : `Chưa đúng! Đáp án đúng là ${["A", "B", "C", "D"][currentQ.correctIndex]}`}
+                    </strong>
+                  </div>
+                  <button
+                    type="button"
+                    className="quiz-popup-close-btn"
+                    onClick={() => closePopup()}
+                    aria-label="Đóng"
+                  >
+                    <X size={16} aria-hidden="true" />
+                  </button>
+                </div>
+                <div className="quiz-popup-body">
+                  <p>{currentQ.explanation}</p>
+                </div>
+                <div className="quiz-popup-footer">
+                  <Button
+                    className="primary quiz-popup-next-btn"
+                    onClick={() => closePopup(handleNextQuestion)}
+                  >
+                    {quizIndex < quizQuestions.length - 1 ? (
+                      <>
+                        Câu tiếp theo{" "}
+                        <ArrowRight size={16} aria-hidden="true" />
+                      </>
+                    ) : (
+                      <>
+                        Xem kết quả <ArrowRight size={16} aria-hidden="true" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {!quizCompleted ? (
             <div className="quiz-body">
               {/* Subject Tag */}
@@ -318,9 +628,11 @@ export default function Study({
               >
                 {currentQ.options.map((optionText, idx) => {
                   const isSelected = selectedOption === idx
+
                   const isCorrect = idx === currentQ.correctIndex
 
                   let optionClass = "quiz-option-btn"
+
                   if (isSelected) optionClass += " is-selected"
 
                   if (isAnswerChecked) {
@@ -363,26 +675,6 @@ export default function Study({
                 })}
               </div>
 
-              {/* Explanation section if answered */}
-              {isAnswerChecked && (
-                <div
-                  className={`quiz-explanation-box ${
-                    selectedOption === currentQ.correctIndex
-                      ? "success"
-                      : "warning"
-                  }`}
-                >
-                  <div className="explanation-header">
-                    <strong>
-                      {selectedOption === currentQ.correctIndex
-                        ? "Chính xác!"
-                        : `Chưa đúng! Đáp án đúng là ${["A", "B", "C", "D"][currentQ.correctIndex]}`}
-                    </strong>
-                  </div>
-                  <p>{currentQ.explanation}</p>
-                </div>
-              )}
-
               {/* Bottom Action Button */}
               <div className="quiz-bottom-actions">
                 {!isAnswerChecked ? (
@@ -394,26 +686,36 @@ export default function Study({
                     Kiểm tra đáp án
                   </Button>
                 ) : (
-                  <Button
-                    className="primary quiz-submit-btn"
-                    onClick={handleNextQuestion}
-                  >
-                    {quizIndex < quizQuestions.length - 1 ? (
-                      <>
-                        Câu tiếp theo{" "}
-                        <ArrowRight size={16} aria-hidden="true" />
-                      </>
-                    ) : (
-                      <>
-                        Xem kết quả <ArrowRight size={16} aria-hidden="true" />
-                      </>
-                    )}
-                  </Button>
+                  <div className="quiz-action-group">
+                    <Button
+                      className="secondary quiz-review-btn"
+                      onClick={() => setShowExplanationPopup(true)}
+                    >
+                      Xem giải thích
+                    </Button>
+                    <Button
+                      className="primary quiz-submit-btn"
+                      onClick={handleNextQuestion}
+                    >
+                      {quizIndex < quizQuestions.length - 1 ? (
+                        <>
+                          Câu tiếp theo{" "}
+                          <ArrowRight size={16} aria-hidden="true" />
+                        </>
+                      ) : (
+                        <>
+                          Xem kết quả{" "}
+                          <ArrowRight size={16} aria-hidden="true" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
           ) : (
             /* Quiz Completed Results Screen */
+
             <div className="quiz-results-screen">
               <div className="results-icon-wrap">
                 <Sparkles size={32} className="text-primary" />

@@ -48,6 +48,8 @@
 - Bỏ thanh tìm kiếm công việc và phím tắt Ctrl/⌘+K.
 - Tách `index.css` thành nhiều file trong `styles/`, xóa CSS không còn dùng (~200 selector), gộp còn 11 file (`tokens`, `base`, `overlays`, `overrides`, `planner`, `study`...) và viết lại `DESIGN.md`.
 - Cập nhật trang Học tập (`pages/Study.tsx`, `styles/study-page.css`).
+- Cài `gsap` và `@gsap/react`; thêm animation: thẻ trượt lên khi mở trang, tin nhắn chat, panel lịch sử co/giãn, chuyển tuần và sự kiện mới trong lịch, chữ chào trang chủ, đổi cuộc trò chuyện, chuyển câu và popup giải thích trong trắc nghiệm (`pages/Study.tsx`).
+- Cắt viền trắng quanh logo (`public/brand/`) và tăng kích thước logo trên thanh trên.
 - Thêm skill `ui-ux-pro-max` vào `.claude/skills/` và quy tắc ghi worklog vào `CLAUDE.md`.
 
 **Kết quả:** PR #13 (`feat/pages`). `tsc --noEmit`, `npm run build` và `npm run format` pass; test `plannerAgent` và `conversationHistory` 7/7 pass. Review PR #11 (docs kiến trúc Supabase + FastAPI) dưới dạng nhận xét.
@@ -56,4 +58,5 @@
 
 - Agent chỉ hiểu lệnh đơn giản (chưa có phút, ngày cụ thể, "tuần sau"); phản hồi chat và tuần đang xem ở Lập kế hoạch reset khi đổi trang.
 - Nút chuyển tuần cao 32px, nhỏ hơn mức 44px trong `DESIGN.md`; còn CSS cũ không dùng.
-- Chưa kiểm tra giao diện điện thoại (~400px).
+- Chưa kiểm tra giao diện điện thoại (~400px); drawer lịch sử trên điện thoại chưa có animation.
+- Animation GSAP luôn chạy, không kiểm tra `prefers-reduced-motion` (quyết định của nhóm).

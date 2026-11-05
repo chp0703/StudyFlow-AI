@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from "react"
 
+import gsap from "gsap"
+
+import { useGSAP } from "@gsap/react"
+
 import {
-  ArrowUpRight,
   Bell,
   BookOpen,
   CalendarDays,
   ChevronDown,
   Check,
-  CircleHelp,
   House,
   Settings,
   X,
@@ -78,7 +80,37 @@ export default function App() {
 
   const mainHeadingRef = useRef<HTMLHeadingElement>(null)
 
+  const mainRef = useRef<HTMLElement>(null)
+
   const firstPage = useRef(true)
+
+  // Cards slide up each time a page opens.
+
+  useGSAP(
+    () => {
+      const cards = gsap.utils
+
+        .toArray<HTMLElement>(".card, .assistant-shell")
+
+        .filter((el) => el.offsetParent !== null)
+
+      gsap.from(cards, {
+        y: 48,
+
+        opacity: 0,
+
+        duration: 0.5,
+
+        ease: "power2.out",
+
+        stagger: 0.08,
+
+        clearProps: "transform,opacity",
+      })
+    },
+
+    { scope: mainRef, dependencies: [page] },
+  )
 
   useEffect(() => {
     document.documentElement.lang = "vi"
@@ -121,8 +153,8 @@ export default function App() {
             className="brand-logo"
             src="/brand/logo-horizontal-light-transparent.png"
             alt="StudyFlow AI"
-            width={1600}
-            height={400}
+            width={1840}
+            height={366}
             fetchPriority="high"
           />
         </div>
@@ -132,7 +164,7 @@ export default function App() {
             aria-label="Thông báo"
             onClick={() => setModal("notifications")}
           >
-            <Bell aria-hidden="true" size={19} />
+            <Bell aria-hidden="true" size={17} />
             <i />
           </Button>
           <span className="top-divider" />
@@ -143,7 +175,7 @@ export default function App() {
           >
             <span className="avatar">S</span>
             <span>Sinh viên</span>
-            <ChevronDown aria-hidden="true" size={14} />
+            <ChevronDown aria-hidden="true" size={13} />
           </Button>
         </div>
       </header>
@@ -157,7 +189,7 @@ export default function App() {
               aria-current={page === n.name ? "page" : undefined}
               onClick={() => go(n.name)}
             >
-              <n.icon size={19} />
+              <n.icon size={18} />
               <span>{n.label}</span>
               {page === n.name && <i />}
             </Button>
@@ -172,18 +204,10 @@ export default function App() {
             <Settings aria-hidden="true" size={18} />
             <span>Cài đặt</span>
           </Button>
-          <Button
-            className="nav-item"
-            aria-label="Trợ giúp và phản hồi"
-            onClick={() => setModal("help")}
-          >
-            <CircleHelp aria-hidden="true" size={18} />
-            <span>Trợ giúp & phản hồi</span>
-            <ArrowUpRight aria-hidden="true" size={13} />
-          </Button>
         </div>
       </aside>
       <main
+        ref={mainRef}
         className={`main-content ${page === "Assistant" ? "home-content" : ""}`}
         id="main-content"
         tabIndex={-1}
@@ -204,7 +228,9 @@ export default function App() {
             <HomeSummary tasks={tasks} go={go} />
           </aside>
         </div>
-        {page === "Planner" && <Planner tasks={tasks} setTasks={setTasks} />}
+        {page === "Planner" && (
+          <Planner tasks={tasks} setTasks={setTasks} notify={setNotice} />
+        )}
         <div
           hidden={page !== "Study"}
           className={page === "Study" ? "study-page-wrapper" : ""}

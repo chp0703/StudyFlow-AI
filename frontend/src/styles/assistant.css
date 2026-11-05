@@ -1,4 +1,4 @@
-.home-content { max-width: none; min-height: calc(100dvh - 80px); padding: 0 16px 0 0; background: transparent; }
+.home-content { max-width: none; min-height: calc(100dvh - 58px); padding: 0 16px 0 0; background: transparent; }
 .home-content>div[hidden] { display: none; }
 .assistant-shell { position: relative; display: flex; flex-direction: column; min-height: calc(100dvh - 72px); height: calc(100dvh - 72px); width: 100%; background: transparent; }
 .assistant-topline { width: min(100%,1080px); margin: 0 auto; padding: 20px 10px 12px; min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }

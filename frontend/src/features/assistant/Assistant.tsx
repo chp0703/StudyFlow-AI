@@ -6,6 +6,10 @@ import {
   type KeyboardEvent,
 } from "react"
 
+import gsap from "gsap"
+
+import { useGSAP } from "@gsap/react"
+
 import {
   ArrowRight,
   Check,
@@ -115,6 +119,14 @@ export default function Assistant({
   const composerRef = useRef<HTMLTextAreaElement>(null)
 
   const transcriptRef = useRef<HTMLDivElement>(null)
+
+  const historyPanelRef = useRef<HTMLElement>(null)
+
+  const welcomeRef = useRef<HTMLHeadingElement>(null)
+
+  const [panelShown, setPanelShown] = useState(false)
+
+  const seenMessages = useRef({ first: "", count: 0 })
 
   const historyTriggerRef = useRef<HTMLButtonElement>(null)
 
@@ -302,6 +314,194 @@ export default function Assistant({
         behavior: "smooth",
       })
   }, [activeId, messages])
+
+  // The welcome heading wipes in from the left, then its gradient drifts slowly.
+
+  useGSAP(
+    () => {
+      const heading = welcomeRef.current
+
+      if (!heading) return
+
+      gsap.fromTo(
+        heading,
+
+        { clipPath: "inset(0 100% 0 0)", y: 18, letterSpacing: "0.04em" },
+
+        {
+          clipPath: "inset(0 0% 0 0)",
+
+          y: 0,
+
+          letterSpacing: "-0.045em",
+
+          duration: 1,
+
+          ease: "power3.out",
+
+          clearProps: "clipPath,transform,letterSpacing",
+        },
+      )
+
+      gsap.set(heading, { backgroundSize: "200% 100%" })
+
+      gsap.fromTo(
+        heading,
+
+        { backgroundPosition: "0% 50%" },
+
+        {
+          backgroundPosition: "100% 50%",
+
+          duration: 5,
+
+          ease: "sine.inOut",
+
+          repeat: -1,
+
+          yoyo: true,
+        },
+      )
+    },
+
+    { dependencies: [messages.length === 0], revertOnUpdate: true },
+  )
+
+  // A new message slides up; switching conversations does not animate the whole transcript.
+
+  useGSAP(
+    () => {
+      const seen = seenMessages.current
+
+      const added = messages.length - seen.count
+
+      if (
+        added > 0 &&
+        (messages[0]?.id === seen.first || (seen.count === 0 && added <= 2))
+      ) {
+        const items = gsap.utils.toArray<HTMLElement>(".assistant-message")
+
+        gsap.from(items.slice(-added), {
+          y: 14,
+
+          opacity: 0,
+
+          duration: 0.4,
+
+          ease: "power2.out",
+
+          stagger: 0.08,
+
+          clearProps: "transform,opacity",
+        })
+      }
+
+      seenMessages.current = {
+        first: messages[0]?.id ?? "",
+
+        count: messages.length,
+      }
+    },
+
+    { scope: transcriptRef, dependencies: [messages] },
+  )
+
+  // The desktop history panel grows in from the right edge and shrinks back, so the chat widens smoothly.
+
+  useGSAP(
+    () => {
+      if (mobile) return setPanelShown(false)
+
+      const panel = historyPanelRef.current
+
+      if (!historyOpen && !panelShown) return
+
+      // Keep the contents at full width while the panel itself animates its width.
+
+      const fixed = () => gsap.set(panel?.children ?? [], { minWidth: 304 })
+
+      const release = "width,minWidth,opacity,overflow"
+
+      if (historyOpen) {
+        setPanelShown(true)
+
+        fixed()
+
+        gsap.fromTo(
+          panel,
+
+          { width: 0, minWidth: 0, opacity: 0, overflow: "hidden" },
+
+          {
+            width: 304,
+
+            minWidth: 304,
+
+            opacity: 1,
+
+            duration: 0.4,
+
+            ease: "power3.out",
+
+            clearProps: release,
+
+            onComplete: () => {
+              gsap.set(panel?.children ?? [], { clearProps: "minWidth" })
+            },
+          },
+        )
+      } else {
+        fixed()
+
+        gsap.to(panel, {
+          width: 0,
+
+          minWidth: 0,
+
+          opacity: 0,
+
+          overflow: "hidden",
+
+          duration: 0.35,
+
+          ease: "power3.inOut",
+
+          onComplete: () => setPanelShown(false),
+        })
+      }
+    },
+
+    { dependencies: [historyOpen, mobile] },
+  )
+
+  // Opening another conversation fades its transcript in instead of swapping it instantly.
+
+  const prevActiveId = useRef(activeId)
+
+  useGSAP(
+    () => {
+      const switched =
+        prevActiveId.current && activeId && prevActiveId.current !== activeId
+
+      prevActiveId.current = activeId
+
+      if (switched) {
+        gsap.from(".assistant-thread", {
+          opacity: 0,
+
+          y: 16,
+
+          duration: 0.45,
+
+          ease: "power2.out",
+
+          clearProps: "transform,opacity",
+        })
+      }
+    },
+
+    { scope: transcriptRef, dependencies: [activeId] },
+  )
 
   useEffect(() => {
     if (!historyOpen) return
@@ -1008,7 +1208,7 @@ export default function Assistant({
         </div>
         {messages.length === 0 ? (
           <div className="assistant-welcome">
-            <h1 data-assistant-heading tabIndex={-1}>
+            <h1 ref={welcomeRef} data-assistant-heading tabIndex={-1}>
               Hôm nay bạn muốn làm gì?
             </h1>
           </div>
@@ -1203,8 +1403,9 @@ export default function Assistant({
           )}
         </div>
       </div>
-      {historyOpen && !mobile && (
+      {(historyOpen || panelShown) && !mobile && (
         <aside
+          ref={historyPanelRef}
           className="assistant-history-panel"
           aria-label="Lịch sử hội thoại"
         >

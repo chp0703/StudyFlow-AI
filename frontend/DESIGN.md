@@ -22,7 +22,7 @@ Quy tắc bắt buộc:
 
 ## 2. Công nghệ và lệnh
 
-React 19 · Vite 8 · TypeScript (strict) · Tailwind CSS v4 (`@tailwindcss/vite`) · icon `lucide-react` · formatter oxfmt. Node 22, npm. Chuỗi giao diện bằng tiếng Việt.
+React 19 · Vite 8 · TypeScript (strict) · Tailwind CSS v4 (`@tailwindcss/vite`) · icon `lucide-react` · animation `gsap` + `@gsap/react` · formatter oxfmt. Node 22, npm. Chuỗi giao diện bằng tiếng Việt.
 
 | Lệnh | Mục đích |
 |---|---|
@@ -68,6 +68,7 @@ Sinh tự động: `dist/`, `node_modules/` — không sửa, không commit.
 - Dùng lại `Button`, `Card`, `Modal` (Modal là `<dialog>` gốc, có khôi phục focus) trước khi viết wrapper mới.
 - Chọn tệp chỉ lưu tên và nhãn trạng thái; không tải lên hay đọc nội dung.
 - Icon: chỉ dùng `lucide-react`.
+- **Animation**: dùng GSAP qua hook `useGSAP` (`@gsap/react`), không tự viết `useEffect` + `gsap` để tránh rò rỉ khi unmount. Hiện có một hiệu ứng: ở `App.tsx`, mỗi lần `page` đổi, các `.card` và khung chat trang chủ đang hiển thị trượt từ dưới lên (48px, 0.5s, lệch nhau 0.08s, `clearProps` để không để lại style). Vì `Assistant` và `Study` chỉ bị `hidden` chứ không unmount, hiệu ứng gắn vào việc đổi trang chứ không gắn vào lúc mount. Khi thêm hiệu ứng mới, chỉ animate `transform` và `opacity`.
 
 ## 5. Giao diện và CSS
 
@@ -109,7 +110,7 @@ Mỗi trang có file CSS riêng; style dùng chung cho nhiều trang đặt tron
 - Giữ `:focus-visible` nhìn thấy được, skip link, khôi phục focus cho modal + phím Escape, và `aria-label` / `aria-current` / `aria-pressed`.
 - Không chỉ dựa vào màu để biểu thị trạng thái, deadline, hoàn thành hay lỗi (thêm icon/chữ).
 - Vùng bấm tối thiểu 44px. Ngoại lệ hiện có: nút chuyển tuần trong lịch cao 32px; không thêm ngoại lệ mới nếu chưa cần.
-- Tôn trọng `prefers-reduced-motion` và `forced-colors`; giữ các breakpoint 1250 / 800 / 480px.
+- Tôn trọng `forced-colors`; giữ các breakpoint 1250 / 800 / 480px. CSS (transition/animation) tôn trọng `prefers-reduced-motion` trong `overrides.css`. **Ngoại lệ có chủ đích:** hiệu ứng trượt thẻ bằng GSAP luôn chạy, không kiểm tra `prefers-reduced-motion`, theo quyết định của nhóm. Hiệu ứng mới có chuyển động lớn nên cân nhắc tắt khi người dùng chọn giảm chuyển động.
 - Khi đổi trang, chuyển focus về tiêu đề trang.
 
 ## 7. Quy trình thay đổi

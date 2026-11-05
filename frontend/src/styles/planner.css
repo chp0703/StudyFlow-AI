@@ -23,10 +23,10 @@
 
 /* Planner fits the viewport: chat on top, calendar fills the rest and its hour rows shrink, so the page never scrolls. */
 .main-content:has(.planner-page) {
-  height: calc(100dvh - 80px);
+  height: calc(100dvh - 58px);
   display: flex;
   flex-direction: column;
-  padding: 12px 0 20px;
+  padding: 8px 0 16px;
   box-sizing: border-box;
 }
 .planner-page {
@@ -34,7 +34,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 /* Chat prompt card styled like the Assistant chat composer */
@@ -42,8 +42,8 @@
   flex: none;
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 12px 20px;
+  gap: 14px;
+  padding: 6px 14px;
   border-radius: var(--radius-card);
   border: 1px solid var(--color-line);
   background: var(--bg-card);
@@ -52,21 +52,12 @@
   box-shadow: 0 4px 20px -2px rgba(23, 32, 59, 0.05);
 }
 .planner-chat-title {
-  flex: 0 1 40%;
-  min-width: 0;
-}
-.planner-chat-title h2 {
-  font-size: 15px;
+  flex: none;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--color-ink);
-}
-.planner-chat-title p {
-  font-size: 12px;
-  color: var(--color-muted);
+  line-height: 1;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 2px;
 }
 .planner-chat-form {
   flex: 1;
@@ -78,13 +69,13 @@
 .planner-chat-form input {
   flex: 1;
   min-width: 0;
-  min-height: 42px;
-  height: 42px;
-  padding: 0 16px;
+  min-height: 32px;
+  height: 32px;
+  padding: 0 12px;
   border: 1px solid var(--color-line);
   border-radius: 100px;
   background: var(--bg-card);
-  font-size: 14px;
+  font-size: 12.5px;
   color: var(--color-ink);
   box-shadow: 0 1px 3px rgba(23, 32, 59, 0.03);
 }
@@ -93,19 +84,19 @@
   border-color: var(--color-primary);
 }
 .planner-chat-form .button.primary {
-  width: 42px;
-  height: 42px;
-  min-height: 42px;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
   padding: 0;
   border-radius: 50%;
   display: grid;
   place-items: center;
   flex-shrink: 0;
 }
-@media (max-width: 800px) {
+@media (max-width: 700px) {
   .planner-chat {
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
   }
   .planner-chat-title,
   .planner-chat-form {
