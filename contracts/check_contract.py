@@ -147,6 +147,85 @@ def semantic_errors(value, path='$'):
     if 'http_operation' in value and value.get('state') == 'COMPLETED':
         if value.get('response') is None or value.get('http_status') is None:
             fail('completed API receipt requires a response and status')
+    if 'extraction' in value and 'depends_on' in value:
+        intents = value['extraction'].get('intents', []) if isinstance(value['extraction'], dict) else []
+        depends_on = value['depends_on']
+        if isinstance(depends_on, list):
+            if len(depends_on) != len(intents):
+                fail('depends_on must have exactly one dependency list per extracted intent')
+            for idx, deps in enumerate(depends_on):
+                if isinstance(deps, list):
+                    if len(deps) != len(set(deps)):
+                        fail(f'depends_on[{idx}] cannot contain duplicate intent indices')
+                    if any((not isinstance(d, int) or isinstance(d, bool) or d < 0 or d >= idx) for d in deps):
+                        fail(f'depends_on[{idx}] must only reference earlier intent indices 0..{idx - 1}')
+    if 'extraction' in value and 'cursor' in value and 'completed_steps' in value:
+        intents = value['extraction'].get('intents', []) if isinstance(value['extraction'], dict) else []
+        cursor = value['cursor']
+        steps = value['completed_steps']
+        if isinstance(cursor, int) and not isinstance(cursor, bool):
+            if cursor > len(intents):
+                fail('continuation cursor cannot exceed extracted intent count')
+            if isinstance(steps, list):
+                if len(steps) != cursor:
+                    fail('completed_steps length must equal continuation cursor')
+                for idx, step in enumerate(steps):
+                    if isinstance(step, dict) and step.get('intent_index') != idx:
+                        fail('completed_steps must have contiguous intent_index values 0..cursor-1')
+            if cursor == len(intents) and value.get('awaiting_reference') is not None:
+                fail('completed continuation queue cannot have an awaiting_reference')
+    if 'extraction' in value and isinstance(value.get('receipt_binding'), dict):
+        if value['receipt_binding'].get('http_operation') not in {'send_message', 'prepare_action'}:
+            fail('only send_message or prepare_action may initialize a workflow continuation')
+    if value.get('transition') == 'ADVANCE' and isinstance(value.get('outcome'), dict):
+        if value['outcome'].get('intent_index') != value.get('expected_cursor'):
+            fail('ADVANCE outcome intent_index must equal expected_cursor')
+    if {'intent_index', 'step_key', 'disposition', 'operation', 'result', 'error'} <= set(value):
+        disp = value['disposition']
+        if disp == 'FAILED' and value.get('error') is None:
+            fail('FAILED step outcome requires error')
+        if disp == 'SUCCEEDED':
+            if value.get('operation') is None or value.get('result') is None or value.get('error') is not None:
+                fail('SUCCEEDED step outcome requires operation, result, and error=null')
+            elif isinstance(value.get('result'), dict) and value['result'].get('outcome') not in {'READ', 'COMMITTED', 'PROPOSED'}:
+                fail('SUCCEEDED step outcome result must be a terminal/non-draft ToolResult')
+        if disp == 'DEPENDENCY_CANCELLED' and (value.get('operation') is not None or value.get('result') is not None):
+            fail('DEPENDENCY_CANCELLED step outcome cannot carry a domain operation or result')
+        if disp == 'REJECTED':
+            if value.get('error') is not None:
+                fail('REJECTED step outcome requires error=null')
+            if value.get('operation') is not None and value.get('operation') != 'reject_study_plan':
+                fail('REJECTED step outcome with domain operation must use reject_study_plan')
+    if {'pending_action', 'candidate', 'proposal', 'last_presentation', 'presentation_source_message'} <= set(value):
+        action = value['pending_action']
+        if isinstance(action, dict):
+            for key, id_key in [('candidate', 'candidate_id'), ('proposal', 'proposal_id')]:
+                target = value.get(key)
+                if isinstance(target, dict) and (target.get('user_id') != action.get('user_id') or target.get(id_key) != action.get(id_key)):
+                    fail('workflow action target must match pending_action owner and target id')
+            pres = value.get('last_presentation')
+            src = value.get('presentation_source_message')
+            if isinstance(pres, dict):
+                if pres.get('user_id') != action.get('user_id') or pres.get('action_id') != action.get('action_id'):
+                    fail('last_presentation must match pending_action owner and action_id')
+                if (pres.get('source_message_id') is None) != (src is None):
+                    fail('presentation_source_message must be present iff last_presentation.source_message_id is non-null')
+                if isinstance(src, dict) and (src.get('message_id') != pres.get('source_message_id') or src.get('user_id') != action.get('user_id') or src.get('conversation_id') != action.get('conversation_id')):
+                    fail('presentation_source_message must match last_presentation and pending_action')
+            elif src is not None:
+                fail('presentation_source_message requires last_presentation')
+    if {'conversation_id', 'active_action', 'selected_action', 'source_message', 'read_at'} <= set(value):
+        conv_id = value.get('conversation_id')
+        for act_key in ('active_action', 'selected_action'):
+            act_ctx = value.get(act_key)
+            if isinstance(act_ctx, dict) and isinstance(act_ctx.get('pending_action'), dict):
+                if act_ctx['pending_action'].get('conversation_id') != conv_id:
+                    fail(f'{act_key} must belong to the requested conversation_id')
+        if isinstance(value.get('active_action'), dict) and isinstance(value['active_action'].get('pending_action'), dict):
+            if value['active_action']['pending_action'].get('state') not in {'AWAITING_CLARIFICATION', 'AWAITING_CONFIRMATION', 'AWAITING_APPROVAL'}:
+                fail('active_action must be in an awaiting state')
+        if isinstance(value.get('source_message'), dict) and value['source_message'].get('conversation_id') != conv_id:
+            fail('source_message must belong to the requested conversation_id')
     for k, v in value.items():
         errors += semantic_errors(v, f'{path}.{k}')
     return errors
@@ -167,6 +246,10 @@ def main():
     service = read('service-contract.json')
     data = read('data-contract.json')
     api = read('openapi.yaml')
+    assert service['contract_version'] == '1.0.1'
+    assert data['contract_version'] == '1.0.1'
+    assert api['info']['version'] == '1.0.1'
+    assert bundle['$id'] == 'urn:studyflow:f1:1.1:integration:1.0.1'
     operations = {o['operation'] for o in service['operations']}
     assert len(operations) == 10
     assert operations == set(definitions['Operation']['enum'])
@@ -174,10 +257,12 @@ def main():
     for op in service['operations']:
         assert op['arguments_schema'] in definitions and op['result_schema'] in definitions
         assert op['idempotency_required'] == (not op['read_only'])
+    assert len(service['internal_interfaces']) == 18
     for op in service['internal_interfaces']:
-        assert op['arguments_schema'] in definitions and op['data_schema'] in definitions
+        assert op['arguments_schema'] in definitions and op['data_schema'] in definitions and op['result_schema'] in definitions
         assert op['llm_callable'] is False
     assert len(data['entities']) == 10
+    assert len(data['infrastructure_records']) == 5
     for entity in data['entities'] + data['infrastructure_records']:
         props = definitions[entity['schema']]['properties']
         assert set(props) == {c['name'] for c in entity['columns']}, entity['schema']

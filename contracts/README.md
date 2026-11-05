@@ -2,7 +2,7 @@
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Contract package | **1.0.0 — APPROVED / CHÍNH THỨC**, hiệu lực 05/11/2026, giờ Việt Nam |
+| Contract package | **1.0.1 — APPROVED / CHÍNH THỨC**, hiệu lực 05/11/2026, giờ Việt Nam |
 | Logical schema | **F1 v1.1**, `schema_version: "1.1"` |
 | Phạm vi | API FE ↔ BE; Tool/Service Orchestrator ↔ BE; Data/RPC BE ↔ DB |
 | Trạng thái phê duyệt | **Team đã phê duyệt**, theo xác nhận của người dùng ngày 05/11/2026; căn cứ và phạm vi tại [APPROVAL.md](APPROVAL.md) |
@@ -194,14 +194,15 @@ UUID → uuid; instant → timestamptz; date → date; local time → time(0) wi
 
 ### 5.3. Persistence hỗ trợ transport
 
-Để server chứng minh nguồn tin nhắn và nội dung đã trình bày, cần kho hạ tầng bền vững cho **conversation ownership, source messages, API request receipts và action presentations**. Đây là record hạ tầng, không mở rộng business scope thành Course/StudySession.
+Để server chứng minh nguồn tin nhắn, nội dung đã trình bày và tiến trình hàng đợi đa bước, cần kho hạ tầng bền vững cho **conversation ownership, source messages, API request receipts, action presentations và workflow continuations**. Đây là 5 record hạ tầng, không mở rộng business scope thành Course/StudySession hay entity nghiệp vụ thứ 11.
 
 - Conversation: `(user_id,conversation_id)` unique; không cho attach conversation người khác.
 - Message: server message_id, cùng owner/conversation, source UI/CHAT, text, received_at; retry API dùng lại message_id đã lưu, không tạo một tin mới mỗi lần retry.
 - API receipt: unique(user_id,HTTP operation,Idempotency-Key), fingerprint body chuẩn hóa, status IN_PROGRESS/COMPLETED và response gốc. Cần cho POST messages/actions/review/decisions vì chúng không phải cả 10 domain operation trong IdempotencyRecord. Store không được chỉ nằm trong RAM.
 - Presentation: unique(user_id,action_id,action_version), exact target/version, normalized content digest, full effective policy/partial warnings khi có, source_message_id và thời điểm server phát hành. Liên kết owner/target phải được DB kiểm tra. Nó chứng minh nội dung server phát hành; không tự chứng minh người dùng đã đọc.
+- Workflow continuation (`app_private.workflow_continuations`): PK `(user_id,source_message_id)` 15 cột, giữ trạng thái tuần tự của `PlannedWorkflow` cho một tin nhắn nguồn. Same-owner FK tới `conversation_records(user_id,conversation_id)`, `source_messages(user_id,conversation_id,message_id)` và `api_request_receipts(user_id,http_operation,idempotency_key)` với `origin_http_operation='POST /v1/messages'`. Các cột `conversation_id`, `origin_http_operation`, `origin_api_idempotency_key`, `origin_request_fingerprint`, `workflow_plan`, `created_at` bất biến sau khởi tạo. Giữ ít nhất 7 ngày cho hàng hoàn tất/hủy; không xóa theo TTL đối với continuation còn `AWAITING_DECISION` hoặc tham chiếu action đang chờ duyệt.
 
-Các record hạ tầng này được đặc tả tại `data-contract.json.infrastructure_records`; implementer phải cung cấp persistence adapter tương đương trước khi nhận delivery là hoàn tất. Không giả vờ source_message_id chỉ là UUID tùy ý. Không có product TTL cho candidate/action/proposal/presentation; không dùng expiry token để xóa nháp.
+Các record hạ tầng này được đặc tả tại `data-contract.json.infrastructure_records`; implementer phải cung cấp persistence adapter tương đương trước khi nhận delivery là hoàn tất. Không giả vờ source_message_id chỉ là UUID tùy ý. Không có product TTL cho candidate/action/proposal/presentation/awaiting continuation; không dùng expiry token để xóa nháp.
 
 ## 6. RPC, quyền và nguồn request
 
@@ -246,12 +247,18 @@ Attestation không gửi ra FE, không được nhận từ `/v1/messages/action
 | lookup_operation_result | operation, key, fingerprint → result cũ hoặc null | Chỉ đọc của auth.uid(); khác fingerprint trả conflict |
 | prepare_pending_action / review_pending_action | command/presentation + expected action version → ActionPresentation | Owner lock; version guard; một awaiting/conversation |
 | record_source_message / claim_api_receipt / renew_api_receipt / release_api_receipt / complete_api_receipt | Schema record hạ tầng ở data-contract.json | Identity/receipt/lease guards; không tăng schedule_revision |
+| ensure_user_context | `{timezone?}` → `PreferencesData` | Signed bootstrap idempotent cho user mới (gồm first `GET /v1/preferences`, `idempotency_key=null`, `conversation_id=null`); không ghi đè hoặc tăng `schedule_revision` khi đã có profile |
+| list_time_windows | `kind?`, `include_archived`, `page_size`, `cursor` → `TimeWindowPage` | Read-only phục vụ `GET /v1/time-windows` |
+| get_workflow_context | `conversation_id`, `action_id?`, `include_Draft_candidates`, `include_pending_proposals` → `WorkflowContextData` | Một SQL read snapshot nhất quán (profile, awaiting/requested action + presentation + target, draft candidates, pending proposals) |
+| get_workflow_continuation | `conversation_id`, `source_message_id?` → `WorkflowContinuationData` | Read-only tải continuation theo message nguồn hoặc continuation đang `AWAITING_DECISION` |
+| initialize_workflow_continuation | `conversation_id`, `source_message_id`, `origin_*`, `workflow_plan` → `WorkflowContinuationRecord` | Signed helper; owner lock; gắn chặt `POST /v1/messages` receipt đang `IN_PROGRESS`; idempotent trên cùng `(user_id,source_message_id)` |
+| checkpoint_workflow_continuation | `source_message_id`, `expected_continuation_version`, `active_api_receipt`, `transition_kind` (`WAIT_FOR_DECISION`/`ADVANCE`), `recorded_outcome?`, `awaiting_reference?`, `next_status` → `WorkflowContinuationRecord` | Signed helper; owner lock; verify active receipt lease (`IN_PROGRESS`, `lease_expires_at > now()`); tăng `version` đúng 1 |
 
-`generate_study_plan` là application operation, **không phải DB chạy engine**. Chữ ký RPC nội bộ khác command public được lưu trong service-contract.json.internal_interfaces. Không gọi LLM/network trong transaction. Candidate clarification dùng helper nội bộ versioned, không public PATCH task.
+`generate_study_plan` là application operation, **không phải DB chạy engine**. Chữ ký 18 RPC nội bộ khác 10 command public được lưu trong `service-contract.json.internal_interfaces`. Không gọi LLM/network trong transaction. Candidate clarification dùng helper nội bộ versioned, không public PATCH task.
 
 ## 7. Transaction và idempotency
 
-Mọi writer cùng owner dùng `SELECT ... FOR UPDATE` trên user_profiles trước authoritative reads và ghi, trong một RPC transaction READ COMMITTED. Profile khởi tạo bằng insert-on-conflict từ auth.uid() qua routine có attestation; insert trước khi lock nếu chưa có. Chọn row lock cụ thể để tránh mỗi team tự chọn advisory-key hash khác nhau. Snapshot input đọc riêng bằng một SQL statement; nếu implementer dùng nhiều statement thì phải cung cấp REPEATABLE READ tương đương, không mặc định READ COMMITTED là snapshot nhất quán.
+Mọi writer cùng owner dùng `SELECT ... FOR UPDATE` trên user_profiles trước authoritative reads và ghi, trong một RPC transaction READ COMMITTED. Profile khởi tạo bằng insert-on-conflict từ auth.uid() qua routine có attestation (`app_api.ensure_user_context`, cho phép `idempotency_key=null` và `conversation_id=null` khi bootstrap ở first `GET /v1/preferences`); insert trước khi lock nếu chưa có. Chọn row lock cụ thể để tránh mỗi team tự chọn advisory-key hash khác nhau. Snapshot input đọc riêng bằng một SQL statement (`get_scheduling_context`, `get_workflow_context`); nếu implementer dùng nhiều statement thì phải cung cấp REPEATABLE READ tương đương, không mặc định READ COMMITTED là snapshot nhất quán.
 
 Thứ tự mutation: verify JWT/attestation → fast idempotency lookup → owner row lock → **lookup lại idempotency sau lock** → reload state/version → validate → write + complete domain record. Không khóa action rồi mới khóa owner ở đường khác gây deadlock. Transaction failure rollback toàn bộ. Không tự COMMIT giữa RPC.
 
@@ -259,7 +266,7 @@ Fingerprint domain = SHA256 canonical `{schema_version, user_id, operation, argu
 
 Riêng generate_study_plan: fingerprint dùng **arguments gốc** (generation_scope/policy_overrides), không hash proposal_id/generated_at/block IDs mới sinh. Service lookup_operation_result trước khi chạy engine; persist_plan_proposal nhận command_arguments gốc cùng proposal, dùng namespace operation=generate_study_plan và lookup lại sau lock. Attestation vẫn bind toàn bộ generated payload. DB đối chiếu scope và effective policy từ command với proposal/revision, không tin một policy_snapshot tự khai. Nếu worker retry sau persist nhưng trước trả response, dùng lại proposal đã lưu; không tạo proposal thứ hai do ID/clock mới làm đổi fingerprint.
 
-Transport receipt và domain idempotency giữ ít nhất **7 ngày**; transport công bố bảo đảm retry trong 7 ngày. Sau cửa sổ này FE phải đọc trạng thái để reconcile, không tự retry mù. Giữ vĩnh viễn uniqueness nghiệp vụ; cleanup IdempotencyRecord không xóa business history. API receipts không chiếm namespace 10 domain operation. Mỗi bước domain trong một POST nhiều intent dùng key con SHA256(api-key + step/action identity + operation) ổn định, tối đa 128 ký tự.
+Transport receipt, workflow continuation và domain idempotency giữ ít nhất **7 ngày**; transport công bố bảo đảm retry trong 7 ngày. Sau cửa sổ này FE phải đọc trạng thái để reconcile, không tự retry mù. Giữ vĩnh viễn uniqueness nghiệp vụ; cleanup IdempotencyRecord không xóa business history. API receipts không chiếm namespace 10 domain operation. Với workflow nhiều bước thuộc một `source_message_id`, mỗi step có `step_key` ổn định (`s01`, `s02`, ...) và khóa idempotency cho domain operation ở step thứ `i` được dẫn xuất tất định bằng `SHA256(origin_api_idempotency_key + ":" + step_key + ":" + operation)` dạng hex lowercase 64 ký tự (không phụ thuộc vào `Idempotency-Key` của `POST /v1/decisions` về sau).
 
 API receipt claim/execute/complete có recovery: claim IN_PROGRESS có lease vận hành **120 giây**, renew mỗi tối đa 30 giây trong công việc dài; không lease product action. Mỗi lần claim/reclaim tăng lease_version; renew/release/complete phải so expected_lease_version và fingerprint dưới lock, worker cũ không được complete sau khi lease đã bị reclaim. Claim đầu tiên lưu message_id/action_id ổn định trước công việc ngoại vi; worker chết được recovery bằng các ID và domain keys đó. Chỉ complete sau khi mọi bước đã có kết quả bền vững; replay trả đúng response trước đó, thay request_id ở envelope theo request hiện tại.
 
@@ -317,11 +324,11 @@ Tất cả IC-01–IC-08 dưới đây có trạng thái **APPROVED**, hiệu l�
 |---|---|---|
 | IC-01 | 8 endpoint; POST chuẩn bị khác POST quyết định; GET timewindows/preferences là read adapter | FE + TV2 + TV3 |
 | IC-02 | Typed ActionPresentation để hiển thị full policy/target; bốn mã lỗi transport bổ sung | FE + TV2 + TV3 |
-| IC-03 | DTO chung, unknown-field rejection, schema_version=1.1; package=1.0.0 | TV2 điều phối; tất cả consumer |
+| IC-03 | DTO chung, unknown-field rejection, schema_version=1.1; package=1.0.1 | TV2 điều phối; tất cả consumer |
 | IC-04 | user_profiles, bigint, typed approval FK, PostgreSQL time giữ 24:00 | TV1 + TV2 + TV4 |
 | IC-05 | user JWT + backend HMAC attestation; wrapper SECURITY DEFINER tối thiểu quyền, FORCE RLS | TV1 + TV2 + security owner |
 | IC-06 | Owner row lock, double idempotency lookup, consistent input snapshot | TV1 + TV2 + TV4 |
-| IC-07 | Request receipt/message/presentation persistence; retry 7 ngày; transport token 60 giây | TV1 + TV2 + TV3 |
+| IC-07 | Request receipt/message/presentation/workflow continuation persistence; retry 7 ngày; transport token 60 giây | TV1 + TV2 + TV3 |
 | IC-08 | Datetime theo phút, query defaults/cursors/filter; 64KiB/8000 ký tự/100 items | FE + TV2 |
 
 Vai trò TV1–TV4 theo bản phân công hiện có; không tự gán tên người. Thay đổi từng IC sau phê duyệt cần review cụ thể từ các consumer liên quan. Nếu thay trust model, phải cập nhật đồng thời API/service/data và acceptance cases, không chỉ sửa một ADR. Decision Register/ADR đã ghi nhận bản chính thức; physical design khi triển khai phải đối chiếu lại với bộ này. Merge tài liệu không thay thế căn cứ phê duyệt đã được ghi nhận.

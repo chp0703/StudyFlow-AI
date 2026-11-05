@@ -1,12 +1,12 @@
 {
-  "contract_version": "1.0.0",
+  "contract_version": "1.0.1",
   "schema_version": "1.1",
   "status": "APPROVED",
   "approval": {
     "record": "APPROVAL.md",
     "approved_on": "2026-11-05",
     "effective_on": "2026-11-05",
-    "basis": "Team approval confirmed by the user in this conversation"
+    "basis": "Team approval and explicit A/B/C/D 1.0.1 addendum approval confirmed by the user"
   },
   "private_schema": "app_private",
   "exposed_schema": "app_api",
@@ -1082,6 +1082,158 @@
           "postgres_type": "timestamptz",
           "nullable": false,
           "schema_pointer": "#/$defs/ActionPresentationRecord/properties/created_at"
+        }
+      ]
+    },
+    {
+      "schema": "WorkflowContinuationRecord",
+      "table": "app_private.workflow_continuations",
+      "primary_key": [
+        "user_id",
+        "source_message_id"
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "user_id",
+            "conversation_id"
+          ],
+          "references": "app_private.conversation_records(user_id, conversation_id)",
+          "on_delete": "RESTRICT",
+          "on_update": "RESTRICT"
+        },
+        {
+          "columns": [
+            "user_id",
+            "source_message_id"
+          ],
+          "references": "app_private.source_messages(user_id, message_id)",
+          "on_delete": "RESTRICT",
+          "on_update": "RESTRICT"
+        },
+        {
+          "columns": [
+            "user_id",
+            "origin_http_operation",
+            "origin_idempotency_key"
+          ],
+          "references": "app_private.api_request_receipts(user_id, http_operation, idempotency_key)",
+          "on_delete": "RESTRICT",
+          "on_update": "RESTRICT"
+        }
+      ],
+      "immutable_columns": [
+        "user_id",
+        "conversation_id",
+        "source_message_id",
+        "origin_http_operation",
+        "origin_idempotency_key",
+        "origin_request_fingerprint",
+        "extraction",
+        "extraction_digest",
+        "depends_on",
+        "created_at"
+      ],
+      "indexes": [
+        "app_private.workflow_continuations(user_id, conversation_id, updated_at)",
+        "partial unique unfinished continuation per (user_id, conversation_id) where cursor < jsonb_array_length(extraction->'intents')"
+      ],
+      "invariants": [
+        "Mutations acquire SELECT ... FOR UPDATE on app_private.user_profiles under existing owner-lock order and verify active unexpired API receipt lease/fingerprint",
+        "Initialize is first-write-wins for same owner/source/origin receipt/fingerprint; checkpoint WAIT and ADVANCE use CAS on (version, cursor) with exact-once contiguous completed_steps prefix 0..cursor-1",
+        "Completed records are retained for at least the 7-day receipt retry window; live awaiting continuations are never deleted by lease or product TTL",
+        "ENABLE/FORCE RLS with same-owner auth.uid() policy; sf_rpc_owner receives least touched-table privileges only, with no PUBLIC/anon/authenticated direct table access"
+      ],
+      "columns": [
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/user_id"
+        },
+        {
+          "name": "conversation_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/conversation_id"
+        },
+        {
+          "name": "source_message_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/source_message_id"
+        },
+        {
+          "name": "origin_http_operation",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/origin_http_operation"
+        },
+        {
+          "name": "origin_idempotency_key",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/origin_idempotency_key"
+        },
+        {
+          "name": "origin_request_fingerprint",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/origin_request_fingerprint"
+        },
+        {
+          "name": "version",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/version"
+        },
+        {
+          "name": "extraction",
+          "postgres_type": "jsonb",
+          "nullable": false,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/extraction"
+        },
+        {
+          "name": "extraction_digest",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/extraction_digest"
+        },
+        {
+          "name": "depends_on",
+          "postgres_type": "jsonb",
+          "nullable": false,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/depends_on"
+        },
+        {
+          "name": "cursor",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/cursor"
+        },
+        {
+          "name": "awaiting_reference",
+          "postgres_type": "jsonb",
+          "nullable": true,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/awaiting_reference"
+        },
+        {
+          "name": "completed_steps",
+          "postgres_type": "jsonb",
+          "nullable": false,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/completed_steps"
+        },
+        {
+          "name": "created_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/created_at"
+        },
+        {
+          "name": "updated_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/WorkflowContinuationRecord/properties/updated_at"
         }
       ]
     }

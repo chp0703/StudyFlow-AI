@@ -1,0 +1,42 @@
+{
+  "conversation_id": "00000000-0000-4000-8000-000000000003",
+  "source_message_id": "00000000-0000-4000-8000-000000000004",
+  "extraction": {
+    "intents": [
+      {
+        "intent": "SEARCH_TASKS",
+        "slots": {
+          "query": null,
+          "status_filter": [],
+          "page_size": 50,
+          "cursor": null
+        },
+        "raw_expressions": {},
+        "ambiguities": []
+      },
+      {
+        "intent": "SEARCH_TASKS",
+        "slots": {
+          "query": "OOP",
+          "status_filter": [],
+          "page_size": 50,
+          "cursor": null
+        },
+        "raw_expressions": {},
+        "ambiguities": []
+      }
+    ]
+  },
+  "depends_on": [
+    [],
+    [
+      0
+    ]
+  ],
+  "receipt_binding": {
+    "http_operation": "send_message",
+    "idempotency_key": "example-key-00001",
+    "request_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expected_lease_version": 1
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "user_id": "00000000-0000-4000-8000-000000000001",
+  "conversation_id": "00000000-0000-4000-8000-000000000003",
+  "source_message_id": "00000000-0000-4000-8000-000000000004",
+  "origin_http_operation": "send_message",
+  "origin_idempotency_key": "example-key-00001",
+  "origin_request_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "version": 1,
+  "extraction": {
+    "intents": [
+      {
+        "intent": "SEARCH_TASKS",
+        "slots": {
+          "query": null,
+          "status_filter": [],
+          "page_size": 50,
+          "cursor": null
+        },
+        "raw_expressions": {},
+        "ambiguities": []
+      }
+    ]
+  },
+  "extraction_digest": "73f7dd68782dbed378e8bce147037cab1b157ad8a37d05c815d29732c416fdc9",
+  "depends_on": [
+    []
+  ],
+  "cursor": 2,
+  "awaiting_reference": null,
+  "completed_steps": [],
+  "created_at": "2026-11-05T03:00:00Z",
+  "updated_at": "2026-11-05T03:00:00Z"
+}

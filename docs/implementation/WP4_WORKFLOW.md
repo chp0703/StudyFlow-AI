@@ -125,9 +125,9 @@ prove cold-app replay routing; they cannot prove durable database transactions,
 requires_review transitions, owner binding or restart recovery of uncompleted
 work. Do not add fake success stubs to satisfy these gates.
 
-Blocked seams: profile/bootstrap and window list reads; cold-load of current
-action/target/presentation/source; durable remaining-intent queue. A/B/C/D in
-the concrete proposal cover those seams; review
-`INTERNAL_RPC_ADDENDUM_PROPOSAL.md` before implementing affected persistence.
-The public contracts remain approved and unchanged; the proposal is not permission
-to add new wrappers or silently fill data with fixture values.
+Formerly missing seams are now explicitly approved: profile/bootstrap and window
+list reads, cold workflow state and durable remaining-intent queue. Implement
+A/B/C/D in `INTERNAL_RPC_ADDENDUM_PROPOSAL.md` after WP0 synchronizes package 1.0.1
+and WP2 delivers the actual persistence. No further design approval is needed
+for these additions. Public eight endpoints/ten operations stay unchanged; never
+fill live state with fixture values or claim incomplete persistence is complete.

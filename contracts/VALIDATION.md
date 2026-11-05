@@ -1,23 +1,22 @@
 # Báo cáo kiểm tra contract
 
-Ngày kiểm tra: **05/11/2026**, múi giờ Việt Nam.
+Ngày cập nhật: **05/11/2026**, múi giờ Việt Nam.
 
-Package **1.0.0** đã được phê duyệt chính thức theo [APPROVAL.md](APPROVAL.md). Phê duyệt được ghi riêng với kết quả kiểm tra; việc đổi trạng thái không thay đổi 104 definitions, 8 endpoint hoặc các fixture nghiệp vụ.
+Package **1.0.1** (logical `schema_version="1.1"`) đã được phê duyệt chính thức theo [APPROVAL.md](APPROVAL.md), kế thừa nền tảng `1.0.0` (`b629a5e`) và bổ sung phụ lục RPC nội bộ đã duyệt (`docs/implementation/INTERNAL_RPC_ADDENDUM_PROPOSAL.md`). Trong phạm vi bàn giao WP0 chỉ chỉnh sửa file tĩnh trong `contracts/`, không tự thực thi lệnh terminal/test; việc chạy `contracts/check_contract.py` và bộ test độc lập do Sol thực hiện bên ngoài.
 
-| Hạng mục | Kết quả |
+| Hạng mục | Phạm vi / Trạng thái |
 |---|---|
-| Metadata phê duyệt | PASS — APPROVED đồng bộ ở API, schema bundle, service/data registry; ngày hiệu lực 05/11/2026 |
-| Đối chiếu bản team đã duyệt | PASS — endpoint/components, 104 definitions, tool/data mapping và version giữ nguyên so với commit b629a5e |
-| JSON Schema 2020-12 | PASS — 104 definitions |
-| OpenAPI 3.1.1 | PASS — 8 paths; external schema references resolve local |
-| Service registry | PASS — đúng 10 operation F1, arguments/result schema tồn tại |
-| Data mapping | PASS — đủ field của 10 entity, PK/nullability khớp shared schema; 4 infrastructure records |
-| Đối chiếu schema F1 nguồn | PASS — tên field 10 entity và catalog operation khớp docs/database/schema_F1.md |
-| Ví dụ | PASS — 88 positive/negative fixtures, gồm policy custom, deadline/date/timezone, stale/partial và RPC request shape |
-| Liên kết Markdown nội bộ của bộ contract và trang dẫn | PASS |
-| git diff --check | PASS |
-| Backend/DB/auth/UI runtime | **NOT_RUN**; chưa có implementation trong phạm vi thay đổi này |
+| Metadata phê duyệt | Đồng bộ `contract_version="1.0.1"`, `schema_version="1.1"`, trạng thái `APPROVED` ở API, schema bundle, service/data registry và manifest; ngày hiệu lực 05/11/2026 |
+| Bảo toàn phạm vi F1 v1.1 | Giữ nguyên 8 HTTP endpoint, 10 operation nghiệp vụ/LLM, 10 entity nghiệp vụ logic và 12 helper RPC nội bộ từ bản `1.0.0` |
+| JSON Schema 2020-12 | 122 definitions trong `schemas/f1.schema.json` (`$id: "urn:studyflow:f1:1.1:integration:1.0.1"`), 27 nhánh `RpcRequest.oneOf` |
+| OpenAPI 3.1.1 | 8 paths (`info.version: "1.0.1"`); external schema references resolve local |
+| Service registry | Đúng 10 operation F1 public và 18 `internal_interfaces` (thêm 6 helper RPC nội bộ); đầy đủ `arguments_schema`, `data_schema`, `result_schema` |
+| Data mapping | Đủ field của 10 entity, PK/nullability khớp shared schema; 5 `infrastructure_records` (thêm `WorkflowContinuationRecord` → `app_private.workflow_continuations`) |
+| Đối chiếu schema F1 nguồn | Tên field 10 entity và catalog operation khớp `docs/database/schema_F1.md` |
+| Ví dụ | 100 positive/negative fixtures trong `examples/manifest.json` (88 fixture gốc cập nhật lên `1.0.1` + 12 fixture mới cho continuation/checkpoint/context/version) |
+| Thực thi checker & test độc lập trong phiên WP0 | **EXTERNAL_RUNNER (Sol)** — không chạy lệnh trong phiên chỉnh sửa WP0; chờ Sol chạy `python contracts/check_contract.py` và `pytest backend/tests/acceptance_api_sol/test_contract_addendum.py` |
+| Backend/DB/auth/UI runtime | **NOT_RUN**; chưa có implementation trong phạm vi thay đổi WP0 |
 
-Môi trường kiểm tra: Python 3.13.9, jsonschema 4.25.0, openapi-spec-validator 0.7.2. Validator OpenAPI được cài trong thư mục tạm để kiểm tra, không thêm dependency runtime cho frontend/backend. Người dùng có thể tạo môi trường riêng bằng requirements-check.txt và chạy check_contract.py.
+Môi trường kiểm tra tham chiếu: Python, `jsonschema`, `openapi-spec-validator` theo `contracts/requirements-check.txt`.
 
-Kiểm tra schema/invariant thuần không chứng nhận chữ ký HMAC, RLS/grants, transaction/rollback, concurrency hoặc luồng UI. Fixture RPC có signature giả chỉ kiểm tra cấu trúc JSON. Các ca cần chạy thật được liệt kê trong acceptance-cases.md và vẫn NOT_RUN.
+Kiểm tra schema/invariant thuần không chứng nhận chữ ký HMAC, RLS/grants, transaction/rollback, concurrency hoặc luồng UI. Fixture RPC có signature giả chỉ kiểm tra cấu trúc JSON. Các ca cần chạy thật được liệt kê trong [acceptance-cases.md](acceptance-cases.md) và vẫn `NOT_RUN`.

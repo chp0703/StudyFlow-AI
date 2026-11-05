@@ -1,0 +1,15 @@
+{
+  "conversation_id": "00000000-0000-4000-8000-000000000003",
+  "active_action": null,
+  "selected_action": null,
+  "source_message": {
+    "message_id": "00000000-0000-4000-8000-000000000004",
+    "user_id": "00000000-0000-4000-8000-000000000001",
+    "conversation_id": "00000000-0000-4000-8000-000000000003",
+    "source": "CHAT",
+    "role": "USER",
+    "text": "Tìm task OOP",
+    "received_at": "2026-11-05T03:00:00Z"
+  },
+  "read_at": "2026-11-05T03:00:00Z"
+}

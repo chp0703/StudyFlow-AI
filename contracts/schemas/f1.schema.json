@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:studyflow:f1:1.1:integration:1.0.0",
+  "$id": "urn:studyflow:f1:1.1:integration:1.0.1",
   "title": "StudyFlow F1 shared boundary schemas",
   "x-contract-status": "APPROVED",
   "x-approval-record": "../APPROVAL.md",
@@ -5811,7 +5811,7 @@
       "type": "object",
       "properties": {
         "contract_version": {
-          "const": "1.0.0"
+          "const": "1.0.1"
         },
         "schema_version": {
           "const": "1.1"
@@ -7120,13 +7120,934 @@
         }
       ]
     },
+    "EnsureUserContextArguments": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "ListTimeWindowsArguments": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "AVAILABILITY",
+                "BUSY"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "include_archived": {
+          "type": "boolean"
+        },
+        "page_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "cursor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "include_archived",
+        "page_size",
+        "cursor"
+      ],
+      "additionalProperties": false
+    },
+    "GetWorkflowContextArguments": {
+      "type": "object",
+      "properties": {
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "action_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "conversation_id",
+        "action_id",
+        "message_id"
+      ],
+      "additionalProperties": false
+    },
+    "WorkflowActionContext": {
+      "type": "object",
+      "properties": {
+        "pending_action": {
+          "$ref": "#/$defs/PendingAction"
+        },
+        "candidate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TaskCandidate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proposal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlanProposal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "last_presentation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ActionPresentationRecord"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "presentation_source_message": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceMessageRecord"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "pending_action",
+        "candidate",
+        "proposal",
+        "last_presentation",
+        "presentation_source_message"
+      ],
+      "additionalProperties": false
+    },
+    "WorkflowContextData": {
+      "type": "object",
+      "properties": {
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "active_action": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkflowActionContext"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "selected_action": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkflowActionContext"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_message": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceMessageRecord"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "read_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        }
+      },
+      "required": [
+        "conversation_id",
+        "active_action",
+        "selected_action",
+        "source_message",
+        "read_at"
+      ],
+      "additionalProperties": false
+    },
+    "ActiveApiReceiptBinding": {
+      "type": "object",
+      "properties": {
+        "http_operation": {
+          "type": "string",
+          "enum": [
+            "send_message",
+            "prepare_action",
+            "review_action",
+            "submit_decision"
+          ]
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$"
+        },
+        "request_fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "expected_lease_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "http_operation",
+        "idempotency_key",
+        "request_fingerprint",
+        "expected_lease_version"
+      ],
+      "additionalProperties": false
+    },
+    "WorkflowStepOutcome": {
+      "type": "object",
+      "properties": {
+        "intent_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "step_key": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "operation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Operation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "disposition": {
+          "type": "string",
+          "enum": [
+            "SUCCEEDED",
+            "REJECTED",
+            "FAILED",
+            "DEPENDENCY_CANCELLED"
+          ]
+        },
+        "result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ToolResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Error"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "intent_index",
+        "step_key",
+        "operation",
+        "disposition",
+        "result",
+        "error"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "FAILED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "error": {
+                "$ref": "#/$defs/Error"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "error": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "SUCCEEDED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "operation": {
+                "$ref": "#/$defs/Operation"
+              },
+              "result": {
+                "$ref": "#/$defs/ToolResult"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "DEPENDENCY_CANCELLED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "operation": {
+                "type": "null"
+              },
+              "result": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "WorkflowContinuationRecord": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "source_message_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "origin_http_operation": {
+          "type": "string",
+          "enum": [
+            "send_message",
+            "prepare_action"
+          ]
+        },
+        "origin_idempotency_key": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$"
+        },
+        "origin_request_fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "extraction": {
+          "$ref": "#/$defs/ExtractionResult"
+        },
+        "extraction_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "depends_on": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "uniqueItems": true
+          }
+        },
+        "cursor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "awaiting_reference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ActionReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "completed_steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WorkflowStepOutcome"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        }
+      },
+      "required": [
+        "user_id",
+        "conversation_id",
+        "source_message_id",
+        "origin_http_operation",
+        "origin_idempotency_key",
+        "origin_request_fingerprint",
+        "version",
+        "extraction",
+        "extraction_digest",
+        "depends_on",
+        "cursor",
+        "awaiting_reference",
+        "completed_steps",
+        "created_at",
+        "updated_at"
+      ],
+      "additionalProperties": false
+    },
+    "GetWorkflowContinuationArguments": {
+      "type": "object",
+      "properties": {
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "source_message_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "conversation_id",
+        "source_message_id"
+      ],
+      "additionalProperties": false
+    },
+    "WorkflowContinuationData": {
+      "type": "object",
+      "properties": {
+        "continuation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkflowContinuationRecord"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "continuation"
+      ],
+      "additionalProperties": false
+    },
+    "InitializeWorkflowContinuationArguments": {
+      "type": "object",
+      "properties": {
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "source_message_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "extraction": {
+          "$ref": "#/$defs/ExtractionResult"
+        },
+        "depends_on": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "uniqueItems": true
+          }
+        },
+        "receipt_binding": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ActiveApiReceiptBinding"
+            },
+            {
+              "properties": {
+                "http_operation": {
+                  "type": "string",
+                  "enum": [
+                    "send_message",
+                    "prepare_action"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "conversation_id",
+        "source_message_id",
+        "extraction",
+        "depends_on",
+        "receipt_binding"
+      ],
+      "additionalProperties": false
+    },
+    "CheckpointWorkflowContinuationArguments": {
+      "type": "object",
+      "properties": {
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "source_message_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "expected_cursor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "transition": {
+          "type": "string",
+          "enum": [
+            "WAIT",
+            "ADVANCE"
+          ]
+        },
+        "action_reference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ActionReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outcome": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkflowStepOutcome"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "receipt_binding": {
+          "$ref": "#/$defs/ActiveApiReceiptBinding"
+        }
+      },
+      "required": [
+        "conversation_id",
+        "source_message_id",
+        "expected_version",
+        "expected_cursor",
+        "transition",
+        "action_reference",
+        "outcome",
+        "receipt_binding"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "transition": {
+                "const": "WAIT"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "action_reference": {
+                "$ref": "#/$defs/ActionReference"
+              },
+              "outcome": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "outcome": {
+                "$ref": "#/$defs/WorkflowStepOutcome"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ensure_user_contextInternalResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "$ref": "#/$defs/User"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "list_time_windowsInternalResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "$ref": "#/$defs/TimeWindowListData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "get_workflow_contextInternalResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "$ref": "#/$defs/WorkflowContextData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "get_workflow_continuationInternalResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "$ref": "#/$defs/WorkflowContinuationData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "initialize_workflow_continuationInternalResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "$ref": "#/$defs/WorkflowContinuationRecord"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "checkpoint_workflow_continuationInternalResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "$ref": "#/$defs/WorkflowContinuationRecord"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
     "RpcRequest": {
       "oneOf": [
         {
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -7204,7 +8125,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -7282,7 +8203,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -7334,7 +8255,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -7412,7 +8333,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -7490,7 +8411,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -7568,7 +8489,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -7620,7 +8541,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -7698,7 +8619,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -7776,7 +8697,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -7828,7 +8749,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -7906,7 +8827,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -7984,7 +8905,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -8062,7 +8983,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -8140,7 +9061,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -8218,7 +9139,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -8296,7 +9217,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -8374,7 +9295,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -8452,7 +9373,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -8504,7 +9425,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -8582,7 +9503,7 @@
           "type": "object",
           "properties": {
             "contract_version": {
-              "const": "1.0.0"
+              "const": "1.0.1"
             },
             "schema_version": {
               "const": "1.1"
@@ -8597,6 +9518,389 @@
             },
             "arguments": {
               "$ref": "#/$defs/ApiReceiptLeaseArguments"
+            },
+            "execution_context": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/ExecutionContext"
+                },
+                {
+                  "properties": {
+                    "idempotency_key": {
+                      "type": "string",
+                      "minLength": 16,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9._:-]+$"
+                    },
+                    "conversation_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              ]
+            },
+            "attestation": {
+              "type": "object",
+              "properties": {
+                "key_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "payload": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "signature": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "required": [
+                "key_id",
+                "payload",
+                "signature"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "contract_version",
+            "schema_version",
+            "request_id",
+            "operation",
+            "arguments",
+            "execution_context",
+            "attestation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract_version": {
+              "const": "1.0.1"
+            },
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "operation": {
+              "const": "ensure_user_context"
+            },
+            "arguments": {
+              "$ref": "#/$defs/EnsureUserContextArguments"
+            },
+            "execution_context": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/ExecutionContext"
+                },
+                {
+                  "properties": {
+                    "approval_action": {
+                      "type": "null"
+                    }
+                  }
+                }
+              ]
+            },
+            "attestation": {
+              "type": "object",
+              "properties": {
+                "key_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "payload": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "signature": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "required": [
+                "key_id",
+                "payload",
+                "signature"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "contract_version",
+            "schema_version",
+            "request_id",
+            "operation",
+            "arguments",
+            "execution_context",
+            "attestation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract_version": {
+              "const": "1.0.1"
+            },
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "operation": {
+              "const": "list_time_windows"
+            },
+            "arguments": {
+              "$ref": "#/$defs/ListTimeWindowsArguments"
+            },
+            "execution_context": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/ExecutionContext"
+                },
+                {
+                  "properties": {
+                    "idempotency_key": {
+                      "type": "null"
+                    },
+                    "approval_action": {
+                      "type": "null"
+                    }
+                  }
+                }
+              ]
+            },
+            "attestation": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "contract_version",
+            "schema_version",
+            "request_id",
+            "operation",
+            "arguments",
+            "execution_context",
+            "attestation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract_version": {
+              "const": "1.0.1"
+            },
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "operation": {
+              "const": "get_workflow_context"
+            },
+            "arguments": {
+              "$ref": "#/$defs/GetWorkflowContextArguments"
+            },
+            "execution_context": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/ExecutionContext"
+                },
+                {
+                  "properties": {
+                    "idempotency_key": {
+                      "type": "null"
+                    },
+                    "approval_action": {
+                      "type": "null"
+                    }
+                  }
+                }
+              ]
+            },
+            "attestation": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "contract_version",
+            "schema_version",
+            "request_id",
+            "operation",
+            "arguments",
+            "execution_context",
+            "attestation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract_version": {
+              "const": "1.0.1"
+            },
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "operation": {
+              "const": "get_workflow_continuation"
+            },
+            "arguments": {
+              "$ref": "#/$defs/GetWorkflowContinuationArguments"
+            },
+            "execution_context": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/ExecutionContext"
+                },
+                {
+                  "properties": {
+                    "idempotency_key": {
+                      "type": "null"
+                    },
+                    "approval_action": {
+                      "type": "null"
+                    }
+                  }
+                }
+              ]
+            },
+            "attestation": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "contract_version",
+            "schema_version",
+            "request_id",
+            "operation",
+            "arguments",
+            "execution_context",
+            "attestation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract_version": {
+              "const": "1.0.1"
+            },
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "operation": {
+              "const": "initialize_workflow_continuation"
+            },
+            "arguments": {
+              "$ref": "#/$defs/InitializeWorkflowContinuationArguments"
+            },
+            "execution_context": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/ExecutionContext"
+                },
+                {
+                  "properties": {
+                    "idempotency_key": {
+                      "type": "string",
+                      "minLength": 16,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9._:-]+$"
+                    },
+                    "conversation_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              ]
+            },
+            "attestation": {
+              "type": "object",
+              "properties": {
+                "key_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "payload": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "signature": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "required": [
+                "key_id",
+                "payload",
+                "signature"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "contract_version",
+            "schema_version",
+            "request_id",
+            "operation",
+            "arguments",
+            "execution_context",
+            "attestation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract_version": {
+              "const": "1.0.1"
+            },
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "operation": {
+              "const": "checkpoint_workflow_continuation"
+            },
+            "arguments": {
+              "$ref": "#/$defs/CheckpointWorkflowContinuationArguments"
             },
             "execution_context": {
               "allOf": [

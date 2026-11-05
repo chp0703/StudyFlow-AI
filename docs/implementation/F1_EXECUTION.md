@@ -30,6 +30,19 @@ Never mark a gate complete from fixture-only checks. Cloud project credentials a
 - User supplied shared-or-demo Supabase project ref `phomrutsdhdgejlskwcb`; public JWKS responded 200 with an ES256 key. Schema, permissions, migration history and existing data remain unverified. Do not reset or deploy blindly.
 - User approved all A/B/C/D in INTERNAL_RPC_ADDENDUM_PROPOSAL.md for package 1.0.1: six internal helpers, continuation infrastructure and signed first-GET profile initialization. Sol freezes independent tests before Gemini synchronizes schemas/mappings/fixtures. Public eight endpoints, ten operations and logical schema 1.1 remain unchanged. Approval does not establish implementation success.
 
+## Handoff checkpoint
+
+The user requested a handoff due approaching quota, not further implementation.
+Argon WP0 conversation `dd1d22b6-130b-48fe-91ac-d062172205bd` finished with native
+contract edits only. Sol then ran the actual source: the checker fails its valid
+checkpoint ADVANCE fixture; 16 independent addendum methods run with two failures
+(valid ADVANCE and a completed continuation prefix containing an empty READ list).
+Generic ToolResult READ.data.oneOf overlaps SearchTasksData/TimeWindowListData
+for empty items. WP0 is NOT accepted or committed; preserve the dirty snapshot.
+Do not use the implementer's completion report as evidence of acceptance.
+See root BAN_GIAO.md and docs/handoff/ for the continuation plan, prompts and
+portable environment instructions. No 009+ migration or API factory exists yet.
+
 ## Work packages
 
 ### WP1 — scheduler correctness and TimeWindow normalization (TV4)
@@ -39,6 +52,9 @@ CLI Argon High conversation `8f23a737-bf8b-4ba2-b8d6-b8c4516835ff` with independ
 Sol correction/review. Argon performed native edits; Sol ran all tests and Git.
 UTC instant arithmetic preserves actual duration and PEP 495 fold while IANA
 local-day rules remain local. Full DB/service integration is subsequent work.
+Independent scheduler CI also passed at commit 52ee7c8:
+https://github.com/chp0703/StudyFlow-AI/actions/runs/42034378754 . The separate
+HTTP/1.0.1 contract jobs remain red until their implementation is delivered.
 
 Implementation owner: Argon High. Sol acceptance tests: `backend/tests/acceptance_sol/` (implementer must not edit).
 

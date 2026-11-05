@@ -1,0 +1,2 @@
+-r ../../contracts/requirements-check.txt
+psycopg[binary]==3.3.8

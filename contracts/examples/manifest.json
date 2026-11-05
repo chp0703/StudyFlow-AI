@@ -1,5 +1,5 @@
 {
-  "contract_version": "1.0.0",
+  "contract_version": "1.0.1",
   "cases": [
     {
       "file": "examples/valid/User.json",
@@ -480,6 +480,72 @@
       "schema": "RpcRequest",
       "valid": false,
       "reason": "Read context must not carry an approval claim"
+    },
+    {
+      "file": "examples/valid/WorkflowContextData.json",
+      "schema": "WorkflowContextData",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/WorkflowContinuationRecord.json",
+      "schema": "WorkflowContinuationRecord",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/checkpoint-wait-arguments.json",
+      "schema": "CheckpointWorkflowContinuationArguments",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/checkpoint-advance-arguments.json",
+      "schema": "CheckpointWorkflowContinuationArguments",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/initialize-continuation-arguments.json",
+      "schema": "InitializeWorkflowContinuationArguments",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/rpc-ensure-user-context-shape-only.json",
+      "schema": "RpcRequest",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/continuation-cursor-mismatch.json",
+      "schema": "WorkflowContinuationRecord",
+      "valid": false,
+      "reason": "Continuation cursor and completed_steps prefix must match"
+    },
+    {
+      "file": "examples/invalid/continuation-bad-dependency.json",
+      "schema": "WorkflowContinuationRecord",
+      "valid": false,
+      "reason": "Dependencies may only reference distinct earlier intents"
+    },
+    {
+      "file": "examples/invalid/initialize-wrong-http-operation.json",
+      "schema": "InitializeWorkflowContinuationArguments",
+      "valid": false,
+      "reason": "Only send_message or prepare_action may initialize a continuation"
+    },
+    {
+      "file": "examples/invalid/checkpoint-wait-with-outcome.json",
+      "schema": "CheckpointWorkflowContinuationArguments",
+      "valid": false,
+      "reason": "WAIT checkpoint requires outcome=null"
+    },
+    {
+      "file": "examples/invalid/checkpoint-advance-cursor-mismatch.json",
+      "schema": "CheckpointWorkflowContinuationArguments",
+      "valid": false,
+      "reason": "ADVANCE outcome intent_index must match expected_cursor"
+    },
+    {
+      "file": "examples/invalid/rpc-old-contract-version.json",
+      "schema": "RpcRequest",
+      "valid": false,
+      "reason": "Package 1.0.1 rejects 1.0.0 RpcRequest envelopes"
     }
   ]
 }

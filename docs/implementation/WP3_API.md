@@ -122,8 +122,11 @@ Keep attestation and request_id out of business fingerprints.
 
 Implement JWT/errors, canonical signing, declared RPC reads and factory wiring
 independently now. GET preferences/time-windows and cold-start workflow loading
-need approval of the concrete proposal in `INTERNAL_RPC_ADDENDUM_PROPOSAL.md`; do not add its
-proposed routines to runtime or approved contracts before authorization.
+use the six helpers explicitly approved in `INTERNAL_RPC_ADDENDUM_PROPOSAL.md`.
+WP0 synchronizes their machine-readable package 1.0.1 definitions first; then
+implement against those definitions. No further design approval is required for
+the approved A/B/C/D. First-GET bootstrap and optional context loading before
+other reads must follow the attested helper and frozen HTTP tests.
 
 Run `backend/tests/acceptance_api_sol/` without editing its assertions. Its initial
 baseline is a missing-factory setup failure. A mock RPC pass proves adapter

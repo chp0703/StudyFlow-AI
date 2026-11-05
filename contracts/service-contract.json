@@ -1,12 +1,12 @@
 {
-  "contract_version": "1.0.0",
+  "contract_version": "1.0.1",
   "schema_version": "1.1",
   "status": "APPROVED",
   "approval": {
     "record": "APPROVAL.md",
     "approved_on": "2026-11-05",
     "effective_on": "2026-11-05",
-    "basis": "Team approval confirmed by the user in this conversation"
+    "basis": "Team approval and explicit A/B/C/D 1.0.1 addendum approval confirmed by the user"
   },
   "signature": "execute(command: ValidatedCommand, context: ExecutionContext) -> operation-specific ToolResult",
   "operations": [
@@ -250,6 +250,60 @@
       "attestation_required": true,
       "llm_callable": false,
       "result_schema": "release_api_receiptInternalResult"
+    },
+    {
+      "rpc": "ensure_user_context",
+      "arguments_schema": "EnsureUserContextArguments",
+      "data_schema": "User",
+      "read_only": false,
+      "attestation_required": true,
+      "llm_callable": false,
+      "result_schema": "ensure_user_contextInternalResult"
+    },
+    {
+      "rpc": "list_time_windows",
+      "arguments_schema": "ListTimeWindowsArguments",
+      "data_schema": "TimeWindowListData",
+      "read_only": true,
+      "attestation_required": false,
+      "llm_callable": false,
+      "result_schema": "list_time_windowsInternalResult"
+    },
+    {
+      "rpc": "get_workflow_context",
+      "arguments_schema": "GetWorkflowContextArguments",
+      "data_schema": "WorkflowContextData",
+      "read_only": true,
+      "attestation_required": false,
+      "llm_callable": false,
+      "result_schema": "get_workflow_contextInternalResult"
+    },
+    {
+      "rpc": "get_workflow_continuation",
+      "arguments_schema": "GetWorkflowContinuationArguments",
+      "data_schema": "WorkflowContinuationData",
+      "read_only": true,
+      "attestation_required": false,
+      "llm_callable": false,
+      "result_schema": "get_workflow_continuationInternalResult"
+    },
+    {
+      "rpc": "initialize_workflow_continuation",
+      "arguments_schema": "InitializeWorkflowContinuationArguments",
+      "data_schema": "WorkflowContinuationRecord",
+      "read_only": false,
+      "attestation_required": true,
+      "llm_callable": false,
+      "result_schema": "initialize_workflow_continuationInternalResult"
+    },
+    {
+      "rpc": "checkpoint_workflow_continuation",
+      "arguments_schema": "CheckpointWorkflowContinuationArguments",
+      "data_schema": "WorkflowContinuationRecord",
+      "read_only": false,
+      "attestation_required": true,
+      "llm_callable": false,
+      "result_schema": "checkpoint_workflow_continuationInternalResult"
     }
   ],
   "internal_result_envelope": "Internal RPCs return {schema_version, request_id, outcome: READ or COMMITTED, data: data_schema, error:null, warnings:Issue[]} or ErrorResult. persist_plan_proposal uses generate_study_planResult unchanged.",
