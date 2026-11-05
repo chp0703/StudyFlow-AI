@@ -71,3 +71,19 @@
 - Chưa kiểm tra giao diện điện thoại (~400px); drawer lịch sử trên điện thoại chưa có animation.
 - Animation GSAP luôn chạy, không kiểm tra `prefers-reduced-motion` (quyết định của nhóm).
 - Đề xuất, khung giờ rảnh/bận và việc chỉ lưu trong bộ nhớ (mất khi tải lại trang); thời hạn đề xuất 10 phút và khối 60 phút là giá trị đề xuất, SRS chưa chốt.
+
+## 2026-11-05 — Bỏ hết hạn đề xuất theo schema F1 v1.1
+
+**Mục tiêu:** đưa giao diện Lập kế hoạch về đúng hợp đồng `docs/database/schema_F1.md` v1.1, vốn đã bỏ `EXPIRED` và mọi TTL của đề xuất.
+
+**Đã làm**
+
+- Xóa đếm ngược 10 phút, mã `EXPIRED`, `isExpired`, `PROPOSAL_TTL_MS` và test liên quan (`pages/Planner.tsx`, `features/planner/proposal.ts`).
+- Đổi thông báo `STALE_PLAN_VERSION` thành `STALE`.
+- `DESIGN.md`: cập nhật mục đề xuất; ghi rõ lệnh thêm/dời/xóa khối thủ công nằm ngoài F1 v1.1.
+
+**Kết quả:** nhánh `fix/remove-proposal-expiry`. `tsc --noEmit`, `npm run build` và test `features/planner` (9/9) pass.
+
+**Ghi chú**
+
+- Chưa xử lý các chỗ còn lệch v1.1: thẻ xác nhận công việc, nối chat với công việc, chia khối theo thời lượng, cấu hình lập lịch, lịch hiện hành/lịch sử.

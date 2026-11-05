@@ -58,13 +58,6 @@ export function diffWindows(
   ]
 }
 
-// shortcut: 10 minutes is a proposed value, SRS leaves the expiry TBD.
-
-export const PROPOSAL_TTL_MS = 10 * 60 * 1000
-
-export const isExpired = (proposal: Proposal, now: number) =>
-  now - proposal.createdAt >= PROPOSAL_TTL_MS
-
 export const isStale = (proposal: Proposal, revision: number) =>
   proposal.baseRevision !== revision
 
