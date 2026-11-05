@@ -497,7 +497,7 @@ export default function Planner({
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Nhập yêu cầu lịch học của bạn..."
+                placeholder="Nhập yêu cầu lịch học"
                 aria-label="Yêu cầu điều chỉnh lịch"
               />
               <Button
@@ -616,9 +616,7 @@ export default function Planner({
           <span className="legend-busy">Bận</span>
           <span className="legend-proposed">Đề xuất</span>
           <span>
-            {weekEmpty
-              ? "Tuần này chưa có việc. Thử: thêm Ôn giải tích thứ 6 lúc 15h"
-              : "Bấm ô trống để thêm việc"}
+            {weekEmpty ? "Tuần này chưa có việc." : "Bấm ô trống để thêm việc"}
           </span>
         </p>
         <div
