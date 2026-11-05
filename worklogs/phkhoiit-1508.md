@@ -255,3 +255,20 @@
 **Ghi chú**
 
 - Chưa có replan khi có block active cần review qua HTTP (trả lỗi `ACTIVE_BLOCK_REQUIRES_REVIEW`), và chưa có endpoint review riêng cho trường hợp đó.
+
+## 2026-11-05 — Backend F1: WP4 (luồng chat: trích xuất, hàng đợi bền vững, tiếp tục sau quyết định)
+
+**Mục tiêu:** `POST /v1/messages` chạy trọn vòng: trích xuất → hàng đợi ý định bền vững → chuẩn bị ghi → chờ quyết định → tiếp tục.
+
+**Đã làm**
+
+- `backend/app/nlu/extractor.py` (DeepSeek JSON mode có kiểm schema, extractor kịch bản cho test, extractor "chưa cấu hình"), `backend/app/api/v1/chat.py` (hàng đợi bền vững, phụ thuộc, hỏi lại và gộp vào bản nháp, từ chối khi đang có thao tác chờ, tiếp tục sau `/v1/decisions`, tự sửa hàng đợi mồ côi), sửa `decide` để retry sau sự cố không bị chặn bởi trạng thái đã đổi.
+- Tập đánh giá 40 câu tiếng Việt (`nlu_eval_vi.json`), bộ chấm điểm có test, script `evaluate_nlu.py` (cần khóa DeepSeek).
+- 5 test tích hợp chat trên Supabase local thật; 4 test đơn vị cho extractor; 4 test cho bộ chấm.
+
+**Kết quả:** integration 11/11, unit 33, HTTP Sol 30/30 pass.
+
+**Ghi chú**
+
+- **NOT_RUN:** đo thật 38/40 với DeepSeek (chưa có khóa); prompt là bản đầu.
+- Chat chỉ ADD cửa sổ giờ; sửa/lưu trữ qua biểu mẫu. Chi tiết trong `docs/implementation/WP4_NOTES.md`.

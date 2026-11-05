@@ -13,15 +13,19 @@ from .api.v1.routes import Api, fallback_response
 from .clients.rpc import RpcClient
 from .core.config import Settings
 from .core.security import JwtVerifier
+from .nlu.extractor import DeepSeekExtractor, UnavailableExtractor
 
 
 def create_app(settings: Settings | None = None, *, rpc_transport: httpx.BaseTransport | None = None,
                llm_transport: httpx.BaseTransport | None = None, jwks_transport: httpx.BaseTransport | None = None,
-               clock=None) -> FastAPI:
+               clock=None, extractor=None) -> FastAPI:
     settings = settings or Settings.from_env()
     clock = clock or (lambda: datetime.now(timezone.utc))
     app = FastAPI(title="StudyFlow F1 API", docs_url=None, redoc_url=None, openapi_url=None)
-    api = Api(settings, RpcClient(settings, rpc_transport, clock), JwtVerifier(settings, jwks_transport, clock), clock)
+    if extractor is None:
+        extractor = (DeepSeekExtractor(settings.deepseek_base_url, settings.deepseek_api_key, settings.deepseek_model, llm_transport)
+                     if settings.deepseek_api_key else UnavailableExtractor())
+    api = Api(settings, RpcClient(settings, rpc_transport, clock), JwtVerifier(settings, jwks_transport, clock), clock, extractor)
     app.state.llm_transport = llm_transport  # used by the extraction stage
     api.register(app)
 

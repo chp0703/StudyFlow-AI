@@ -59,7 +59,10 @@ def deadline_instant(slots: dict) -> str | None:
 
 class ActionProcessor:
     def __init__(self, api):
+        from .chat import ChatProcessor  # chat builds on this module, so import it late
+
         self.api = api
+        self.chat = ChatProcessor(api, self, api.extractor)
 
     # ------------------------------------------------------------ receipt lifecycle
     def run(self, ctx, http_operation: str, key: str, fingerprint: str, body: dict, path: dict):
@@ -118,6 +121,8 @@ class ActionProcessor:
         return result
 
     def dispatch(self, ctx, receipt, http_operation, key, body, path):
+        if http_operation == "send_message":
+            return self.chat.handle_message(ctx, receipt, key, body)
         if http_operation == "prepare_action":
             return self.prepare(ctx, receipt, key, body)
         if http_operation == "submit_decision":
@@ -134,9 +139,9 @@ class ActionProcessor:
             raise
 
     @staticmethod
-    def pending_shell(ctx, receipt, conversation, intent, state, *, candidate_id, draft, missing):
+    def pending_shell(ctx, action_id, conversation, intent, state, *, candidate_id, draft, missing):
         now = iso(datetime.now(timezone.utc))
-        return {"action_id": receipt["action_id"], "user_id": ctx.user_id, "conversation_id": conversation, "version": 1,
+        return {"action_id": action_id, "user_id": ctx.user_id, "conversation_id": conversation, "version": 1,
                 "intent": intent, "state": state, "requires_review": False, "candidate_id": candidate_id,
                 "proposal_id": None, "draft_arguments": draft, "missing_fields": missing, "ambiguities": [],
                 "depends_on_action_id": None, "created_at": now, "updated_at": now}
@@ -146,9 +151,7 @@ class ActionProcessor:
         operation, arguments, conversation = body["operation"], body["arguments"], body["conversation_id"]
         slots = None
         if operation == "create_task_candidate":
-            slots = dict(arguments["slots"])
-            if slots.get("deadline_precision") == "DATE" and slots.get("deadline_at") is None:
-                slots["deadline_at"] = deadline_instant(slots)
+            slots = self.normalize_slots(arguments["slots"])
             questions = self.questions(slots)
             if questions:
                 return 200, reply(ctx.request_id, "NEEDS_CLARIFICATION", "Cần thêm thông tin để lưu công việc.", questions=questions)
@@ -157,16 +160,42 @@ class ActionProcessor:
         message_id = receipt["message_id"]
         self.step(ctx, "record_source_message", {"message": {
             "message_id": message_id, "user_id": ctx.user_id, "conversation_id": conversation, "source": "UI",
-            "role": "USER", "text": FORM_TEXT[operation], "received_at": iso(datetime.now(timezone.utc))}},
+            "role": "USER", "text": FORM_TEXT[operation], "received_at": receipt["created_at"]}},
             conversation_id=conversation, idempotency_key=child_key(key, "message"), message_id=message_id)
+        built = self.build_action(ctx, action_id=receipt["action_id"], message_id=message_id, key=key, tag="",
+                                  conversation=conversation, operation=operation, arguments=arguments, slots=slots)
+        if "report" in built:
+            return 200, self.report_reply(ctx, built["report"])
+        return 200, self.awaiting_reply(ctx, built["presentation"], built["target"])
+
+    @staticmethod
+    def normalize_slots(raw: dict) -> dict:
+        slots = dict(raw)
+        if slots.get("deadline_precision") == "DATE" and slots.get("deadline_at") is None:
+            slots["deadline_at"] = deadline_instant(slots)
+        return slots
+
+    @staticmethod
+    def report_reply(ctx, report: dict) -> dict:
+        text = "Lịch hiện tại đã phù hợp, không có thay đổi." if report["coverage"] == "NO_CHANGE" \
+            else "Chưa xếp được khối học nào trong khoảng thời gian này."
+        return reply(ctx.request_id, "SUCCEEDED", text, result=_ok(ctx.request_id, "READ", report))
+
+    def build_action(self, ctx, *, action_id, message_id, key, tag, conversation, operation, arguments, slots=None,
+                     missing=None) -> dict:
+        """Creates the draft/proposal and the server-issued presentation for one action.
+
+        Returns {"presentation", "target"} or, when the engine has nothing to propose, {"report"}.
+        `tag` keeps the database idempotency keys of several actions from one request apart."""
         if operation == "generate_study_plan":
-            return self.prepare_plan(ctx, receipt, key, body, message_id)
+            return self.build_plan(ctx, action_id, message_id, key, tag, conversation, arguments)
         if operation == "create_task_candidate":
             candidate = self.step(ctx, "create_task_candidate", {"slots": slots}, conversation_id=conversation,
-                                  idempotency_key=child_key(key, "candidate"), message_id=message_id)["data"]
-            pending = self.pending_shell(ctx, receipt, conversation, "CREATE_TASK", "AWAITING_CONFIRMATION",
-                                         candidate_id=candidate["candidate_id"], draft={"slots": slots}, missing=[])
-            command = {"schema_version": "1.1", "operation": "confirm_task", "arguments": {
+                                  idempotency_key=child_key(key, f"candidate{tag}"), message_id=message_id)["data"]
+            pending = self.pending_shell(ctx, action_id, conversation, "CREATE_TASK",
+                                         "AWAITING_CLARIFICATION" if missing else "AWAITING_CONFIRMATION",
+                                         candidate_id=candidate["candidate_id"], draft={"slots": slots}, missing=missing or [])
+            command = None if missing else {"schema_version": "1.1", "operation": "confirm_task", "arguments": {
                 "candidate_id": candidate["candidate_id"], "expected_candidate_version": candidate["version"]}}
             presentation = {"kind": "ACTION_PRESENTATION", "pending_action": pending, "candidate": candidate,
                             "proposal": None, "normalized_command": command, "effective_policy": None}
@@ -174,18 +203,18 @@ class ActionProcessor:
         else:
             command = {"schema_version": "1.1", "operation": operation, "arguments": arguments}
             policy = self.effective_policy(ctx, arguments) if operation == "set_scheduling_preferences" else None
-            pending = self.pending_shell(ctx, receipt, conversation, INTENT[operation], "AWAITING_APPROVAL",
+            pending = self.pending_shell(ctx, action_id, conversation, INTENT[operation], "AWAITING_APPROVAL",
                                          candidate_id=None, draft=arguments, missing=[])
             presentation = {"kind": "ACTION_PRESENTATION", "pending_action": pending, "candidate": None, "proposal": None,
                             "normalized_command": command, "effective_policy": policy}
-            target = ("PENDING_ACTION", receipt["action_id"], 1)
+            target = ("PENDING_ACTION", action_id, 1)
         stored = self.step(ctx, "prepare_pending_action", {"presentation": presentation, "expected_action_version": None},
-                           conversation_id=conversation, idempotency_key=child_key(key, "prepare"), message_id=message_id)["data"]
-        return 200, self.awaiting_reply(ctx, stored, target)
+                           conversation_id=conversation, idempotency_key=child_key(key, f"prepare{tag}"),
+                           message_id=message_id)["data"]
+        return {"presentation": stored, "target": target}
 
-    def prepare_plan(self, ctx, receipt, key, body, message_id):
+    def build_plan(self, ctx, action_id, message_id, key, tag, conversation, arguments) -> dict:
         """Engine -> persisted proposal -> pending action. Nothing becomes the current plan until approved."""
-        conversation, arguments = body["conversation_id"], body["arguments"]
         self.step(ctx, "ensure_user_context", {})
         snapshot = self.step(ctx, "get_scheduling_context", {"generation_scope": arguments["generation_scope"]},
                              conversation_id=conversation)["data"]
@@ -198,12 +227,11 @@ class ActionProcessor:
             code = "ACTIVE_BLOCK_REQUIRES_REVIEW" if first.code == "ACTIVE_BLOCK_REQUIRES_REVIEW" else "INVALID_PARAMETER"
             raise Terminal(code, first.message)
         if generated.report is not None:
-            text = "Lịch hiện tại đã phù hợp, không có thay đổi." if generated.report["coverage"] == "NO_CHANGE"                 else "Chưa xếp được khối học nào trong khoảng thời gian này."
-            return 200, reply(ctx.request_id, "SUCCEEDED", text, result=_ok(ctx.request_id, "READ", generated.report))
+            return {"report": generated.report}
         proposal = self.step(ctx, "persist_plan_proposal", {"command_arguments": arguments, "proposal": generated.proposal},
-                             conversation_id=conversation, idempotency_key=child_key(key, "generate"),
+                             conversation_id=conversation, idempotency_key=child_key(key, f"generate{tag}"),
                              message_id=message_id)["data"]
-        pending = self.pending_shell(ctx, receipt, conversation, "GENERATE_STUDY_PLAN", "AWAITING_APPROVAL",
+        pending = self.pending_shell(ctx, action_id, conversation, "GENERATE_STUDY_PLAN", "AWAITING_APPROVAL",
                                      candidate_id=None, draft=arguments, missing=[])
         pending["proposal_id"] = proposal["proposal_id"]
         command = {"schema_version": "1.1", "operation": "approve_study_plan", "arguments": {
@@ -212,8 +240,9 @@ class ActionProcessor:
         presentation = {"kind": "ACTION_PRESENTATION", "pending_action": pending, "candidate": None, "proposal": proposal,
                         "normalized_command": command, "effective_policy": proposal["policy_snapshot"]}
         stored = self.step(ctx, "prepare_pending_action", {"presentation": presentation, "expected_action_version": None},
-                           conversation_id=conversation, idempotency_key=child_key(key, "prepare"), message_id=message_id)["data"]
-        return 200, self.awaiting_reply(ctx, stored, ("PLAN_PROPOSAL", proposal["proposal_id"], proposal["version"]))
+                           conversation_id=conversation, idempotency_key=child_key(key, f"prepare{tag}"),
+                           message_id=message_id)["data"]
+        return {"presentation": stored, "target": ("PLAN_PROPOSAL", proposal["proposal_id"], proposal["version"])}
 
     @staticmethod
     def awaiting_reply(ctx, presentation: dict, target: tuple) -> dict:
@@ -271,10 +300,13 @@ class ActionProcessor:
         data = self.workflow_context(ctx, conversation, ref["action_id"], key, False)
         action = data["selected_action"]
         pending = action["pending_action"]
-        if pending["requires_review"]:
-            raise Terminal("ACTION_REVIEW_REQUIRED", "Hãy xem lại thao tác hiện tại trước khi quyết định.")
-        if pending["state"] not in AWAITING or pending["version"] != ref["action_version"]:
-            raise Terminal("STALE_ENTITY_VERSION", "Thao tác đã thay đổi; hãy tải lại trước khi quyết định.")
+        # A finished action is passed on as is: the database replays the same decision for the same key and
+        # refuses any other key, which is what makes a retry after a crash safe.
+        if pending["state"] in AWAITING:
+            if pending["requires_review"]:
+                raise Terminal("ACTION_REVIEW_REQUIRED", "Hãy xem lại thao tác hiện tại trước khi quyết định.")
+            if pending["version"] != ref["action_version"]:
+                raise Terminal("STALE_ENTITY_VERSION", "Thao tác đã thay đổi; hãy tải lại trước khi quyết định.")
         last = (action["last_presentation"] or {}).get("presentation") or {}
         command = last.get("normalized_command")
         if decision == "REJECT":
@@ -289,6 +321,9 @@ class ActionProcessor:
                            idempotency_key=child_key(key, "decision"), approval_action=approval,
                            action_reference=ref, message_id=receipt["message_id"])
         result = {**result, "request_id": ctx.request_id}
+        resumed = self.chat.resume(ctx, receipt, key, conversation, ref, operation, result, False)
+        if resumed is not None:
+            return 200, resumed
         return 200, reply(ctx.request_id, "SUCCEEDED", DONE_TEXT.get(operation, "Đã hoàn tất."), result=result)
 
     def reject(self, ctx, receipt, key, conversation, ref, action, command):
@@ -300,8 +335,9 @@ class ActionProcessor:
                                                           "expected_proposal_version": ref["target_version"]},
                                conversation_id=conversation, idempotency_key=child_key(key, "decision"),
                                approval_action=approval, action_reference=ref, message_id=receipt["message_id"])
-            return 200, reply(ctx.request_id, "SUCCEEDED", DONE_TEXT["reject_study_plan"],
-                              result={**result, "request_id": ctx.request_id})
+            done = reply(ctx.request_id, "SUCCEEDED", DONE_TEXT["reject_study_plan"],
+                         result={**result, "request_id": ctx.request_id})
+            return 200, self.chat.resume(ctx, receipt, key, conversation, ref, None, None, True, done) or done
         candidate_id = ref["target_id"] if ref["target_type"] == "TASK_CANDIDATE" else None
         cancelled = self.step(ctx, "cancel_pending_action", {"action_reference": ref, "candidate_id": candidate_id},
                               conversation_id=conversation, idempotency_key=child_key(key, "cancel"),
@@ -309,5 +345,6 @@ class ActionProcessor:
         # The contract has no "cancelled" tool result, so the cancelled action is shown as its own presentation.
         presentation = {"kind": "ACTION_PRESENTATION", "pending_action": cancelled, "candidate": None, "proposal": None,
                         "normalized_command": None, "effective_policy": None}
-        return 200, reply(ctx.request_id, "SUCCEEDED", "Đã hủy thao tác. Không có dữ liệu nào được lưu.",
-                          result=_ok(ctx.request_id, "DRAFTED", presentation))
+        done = reply(ctx.request_id, "SUCCEEDED", "Đã hủy thao tác. Không có dữ liệu nào được lưu.",
+                     result=_ok(ctx.request_id, "DRAFTED", presentation))
+        return 200, self.chat.resume(ctx, receipt, key, conversation, ref, None, None, True, done) or done

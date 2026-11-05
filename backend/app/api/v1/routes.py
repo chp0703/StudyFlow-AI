@@ -40,8 +40,9 @@ def _int(value: str, name: str) -> int:
 
 
 class Api:
-    def __init__(self, settings: Settings, rpc: RpcClient, verifier: JwtVerifier, clock):
+    def __init__(self, settings: Settings, rpc: RpcClient, verifier: JwtVerifier, clock, extractor):
         self.settings, self.rpc_client, self.verifier, self.clock = settings, rpc, verifier, clock
+        self.extractor = extractor
         self.processor = ActionProcessor(self)
 
     # ----------------------------------------------------------------- plumbing
@@ -171,10 +172,7 @@ class Api:
         return await run_in_threadpool(self.processor.run, ctx, http_operation, key, fingerprint, body, path or {})
 
     async def post_messages(self, request: Request, ctx: Ctx):
-        body = await self.read_json(request)
-        self.validated("UserMessage", body)
-        # Natural-language extraction is the workflow stage (WP4); nothing is claimed or stored yet.
-        raise ApiError("UNSUPPORTED_OPERATION", "Free-text messages are not available in this build.")
+        return await self.post_pipeline(request, ctx, "send_message", "UserMessage")
 
     async def post_actions(self, request: Request, ctx: Ctx):
         return await self.post_pipeline(request, ctx, "prepare_action", "ActionRequest")
