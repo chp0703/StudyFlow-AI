@@ -1,10 +1,23 @@
-import { useRef, useState, type Dispatch, type SetStateAction } from "react"
+import {
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react"
 
 import gsap from "gsap"
 
 import { useGSAP } from "@gsap/react"
 
-import { ChevronLeft, ChevronRight, Send } from "lucide-react"
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Send,
+  Sparkles,
+  X,
+} from "lucide-react"
 
 import Button from "../components/ui/Button"
 
@@ -15,6 +28,14 @@ import {
   LAST_HOUR,
   runPlannerCommand,
 } from "../features/planner/plannerAgent"
+
+import {
+  describeChanges,
+  diffTasks,
+  isStale,
+} from "../features/planner/proposal"
+
+import type { Proposal } from "../types/planner"
 
 import type { Task } from "../types/task"
 
@@ -37,17 +58,82 @@ export default function Planner({
 
   setTasks,
 
+  proposal,
+
+  setProposal,
+
+  revision,
+
+  setRevision,
+
   notify,
 }: {
   tasks: Task[]
 
   setTasks: Dispatch<SetStateAction<Task[]>>
 
+  proposal: Proposal | null
+
+  setProposal: Dispatch<SetStateAction<Proposal | null>>
+
+  revision: number
+
+  setRevision: Dispatch<SetStateAction<number>>
+
   notify?: (message: string) => void
 }) {
   const [input, setInput] = useState("")
 
   const [reply, setReply] = useState("")
+
+  const [plannerNotice, setPlannerNotice] = useState("")
+
+  const noticeRef = useRef<HTMLDivElement>(null)
+
+  const noticeTimer = useRef<number>(0)
+
+  const showPlannerNotice = (message: string) => {
+    window.clearTimeout(noticeTimer.current)
+
+    setPlannerNotice(message)
+
+    noticeTimer.current = window.setTimeout(() => closePlannerNotice(), 3500)
+  }
+
+  const closePlannerNotice = () => {
+    window.clearTimeout(noticeTimer.current)
+
+    if (!noticeRef.current) return setPlannerNotice("")
+
+    gsap.to(noticeRef.current, {
+      y: 16,
+
+      opacity: 0,
+
+      duration: 0.25,
+
+      ease: "power2.in",
+
+      onComplete: () => setPlannerNotice(""),
+    })
+  }
+
+  useEffect(() => () => window.clearTimeout(noticeTimer.current), [])
+
+  useGSAP(
+    () => {
+      if (plannerNotice)
+        gsap.fromTo(
+          noticeRef.current,
+
+          { y: 24, opacity: 0 },
+
+          { y: 0, opacity: 1, duration: 0.4, ease: "back.out(1.6)" },
+        )
+    },
+
+    { dependencies: [plannerNotice] },
+  )
 
   const [week, setWeek] = useState(0)
 
@@ -125,6 +211,43 @@ export default function Planner({
     { scope: calendarRef, dependencies: [tasks] },
   )
 
+  // Proposed blocks pop in so the pending change is easy to spot before approving.
+
+  useGSAP(
+    () => {
+      if (proposal)
+        gsap.fromTo(
+          ".is-proposed",
+
+          { scale: 0.9, opacity: 0.4 },
+
+          {
+            scale: 1,
+
+            opacity: 1,
+
+            duration: 0.45,
+
+            ease: "back.out(2)",
+
+            clearProps: "transform,opacity",
+          },
+        )
+    },
+
+    { scope: calendarRef, dependencies: [proposal] },
+  )
+
+  // A plain reply (error or no-op) fades away on its own; a proposal stays until decided.
+
+  useEffect(() => {
+    if (!reply || proposal) return
+
+    const timer = window.setTimeout(() => setReply(""), 8000)
+
+    return () => window.clearTimeout(timer)
+  }, [reply, proposal])
+
   // Today's date, shifted by whole weeks so it tracks the week being viewed.
 
   const weekLabel = new Date(
@@ -152,23 +275,73 @@ export default function Planner({
       new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i),
   )
 
+  // The calendar shows the proposal's preview while one is pending; committed tasks otherwise.
+
+  const shown = proposal ? proposal.next.tasks : tasks
+
+  const changeOf = new Map(proposal?.changes.map((c) => [c.task.id, c.kind]))
+
+  const slotMatch = (task: Task, date: Date, hour: number) =>
+    task.date === toIsoDate(date) && task.hour === hour
+
   const eventAt = (date: Date, hour: number) =>
-    tasks.find((task) => task.date === toIsoDate(date) && task.hour === hour)
+    shown.find((task) => slotMatch(task, date, hour)) ??
+    proposal?.changes.find(
+      (c) => c.kind === "removed" && slotMatch(c.task, date, hour),
+    )?.task
+
+  const stale = proposal ? isStale(proposal, revision) : false
 
   const send = () => {
     const text = input.trim()
 
     if (!text) return
 
-    const result = runPlannerCommand(text, tasks)
+    // Commands stack on a pending proposal, but are always diffed against the committed schedule.
 
-    setTasks(result.tasks)
+    const result = runPlannerCommand(text, shown)
+
+    const changes = diffTasks(tasks, result.tasks)
 
     setReply(result.reply)
 
-    notify?.(result.reply)
-
     setInput("")
+
+    if (!changes.length) return setProposal(null)
+
+    setProposal({
+      id: proposal?.id ?? crypto.randomUUID(),
+
+      createdAt: proposal?.createdAt ?? Date.now(),
+
+      baseRevision: proposal?.baseRevision ?? revision,
+
+      next: { tasks: result.tasks },
+
+      changes,
+
+      reply: result.reply,
+    })
+  }
+
+  const approve = () => {
+    if (!proposal || stale) return
+
+    setTasks(proposal.next.tasks)
+
+    setRevision((r) => r + 1)
+
+    setProposal(null)
+
+    setReply("")
+
+    showPlannerNotice("Đã lưu thay đổi vào lịch.")
+  }
+
+  const reject = () => {
+    setProposal(null)
+
+    setReply("")
   }
 
   return (
@@ -178,9 +351,6 @@ export default function Planner({
         title="Lịch"
         action={
           <div className="planner-heading-action">
-            <span className="sr-only" role="status" aria-live="polite">
-              {reply}
-            </span>
             <form
               className="planner-chat-form"
               onSubmit={(e) => {
@@ -233,6 +403,35 @@ export default function Planner({
           </div>
         }
       >
+        <div className="planner-status" role="status" aria-live="polite">
+          {proposal ? (
+            <div className={`proposal-bar ${stale ? "is-stale" : ""}`}>
+              <Sparkles aria-hidden="true" size={16} />
+              <span className="proposal-text">
+                <strong>
+                  Đề xuất: {describeChanges(proposal.changes) || "không đổi"}
+                </strong>
+                <span>
+                  {stale
+                    ? "Lịch đã thay đổi từ lúc tạo đề xuất (STALE_PLAN_VERSION). Hãy từ chối và tạo lại."
+                    : reply || proposal.reply}
+                </span>
+              </span>
+              <Button className="secondary proposal-reject" onClick={reject}>
+                <X aria-hidden="true" size={14} /> Từ chối
+              </Button>
+              <Button
+                className="primary proposal-approve"
+                onClick={approve}
+                disabled={stale}
+              >
+                <Check aria-hidden="true" size={14} /> Duyệt
+              </Button>
+            </div>
+          ) : (
+            reply && <p className="planner-reply">{reply}</p>
+          )}
+        </div>
         <div
           ref={calendarRef}
           className="dashboard-calendar-scroll"
@@ -272,12 +471,25 @@ export default function Planner({
                           className={`schedule-event study priority-${
                             { Cao: "high", Thấp: "low" }[event.priority] ??
                             "mid"
-                          } ${event.done ? "is-done" : ""}`}
+                          } ${event.done ? "is-done" : ""} ${
+                            changeOf.get(event.id) === "removed"
+                              ? "is-removed"
+                              : changeOf.has(event.id)
+                                ? "is-proposed"
+                                : ""
+                          }`}
                           data-task-id={event.id}
                           title={`${event.title} · ${event.time}`}
                         >
                           <strong>{event.title}</strong>
-                          <small>{event.time}</small>
+                          <small>
+                            {event.time}
+                            {changeOf.get(event.id) === "removed"
+                              ? " · Sẽ xóa"
+                              : changeOf.has(event.id)
+                                ? " · Đề xuất"
+                                : ""}
+                          </small>
                         </div>
                       )}
                       {week === 0 && day === todayIndex && hour === nowHour && (
@@ -293,6 +505,21 @@ export default function Planner({
             ))}
           </div>
         </div>
+        {plannerNotice && (
+          <div className="planner-notice-wrap">
+            <div className="planner-notice" ref={noticeRef}>
+              <span role="status">{plannerNotice}</span>
+              <button
+                type="button"
+                className="planner-notice-close"
+                aria-label="Đóng thông báo"
+                onClick={closePlannerNotice}
+              >
+                <X size={14} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   )

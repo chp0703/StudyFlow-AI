@@ -95,6 +95,7 @@
 }
 /* Calendar Card styled with glassmorphism matching Assistant chat */
 .planner-calendar {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -125,7 +126,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow-y: hidden;
+  overflow-y: auto;
 }
 .planner-calendar .dashboard-schedule {
   flex: 1;
@@ -176,45 +177,53 @@
 
 .planner-calendar .schedule-row {
   flex: 1;
-  min-height: 30px;
+  min-height: 46px;
 }
 .planner-calendar .schedule-cell {
   position: relative;
   min-height: 0;
-  padding: 3px 5px;
-  border-top: 1px solid rgba(229, 232, 244, 0.45);
-  border-right: 1px solid rgba(229, 232, 244, 0.6);
+  padding: 3px 6px;
+  border-top: 0;
+  border-bottom: 0;
+  border-left: 0;
+  border-right: 1px solid rgba(229, 232, 244, 0.55);
 }
 .planner-calendar .schedule-cell:last-child {
   border-right: 0;
 }
 .planner-calendar .today-column {
-  background: linear-gradient(
-    180deg,
-    rgba(89, 108, 240, 0.05) 0%,
-    rgba(139, 92, 246, 0.02) 100%
-  );
+  background: rgba(89, 108, 240, 0.04);
 }
 
 /* Event badges styled as sleek rounded chat-like cards */
 .planner-calendar .schedule-event {
-  min-height: 0;
+  position: relative;
+  min-height: 38px;
   height: 100%;
-  padding: 4px 10px;
-  gap: 1px;
+  padding: 6px 10px 6px 12px;
+  gap: 2px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
   overflow: hidden;
   border: 0;
-  border-left: 3px solid var(--evt, var(--primary));
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--evt-bg, #eef1fe);
   color: var(--evt-ink, var(--indigo));
-  line-height: 1.25;
-  box-shadow: 0 1px 4px rgba(23, 32, 59, 0.04);
+  box-shadow: 0 1px 4px rgba(23, 32, 59, 0.05);
+  box-sizing: border-box;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.planner-calendar .schedule-event::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3.5px;
+  background: var(--evt, var(--primary));
+  border-radius: 8px 0 0 8px;
 }
 .planner-calendar .schedule-event:hover {
   transform: translateY(-1px);
@@ -222,20 +231,25 @@
 }
 .planner-calendar .schedule-event strong {
   max-width: 100%;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 650;
+  line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--evt-ink, var(--indigo));
 }
 .planner-calendar .schedule-event small {
   max-width: 100%;
   font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
   opacity: 0.85;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   font-variant-numeric: tabular-nums;
+  color: var(--evt-ink, var(--indigo));
 }
 .planner-calendar .priority-high {
   --evt: var(--pink);
@@ -315,4 +329,114 @@
 }
 .planner-calendar .calendar-today-btn {
   padding: 0 10px;
+}
+
+/* Pending proposal: preview blocks, status line and approve/reject bar */
+.planner-status:empty {
+  display: none;
+}
+.planner-reply {
+  margin: 0;
+  padding: 6px 20px;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+.proposal-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px;
+  background: var(--color-info-bg);
+  border-block: 1px solid var(--color-line);
+  color: var(--color-info-text);
+}
+.proposal-bar.is-stale {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+.proposal-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 12.5px;
+}
+.proposal-text strong {
+  font-size: 13px;
+}
+.proposal-text span {
+  color: var(--color-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.proposal-bar .button {
+  min-height: 32px;
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.planner-calendar .schedule-event.is-proposed {
+  outline: 2px dashed var(--primary);
+  outline-offset: -2px;
+}
+.planner-calendar .schedule-event.is-removed {
+  opacity: 0.6;
+  outline: 2px dashed var(--pink);
+  outline-offset: -2px;
+}
+.planner-calendar .schedule-event.is-removed strong {
+  text-decoration: line-through;
+}
+
+/* Floating notice after approving schedule changes */
+.planner-notice-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.planner-notice {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px -4px rgba(23, 32, 59, 0.18);
+  font-size: 13.5px;
+  color: var(--color-ink);
+  max-width: calc(100% - 32px);
+}
+.planner-notice > span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.planner-notice-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.planner-notice-close:hover {
+  background: var(--border);
+  color: var(--color-ink);
 }

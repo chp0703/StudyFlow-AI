@@ -28,6 +28,8 @@ import Planner from "./pages/Planner"
 
 import Study from "./pages/Study"
 
+import type { Proposal } from "./types/planner"
+
 import type { Task } from "./types/task"
 
 const destinations = [
@@ -47,11 +49,13 @@ type PageInfo = {
 const pageInfo: Record<string, PageInfo> = {
   Planner: {
     title: "Lập kế hoạch",
+
     description: "Quản lý công việc và lịch học trong tuần.",
   },
 
   Study: {
     title: "Học tập",
+
     description: "Tài liệu học tập, luyện đề và trao đổi cùng trợ lý AI.",
   },
 }
@@ -77,9 +81,23 @@ export default function App() {
 
   const [tasks, setTasks] = useState<Task[]>([])
 
+  // Pending schedule change awaiting the user's approval, and the committed schedule revision.
+
+  const [proposal, setProposal] = useState<Proposal | null>(null)
+
+  const [revision, setRevision] = useState(0)
+
   const [modal, setModal] = useState("")
 
   const [notice, setNotice] = useState("")
+
+  useEffect(() => {
+    if (!notice) return
+
+    const timer = window.setTimeout(() => setNotice(""), 3500)
+
+    return () => window.clearTimeout(timer)
+  }, [notice])
 
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     try {
@@ -444,7 +462,15 @@ export default function App() {
           </aside>
         </div>
         {page === "Planner" && (
-          <Planner tasks={tasks} setTasks={setTasks} notify={setNotice} />
+          <Planner
+            tasks={tasks}
+            setTasks={setTasks}
+            proposal={proposal}
+            setProposal={setProposal}
+            revision={revision}
+            setRevision={setRevision}
+            notify={setNotice}
+          />
         )}
         <div
           hidden={page !== "Study"}
