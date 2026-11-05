@@ -54,3 +54,18 @@
 - Wrapper mới chỉ kiểm tra request rồi trả `UNSUPPORTED_OPERATION`; hành vi nghiệp vụ làm ở WP2b/WP2c.
 - Chưa chạy: harness đồng thời, JWT thật qua HTTP, CI mới. Chưa đụng tới project Supabase trên cloud.
 
+## 2026-11-05 — Backend F1: WP2b-1 (bootstrap, tin nhắn nguồn, biên nhận)
+
+**Mục tiêu:** chia WP2b thành các giai đoạn nhỏ; giai đoạn 2b-1 làm helper dùng chung, bootstrap, ghi tin nhắn nguồn và vòng đời lease của API receipt.
+
+**Đã làm**
+
+- Migration 013: helper `precheck/lock_owner/ok_result/failure`; `ensure_user_context`, `record_source_message`, `claim/renew/release/complete_api_receipt` thay cho wrapper từ chối an toàn; bỏ hai FK của receipt (ID được cấp trước khi message/action tồn tại).
+- Thêm `supabase/tests/09_wp2b1_receipts_messages.sql` (22 kiểm tra: lease 120 giây, reclaim, fencing, 503 không chốt, replay, ràng buộc tin nhắn) và `docs/implementation/WP2B_NOTES.md`.
+
+**Kết quả:** nhánh `feat/f1-mvp-intergration`. pgTAP local: 03, 04, 05, 08, 09 pass; 06 còn 10/81 lỗi, 07 còn 24/58 lỗi (thuộc 2b-2 đến 2b-5).
+
+**Ghi chú**
+
+- Chưa chạy: chờ lease 120 giây thật, harness đồng thời, CI mới.
+
