@@ -138,10 +138,11 @@ begin
         if exists (
             select 1 from jsonb_array_elements(pr.payload -> 'study_blocks') b
             left join app_private.academic_tasks t on t.user_id = v_uid and t.task_id = (b ->> 'task_id')::uuid
-            where t.task_id is null or t.status not in ('TODO', 'IN_PROGRESS')
-               or (b ->> 'end_at')::timestamptz > t.deadline_at
-               or (t.available_from_at is not null and (b ->> 'start_at')::timestamptz < t.available_from_at)
-               or extract(epoch from ((b ->> 'end_at')::timestamptz - (b ->> 'start_at')::timestamptz)) / 60 > v_max) then
+            where not app_private.is_base_plan_block(v_uid, b)  -- blocks kept from the current plan are not re-judged
+              and (t.task_id is null or t.status not in ('TODO', 'IN_PROGRESS')
+                   or (b ->> 'end_at')::timestamptz > t.deadline_at
+                   or (t.available_from_at is not null and (b ->> 'start_at')::timestamptz < t.available_from_at)
+                   or extract(epoch from ((b ->> 'end_at')::timestamptz - (b ->> 'start_at')::timestamptz)) / 60 > v_max)) then
             return app_private.error_result(p_request, 'INVALID_PARAMETER', 'A proposed block no longer fits its task or the policy.');
         end if;
 

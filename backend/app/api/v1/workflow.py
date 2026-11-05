@@ -13,6 +13,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from ...clients.rpc import child_key, iso
+from ...f1.planning.generate import generate
 from .http import STATUS, ApiError, error_body, respond
 
 POLICY_DEFAULT = {"min_block_minutes": 25, "max_block_minutes": 90, "allow_short_final_block": True,
@@ -20,7 +21,8 @@ POLICY_DEFAULT = {"min_block_minutes": 25, "max_block_minutes": 90, "allow_short
 INTENT = {"create_task_candidate": "CREATE_TASK", "set_availability": "SET_AVAILABILITY",
           "set_busy_interval": "SET_BUSY_INTERVAL", "set_scheduling_preferences": "SET_SCHEDULING_PREFERENCES"}
 FORM_TEXT = {"create_task_candidate": "Thêm công việc bằng biểu mẫu", "set_availability": "Cập nhật giờ rảnh bằng biểu mẫu",
-             "set_busy_interval": "Cập nhật giờ bận bằng biểu mẫu", "set_scheduling_preferences": "Cập nhật tùy chọn lập lịch bằng biểu mẫu"}
+             "set_busy_interval": "Cập nhật giờ bận bằng biểu mẫu", "set_scheduling_preferences": "Cập nhật tùy chọn lập lịch bằng biểu mẫu",
+             "generate_study_plan": "Tạo kế hoạch học bằng biểu mẫu"}
 DONE_TEXT = {"confirm_task": "Đã lưu công việc.", "set_availability": "Đã cập nhật giờ rảnh.",
              "set_busy_interval": "Đã cập nhật giờ bận.", "set_scheduling_preferences": "Đã cập nhật tùy chọn lập lịch.",
              "approve_study_plan": "Đã duyệt kế hoạch học.", "reject_study_plan": "Đã từ chối kế hoạch."}
@@ -142,8 +144,6 @@ class ActionProcessor:
     # ------------------------------------------------------------ prepare (POST /v1/actions)
     def prepare(self, ctx, receipt, key, body):
         operation, arguments, conversation = body["operation"], body["arguments"], body["conversation_id"]
-        if operation == "generate_study_plan":
-            raise Terminal("UNSUPPORTED_OPERATION", "Plan generation is not available through this build yet.")
         slots = None
         if operation == "create_task_candidate":
             slots = dict(arguments["slots"])
@@ -159,6 +159,8 @@ class ActionProcessor:
             "message_id": message_id, "user_id": ctx.user_id, "conversation_id": conversation, "source": "UI",
             "role": "USER", "text": FORM_TEXT[operation], "received_at": iso(datetime.now(timezone.utc))}},
             conversation_id=conversation, idempotency_key=child_key(key, "message"), message_id=message_id)
+        if operation == "generate_study_plan":
+            return self.prepare_plan(ctx, receipt, key, body, message_id)
         if operation == "create_task_candidate":
             candidate = self.step(ctx, "create_task_candidate", {"slots": slots}, conversation_id=conversation,
                                   idempotency_key=child_key(key, "candidate"), message_id=message_id)["data"]
@@ -180,6 +182,38 @@ class ActionProcessor:
         stored = self.step(ctx, "prepare_pending_action", {"presentation": presentation, "expected_action_version": None},
                            conversation_id=conversation, idempotency_key=child_key(key, "prepare"), message_id=message_id)["data"]
         return 200, self.awaiting_reply(ctx, stored, target)
+
+    def prepare_plan(self, ctx, receipt, key, body, message_id):
+        """Engine -> persisted proposal -> pending action. Nothing becomes the current plan until approved."""
+        conversation, arguments = body["conversation_id"], body["arguments"]
+        self.step(ctx, "ensure_user_context", {})
+        snapshot = self.step(ctx, "get_scheduling_context", {"generation_scope": arguments["generation_scope"]},
+                             conversation_id=conversation)["data"]
+        try:
+            generated = generate(snapshot, arguments, now=self.api.clock())
+        except ValueError as exc:  # malformed window data in the snapshot
+            raise Terminal("INVALID_PARAMETER", f"Dữ liệu giờ rảnh/bận không hợp lệ: {exc}") from None
+        if generated.conflicts:
+            first = generated.conflicts[0]
+            code = "ACTIVE_BLOCK_REQUIRES_REVIEW" if first.code == "ACTIVE_BLOCK_REQUIRES_REVIEW" else "INVALID_PARAMETER"
+            raise Terminal(code, first.message)
+        if generated.report is not None:
+            text = "Lịch hiện tại đã phù hợp, không có thay đổi." if generated.report["coverage"] == "NO_CHANGE"                 else "Chưa xếp được khối học nào trong khoảng thời gian này."
+            return 200, reply(ctx.request_id, "SUCCEEDED", text, result=_ok(ctx.request_id, "READ", generated.report))
+        proposal = self.step(ctx, "persist_plan_proposal", {"command_arguments": arguments, "proposal": generated.proposal},
+                             conversation_id=conversation, idempotency_key=child_key(key, "generate"),
+                             message_id=message_id)["data"]
+        pending = self.pending_shell(ctx, receipt, conversation, "GENERATE_STUDY_PLAN", "AWAITING_APPROVAL",
+                                     candidate_id=None, draft=arguments, missing=[])
+        pending["proposal_id"] = proposal["proposal_id"]
+        command = {"schema_version": "1.1", "operation": "approve_study_plan", "arguments": {
+            "proposal_id": proposal["proposal_id"], "expected_proposal_version": proposal["version"],
+            "expected_plan_version": proposal["base_plan_version"]}}
+        presentation = {"kind": "ACTION_PRESENTATION", "pending_action": pending, "candidate": None, "proposal": proposal,
+                        "normalized_command": command, "effective_policy": proposal["policy_snapshot"]}
+        stored = self.step(ctx, "prepare_pending_action", {"presentation": presentation, "expected_action_version": None},
+                           conversation_id=conversation, idempotency_key=child_key(key, "prepare"), message_id=message_id)["data"]
+        return 200, self.awaiting_reply(ctx, stored, ("PLAN_PROPOSAL", proposal["proposal_id"], proposal["version"]))
 
     @staticmethod
     def awaiting_reply(ctx, presentation: dict, target: tuple) -> dict:

@@ -2,6 +2,18 @@
 -- re-checks everything it can without trusting the caller's self-description. It never changes
 -- schedule_revision (a proposal is not a plan).
 
+-- True when the block is exactly one of the owner's current-plan blocks (kept unchanged by a proposal).
+create function app_private.is_base_plan_block(p_uid uuid, p_block jsonb) returns boolean
+language sql stable security definer set search_path = '' as $$
+    select exists (select 1 from app_private.study_blocks sb join app_private.user_profiles u
+                     on u.user_id = sb.user_id and u.current_plan_id = sb.plan_id
+                   where sb.user_id = p_uid and sb.block_id::text = p_block ->> 'block_id'
+                     and sb.task_id::text = p_block ->> 'task_id' and sb.is_locked = (p_block ->> 'is_locked')::boolean
+                     and sb.start_at = (p_block ->> 'start_at')::timestamptz and sb.end_at = (p_block ->> 'end_at')::timestamptz)
+$$;
+alter function app_private.is_base_plan_block(uuid, jsonb) owner to sf_rpc_owner;
+revoke all on function app_private.is_base_plan_block(uuid, jsonb) from public, anon, authenticated;
+
 -- Business checks on a proposal payload. Returns an ErrorResult or null.
 create function app_private.validate_proposal(p_request jsonb, p_uid uuid, p_proposal jsonb) returns jsonb
 language plpgsql security definer set search_path = '' as $$
@@ -13,10 +25,13 @@ begin
     if exists (select 1 from jsonb_array_elements(v_blocks) b where b ->> 'user_id' <> p_uid::text) then
         return app_private.error_result(p_request, 'INVALID_PARAMETER', 'A proposed block belongs to another user.');
     end if;
+    -- A snapshot also carries blocks of the base plan that the proposal keeps as they are (past, locked or
+    -- outside the scope); those may lie outside the generation window, new blocks may not.
     if exists (select 1 from jsonb_array_elements(v_blocks) b
                where (b ->> 'end_at')::timestamptz <= (b ->> 'start_at')::timestamptz
-                  or (b ->> 'start_at')::timestamptz < (v_scope ->> 'start_at')::timestamptz
-                  or (b ->> 'end_at')::timestamptz > (v_scope ->> 'end_at')::timestamptz) then
+                  or (((b ->> 'start_at')::timestamptz < (v_scope ->> 'start_at')::timestamptz
+                       or (b ->> 'end_at')::timestamptz > (v_scope ->> 'end_at')::timestamptz)
+                      and not app_private.is_base_plan_block(p_uid, b))) then
         return app_private.error_result(p_request, 'INVALID_PARAMETER', 'A proposed block is empty or outside the generation window.');
     end if;
     select array_agg((b ->> 'block_id')::uuid) into v_ids from jsonb_array_elements(v_blocks) b;
@@ -31,10 +46,11 @@ begin
         return app_private.error_result(p_request, 'TIME_CONFLICT', 'Proposed blocks overlap.');
     end if;
     -- Every block (and summary) targets a task the owner has, inside the selection when one is given.
-    if exists (select 1 from (select b ->> 'task_id' t from jsonb_array_elements(v_blocks) b
-                              union select s ->> 'task_id' from jsonb_array_elements(p_proposal #> '{payload,task_summaries}') s) x
+    if exists (select 1 from (select b ->> 'task_id' t, app_private.is_base_plan_block(p_uid, b) kept
+                              from jsonb_array_elements(v_blocks) b
+                              union all select s ->> 'task_id', false from jsonb_array_elements(p_proposal #> '{payload,task_summaries}') s) x
                where not exists (select 1 from app_private.academic_tasks k where k.user_id = p_uid and k.task_id::text = x.t)
-                  or (v_scope ->> 'selection_mode' = 'SELECTED_TASKS' and not ((v_scope -> 'task_ids') ? x.t))) then
+                  or (not x.kept and v_scope ->> 'selection_mode' = 'SELECTED_TASKS' and not ((v_scope -> 'task_ids') ? x.t))) then
         return app_private.error_result(p_request, 'ENTITY_NOT_FOUND', 'A proposed task is not available to this user or scope.');
     end if;
     return null;

@@ -238,3 +238,20 @@
 - `generate_study_plan` qua actions chưa có (cần engine + persist, bước tiếp theo); `POST /v1/messages` chưa có (cần DeepSeek).
 - Hợp đồng không có kết quả "đã hủy"; hủy trả `SUCCEEDED` kèm presentation của action ở trạng thái CANCELLED, cần nhóm xác nhận.
 - Dữ liệu của set_availability/busy chỉ được DB kiểm tra khi quyết định, chưa có dry-run lúc chuẩn bị.
+
+## 2026-11-05 — Backend F1: WP3c (sinh kế hoạch qua HTTP với scheduler thật)
+
+**Mục tiêu:** `generate_study_plan` qua `POST /v1/actions`: snapshot DB → scheduler thật → lưu đề xuất → chờ duyệt.
+
+**Đã làm**
+
+- `backend/app/f1/planning/generate.py`: chuyển snapshot hợp đồng thành `SchedulingContext` (mở rộng khung giờ lặp, tách block giữ lại/thay thế, phạm vi chọn task), chạy `PlanningService`, dựng `PlanProposal` đầy đủ; không có gì để đề xuất thì trả báo cáo `SchedulingReadData` (NO_CHANGE/NONE); block đang diễn ra của task được chọn trả `ACTIVE_BLOCK_REQUIRES_REVIEW`.
+- `workflow.py`: bước `prepare_plan` (ensure → get_scheduling_context → engine → persist_plan_proposal với khóa dẫn xuất → pending action PLAN_PROPOSAL); quyết định APPROVE/REJECT dùng lại luồng sẵn có.
+- Sửa migration 019/020: block giữ nguyên từ kế hoạch hiện tại (`is_base_plan_block`) được phép nằm ngoài cửa sổ/tập chọn và không bị kiểm tra lại với task khi duyệt.
+- Thêm test tích hợp end-to-end: task → giờ rảnh → sinh kế hoạch → xem đề xuất → duyệt → đọc kế hoạch hiện tại → sinh lại cho NO_CHANGE.
+
+**Kết quả:** integration 6/6 trên Supabase local thật, pgTAP 14 bộ (465 kiểm tra), test HTTP/unit/scheduler pass.
+
+**Ghi chú**
+
+- Chưa có replan khi có block active cần review qua HTTP (trả lỗi `ACTIVE_BLOCK_REQUIRES_REVIEW`), và chưa có endpoint review riêng cho trường hợp đó.

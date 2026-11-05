@@ -21,7 +21,7 @@ def create_app(settings: Settings | None = None, *, rpc_transport: httpx.BaseTra
     settings = settings or Settings.from_env()
     clock = clock or (lambda: datetime.now(timezone.utc))
     app = FastAPI(title="StudyFlow F1 API", docs_url=None, redoc_url=None, openapi_url=None)
-    api = Api(settings, RpcClient(settings, rpc_transport, clock), JwtVerifier(settings, jwks_transport, clock))
+    api = Api(settings, RpcClient(settings, rpc_transport, clock), JwtVerifier(settings, jwks_transport, clock), clock)
     app.state.llm_transport = llm_transport  # used by the extraction stage
     api.register(app)
 

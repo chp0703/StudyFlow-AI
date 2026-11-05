@@ -10,6 +10,7 @@ Required environment (loopback only; never a cloud project):
 
 import base64
 import os
+from datetime import datetime, timedelta, timezone
 import secrets
 import unittest
 from urllib.parse import urlparse
@@ -40,7 +41,7 @@ class LocalSupabaseHttp(unittest.TestCase):
         with psycopg.connect(os.environ["F1_DB_TEST_DSN"], autocommit=True) as db:
             db.execute("insert into app_private.rpc_attestation_keys(key_id,key_material,not_before,not_after) "
                        "values (%s,%s,now()-interval '1 hour',now()+interval '2 hours')", (cls.key_id, cls.secret))
-        cls.users = {name: cls.sign_in(name) for name in ("a", "b")}
+        cls.users = {name: cls.sign_in(name) for name in ("a", "b", "c")}
 
     @classmethod
     def sign_in(cls, name):
@@ -156,6 +157,62 @@ class LocalSupabaseHttp(unittest.TestCase):
             after = app.get("/v1/preferences", headers=self.auth("b")).json()["data"]
             self.assertEqual(after["scheduling_policy"]["break_minutes"], 20)
             self.assertEqual(after["schedule_revision"], before["schedule_revision"] + 1)
+
+
+    def approve(self, app, body, who):
+        prepared = self.post(app, "/v1/actions", body, who=who)
+        self.assertEqual(prepared.status_code, 200, prepared.text)
+        self.assertEqual(prepared.json()["state"], "AWAITING_APPROVAL", prepared.text)
+        done = self.post(app, "/v1/decisions", {"schema_version": "1.1", "conversation_id": body["conversation_id"],
+                                                "action_reference": prepared.json()["action_reference"], "decision": "APPROVE"}, who=who)
+        self.assertEqual(done.status_code, 200, done.text)
+        return done.json()
+
+    def test_generate_review_approve_plan_end_to_end(self):
+        tomorrow = (datetime.now(timezone.utc) + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        scope = {"start_at": tomorrow.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                 "end_at": (tomorrow + timedelta(days=8)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                 "selection_mode": "ALL_ELIGIBLE", "task_ids": []}
+        generate = lambda: {"schema_version": "1.1", "conversation_id": str(uuid4()), "operation": "generate_study_plan",
+                            "arguments": {"generation_scope": scope, "policy_overrides": {}}}
+        weekly = {"kind": "AVAILABILITY", "label": "Giờ học", "recurrence": "WEEKLY", "timezone": "Asia/Ho_Chi_Minh",
+                  "start_at": None, "end_at": None, "weekday": (tomorrow + timedelta(days=1)).isoweekday(),
+                  "start_time": "09:00", "end_time": "24:00", "valid_from": datetime.now(timezone.utc).date().isoformat(),
+                  "valid_until": None}
+        with self.client() as app:
+            self.approve(app, self.task_body(str(uuid4()), "Ôn lập kế hoạch"), "c")
+            self.approve(app, {"schema_version": "1.1", "conversation_id": str(uuid4()), "operation": "set_availability",
+                               "arguments": {"change_type": "ADD", "window_id": None, "expected_window_version": None,
+                                             "window": weekly}}, "c")
+            prepared = self.post(app, "/v1/actions", generate(), who="c")
+            self.assertEqual(prepared.status_code, 200, prepared.text)
+            reply = prepared.json()
+            self.assertEqual(reply["state"], "AWAITING_APPROVAL", prepared.text)
+            self.assertEqual(reply["action_reference"]["target_type"], "PLAN_PROPOSAL")
+            proposal = reply["result"]["data"]["proposal"]
+            blocks = proposal["payload"]["study_blocks"]
+            self.assertEqual(proposal["payload"]["coverage"], "FULL")
+            self.assertEqual(sum((datetime.fromisoformat(b["end_at"]) - datetime.fromisoformat(b["start_at"])).seconds // 60
+                                 for b in blocks), 90)
+            self.assertEqual(app.get("/v1/plans", params={"view": "CURRENT"}, headers=self.auth("c")).json()["data"]["plan"], None)
+            shown = app.get("/v1/plans", params={"view": "PROPOSAL", "proposal_id": proposal["proposal_id"]}, headers=self.auth("c"))
+            self.assertEqual(shown.json()["data"]["proposal"]["status"], "PROPOSED")
+
+            before = app.get("/v1/preferences", headers=self.auth("c")).json()["data"]["schedule_revision"]
+            conversation = reply["result"]["data"]["pending_action"]["conversation_id"]
+            done = self.post(app, "/v1/decisions", {"schema_version": "1.1", "conversation_id": conversation,
+                                                    "action_reference": reply["action_reference"], "decision": "APPROVE"}, who="c")
+            self.assertEqual(done.status_code, 200, done.text)
+            self.assertEqual(done.json()["result"]["data"]["version"], 1)
+            current = app.get("/v1/plans", headers=self.auth("c")).json()["data"]
+            self.assertEqual({b["block_id"] for b in current["study_blocks"]}, {b["block_id"] for b in blocks})
+            self.assertEqual(app.get("/v1/preferences", headers=self.auth("c")).json()["data"]["schedule_revision"], before + 1)
+
+            # Everything is already scheduled: a second generation proposes nothing.
+            again = self.post(app, "/v1/actions", generate(), who="c")
+            self.assertEqual(again.status_code, 200, again.text)
+            self.assertEqual(again.json()["state"], "SUCCEEDED")
+            self.assertEqual(again.json()["result"]["data"]["coverage"], "NO_CHANGE")
 
     def test_tampered_or_foreign_token_is_rejected_before_the_database(self):
         with self.client() as app:

@@ -40,8 +40,8 @@ def _int(value: str, name: str) -> int:
 
 
 class Api:
-    def __init__(self, settings: Settings, rpc: RpcClient, verifier: JwtVerifier):
-        self.settings, self.rpc_client, self.verifier = settings, rpc, verifier
+    def __init__(self, settings: Settings, rpc: RpcClient, verifier: JwtVerifier, clock):
+        self.settings, self.rpc_client, self.verifier, self.clock = settings, rpc, verifier, clock
         self.processor = ActionProcessor(self)
 
     # ----------------------------------------------------------------- plumbing

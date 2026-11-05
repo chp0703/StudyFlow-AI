@@ -67,3 +67,10 @@
 - The suite leaves committed rows by design, so run `supabase db reset` before pgTAP afterwards (CI does).
 - `database-tests.yml` now also runs the generator `--check`, the upgrade-route comparison (reset to
   `202611050008`, `migration up`, same `app_private`/`app_api` dump as a clean replay) and the concurrency suite.
+
+## 2c-6 (found while wiring generation over HTTP)
+
+- A scheduler snapshot also contains blocks the proposal keeps unchanged (past, locked or outside the scope).
+  `persist_plan_proposal` and `approve_study_plan` therefore treat a block identical to one in the current plan
+  (`app_private.is_base_plan_block`) as retained: it may lie outside the generation window or the selection, and it
+  is not re-judged against its task at approval. New blocks keep all the checks above.
