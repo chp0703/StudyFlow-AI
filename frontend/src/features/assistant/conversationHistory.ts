@@ -1,4 +1,8 @@
-import type { ChatMessage, ActionProposal } from "../../types/assistant.ts"
+import type {
+  ChatMessage,
+  ChatAttachment,
+  ActionProposal,
+} from "../../types/assistant.ts"
 
 export const HISTORY_SCHEMA_VERSION = 1
 
@@ -214,6 +218,27 @@ function safeMessage(value: unknown): ChatMessage | null {
     category,
 
     text: value.text,
+  }
+
+  if (Array.isArray(value.attachments)) {
+    const attachments = value.attachments
+      .filter(
+        (att): att is ChatAttachment =>
+          isObject(att) &&
+          typeof att.id === "string" &&
+          typeof att.name === "string" &&
+          typeof att.size === "string" &&
+          (att.type === "image" || att.type === "file"),
+      )
+      .map((att) => ({
+        id: att.id,
+        name: att.name,
+        size: att.size,
+        type: att.type,
+        ...(typeof att.dataUrl === "string" ? { dataUrl: att.dataUrl } : {}),
+      }))
+
+    if (attachments.length > 0) message.attachments = attachments
   }
 
   if (["task", "plan", "view", "reschedule"].includes(String(value.scenario)))

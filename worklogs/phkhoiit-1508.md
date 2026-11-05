@@ -53,6 +53,7 @@
 - Nút gửi ở Lập kế hoạch và chat tài liệu chuyển xám khi ô trống, có màu khi đã nhập (giống trang chủ).
 - Học tập: thông báo tải lên/xóa tài liệu hiện ngay trong thẻ Tài liệu thay cho toast toàn trang; bỏ prop `notify` của `Study`.
 - Menu: nút mở lại luôn hiện cạnh logo khi thu gọn; thanh bên trượt ra/vào và nội dung giãn theo bằng GSAP (biến `--sb-offset`), các mục hiện lần lượt; khi kéo cửa sổ qua mốc responsive các thẻ dịch vào mượt.
+- Chat trợ lý: cho đính kèm tệp/ảnh vào tin nhắn (hiển thị thẻ tệp và xem trước ảnh), `getAssistantReply` nhận thêm `attachments`, lịch sử lưu tên/dung lượng tệp và ảnh dạng `dataUrl` trong IndexedDB; thêm test cho `conversationHistory`.
 - Cắt viền trắng quanh logo (`public/brand/`) và tăng kích thước logo trên thanh trên.
 - Thêm skill `ui-ux-pro-max` vào `.claude/skills/` và quy tắc ghi worklog vào `CLAUDE.md`.
 

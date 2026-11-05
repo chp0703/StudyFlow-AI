@@ -2,6 +2,9 @@ import {
   useEffect,
   useRef,
   useState,
+  type ChangeEvent,
+  type ClipboardEvent,
+  type DragEvent,
   type FormEvent,
   type KeyboardEvent,
 } from "react"
@@ -13,6 +16,7 @@ import { useGSAP } from "@gsap/react"
 import {
   ArrowRight,
   Check,
+  FileText,
   History,
   MoreHorizontal,
   ArrowLeft,
@@ -28,6 +32,7 @@ import { getAssistantReply } from "./assistantService"
 
 import type {
   ActionProposal,
+  ChatAttachment,
   ChatMessage,
   AssistantScenario,
 } from "../../types/assistant"
@@ -143,6 +148,76 @@ export default function Assistant({
   const submitting = useRef(false)
 
   const shouldScroll = useRef(true)
+
+  const [attachedFiles, setAttachedFiles] = useState<ChatAttachment[]>([])
+
+  const [isDragging, setIsDragging] = useState(false)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const processFiles = (fileList: File[]) => {
+    if (!fileList.length) return
+
+    fileList.forEach((file) => {
+      const isImg = file.type.startsWith("image/")
+      const sizeStr =
+        file.size > 1024 * 1024
+          ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+          : `${Math.max(1, Math.round(file.size / 1024))} KB`
+
+      if (isImg) {
+        const reader = new FileReader()
+        reader.onload = () => {
+          setAttachedFiles((prev) => [
+            ...prev,
+            {
+              id: crypto.randomUUID(),
+              name: file.name,
+              size: sizeStr,
+              type: "image",
+              dataUrl: String(reader.result || ""),
+            },
+          ])
+        }
+        reader.readAsDataURL(file)
+      } else {
+        setAttachedFiles((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            name: file.name,
+            size: sizeStr,
+            type: "file",
+          },
+        ])
+      }
+    })
+  }
+
+  const handleFileAttach = (e: ChangeEvent<HTMLInputElement>) => {
+    processFiles(Array.from(e.target.files || []))
+    e.target.value = ""
+  }
+
+  const handlePaste = (e: ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = Array.from(e.clipboardData.files || [])
+    if (items.length > 0) {
+      processFiles(items)
+    }
+  }
+
+  const handleDrop = (e: DragEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const items = Array.from(e.dataTransfer.files || [])
+    if (items.length > 0) {
+      processFiles(items)
+    }
+  }
+
+  const removeAttachment = (id: string) => {
+    setAttachedFiles((prev) => prev.filter((item) => item.id !== id))
+  }
 
   const active =
     conversations.find((conversation) => conversation.id === activeId) ?? null
@@ -557,7 +632,13 @@ export default function Assistant({
   function send() {
     const text = input.trim()
 
-    if (!hydrated || !text || composition.current || submitting.current) return
+    if (
+      !hydrated ||
+      (!text && attachedFiles.length === 0) ||
+      composition.current ||
+      submitting.current
+    )
+      return
 
     submitting.current = true
 
@@ -565,11 +646,33 @@ export default function Assistant({
       submitting.current = false
     })
 
-    const user = message({ role: "user", category: "MESSAGE", text })
+    const currentAttachments = [...attachedFiles]
 
-    const assistant = message(getAssistantReply(text))
+    setAttachedFiles([])
 
-    const starting = active ?? createConversation(text)
+    const user = message({
+      role: "user",
+      category: "MESSAGE",
+      text:
+        text ||
+        (currentAttachments.length > 0
+          ? `Đã gửi ${currentAttachments.length} tệp đính kèm.`
+          : ""),
+      ...(currentAttachments.length > 0
+        ? { attachments: currentAttachments }
+        : {}),
+    })
+
+    const assistant = message(getAssistantReply(text, currentAttachments))
+
+    const starting =
+      active ??
+      createConversation(
+        text ||
+          (currentAttachments[0]
+            ? `Tệp: ${currentAttachments[0].name}`
+            : "Cuộc trò chuyện mới"),
+      )
 
     const updated = appendMessages(starting, [user, assistant])
 
@@ -733,6 +836,8 @@ export default function Assistant({
 
     setEmptyInput("")
 
+    setAttachedFiles([])
+
     shouldScroll.current = true
 
     requestAnimationFrame(() => composerRef.current?.focus())
@@ -740,6 +845,8 @@ export default function Assistant({
 
   function selectConversation(id: string) {
     setActiveId(id)
+
+    setAttachedFiles([])
 
     setMenuId(null)
 
@@ -1262,6 +1369,37 @@ export default function Assistant({
                                 : "Có lỗi"}
                         </span>
                       )}
+                      {entry.attachments && entry.attachments.length > 0 && (
+                        <div className="assistant-message-attachments">
+                          {entry.attachments.map((att) => (
+                            <div
+                              key={att.id}
+                              className="assistant-attachment-card"
+                            >
+                              {att.type === "image" && att.dataUrl ? (
+                                <img
+                                  src={att.dataUrl}
+                                  alt={att.name}
+                                  className="assistant-attachment-img-preview"
+                                />
+                              ) : (
+                                <>
+                                  <FileText size={16} aria-hidden="true" />
+                                  <span
+                                    className="assistant-attachment-name"
+                                    title={att.name}
+                                  >
+                                    {att.name}
+                                  </span>
+                                  <span className="assistant-attachment-size">
+                                    {att.size}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <p>{entry.text}</p>
                       {entry.category === "CLARIFICATION" &&
                         entry.scenario &&
@@ -1346,37 +1484,106 @@ export default function Assistant({
         )}
         <div className="assistant-composer-wrap">
           <form
-            className="assistant-composer"
+            className={`assistant-composer ${isDragging ? "is-dragging" : ""}`}
+            onDragOver={(e) => {
+              e.preventDefault()
+              setIsDragging(true)
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
             onSubmit={(event) => {
               event.preventDefault()
 
               send()
             }}
           >
-            <label className="sr-only" htmlFor="assistant-input">
-              Tin nhắn cho StudyFlow
-            </label>
-            <textarea
-              id="assistant-input"
-              ref={composerRef}
-              value={input}
-              onChange={(event) => setComposer(event.target.value)}
-              onCompositionStart={() => {
-                composition.current = true
-              }}
-              onCompositionEnd={() => {
-                composition.current = false
-              }}
-              onKeyDown={onComposerKeyDown}
-              rows={1}
-              placeholder="Hỏi StudyFlow AI..."
-              disabled={!hydrated}
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="sr-only"
+              aria-label="Đính kèm ảnh hoặc tệp"
+              accept="image/*,.pdf,.doc,.docx,.txt"
+              multiple
+              onChange={handleFileAttach}
             />
+            <div className="assistant-composer-left">
+              <button
+                type="button"
+                className="assistant-attach-btn"
+                aria-label="Đính kèm ảnh hoặc tệp"
+                title="Đính kèm ảnh, tệp..."
+                onClick={() => fileInputRef.current?.click()}
+                disabled={!hydrated}
+              >
+                <Plus size={20} aria-hidden="true" />
+              </button>
+            </div>
+            <div className="assistant-composer-body">
+              {attachedFiles.length > 0 && (
+                <div className="assistant-attached-list">
+                  {attachedFiles.map((att) => (
+                    <div key={att.id} className="assistant-attached-chip">
+                      {att.type === "image" && att.dataUrl ? (
+                        <img
+                          src={att.dataUrl}
+                          alt={att.name}
+                          className="attached-chip-thumb"
+                        />
+                      ) : (
+                        <FileText
+                          size={14}
+                          className="attached-chip-icon"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <span className="attached-chip-name" title={att.name}>
+                        {att.name}
+                      </span>
+                      <span className="attached-chip-size">{att.size}</span>
+                      <button
+                        type="button"
+                        className="attached-chip-remove"
+                        aria-label={`Xóa tệp ${att.name}`}
+                        onClick={() => removeAttachment(att.id)}
+                      >
+                        <X size={12} aria-hidden="true" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <label className="sr-only" htmlFor="assistant-input">
+                Tin nhắn cho StudyFlow
+              </label>
+              <textarea
+                id="assistant-input"
+                ref={composerRef}
+                value={input}
+                onChange={(event) => setComposer(event.target.value)}
+                onPaste={handlePaste}
+                onCompositionStart={() => {
+                  composition.current = true
+                }}
+                onCompositionEnd={() => {
+                  composition.current = false
+                }}
+                onKeyDown={onComposerKeyDown}
+                rows={1}
+                placeholder={
+                  attachedFiles.length > 0
+                    ? "Thêm câu hỏi hoặc ghi chú về tệp đã chọn..."
+                    : "Hỏi StudyFlow AI..."
+                }
+                disabled={!hydrated}
+              />
+            </div>
             <div className="assistant-composer-bottom">
               <button
                 type="submit"
                 aria-label="Gửi tin nhắn"
-                disabled={!hydrated || !input.trim()}
+                disabled={
+                  !hydrated || (!input.trim() && attachedFiles.length === 0)
+                }
               >
                 <Send size={18} aria-hidden="true" />
               </button>

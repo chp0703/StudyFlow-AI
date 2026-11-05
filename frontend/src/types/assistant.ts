@@ -24,6 +24,18 @@ export type ActionProposal = {
   status: ApprovalStatus
 }
 
+export type ChatAttachment = {
+  id: string
+
+  name: string
+
+  size: string
+
+  type: "image" | "file"
+
+  dataUrl?: string
+}
+
 export type ChatMessage = {
   id: string
 
@@ -34,6 +46,8 @@ export type ChatMessage = {
   category: ResponseCategory
 
   text: string
+
+  attachments?: ChatAttachment[]
 
   scenario?: AssistantScenario
 

@@ -146,3 +146,34 @@ test("groups use the local calendar and storage absence rejects", async () => {
 
   await assert.rejects(openHistoryDatabase(undefined), /IndexedDB unavailable/)
 })
+
+test("attachments are preserved and validated in conversation history", () => {
+  const base = createConversation("Tải ảnh bài tập")
+
+  const withAttachment = appendMessages(base, [
+    {
+      id: "user-attach-1",
+      timestamp: "2026-11-04T09:00:00.000Z",
+      role: "user",
+      category: "MESSAGE",
+      text: "Đã gửi tệp bài tập",
+      attachments: [
+        {
+          id: "att-1",
+          name: "baitap.png",
+          size: "120 KB",
+          type: "image",
+          dataUrl: "data:image/png;base64,abc",
+        },
+      ],
+    },
+  ])
+
+  const restored = restoreConversation(structuredClone(withAttachment))
+
+  assert.equal(restored?.messages[0].attachments?.length, 1)
+
+  assert.equal(restored?.messages[0].attachments?.[0].name, "baitap.png")
+
+  assert.equal(restored?.messages[0].attachments?.[0].type, "image")
+})
