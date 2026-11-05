@@ -2,7 +2,10 @@
 
 StudyFlow AI is a student-controlled academic planning assistant. It turns confirmed tasks and time constraints into feasible study-plan proposals, then saves a new schedule snapshot only after explicit approval.
 
-This repository currently contains the frontend prototype and approved F1 design documentation. The backend, database migrations, authentication integration, and live AI services are not yet implemented here.
+This repository contains the frontend prototype, approved F1 design documentation,
+and the first backend component: a pure deterministic F1 scheduling engine. Database
+migrations, authentication integration, persistence, HTTP APIs, and live AI services
+are not yet implemented here.
 
 ## Current release scope
 
@@ -67,12 +70,27 @@ Proposal coverage is explicit: `FULL`, `PARTIAL`, `NONE`, or `NO_CHANGE`. Partia
 
 The planned architecture separates the UI, shared orchestrator, validation, F1 domain services, deterministic scheduler, persistence, and contract schemas. See [repository structure](docs/architecture/StudyFlow_AI_Repo_Structure.md).
 
-The currently present application is a React/Vite prototype under [`frontend/`](frontend/). It is demo-only: there is no backend, authentication, persistence, PDF parsing, or live AI integration yet.
+The React/Vite prototype lives under [`frontend/`](frontend/). The framework-independent
+F1 scheduler lives under [`backend/app/f1/scheduler/`](backend/app/f1/scheduler/) and
+includes deterministic allocation, constraint validation, replanning, proposal payload
+materialization, fixed unit cases, and evaluation metrics. There is still no authentication,
+persistence, HTTP API, PDF parsing, or live AI integration.
+
+Run the backend scheduler tests from the repository root:
+
+```bash
+python3 -m unittest discover -s backend/tests -v
+python3 backend/scripts/evaluate_planner.py
+```
 
 ## Repository structure
 
 ```text
 StudyFlow-AI/
+├── backend/
+│   ├── app/f1/scheduler/              # Pure deterministic F1 planner
+│   ├── tests/unit/f1/scheduler/       # Unit and fixed-case tests
+│   └── scripts/evaluate_planner.py    # Reproducibility/quality report
 ├── frontend/                         # React/Vite prototype
 │   ├── src/                           # UI, assistant demo, styles and tests
 │   ├── public/                        # Brand assets
@@ -86,6 +104,7 @@ StudyFlow-AI/
 │   ├── srs/                           # Software requirements
 │   ├── project/                       # Proposal, context and worklist
 │   ├── architecture/                 # Target repository architecture
+│   ├── planner/                       # Scheduler rules and evaluation report
 │   └── prompts/                       # Engineering prompts
 ├── README.md
 └── .gitignore
@@ -116,6 +135,8 @@ Other commands: `npm run build`, `npm run preview`, and `npm run format`.
 | Worklist | [docs/project/cong_viec_can_lam.md](docs/project/cong_viec_can_lam.md) |
 | Repository target structure | [docs/architecture/StudyFlow_AI_Repo_Structure.md](docs/architecture/StudyFlow_AI_Repo_Structure.md) |
 | Supabase/database guide | [docs/database/StudyFlow_AI_Supabase_Database_Codex_Guide.md](docs/database/StudyFlow_AI_Supabase_Database_Codex_Guide.md) |
+| F1 scheduling rules | [docs/planner/scheduling_rules.md](docs/planner/scheduling_rules.md) |
+| Planner evaluation | [docs/planner/evaluation.md](docs/planner/evaluation.md) |
 
 ## Out of scope for F1 v1.1
 
@@ -131,4 +152,5 @@ Other commands: `npm run build`, `npm run preview`, and `npm run format`.
 
 The unified integration contract is the approved design baseline for F1 implementation. It settles payload/policy storage, same-owner foreign keys, typed approval targets, snapshot-scoped overlap, runtime authorization/attestation, owner row locking, idempotency retention, and indexes within its scope. Formal SRS reconciliation, concrete environment/tool versions, and implementation/runtime validation remain separate work; see the [decision register](docs/database/StudyFlow_AI_Phase_03_Implementation_Decision_Register.md).
 
-Do not treat design documents, proposal diagrams, or frontend mock data as evidence that backend or database functionality has been implemented.
+Do not treat design documents, proposal diagrams, frontend mock data, or the pure scheduler
+as evidence that database, authentication, API, or approval-commit functionality exists.

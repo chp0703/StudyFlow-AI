@@ -9,6 +9,8 @@ vite.config.*.timestamp-*
 *-debug.log*
 logs/
 *.log
+__pycache__/
+*.py[cod]
 .claude-replay.*
 .tmp-*
 /.figma/design-context/
