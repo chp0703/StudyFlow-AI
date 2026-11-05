@@ -15,6 +15,8 @@ Người dùng cung cấp project ref `phomrutsdhdgejlskwcb` sau khi tham gia St
 
 RPC_SIGNING_SECRET_BASE64 là secret riêng giữa backend và DB, không phải Supabase JWT secret và không phải DeepSeek API key. Sol sẽ tạo key ngẫu nhiên và cung cấp đường provisioning kín; không ghi key vào migration hoặc log. Key chưa được cấu hình phải khiến mutation fail closed.
 
+Preflight metadata chỉ đọc đã có tại [inventory_demo.sql](../../supabase/scripts/inventory_demo.sql). Người có quyền DB có thể chạy bằng SQL Editor; script không đọc dữ liệu người dùng hay secret. Đây chưa phải migration/deployment và chưa được chạy trên project cloud.
+
 ## 2. DeepSeek
 
 1. Mở [DeepSeek Platform](https://platform.deepseek.com/), đăng nhập và tạo API key cho demo. Tài khoản cần có quyền sử dụng API.
