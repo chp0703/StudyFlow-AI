@@ -1,0 +1,546 @@
+[
+  {
+    "name": "create_task_candidate",
+    "operation": "create_task_candidate",
+    "valid": true,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "DRAFTED",
+      "data": {
+        "candidate_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "user_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "conversation_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "version": 1,
+        "status": "DRAFT",
+        "slots": {},
+        "raw_expressions": {},
+        "field_sources": {},
+        "source_message_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "confirmed_task_id": null,
+        "created_at": "2026-11-05T08:00:00+07:00",
+        "updated_at": "2026-11-05T08:00:00+07:00"
+      }
+    }
+  },
+  {
+    "name": "confirm_task",
+    "operation": "confirm_task",
+    "valid": true,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "COMMITTED",
+      "data": {
+        "task_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "user_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "candidate_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "version": 1,
+        "title": "OOP",
+        "description": null,
+        "course_label": null,
+        "available_from_at": null,
+        "deadline_at": "2026-11-05T09:00:00+07:00",
+        "deadline_precision": "DATETIME",
+        "deadline_date": null,
+        "deadline_timezone": "Asia/Ho_Chi_Minh",
+        "estimated_minutes": 60,
+        "remaining_minutes": 60,
+        "priority": "NORMAL",
+        "status": "TODO",
+        "confirmed_at": "2026-11-05T08:00:00+07:00",
+        "created_at": "2026-11-05T08:00:00+07:00",
+        "updated_at": "2026-11-05T08:00:00+07:00"
+      }
+    }
+  },
+  {
+    "name": "search_tasks",
+    "operation": "search_tasks",
+    "valid": true,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "READ",
+      "data": {
+        "items": [
+          {
+            "task_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+            "user_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+            "candidate_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+            "version": 1,
+            "title": "OOP",
+            "description": null,
+            "course_label": null,
+            "available_from_at": null,
+            "deadline_at": "2026-11-05T09:00:00+07:00",
+            "deadline_precision": "DATETIME",
+            "deadline_date": null,
+            "deadline_timezone": "Asia/Ho_Chi_Minh",
+            "estimated_minutes": 60,
+            "remaining_minutes": 60,
+            "priority": "NORMAL",
+            "status": "TODO",
+            "confirmed_at": "2026-11-05T08:00:00+07:00",
+            "created_at": "2026-11-05T08:00:00+07:00",
+            "updated_at": "2026-11-05T08:00:00+07:00"
+          }
+        ],
+        "next_cursor": null
+      }
+    }
+  },
+  {
+    "name": "set_availability",
+    "operation": "set_availability",
+    "valid": true,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "COMMITTED",
+      "data": {
+        "window_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "user_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "version": 1,
+        "kind": "AVAILABILITY",
+        "label": null,
+        "recurrence": "NONE",
+        "timezone": "Asia/Ho_Chi_Minh",
+        "start_at": "2026-11-05T08:00:00+07:00",
+        "end_at": "2026-11-05T09:00:00+07:00",
+        "weekday": null,
+        "start_time": null,
+        "end_time": null,
+        "valid_from": null,
+        "valid_until": null,
+        "archived_at": null,
+        "created_at": "2026-11-05T08:00:00+07:00",
+        "updated_at": "2026-11-05T08:00:00+07:00"
+      }
+    }
+  },
+  {
+    "name": "set_busy_interval",
+    "operation": "set_busy_interval",
+    "valid": true,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "COMMITTED",
+      "data": {
+        "window_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "user_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "version": 1,
+        "kind": "BUSY",
+        "label": null,
+        "recurrence": "NONE",
+        "timezone": "Asia/Ho_Chi_Minh",
+        "start_at": "2026-11-05T08:00:00+07:00",
+        "end_at": "2026-11-05T09:00:00+07:00",
+        "weekday": null,
+        "start_time": null,
+        "end_time": null,
+        "valid_from": null,
+        "valid_until": null,
+        "archived_at": null,
+        "created_at": "2026-11-05T08:00:00+07:00",
+        "updated_at": "2026-11-05T08:00:00+07:00"
+      }
+    }
+  },
+  {
+    "name": "set_scheduling_preferences",
+    "operation": "set_scheduling_preferences",
+    "valid": true,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "COMMITTED",
+      "data": {
+        "scheduling_policy": {
+          "min_block_minutes": 25,
+          "max_block_minutes": 90,
+          "allow_short_final_block": true,
+          "max_daily_minutes": 240,
+          "break_minutes": 10
+        },
+        "schedule_revision": 1
+      }
+    }
+  },
+  {
+    "name": "generate_study_plan",
+    "operation": "generate_study_plan",
+    "valid": true,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "PROPOSED",
+      "data": {
+        "proposal_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "user_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "version": 1,
+        "status": "PROPOSED",
+        "base_plan_id": null,
+        "base_plan_version": null,
+        "base_schedule_revision": 0,
+        "generation_scope": {
+          "start_at": "2026-11-05T08:00:00+07:00",
+          "end_at": "2026-11-05T09:00:00+07:00",
+          "selection_mode": "ALL_ELIGIBLE",
+          "task_ids": []
+        },
+        "payload": {
+          "study_blocks": [],
+          "task_summaries": [
+            {
+              "task_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+              "remaining_minutes": 60,
+              "retained_future_minutes": 0,
+              "newly_scheduled_minutes": 0,
+              "unallocated_minutes": 60,
+              "reason_codes": []
+            }
+          ],
+          "coverage": "PARTIAL",
+          "warnings": [],
+          "plan_diff": {
+            "added": [],
+            "moved": [],
+            "removed": [],
+            "unchanged": []
+          }
+        },
+        "algorithm_version": "1",
+        "policy_snapshot": {
+          "min_block_minutes": 25,
+          "max_block_minutes": 90,
+          "allow_short_final_block": true,
+          "max_daily_minutes": 240,
+          "break_minutes": 10
+        },
+        "generated_at": "2026-11-05T08:00:00+07:00",
+        "committed_plan_id": null,
+        "created_at": "2026-11-05T08:00:00+07:00",
+        "updated_at": "2026-11-05T08:00:00+07:00"
+      }
+    }
+  },
+  {
+    "name": "get_study_plan",
+    "operation": "get_study_plan",
+    "valid": true,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "READ",
+      "data": {
+        "kind": "PLAN_VIEW",
+        "plan": null,
+        "study_blocks": []
+      }
+    }
+  },
+  {
+    "name": "approve_study_plan",
+    "operation": "approve_study_plan",
+    "valid": true,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "COMMITTED",
+      "data": {
+        "plan_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "user_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "version": 1,
+        "previous_plan_id": null,
+        "source_proposal_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "approved_at": "2026-11-05T08:00:00+07:00",
+        "created_at": "2026-11-05T08:00:00+07:00"
+      }
+    }
+  },
+  {
+    "name": "reject_study_plan",
+    "operation": "reject_study_plan",
+    "valid": true,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "REJECTED",
+      "data": {
+        "proposal_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "user_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "version": 1,
+        "status": "REJECTED",
+        "base_plan_id": null,
+        "base_plan_version": null,
+        "base_schedule_revision": 0,
+        "generation_scope": {
+          "start_at": "2026-11-05T08:00:00+07:00",
+          "end_at": "2026-11-05T09:00:00+07:00",
+          "selection_mode": "ALL_ELIGIBLE",
+          "task_ids": []
+        },
+        "payload": {
+          "study_blocks": [],
+          "task_summaries": [
+            {
+              "task_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+              "remaining_minutes": 60,
+              "retained_future_minutes": 0,
+              "newly_scheduled_minutes": 0,
+              "unallocated_minutes": 60,
+              "reason_codes": []
+            }
+          ],
+          "coverage": "PARTIAL",
+          "warnings": [],
+          "plan_diff": {
+            "added": [],
+            "moved": [],
+            "removed": [],
+            "unchanged": []
+          }
+        },
+        "algorithm_version": "1",
+        "policy_snapshot": {
+          "min_block_minutes": 25,
+          "max_block_minutes": 90,
+          "allow_short_final_block": true,
+          "max_daily_minutes": 240,
+          "break_minutes": 10
+        },
+        "generated_at": "2026-11-05T08:00:00+07:00",
+        "committed_plan_id": null,
+        "created_at": "2026-11-05T08:00:00+07:00",
+        "updated_at": "2026-11-05T08:00:00+07:00"
+      }
+    }
+  },
+  {
+    "name": "generate read provisional",
+    "operation": "generate_study_plan",
+    "valid": true,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "READ",
+      "data": {
+        "coverage": "NONE",
+        "task_summaries": [
+          {
+            "task_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+            "remaining_minutes": 60,
+            "retained_future_minutes": 0,
+            "newly_scheduled_minutes": 0,
+            "unallocated_minutes": 60,
+            "reason_codes": []
+          }
+        ],
+        "conflicts": [],
+        "warnings": [],
+        "current_plan": {
+          "kind": "PLAN_VIEW",
+          "plan": null,
+          "study_blocks": []
+        }
+      }
+    }
+  },
+  {
+    "name": "mismatched outcome",
+    "operation": "confirm_task",
+    "valid": false,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "READ",
+      "data": {
+        "task_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "user_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "candidate_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "version": 1,
+        "title": "OOP",
+        "description": null,
+        "course_label": null,
+        "available_from_at": null,
+        "deadline_at": "2026-11-05T09:00:00+07:00",
+        "deadline_precision": "DATETIME",
+        "deadline_date": null,
+        "deadline_timezone": "Asia/Ho_Chi_Minh",
+        "estimated_minutes": 60,
+        "remaining_minutes": 60,
+        "priority": "NORMAL",
+        "status": "TODO",
+        "confirmed_at": "2026-11-05T08:00:00+07:00",
+        "created_at": "2026-11-05T08:00:00+07:00",
+        "updated_at": "2026-11-05T08:00:00+07:00"
+      }
+    }
+  },
+  {
+    "name": "error missing error",
+    "operation": "confirm_task",
+    "valid": false,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "ERROR",
+      "data": null
+    }
+  },
+  {
+    "name": "invalid error code",
+    "operation": "confirm_task",
+    "valid": false,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": {
+        "code": "PROPOSAL_EXPIRED",
+        "message": "x",
+        "field": null,
+        "details": {},
+        "retryable": false
+      },
+      "warnings": [],
+      "outcome": "ERROR",
+      "data": null
+    }
+  },
+  {
+    "name": "wrong payload",
+    "operation": "search_tasks",
+    "valid": false,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "READ",
+      "data": {
+        "kind": "PLAN_VIEW",
+        "plan": null,
+        "study_blocks": []
+      }
+    }
+  },
+  {
+    "name": "wrong window kind",
+    "operation": "set_busy_interval",
+    "valid": false,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "COMMITTED",
+      "data": {
+        "window_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "user_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "version": 1,
+        "kind": "AVAILABILITY",
+        "label": null,
+        "recurrence": "NONE",
+        "timezone": "Asia/Ho_Chi_Minh",
+        "start_at": "2026-11-05T08:00:00+07:00",
+        "end_at": "2026-11-05T09:00:00+07:00",
+        "weekday": null,
+        "start_time": null,
+        "end_time": null,
+        "valid_from": null,
+        "valid_until": null,
+        "archived_at": null,
+        "created_at": "2026-11-05T08:00:00+07:00",
+        "updated_at": "2026-11-05T08:00:00+07:00"
+      }
+    }
+  },
+  {
+    "name": "proposal already rejected",
+    "operation": "generate_study_plan",
+    "valid": false,
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-test",
+      "error": null,
+      "warnings": [],
+      "outcome": "PROPOSED",
+      "data": {
+        "proposal_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "user_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+        "version": 1,
+        "status": "REJECTED",
+        "base_plan_id": null,
+        "base_plan_version": null,
+        "base_schedule_revision": 0,
+        "generation_scope": {
+          "start_at": "2026-11-05T08:00:00+07:00",
+          "end_at": "2026-11-05T09:00:00+07:00",
+          "selection_mode": "ALL_ELIGIBLE",
+          "task_ids": []
+        },
+        "payload": {
+          "study_blocks": [],
+          "task_summaries": [
+            {
+              "task_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+              "remaining_minutes": 60,
+              "retained_future_minutes": 0,
+              "newly_scheduled_minutes": 0,
+              "unallocated_minutes": 60,
+              "reason_codes": []
+            }
+          ],
+          "coverage": "PARTIAL",
+          "warnings": [],
+          "plan_diff": {
+            "added": [],
+            "moved": [],
+            "removed": [],
+            "unchanged": []
+          }
+        },
+        "algorithm_version": "1",
+        "policy_snapshot": {
+          "min_block_minutes": 25,
+          "max_block_minutes": 90,
+          "allow_short_final_block": true,
+          "max_daily_minutes": 240,
+          "break_minutes": 10
+        },
+        "generated_at": "2026-11-05T08:00:00+07:00",
+        "committed_plan_id": null,
+        "created_at": "2026-11-05T08:00:00+07:00",
+        "updated_at": "2026-11-05T08:00:00+07:00"
+      }
+    }
+  }
+]
