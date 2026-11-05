@@ -5,6 +5,39 @@ running database. Local Docker, PostgreSQL/psql and Supabase CLI are unavailable
 Run against a disposable local Supabase stack in GitHub CI after migration replay;
 cloud credentials and production migrations are not prerequisites for these tests.
 
+The root execution log separately records real CI run `42032340280` against the
+eight-migration baseline: migration/reset passed; the previous 03–06 suite ran
+190 assertions with 128 failures. That run predates the additive 1.0.1 test changes
+and test 07; it is red baseline evidence, not a pass or execution of this plan.
+
+## Approved additive 1.0.1 coverage
+
+User approval now covers A/B/C/D in
+[the internal RPC addendum](../../../docs/implementation/INTERNAL_RPC_ADDENDUM_PROPOSAL.md).
+The six added internal wrappers and `workflow_continuations` are authorized while
+logical schema 1.1, eight HTTP endpoints and ten domain/LLM operations stay fixed.
+Tests 03–05 include the added infrastructure; test 06 retains its original 21
+required wrappers, permits exactly the six additions and signs only current
+version 1.0.1. No compatibility with request version 1.0.0 is assumed.
+
+`supabase/tests/07_sol_internal_addendum.sql` is a standalone rollback suite for
+the six wrapper grants/owners/signatures, FORCE RLS, signed null-key bootstrap,
+unchanged existing profile, window cursor tamper, noncreating workflow read and
+cold-load source, receipt-backed continuation initialization, first-extraction
+wins, derived step keys, prefix/version CAS, positive immediate-read progression,
+duplicate CAS replay, fabricated WAIT, wrong terminal operation, obsolete/expired
+lease rejection, exact-completed versus active lookup, revision invariance and
+absence of helper names from domain idempotency. It is **NOT_RUN** until CI runs
+the current commit. Administrative lease backdating is labeled in the fixture.
+
+Next continuation tests still needed: valid WAIT + reviewed/terminal-action ADVANCE;
+actual durable domain-result evidence (current wrong-operation test is not that
+proof); rejection/failure dependency cancellation; completed origin with a new
+follow-up receipt and exact awaited-reference guard; actual lease reclaim/version
+fencing; second unfinished continuation; cross-owner stored target/source reads;
+nonempty list pagination/cursor owner/filter binding. Do not mark these covered
+from the immediate-read CAS tests or catalog checks.
+
 Sources: [approved contract](../../../contracts/README.md),
 [RPC registry](../../../contracts/service-contract.json),
 [persistence mapping](../../../contracts/data-contract.json),
@@ -122,10 +155,10 @@ Important corrections incorporated into the work order:
 - Include actual 120-second lease fencing, unchanged-history checks, and an explicit
   per-wrapper privilege matrix as acceptance outputs. Catalog existence alone is
   insufficient.
-- Unknown missing persistence reads must be resolved through an approved addendum.
-  The current 21-wrapper inventory must not silently grow to unblock API handlers.
-  Full restart/review flows remain blocked where the approved interfaces lack a
-  necessary read. Do not fill the gap with authenticated table grants.
+- The approved additive inventory now contains 27 wrappers. A/B/C/D resolves the
+  identified persistence reads and ordered continuation design, but requires
+  synchronized 1.0.1 schemas and implementation. Any further missing read still
+  needs approval; do not silently add wrappers or authenticated table grants.
 
 CI evidence must record commit, PostgreSQL/Supabase versions, migration replay
 logs, pgTAP output, independent connection counts/barrier observations, exact

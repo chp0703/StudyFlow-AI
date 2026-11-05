@@ -72,6 +72,7 @@ select is((select array_agg(a.attname::text order by key.position)
  ('source_messages',array['message_id']),
  ('api_request_receipts',array['user_id','http_operation','idempotency_key']),
  ('action_presentations',array['user_id','action_id','action_version']),
+ ('workflow_continuations',array['user_id','source_message_id']),
  ('rpc_attestation_keys',array['key_id'])) e(table_name,columns);
 
 -- Durable versions must not truncate JSON-safe integers to int4.
@@ -88,6 +89,12 @@ select ok(exists(select 1 from pg_attribute a join pg_class t on t.oid=a.attreli
  ('action_presentations','action_version','bigint',true),
  ('action_presentations','target_version','bigint',true),
  ('action_presentations','presentation','jsonb',true),
+ ('workflow_continuations','version','bigint',true),
+ ('workflow_continuations','cursor','bigint',true),
+ ('workflow_continuations','extraction','jsonb',true),
+ ('workflow_continuations','depends_on','jsonb',true),
+ ('workflow_continuations','completed_steps','jsonb',true),
+ ('workflow_continuations','awaiting_reference','jsonb',false),
  ('rpc_attestation_keys','key_id','text',true),
  ('rpc_attestation_keys','key_material','bytea',true),
  ('rpc_attestation_keys','not_before','timestamptz',true),

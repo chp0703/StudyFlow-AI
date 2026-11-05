@@ -1,11 +1,12 @@
-# Internal RPC addendum — review proposal, not approved
+# Internal RPC addendum — approved implementation specification
 
-Prepared for review on 2026-11-05. Proposed additive package version: **1.0.1**;
-logical schema_version remains **1.1**. This file does not change the approved package,
-SQL inventory, runtime behavior, eight public endpoints or ten LLM/domain
-operations. Implement affected seams only after approval and a synchronized
-contract revision. Approved README §1 requires stopping related integration
-when specifications do not provide a consistent interface.
+Prepared and approved by the user on 2026-11-05: **all A/B/C/D**, including
+first-GET bootstrap, six internal RPCs and continuation infrastructure. Implement
+as package **1.0.1**, with logical schema_version **1.1** unchanged. This approval
+authorizes the synchronized contract revision; this document alone does not
+prove schemas, SQL or runtime have been updated. Eight public endpoints and ten
+LLM/domain operations remain unchanged. The reviewed proposal is preserved at
+commit 2bac72c.
 
 ## Evidence and scope of the gap
 

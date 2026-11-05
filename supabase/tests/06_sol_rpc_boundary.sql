@@ -69,7 +69,11 @@ select ok(exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronames
  from sol_expected_rpc e order by e.name;
 select ok(not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
  where n.nspname='app_api' and
- (not exists(select 1 from sol_expected_rpc e where e.name=p.proname)
+ -- Package 1.0.1 adds these six names; test 07 requires their full behavior.
+ -- The original 21 required signatures above remain unchanged.
+ ((not exists(select 1 from sol_expected_rpc e where e.name=p.proname)
+ and p.proname not in ('ensure_user_context','list_time_windows','get_workflow_context',
+ 'get_workflow_continuation','initialize_workflow_continuation','checkpoint_workflow_continuation'))
  or p.pronargs<>1 or p.proargtypes[0]<>'jsonb'::regtype
  or p.proargnames is distinct from array['p_request']::text[])),
  'old overloads, legacy issuer and unregistered public RPCs are removed');
@@ -154,7 +158,7 @@ select ok(not exists(select 1 from pg_roles r join pg_class c
 create function pg_temp.sol_request(operation text, arguments jsonb,
  owner_id uuid default 'd0610000-0000-4000-8000-000000000001',
  idem text default 'sol-candidate-idempotency-0001') returns jsonb language sql as $$
- select jsonb_build_object('contract_version','1.0.0','schema_version','1.1',
+ select jsonb_build_object('contract_version','1.0.1','schema_version','1.1',
  'request_id','sol-request-0001','operation',operation,'arguments',arguments,
  'execution_context',jsonb_build_object(
  'conversation_id','d0610000-0000-4000-8000-000000000003',

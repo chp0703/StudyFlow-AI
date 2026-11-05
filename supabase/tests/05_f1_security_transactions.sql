@@ -71,7 +71,7 @@ select ok((select c.relrowsecurity and c.relforcerowsecurity
  where n.nspname='app_private' and c.relname=e.name),
  e.name || ' enables and forces RLS')
  from (values ('conversation_records'),('source_messages'),('api_request_receipts'),
- ('action_presentations'),('rpc_attestation_keys')) e(name);
+ ('action_presentations'),('rpc_attestation_keys'),('workflow_continuations')) e(name);
 select ok(exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
  join pg_roles r on r.rolname='sf_rpc_owner' where n.nspname='app_private'
  and c.relname='rpc_attestation_keys' and has_table_privilege(r.oid,c.oid,'SELECT')

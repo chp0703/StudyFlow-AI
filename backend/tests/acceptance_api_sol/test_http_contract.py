@@ -6,6 +6,9 @@ The RPC responder is NOT evidence of PostgreSQL RLS or wrapper security.
 """
 
 import base64
+import copy
+import hashlib
+import hmac
 import importlib
 import json
 import threading
@@ -31,6 +34,7 @@ CONVERSATION = "00000000-0000-4000-8000-000000000003"
 SUPABASE_URL = "https://supabase.example.test"
 ALLOWED_ORIGIN = "https://studyflow.example.test"
 IDEMPOTENCY_KEY = "sol-api-contract-0001"
+TEST_SIGNING_SECRET = b"test-only-signing-material-32bytes!"
 
 
 def validate_schema(value, name):
@@ -66,6 +70,7 @@ class HttpContractAcceptance(unittest.TestCase):
         self.rpc_calls = []
         self.jwks_calls = []
         self.llm_calls = []
+        self.rpc_override = None
         self.capture_lock = threading.Lock()
         settings = self.Settings(
             supabase_url=SUPABASE_URL,
@@ -76,18 +81,23 @@ class HttpContractAcceptance(unittest.TestCase):
             deepseek_base_url="https://deepseek.example.test/v1",
             deepseek_model="test-model",
             rpc_signing_key_id="sol-test-only",
-            rpc_signing_secret_base64=base64.b64encode(b"test-only-signing-material-32bytes!").decode(),
+            rpc_signing_secret_base64=base64.b64encode(TEST_SIGNING_SECRET).decode(),
             cors_origins=[ALLOWED_ORIGIN],
         )
+        self.settings = settings
+        self.client_context = self.new_client()
+        self.client = self.client_context.__enter__()
+
+    def new_client(self):
+        """Create a distinct app, preserving only external fake dependency state."""
         app = self.create_app(
-            settings,
+            self.settings,
             rpc_transport=httpx.MockTransport(self.rpc_response),
             llm_transport=httpx.MockTransport(self.llm_response),
             jwks_transport=httpx.MockTransport(self.jwks_response),
             clock=lambda: self.now,
         )
-        self.client_context = TestClient(app, raise_server_exceptions=True)
-        self.client = self.client_context.__enter__()
+        return TestClient(app, raise_server_exceptions=True)
 
     def tearDown(self):
         self.client_context.__exit__(None, None, None)
@@ -131,12 +141,38 @@ class HttpContractAcceptance(unittest.TestCase):
         self.assertEqual(request.method, "POST")
         self.assertEqual(set(body), {"p_request"})
         envelope = body["p_request"]
+        if self.rpc_override is not None:
+            return self.rpc_override(request, envelope)
+        self.assertEqual(request.headers["Content-Profile"], "app_api")
+        self.assertEqual(request.headers["apikey"], "test-publishable-key")
+        self.assertEqual(request.headers["Content-Type"].split(";")[0], "application/json")
+        bearer = request.headers["Authorization"]
+        self.assertTrue(bearer.startswith("Bearer "))
+        token = bearer.removeprefix("Bearer ")
+        claims = jwt.decode(token, self.private_key.public_key(), algorithms=["ES256"],
+                            audience="authenticated", issuer=f"{SUPABASE_URL}/auth/v1")
+        user = claims["sub"]
+        self.assertEqual(envelope["execution_context"]["trusted_context"]["principal"], {"user_id": user})
+        operations = [entry["p_request"]["operation"] for _, entry in self.rpc_calls
+                      if entry["p_request"]["request_id"] == envelope["request_id"]]
+        if envelope["operation"] == "ensure_user_context":
+            self.assertEqual(operations, ["ensure_user_context"], "At most one signed context bootstrap may precede this read")
+            self.assert_signed_mutation(request, envelope, "ensure_user_context", token, user=user)
+            self.assertEqual(envelope["arguments"], {})
+            self.assertIsNone(envelope["execution_context"]["idempotency_key"])
+            self.assertIsNone(envelope["execution_context"]["approval_action"])
+            profile = fixture("User.json")
+            profile["user_id"] = user
+            result = {"schema_version": "1.1", "request_id": envelope["request_id"],
+                      "outcome": "COMMITTED", "data": profile, "error": None, "warnings": []}
+            validate_schema(result, "ensure_user_contextInternalResult")
+            return httpx.Response(200, json=result)
         self.assertEqual(envelope["operation"], "search_tasks")
+        self.assertIn(operations, (["search_tasks"], ["ensure_user_context", "search_tasks"]))
         result = fixture("search_tasks-result.json")
         result["request_id"] = envelope["request_id"]
         # Rebind fixture ownership for each simulated database response. The
         # test separately checks that the adapter built this principal from JWT.
-        user = envelope["execution_context"]["trusted_context"]["principal"]["user_id"]
         for task in result["data"]["items"]:
             task["user_id"] = user
         validate_schema(result, "search_tasksResult")
@@ -165,7 +201,7 @@ class HttpContractAcceptance(unittest.TestCase):
         return body
 
     def assert_task_rpc(self, index, token, user, expected_arguments):
-        request, body = self.rpc_calls[index]
+        request, body = self.task_rpc_calls()[index]
         self.assertEqual(str(request.url), f"{SUPABASE_URL}/rest/v1/rpc/search_tasks")
         self.assertEqual(request.headers["Authorization"], f"Bearer {token}")
         self.assertEqual(request.headers["Content-Profile"], "app_api")
@@ -183,7 +219,20 @@ class HttpContractAcceptance(unittest.TestCase):
         self.assertIsNone(context["approval_action"])
         self.assertIsNone(context["action_reference"])
         self.assertIsNone(envelope["attestation"])
+        exchange = [(req, item["p_request"]) for req, item in self.rpc_calls
+                    if item["p_request"]["request_id"] == envelope["request_id"]]
+        self.assertIn([item["operation"] for _, item in exchange],
+                      (["search_tasks"], ["ensure_user_context", "search_tasks"]))
+        for outbound, item in exchange:
+            self.assertEqual(outbound.headers["Authorization"], f"Bearer {token}")
+            self.assertEqual(item["execution_context"]["trusted_context"]["principal"], {"user_id": user})
+            if item["operation"] == "ensure_user_context":
+                self.assert_signed_mutation(outbound, item, "ensure_user_context", token, user=user)
         return envelope
+
+    def task_rpc_calls(self):
+        return [(request, body) for request, body in self.rpc_calls
+                if body["p_request"]["operation"] == "search_tasks"]
 
     def test_missing_jwt_get_uses_error_result(self):
         spoof = "client-chosen-unauthenticated-trace"
@@ -275,7 +324,7 @@ class HttpContractAcceptance(unittest.TestCase):
         response = self.client.get("/v1/tasks", headers=self.headers(token))
         self.assertEqual(response.status_code, 200, response.text)
         validate_schema(self.assert_request_id(response), "search_tasksResult")
-        self.assertEqual(len(self.rpc_calls), 1)
+        self.assertEqual(len(self.task_rpc_calls()), 1)
         envelope = self.assert_task_rpc(0, token, USER_A, {"query": None, "status_filter": [], "page_size": 50, "cursor": None})
         self.assertEqual(envelope["request_id"], response.json()["request_id"])
 
@@ -285,7 +334,7 @@ class HttpContractAcceptance(unittest.TestCase):
         response = self.client.get("/v1/tasks", params=[("query", "OOP tiếng Việt"), ("status_filter", "TODO"), ("status_filter", "IN_PROGRESS"), ("page_size", "100"), ("cursor", cursor)], headers=self.headers(token))
         self.assertEqual(response.status_code, 200, response.text)
         validate_schema(self.assert_request_id(response), "search_tasksResult")
-        self.assertEqual(len(self.rpc_calls), 1)
+        self.assertEqual(len(self.task_rpc_calls()), 1)
         self.assert_task_rpc(0, token, USER_A, {"query": "OOP tiếng Việt", "status_filter": ["TODO", "IN_PROGRESS"], "page_size": 100, "cursor": cursor})
 
     def test_request_id_is_server_generated_and_unique(self):
@@ -298,7 +347,7 @@ class HttpContractAcceptance(unittest.TestCase):
             self.assertNotEqual(body["request_id"], spoof)
             ids.append(body["request_id"])
         self.assertNotEqual(ids[0], ids[1])
-        self.assertEqual([body["p_request"]["request_id"] for _, body in self.rpc_calls], ids)
+        self.assertEqual([body["p_request"]["request_id"] for _, body in self.task_rpc_calls()], ids)
 
     def test_two_users_do_not_share_rpc_authorization(self):
         tokens = {USER_A: self.token(USER_A), USER_B: self.token(USER_B)}
@@ -312,8 +361,8 @@ class HttpContractAcceptance(unittest.TestCase):
             body = self.assert_request_id(response)
             validate_schema(body, "search_tasksResult")
             self.assertEqual({task["user_id"] for task in body["data"]["items"]}, {user})
-        self.assertEqual(len(self.rpc_calls), len(users))
-        for index, (_, body) in enumerate(self.rpc_calls):
+        self.assertEqual(len(self.task_rpc_calls()), len(users))
+        for index, (_, body) in enumerate(self.task_rpc_calls()):
             user = body["p_request"]["execution_context"]["trusted_context"]["principal"]["user_id"]
             self.assertIn(user, tokens)
             self.assert_task_rpc(index, tokens[user], user, {"query": None, "status_filter": [], "page_size": 50, "cursor": None})
@@ -331,6 +380,137 @@ class HttpContractAcceptance(unittest.TestCase):
     def test_proposal_view_rejects_time_filter(self):
         params = {"view": "PROPOSAL", "proposal_id": CONVERSATION, "start_at": "2026-11-05T00:00:00Z", "end_at": "2026-11-06T00:00:00Z"}
         self.assert_error(self.client.get("/v1/plans", params=params, headers=self.headers()), 422, "INVALID_PARAMETER")
+
+    def assert_signed_mutation(self, request, envelope, operation, token, *, user=USER_A):
+        """Independent protocol check; this is not a simulated DB verifier."""
+        validate_schema(envelope, "RpcRequest")
+        self.assertEqual(str(request.url), f"{SUPABASE_URL}/rest/v1/rpc/{operation}")
+        self.assertEqual(request.headers["Authorization"], f"Bearer {token}")
+        self.assertEqual(request.headers["Content-Profile"], "app_api")
+        self.assertEqual(request.headers["apikey"], "test-publishable-key")
+        self.assertEqual(request.headers["Content-Type"].split(";")[0], "application/json")
+        self.assertEqual(envelope["operation"], operation)
+        self.assertEqual(envelope["execution_context"]["trusted_context"]["principal"], {"user_id": user})
+        attestation = envelope["attestation"]
+        self.assertEqual(attestation["key_id"], "sol-test-only")
+        encoded = attestation["payload"]
+        self.assertNotIn("=", encoded, "Attestation base64url must be unpadded")
+        decoded = base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4))
+        payload = json.loads(decoded)
+        validate_schema(payload, "AttestationPayload")
+        unsigned = {key: value for key, value in envelope.items() if key != "attestation"}
+        canonical = json.dumps(unsigned, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+        self.assertEqual(payload["request_digest"], hashlib.sha256(canonical).hexdigest())
+        self.assertEqual(payload["key_id"], attestation["key_id"])
+        self.assertEqual(payload["user_id"], user)
+        self.assertEqual(payload["rpc"], operation)
+        self.assertEqual(payload["request_id"], envelope["request_id"])
+        issued = datetime.fromisoformat(payload["issued_at"].replace("Z", "+00:00"))
+        expires = datetime.fromisoformat(payload["expires_at"].replace("Z", "+00:00"))
+        self.assertEqual(expires - issued, timedelta(seconds=60))
+        self.assertEqual(issued, self.now)
+        expected_signature = hmac.new(TEST_SIGNING_SECRET, encoded.encode("ascii"), hashlib.sha256).hexdigest()
+        self.assertEqual(attestation["signature"], expected_signature)
+
+    def assert_completed_receipt_replay_after_restart(self, path, command, http_operation, stored_reply, stored_status):
+        """A preexisting external receipt survives two entirely new app instances.
+
+        This proves replay routing avoids re-extraction/domain execution; it does
+        not prove a real database stored the receipt or any workflow state.
+        """
+        token = self.token()
+        fingerprints = []
+        validate_schema(stored_reply, "OrchestratorReply")
+        stamp = self.now.isoformat().replace("+00:00", "Z")
+
+        def completed_receipt(request, envelope):
+            self.assert_signed_mutation(request, envelope, "claim_api_receipt", token)
+            args = envelope["arguments"]
+            self.assertEqual(args["http_operation"], http_operation)
+            self.assertEqual(args["idempotency_key"], IDEMPOTENCY_KEY)
+            self.assertEqual(args["conversation_id"], CONVERSATION)
+            fingerprints.append(args["request_fingerprint"])
+            receipt = {
+                "user_id": USER_A, "http_operation": http_operation,
+                "idempotency_key": IDEMPOTENCY_KEY,
+                "request_fingerprint": args["request_fingerprint"],
+                "state": "COMPLETED", "lease_version": 3, "lease_until": None,
+                "message_id": "00000000-0000-4000-8000-000000000003",
+                "action_id": "00000000-0000-4000-8000-000000000006",
+                "http_status": stored_status, "response": copy.deepcopy(stored_reply),
+                "created_at": stamp, "updated_at": stamp,
+            }
+            validate_schema(receipt, "ApiReceipt")
+            result = {"schema_version": "1.1", "request_id": envelope["request_id"],
+                      "outcome": "COMMITTED", "data": receipt, "error": None, "warnings": []}
+            validate_schema(result, "claim_api_receiptInternalResult")
+            return httpx.Response(200, json=result)
+
+        self.rpc_override = completed_receipt
+        replies = []
+        # Neither app has processed the original operation. The receipt is the
+        # only source of the issued response, not an in-process cache.
+        for _ in range(2):
+            with self.new_client() as restarted_client:
+                response = restarted_client.post(path, json=command, headers=self.headers(token, **{"Idempotency-Key": IDEMPOTENCY_KEY}))
+            self.assertEqual(response.status_code, stored_status, response.text)
+            body = self.assert_request_id(response)
+            validate_schema(body, "OrchestratorReply")
+            self.assertEqual(response.headers.get("Idempotency-Replayed"), "true")
+            expected = copy.deepcopy(stored_reply)
+            expected["request_id"] = body["request_id"]
+            if expected["result"] is not None:
+                expected["result"]["request_id"] = body["request_id"]
+            self.assertEqual(body, expected)
+            replies.append(body)
+        self.assertEqual(len(self.rpc_calls), 2, "Completed replay must make no additional workflow/domain RPC")
+        self.assertEqual(fingerprints[0], fingerprints[1])
+        self.assertNotEqual(replies[0]["request_id"], replies[1]["request_id"])
+        self.assertEqual(self.llm_calls, [])
+
+    def test_completed_preparation_receipt_replays_across_cold_apps(self):
+        command = fixture("ActionRequest.json")
+        command["conversation_id"] = CONVERSATION
+        reply = fixture("OrchestratorReply.json")
+        reply["result"]["data"]["pending_action"]["conversation_id"] = CONVERSATION
+        reply["result"]["data"]["candidate"]["conversation_id"] = CONVERSATION
+        self.assert_completed_receipt_replay_after_restart("/v1/actions", command, "prepare_action", reply, 200)
+
+    def test_terminal_review_error_receipt_replays_before_stale_decision(self):
+        issued = fixture("OrchestratorReply.json")
+        decision = {"schema_version": "1.1", "conversation_id": CONVERSATION,
+                    "decision": "APPROVE", "action_reference": issued["action_reference"]}
+        error = {"code": "ACTION_REVIEW_REQUIRED", "message": "Review the current action before approval.",
+                 "field": None, "details": {}, "retryable": False}
+        reply = {"schema_version": "1.1", "request_id": "stored-terminal-request",
+                 "state": "ERROR", "message": error["message"], "action_reference": None,
+                 "questions": [], "result": None, "error": error}
+        self.assert_completed_receipt_replay_after_restart("/v1/decisions", decision, "submit_decision", reply, 409)
+
+    def test_first_preferences_get_bootstraps_through_signed_helper(self):
+        token = self.token()
+        profile = fixture("User.json")
+        profile["user_id"] = USER_A
+
+        def bootstrap(request, envelope):
+            self.assert_signed_mutation(request, envelope, "ensure_user_context", token)
+            self.assertEqual(envelope["arguments"], {})
+            self.assertIsNone(envelope["execution_context"]["idempotency_key"])
+            self.assertIsNone(envelope["execution_context"]["approval_action"])
+            result = {"schema_version": "1.1", "request_id": envelope["request_id"],
+                      "outcome": "COMMITTED", "data": profile, "error": None, "warnings": []}
+            validate_schema(result, "ensure_user_contextInternalResult")
+            return httpx.Response(200, json=result)
+
+        self.rpc_override = bootstrap
+        response = self.client.get("/v1/preferences", headers=self.headers(token))
+        self.assertEqual(response.status_code, 200, response.text)
+        body = self.assert_request_id(response)
+        validate_schema(body, "PreferencesResult")
+        self.assertEqual(body["data"], {"scheduling_policy": profile["scheduling_policy"],
+                                       "schedule_revision": profile["schedule_revision"]})
+        self.assertEqual(len(self.rpc_calls), 1)
+        self.assertEqual(self.llm_calls, [])
 
     def test_cors_preflight_allows_documented_headers(self):
         response = self.client.options("/v1/messages", headers={"Origin": ALLOWED_ORIGIN, "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "authorization,idempotency-key,content-type"})

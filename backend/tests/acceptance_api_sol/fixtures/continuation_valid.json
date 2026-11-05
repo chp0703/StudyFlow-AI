@@ -1,0 +1,47 @@
+{
+  "user_id": "00000000-0000-4000-8000-000000000001",
+  "conversation_id": "00000000-0000-4000-8000-000000000003",
+  "source_message_id": "00000000-0000-4000-8000-000000000004",
+  "origin_http_operation": "send_message",
+  "origin_idempotency_key": "sol-addendum-0001",
+  "origin_request_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "version": 1,
+  "extraction": {
+    "intents": [
+      {
+        "intent": "SEARCH_TASKS",
+        "slots": {
+          "query": null,
+          "status_filter": [],
+          "page_size": 50,
+          "cursor": null
+        },
+        "raw_expressions": {},
+        "ambiguities": []
+      },
+      {
+        "intent": "SEARCH_TASKS",
+        "slots": {
+          "query": "OOP",
+          "status_filter": [],
+          "page_size": 50,
+          "cursor": null
+        },
+        "raw_expressions": {},
+        "ambiguities": []
+      }
+    ]
+  },
+  "extraction_digest": "78ae23dbfbc21a510b5fdc1ca5dea9851d0e02ecc434afa78bfec8d0a0cc804a",
+  "depends_on": [
+    [],
+    [
+      0
+    ]
+  ],
+  "cursor": 0,
+  "awaiting_reference": null,
+  "completed_steps": [],
+  "created_at": "2026-11-05T03:00:00Z",
+  "updated_at": "2026-11-05T03:00:00Z"
+}
