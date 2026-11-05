@@ -1,0 +1,100 @@
+name: F1 database verification
+
+on:
+  push:
+    branches:
+      - feat/supabase-database-foundation
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  database-migrations-and-tests:
+    name: Local Supabase migrations and pgTAP
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Verify checked-out migration source
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "=== Git context ==="
+          echo "Branch: $(git branch --show-current)"
+          echo "HEAD: $(git rev-parse HEAD)"
+          echo "Event SHA: $GITHUB_SHA"
+          echo "Workspace: $GITHUB_WORKSPACE"
+
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+
+          echo "=== Migration path ==="
+          pwd
+          FILE="supabase/migrations/202611050001_create_core_entities.sql"
+          ls -l "$FILE"
+
+          echo "=== AcademicTask definition ==="
+          sed -n '/create table app_private.academic_tasks/,/^[[:space:]]*);/p' "$FILE"
+
+          echo "=== Duplicate constraint check ==="
+          if grep -nE 'deadline_precision[[:space:]]+text[[:space:]]+not null[[:space:]]+check' "$FILE"; then
+            echo "ERROR: obsolete inline CHECK still exists in checked-out migration"
+            exit 1
+          fi
+
+          COUNT=$(grep -c 'constraint academic_tasks_deadline_precision_check' "$FILE")
+          if [ "$COUNT" -ne 1 ]; then
+            echo "ERROR: expected exactly one named deadline precision constraint; found $COUNT"
+            exit 1
+          fi
+
+          echo "Migration source verification passed."
+          echo "=== Migration SHA256 ==="
+          sha256sum "$FILE"
+
+      - name: Install pinned Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 3.0.0
+
+      - name: Show CLI version
+        run: supabase --version
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Show local service status
+        run: supabase status
+
+      - name: Replay migrations and seed locally
+        run: supabase db reset --yes
+
+      - name: Run pgTAP database tests
+        run: supabase test db
+
+  backend-contract-validation:
+    name: Backend contract checker
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install checker dependencies
+        run: python -m pip install --disable-pip-version-check -r contracts/requirements-check.txt
+
+      - name: Run Backend Contract checker
+        run: python contracts/check_contract.py

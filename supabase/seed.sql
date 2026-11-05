@@ -1,0 +1,4 @@
+-- Stage 03.3 local seed entry point.
+-- Deliberately contains no user, task, or plan rows: auth.users is owned by the
+-- local Supabase Auth service and domain fixtures belong in isolated tests.
+-- This file must remain synthetic and must never contain credentials or PII.
