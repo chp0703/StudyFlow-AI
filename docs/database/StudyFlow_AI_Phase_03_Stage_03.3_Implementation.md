@@ -14,7 +14,7 @@ This stage integrates the reviewed backend contract package and creates a local 
 
 ## Contract boundary
 
-The exact contract source is `origin/feat/BE_contract_schema` at `b629a5e251be59570a0f719b5596d7d457e2708d`. Only its `contracts/` package was imported. The contract package's `data-contract.json` declares `PlanProposal.version` as `text`, while logical schema v1.1, physical design, and `f1.schema.json` require an integer-compatible version (the JSON schema currently fixes it to `1`). The migrations intentionally use an integer-compatible column and do not silently create a text column. Planning/approval adapters must resolve this conflict before release.
+The exact contract source is `origin/feat/BE_contract_schema` at `b629a5e251be59570a0f719b5596d7d457e2708d`. Only its `contracts/` package was imported. The package metadata declares `PlanProposal.version` as `text`, while logical schema v1.1, physical design, and `f1.schema.json` require an integer-compatible entity version (currently fixed to `1` in JSON). The mapping is resolved as metadata correction: envelope `schema_version` remains `"1.1"`, entity `version` remains numeric, and base-plan/version/revision remain separate fields. No text column is introduced; the backend contract package should correct its metadata in its next revision.
 
 ## Security and transaction boundary
 

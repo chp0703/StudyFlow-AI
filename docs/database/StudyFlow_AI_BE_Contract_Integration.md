@@ -84,7 +84,7 @@ Derived fields such as `ActionPresentation`, page cursors, HTTP headers, `reques
 | Idempotency state | CHECK `IN_PROGRESS`, `COMPLETED` | DB uniqueness and RPC replay logic |
 | `coverage` | JSONB payload enum `FULL`, `PARTIAL`, `NONE`, `NO_CHANGE` | Schema/service; NONE/hard conflict not committable |
 
-## 6. Identified conflict requiring contract correction
+## 6. PlanProposal version compatibility mapping
 
 The Backend Contract `contracts/data-contract.json` declares `PlanProposal.version` as PostgreSQL `text`, while:
 
@@ -92,7 +92,17 @@ The Backend Contract `contracts/data-contract.json` declares `PlanProposal.versi
 - Stage 03.2 physical design defines the proposal version as integer-compatible.
 - `contracts/schemas/f1.schema.json` currently constrains the proposal version to JSON constant `1`, not a general string.
 
-This is an actual contract/physical mapping inconsistency. The database implementation follows schema v1.1: proposal version is an integer-compatible typed column, not text. The contract package must be corrected or explicitly amended before planning/approval persistence is accepted. No migration will silently create a text version column.
+This is a serialization/type metadata defect, not a new business version concept. The meanings remain distinct:
+
+| Concept | Contract representation | Physical representation | Rule |
+|---|---|---|---|
+| Envelope schema version | `schema_version: "1.1"` | Response metadata only | Never stored as proposal `version`. |
+| PlanProposal entity version | JSON integer constant `1` | `plan_proposals.version bigint CHECK >= 1` | Immutable content version. |
+| Base plan version | JSON integer >= 1 | `base_plan_version bigint` | Version of the referenced historical plan. |
+| Base schedule revision | JSON integer >= 0 | `base_schedule_revision bigint` | Optimistic input snapshot revision. |
+| `data-contract.json` `postgres_type: text` | Metadata only | Integer-compatible column | Adapter serializes a JSON number; no text cast. |
+
+The implementation resolves the conflict by preserving F1 semantics and treating the `text` declaration as metadata to correct in the next backend-contract revision. No new column and no text migration are introduced. Contract validation must reject non-numeric proposal versions.
 
 The package also uses `bigint` for several integer fields where the logical schema says integer. This is compatible as a physical widening when non-negative/range semantics remain unchanged; the API must continue serializing safe JSON integers.
 
@@ -132,10 +142,14 @@ PostgreSQL must reject invalid scalar/status/relationship values even if a calle
 
 The following exact artifacts from commit `b629a5e251be59570a0f719b5596d7d457e2708d` are integrated under `contracts/`: README, JSON Schema, OpenAPI, service/data contracts, checker, validation metadata, acceptance cases, changelog, requirements, manifest, and valid/invalid fixtures. No backend implementation files, secrets, environment files, or unrelated branch changes were imported.
 
-## 10. Compatibility status before migrations
+## 10. Additional contract-only records
+
+The package also describes `ApiReceipt`, `ActionPresentationRecord`, `SourceMessageRecord`, and security-support `rpc_attestation_keys`. These are transport/audit/security artifacts, not additional F1 logical entities. They remain deferred from the F1 migrations until an explicit physical persistence decision is approved.
+
+## 11. Compatibility status after mapping
 
 - Contract package static validation is supplied as `PASS` for schema/OpenAPI/fixtures, with runtime DB/auth/RLS explicitly `NOT_RUN`.
-- Contract-to-logical mapping is compatible for the ten entities except the PlanProposal version representation described in Section 6.
-- Core entities may proceed only using schema v1.1 types and the compatibility rules above.
-- Planning/approval persistence is blocked until the PlanProposal version conflict is corrected or explicitly approved as an adapter-only representation without changing the physical integer column.
+- Contract-to-logical mapping is compatible for the ten F1 entities using the mappings above.
+- The PlanProposal `text` metadata is recorded as a backend-contract correction item; it does not alter the physical integer column.
+- API receipt/presentation/source-message persistence remains explicitly deferred; no F1 table is silently introduced.
 
