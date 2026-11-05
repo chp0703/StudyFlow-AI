@@ -7,13 +7,23 @@ export type TaskSlot = {
 }
 
 export type TaskChange = {
-  kind: "added" | "moved" | "removed"
+  kind: "added" | "scheduled" | "moved" | "removed"
 
   task: Task
 
-  // Previous slot, only for "moved".
+  // Previous slot, only for "moved" (a "scheduled" task had none).
 
   from?: TaskSlot
+}
+
+// Codes follow SRS §12; only the ones the planner can raise today.
+
+export type PlannerIssue = {
+  code: "INSUFFICIENT_AVAILABILITY"
+
+  message: string
+
+  taskId: number
 }
 
 // An hour the user declared free or busy; id is "<date>-<hour>" so one hour has one window.
@@ -56,6 +66,8 @@ export type Proposal = {
   changes: TaskChange[]
 
   windowChanges: WindowChange[]
+
+  issues: PlannerIssue[]
 
   reply: string
 }

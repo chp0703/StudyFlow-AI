@@ -73,3 +73,33 @@ test("creates an unscheduled task with deadline and effort", () => {
     /cùng tên/,
   )
 })
+
+test("plans unscheduled tasks deterministically and reports what does not fit", () => {
+  const d = (n: number) => {
+    const x = new Date(today)
+    x.setDate(x.getDate() + n)
+    return toIsoDate(x)
+  }
+  const mk = (id: number, deadline: string, priority = "Trung bình") =>
+    ({
+      id,
+      title: `T${id}`,
+      course: "",
+      time: "",
+      done: false,
+      effort: 60,
+      priority,
+      deadline,
+    }) as const
+  const tasks = [mk(1, d(3)), mk(2, d(1), "Cao"), mk(3, d(-1))]
+  const a = runPlannerCommand("lập kế hoạch", tasks as never)
+  const b = runPlannerCommand("lập kế hoạch", tasks as never)
+  assert.deepEqual(a, b)
+  const by = (id: number) => a.tasks.find((t) => t.id === id)!
+  assert.ok(by(2).date! <= d(1) && by(1).date! <= d(3))
+  assert.equal(by(3).date, undefined)
+  assert.deepEqual(
+    a.issues?.map((i) => i.taskId),
+    [3],
+  )
+})

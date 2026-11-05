@@ -1,8 +1,8 @@
-import type { TimeWindow } from "../../types/planner.ts"
+import type { PlannerIssue, TimeWindow } from "../../types/planner.ts"
 
 import type { Task } from "../../types/task.ts"
 
-import { toIsoDate, today } from "../../utils/date.ts"
+import { daysUntil, toIsoDate, today } from "../../utils/date.ts"
 
 export const FIRST_HOUR = 8
 
@@ -127,9 +127,17 @@ type PlannerCommandResult = {
   availability: TimeWindow[]
 
   reply: string
+
+  issues?: PlannerIssue[]
 }
 
 const vnDate = (iso: string) => iso.slice(8) + "/" + iso.slice(5, 7)
+
+type Slot = {
+  date: string
+
+  hour: number
+}
 
 const windowId = (date: string, hour: number) => `${date}-${hour}`
 
@@ -253,6 +261,91 @@ export function runPlannerCommand(
   }
 
   // "tạo công việc Báo cáo hạn 20/11 3 giờ": an unscheduled task, placed later.
+
+  // Deterministic plan: unscheduled tasks by deadline then priority, one 60-minute block each.
+
+  if (/^(?:lập kế hoạch|xếp lịch|tự xếp)/u.test(text)) {
+    const rank = (p: string) => ({ Cao: 0, Thấp: 2 })[p] ?? 1
+
+    const todo = tasks
+
+      .filter((t) => !t.done && !t.date)
+
+      .sort(
+        (a, b) =>
+          a.deadline.localeCompare(b.deadline) ||
+          rank(a.priority) - rank(b.priority) ||
+          a.id - b.id,
+      )
+
+    if (!todo.length)
+      return unchanged("Không có công việc chưa xếp. Hãy tạo công việc trước.")
+
+    const placed = new Map<number, Task>()
+
+    const issues: PlannerIssue[] = []
+
+    const taken = (date: string, hour: number) =>
+      isBusy(date, hour) ||
+      tasks.some((t) => t.date === date && t.hour === hour) ||
+      [...placed.values()].some((t) => t.date === date && t.hour === hour)
+
+    for (const task of todo) {
+      let slot: Slot | undefined
+
+      for (let i = 0; i <= daysUntil(task.deadline) && !slot; i++) {
+        const d = new Date(today)
+
+        d.setDate(d.getDate() + i)
+
+        const date = toIsoDate(d)
+
+        const free = availability.filter(
+          (w) => w.date === date && w.kind === "free",
+        )
+
+        for (
+          let h = i === 0 ? new Date().getHours() + 1 : FIRST_HOUR;
+          h <= LAST_HOUR;
+          h++
+        )
+          if (
+            h >= FIRST_HOUR &&
+            !taken(date, h) &&
+            (!free.length || free.some((w) => w.hour === h))
+          ) {
+            slot = { date, hour: h }
+
+            break
+          }
+      }
+
+      if (slot)
+        placed.set(task.id, { ...task, ...slot, time: timeRange(slot.hour) })
+      else
+        issues.push({
+          code: "INSUFFICIENT_AVAILABILITY",
+
+          taskId: task.id,
+
+          message: `Không còn giờ trống trước hạn ${vnDate(task.deadline)} cho "${task.title}".`,
+        })
+    }
+
+    return {
+      tasks: tasks.map((t) => placed.get(t.id) ?? t),
+
+      availability,
+
+      issues,
+
+      reply: `Đã xếp ${placed.size}/${todo.length} công việc${
+        issues.length
+          ? `, chưa xếp được: ${issues.map((i) => tasks.find((t) => t.id === i.taskId)?.title).join(", ")}`
+          : ""
+      }.`,
+    }
+  }
 
   m = /^(?:thêm|tạo)\s+(?:công việc|việc)\s+(.+?)\s+hạn\s+(.+)$/u.exec(text)
 

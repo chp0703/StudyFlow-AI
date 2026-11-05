@@ -14,6 +14,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  ListTodo,
   Send,
   Sparkles,
   X,
@@ -148,6 +149,24 @@ export default function Planner({
 
   const [week, setWeek] = useState(0)
 
+  const [taskPanelOpen, setTaskPanelOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem("studyflow_task_panel_open")
+
+      return saved !== null ? saved === "true" : true
+    } catch {
+      return true
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("studyflow_task_panel_open", String(taskPanelOpen))
+    } catch {
+      // Ignore storage errors in restricted contexts
+    }
+  }, [taskPanelOpen])
+
   const calendarRef = useRef<HTMLDivElement>(null)
 
   const prevWeek = useRef(0)
@@ -220,6 +239,46 @@ export default function Planner({
     },
 
     { scope: calendarRef, dependencies: [tasks] },
+  )
+
+  // GSAP drives the task panel because CSS transitions are disabled by reduced-motion.
+
+  const pageRef = useRef<HTMLDivElement>(null)
+
+  const panelSeen = useRef(taskPanelOpen)
+
+  useGSAP(
+    () => {
+      if (panelSeen.current === taskPanelOpen) return
+
+      panelSeen.current = taskPanelOpen
+
+      const [from, to] = taskPanelOpen
+        ? [
+            { width: 0, opacity: 0, x: 16 },
+
+            { width: 300, opacity: 1, x: 0 },
+          ]
+        : [
+            { width: 300, opacity: 1, x: 0 },
+
+            { width: 0, opacity: 0, x: 16 },
+          ]
+
+      const opts = { duration: 0.4, ease: "power3.inOut", clearProps: "all" }
+
+      gsap.fromTo(".task-panel-wrap", from, { ...to, ...opts })
+
+      gsap.fromTo(
+        ".planner-page",
+
+        { columnGap: taskPanelOpen ? 0 : 8 },
+
+        { columnGap: taskPanelOpen ? 8 : 0, ...opts },
+      )
+    },
+
+    { scope: pageRef, dependencies: [taskPanelOpen] },
   )
 
   // Proposed blocks pop in so the pending change is easy to spot before approving.
@@ -364,6 +423,8 @@ export default function Planner({
 
       windowChanges,
 
+      issues: result.issues ?? proposal?.issues ?? [],
+
       reply: result.reply,
     })
   }
@@ -391,7 +452,10 @@ export default function Planner({
   }
 
   return (
-    <div className="planner-page">
+    <div
+      ref={pageRef}
+      className={`planner-page ${taskPanelOpen ? "" : "is-tasks-closed"}`}
+    >
       <Card
         className="dashboard-calendar planner-calendar"
         title="Lịch"
@@ -446,6 +510,30 @@ export default function Planner({
               >
                 <ChevronRight aria-hidden="true" size={18} />
               </Button>
+              <Button
+                className={`secondary planner-task-toggle ${
+                  taskPanelOpen ? "is-active" : ""
+                }`}
+                type="button"
+                aria-label={
+                  taskPanelOpen
+                    ? "Đóng danh sách công việc"
+                    : "Mở danh sách công việc"
+                }
+                aria-expanded={taskPanelOpen}
+                onClick={() => setTaskPanelOpen((prev) => !prev)}
+                title={
+                  taskPanelOpen
+                    ? "Đóng danh sách công việc"
+                    : "Mở danh sách công việc"
+                }
+              >
+                <ListTodo aria-hidden="true" size={15} />
+                <span>Công việc</span>
+                {shown.length > 0 && (
+                  <span className="planner-task-count">{shown.length}</span>
+                )}
+              </Button>
             </div>
           </div>
         }
@@ -465,6 +553,18 @@ export default function Planner({
                     ? "Lịch đã thay đổi từ lúc tạo đề xuất (STALE_PLAN_VERSION). Hãy từ chối và tạo lại."
                     : reply || proposal.reply}
                 </span>
+                {proposal.issues.length > 0 && (
+                  <details className="proposal-issues">
+                    <summary>Chưa xếp được ({proposal.issues.length})</summary>
+                    <ul>
+                      {proposal.issues.map((i) => (
+                        <li key={i.taskId}>
+                          {i.code}: {i.message}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
               </span>
               <Button className="secondary proposal-reject" onClick={reject}>
                 <X aria-hidden="true" size={14} /> Từ chối
@@ -591,16 +691,25 @@ export default function Planner({
         )}
       </Card>
 
-      <TaskPanel
-        tasks={shown}
-        proposedIds={
-          new Set(
-            proposal?.changes
-              .filter((c) => c.kind !== "removed")
-              .map((c) => c.task.id),
-          )
-        }
-      />
+      <div
+        className="task-panel-wrap"
+        aria-hidden={!taskPanelOpen}
+        inert={!taskPanelOpen ? true : undefined}
+      >
+        <TaskPanel
+          tasks={shown}
+          proposedIds={
+            new Set(
+              proposal?.changes
+
+                .filter((c) => c.kind !== "removed")
+
+                .map((c) => c.task.id),
+            )
+          }
+          onClose={() => setTaskPanelOpen(false)}
+        />
+      </div>
     </div>
   )
 }

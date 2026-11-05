@@ -54,5 +54,5 @@
 
 /* Form controls */
 label { display: flex; flex-direction: column; font-size: 14px; color: var(--color-ink); font-weight: 500; gap: 9px; margin-bottom: 20px; }
-input:not(.search-wrap input):not(.history-search input):not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea { width: 100%; min-height: 44px; border: 1px solid var(--color-control); border-radius: 7px; background: white; padding: 11px 12px; color: var(--color-ink); font-size: 15px; }
+input:not(.search-wrap input):not(.history-search input):not(.task-panel-search):not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea { width: 100%; min-height: 44px; border: 1px solid var(--color-control); border-radius: 7px; background: white; padding: 11px 12px; color: var(--color-ink); font-size: 15px; }
 textarea { min-height: 110px; resize: vertical; line-height: 1.7; }

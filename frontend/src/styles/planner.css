@@ -37,9 +37,37 @@
 .planner-page {
   flex: 1;
   min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  display: flex;
   gap: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: gap 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+.task-panel-wrap {
+  width: 300px;
+  flex-shrink: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1),
+              opacity 0.22s ease,
+              transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+  transform-origin: right center;
+  overflow: hidden;
+}
+.task-panel-wrap .task-panel {
+  width: 300px;
+  height: 100%;
+  flex: 1;
+}
+.planner-page.is-tasks-closed {
+  gap: 0;
+}
+.planner-page.is-tasks-closed .task-panel-wrap {
+  width: 0;
+  opacity: 0;
+  transform: translateX(16px);
+  pointer-events: none;
 }
 
 /* Request box sits on the calendar heading row, between the title and the week controls */
@@ -344,6 +372,61 @@
 .planner-calendar .calendar-today-btn {
   padding: 0 10px;
 }
+.planner-calendar .planner-task-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-left: 4px;
+}
+.planner-calendar .planner-task-toggle:hover {
+  background: rgba(89, 108, 240, 0.08);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.planner-calendar .planner-task-toggle.is-active {
+  background: rgba(89, 108, 240, 0.12);
+  border-color: rgba(89, 108, 240, 0.4);
+  color: var(--color-primary);
+}
+.planner-task-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: rgba(89, 108, 240, 0.15);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+.planner-calendar .planner-task-toggle.is-active .planner-task-count {
+  background: var(--color-primary);
+  color: white;
+}
+.task-panel-close {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+.task-panel-close:hover {
+  background: rgba(89, 108, 240, 0.1);
+  color: var(--color-primary);
+}
 
 /* Pending proposal: preview blocks, status line and approve/reject bar */
 .planner-status:empty {
@@ -500,30 +583,122 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px;
   border-radius: var(--radius-card);
   border: 1px solid var(--color-line);
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px -2px rgba(23, 32, 59, 0.05);
+  overflow: hidden;
+  position: relative;
 }
-.task-panel-search { width: 100%; box-sizing: border-box; }
+.task-panel .card-heading {
+  padding: 12px 18px;
+  min-height: 52px;
+  height: 52px;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--color-line);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.task-panel .card-heading h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-ink);
+  line-height: normal;
+  margin: 0;
+}
+.task-panel-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px 14px;
+}
+.task-panel-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.task-panel-search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--color-muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+.task-panel-search {
+  width: 100% !important;
+  min-height: 34px !important;
+  height: 34px !important;
+  padding: 0 10px 0 32px !important;
+  font-size: 13px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--color-line) !important;
+  background: white !important;
+  color: var(--color-ink) !important;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+.task-panel-search:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(89, 108, 240, 0.15);
+}
 .task-panel-filters { display: flex; flex-wrap: wrap; gap: 4px; }
 .task-panel-filters button {
-  min-height: 28px;
-  padding: 0 10px;
+  min-height: 26px;
+  padding: 0 9px;
   border: 1px solid var(--color-line);
   border-radius: 100px;
   background: transparent;
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 11.5px;
   cursor: pointer;
+  transition: all 0.15s;
 }
-.task-panel-filters button.is-active { background: var(--color-primary); border-color: var(--color-primary); color: white; }
-.task-panel-list { flex: 1; min-height: 0; overflow-y: auto; margin: 0; padding: 0; list-style: none; display: grid; align-content: start; gap: 6px; }
-.task-panel-list li { display: grid; gap: 4px; padding: 8px 10px; border: 1px solid var(--color-line); border-radius: 10px; }
+.task-panel-filters button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-ink);
+}
+.task-panel-filters button.is-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+.task-panel-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+.task-panel-list li {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  transition: background 0.15s, border-color 0.15s;
+}
 .task-panel-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; font-size: 12px; color: var(--color-muted); }
 .task-panel-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.status-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 100px; font-size: 12px; font-weight: 600; }
+.status-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 100px; font-size: 11.5px; font-weight: 600; }
 .status-chip.is-draft { border: 1px dashed var(--color-primary); color: var(--color-primary); }
 .status-chip.is-confirmed { background: rgba(34, 160, 107, 0.12); }
 .status-chip.is-unscheduled { background: #f0f2fc; }
-.task-panel-empty { margin: 0; font-size: 13px; color: var(--color-muted); }
+.task-panel-empty { margin: 8px 0 0; font-size: 12.5px; color: var(--color-muted); line-height: 1.5; }
+
+.proposal-issues { font-size: 12px; margin-top: 2px; }
+.proposal-issues summary { cursor: pointer; font-weight: 600; }
+.proposal-issues ul { margin: 4px 0 0; padding-left: 18px; }

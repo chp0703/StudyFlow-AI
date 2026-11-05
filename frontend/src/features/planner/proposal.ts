@@ -20,7 +20,7 @@ export function diffTasks(base: Task[], next: Task[]): TaskChange[] {
     if (!old) changes.push({ kind: "added", task })
     else if (old.date !== task.date || old.hour !== task.hour)
       changes.push({
-        kind: "moved",
+        kind: old.date ? "moved" : "scheduled",
 
         task,
 
@@ -71,6 +71,8 @@ export function describeChanges(
 
   return [
     ["Thêm", count("added")],
+
+    ["Xếp", count("scheduled")],
 
     ["Dời", count("moved")],
 

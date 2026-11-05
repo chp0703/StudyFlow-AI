@@ -1,6 +1,13 @@
 import { useState } from "react"
 
-import { CalendarClock, CircleCheck, CircleDashed, FilePen } from "lucide-react"
+import {
+  CalendarClock,
+  CircleCheck,
+  CircleDashed,
+  FilePen,
+  Search,
+  X,
+} from "lucide-react"
 
 import Card from "../../components/ui/Card"
 
@@ -44,12 +51,12 @@ export function statusOf(task: Task, proposedIds: Set<number>): Status {
 
 export default function TaskPanel({
   tasks,
-
   proposedIds,
+  onClose,
 }: {
   tasks: Task[]
-
   proposedIds: Set<number>
+  onClose?: () => void
 }) {
   const [query, setQuery] = useState("")
 
@@ -70,64 +77,91 @@ export default function TaskPanel({
     .sort((a, b) => a.deadline.localeCompare(b.deadline))
 
   return (
-    <Card className="task-panel" title="Công việc">
-      <input
-        className="task-panel-search"
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Tìm công việc..."
-        aria-label="Tìm công việc"
-      />
-      <div
-        className="task-panel-filters"
-        role="group"
-        aria-label="Lọc theo trạng thái"
-      >
-        {FILTERS.map((f) => (
+    <Card
+      className="task-panel"
+      title="Công việc"
+      action={
+        onClose ? (
           <button
-            key={f.value}
             type="button"
-            className={filter === f.value ? "is-active" : ""}
-            aria-pressed={filter === f.value}
-            onClick={() => setFilter(f.value)}
+            className="task-panel-close"
+            aria-label="Đóng danh sách công việc"
+            title="Đóng danh sách công việc"
+            onClick={onClose}
           >
-            {f.label}
+            <X size={15} aria-hidden="true" />
           </button>
-        ))}
-      </div>
-      <ul className="task-panel-list">
-        {rows.map((t) => {
-          const { label, Icon } = STATUS[statusOf(t, proposedIds)]
+        ) : undefined
+      }
+    >
+      <div className="task-panel-body">
+        <div className="search-wrap task-panel-search-wrap">
+          <Search
+            size={14}
+            className="task-panel-search-icon"
+            aria-hidden="true"
+          />
+          <input
+            className="task-panel-search"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm công việc..."
+            aria-label="Tìm công việc"
+          />
+        </div>
+        <div
+          className="task-panel-filters"
+          role="group"
+          aria-label="Lọc theo trạng thái"
+        >
+          {FILTERS.map((f) => (
+            <button
+              key={f.value}
+              type="button"
+              className={filter === f.value ? "is-active" : ""}
+              aria-pressed={filter === f.value}
+              onClick={() => setFilter(f.value)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <ul className="task-panel-list">
+          {rows.map((t) => {
+            const { label, Icon } = STATUS[statusOf(t, proposedIds)]
 
-          const left = daysUntil(t.deadline)
+            const left = daysUntil(t.deadline)
 
-          return (
-            <li key={t.id}>
-              <strong>{t.title}</strong>
-              <span className="task-panel-meta">
-                <CalendarClock aria-hidden="true" size={13} />
-                {formatShortDate(t.deadline)}
-                {left >= 0 ? ` · còn ${left} ngày` : " · quá hạn"} · {t.effort}{" "}
-                phút
-              </span>
-              <span className="task-panel-tags">
-                <span className="priority-badge">{t.priority}</span>
-                <span className={`status-chip is-${statusOf(t, proposedIds)}`}>
-                  <Icon aria-hidden="true" size={13} /> {label}
+            return (
+              <li key={t.id}>
+                <strong>{t.title}</strong>
+                <span className="task-panel-meta">
+                  <CalendarClock aria-hidden="true" size={13} />
+                  {formatShortDate(t.deadline)}
+                  {left >= 0 ? ` · còn ${left} ngày` : " · quá hạn"} ·{" "}
+                  {t.effort} phút
                 </span>
-              </span>
-            </li>
-          )
-        })}
-      </ul>
-      {!rows.length && (
-        <p className="task-panel-empty">
-          {tasks.length
-            ? "Không có công việc phù hợp."
-            : "Chưa có công việc. Thử: tạo công việc Báo cáo hạn 20/11 3 giờ"}
-        </p>
-      )}
+                <span className="task-panel-tags">
+                  <span className="priority-badge">{t.priority}</span>
+                  <span
+                    className={`status-chip is-${statusOf(t, proposedIds)}`}
+                  >
+                    <Icon aria-hidden="true" size={13} /> {label}
+                  </span>
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+        {!rows.length && (
+          <p className="task-panel-empty">
+            {tasks.length
+              ? "Không có công việc phù hợp."
+              : "Chưa có công việc. Thử: tạo công việc Báo cáo hạn 20/11 3 giờ"}
+          </p>
+        )}
+      </div>
     </Card>
   )
 }
