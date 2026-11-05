@@ -32,10 +32,11 @@ import {
 import {
   describeChanges,
   diffTasks,
+  diffWindows,
   isStale,
 } from "../features/planner/proposal"
 
-import type { Proposal } from "../types/planner"
+import type { Proposal, TimeWindow } from "../types/planner"
 
 import type { Task } from "../types/task"
 
@@ -58,6 +59,10 @@ export default function Planner({
 
   setTasks,
 
+  availability,
+
+  setAvailability,
+
   proposal,
 
   setProposal,
@@ -71,6 +76,10 @@ export default function Planner({
   tasks: Task[]
 
   setTasks: Dispatch<SetStateAction<Task[]>>
+
+  availability: TimeWindow[]
+
+  setAvailability: Dispatch<SetStateAction<TimeWindow[]>>
 
   proposal: Proposal | null
 
@@ -279,6 +288,33 @@ export default function Planner({
 
   const shown = proposal ? proposal.next.tasks : tasks
 
+  const shownWindows = proposal ? proposal.next.availability : availability
+
+  const windowAt = (date: Date, hour: number) =>
+    shownWindows.find((w) => w.id === `${toIsoDate(date)}-${hour}`)
+
+  const proposedWindows = new Set(
+    proposal?.windowChanges
+      .filter((c) => c.kind === "added")
+      .map((c) => c.window.id),
+  )
+
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Clicking an empty cell starts an add command for that slot.
+
+  const prefill = (date: Date, hour: number) => {
+    const d = `${date.getDate()}/${date.getMonth() + 1}`
+
+    setInput(`thêm  lúc ${hour}h ngày ${d}`)
+
+    requestAnimationFrame(() => {
+      inputRef.current?.focus()
+
+      inputRef.current?.setSelectionRange(5, 5)
+    })
+  }
+
   const changeOf = new Map(proposal?.changes.map((c) => [c.task.id, c.kind]))
 
   const slotMatch = (task: Task, date: Date, hour: number) =>
@@ -299,15 +335,17 @@ export default function Planner({
 
     // Commands stack on a pending proposal, but are always diffed against the committed schedule.
 
-    const result = runPlannerCommand(text, shown)
+    const result = runPlannerCommand(text, shown, shownWindows)
 
     const changes = diffTasks(tasks, result.tasks)
+
+    const windowChanges = diffWindows(availability, result.availability)
 
     setReply(result.reply)
 
     setInput("")
 
-    if (!changes.length) return setProposal(null)
+    if (!changes.length && !windowChanges.length) return setProposal(null)
 
     setProposal({
       id: proposal?.id ?? crypto.randomUUID(),
@@ -316,9 +354,11 @@ export default function Planner({
 
       baseRevision: proposal?.baseRevision ?? revision,
 
-      next: { tasks: result.tasks },
+      next: { tasks: result.tasks, availability: result.availability },
 
       changes,
+
+      windowChanges,
 
       reply: result.reply,
     })
@@ -328,6 +368,8 @@ export default function Planner({
     if (!proposal || stale) return
 
     setTasks(proposal.next.tasks)
+
+    setAvailability(proposal.next.availability)
 
     setRevision((r) => r + 1)
 
@@ -360,6 +402,7 @@ export default function Planner({
               }}
             >
               <input
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Nhập yêu cầu lịch học của bạn..."
@@ -409,7 +452,9 @@ export default function Planner({
               <Sparkles aria-hidden="true" size={16} />
               <span className="proposal-text">
                 <strong>
-                  Đề xuất: {describeChanges(proposal.changes) || "không đổi"}
+                  Đề xuất:{" "}
+                  {describeChanges(proposal.changes, proposal.windowChanges) ||
+                    "không đổi"}
                 </strong>
                 <span>
                   {stale
@@ -432,6 +477,12 @@ export default function Planner({
             reply && <p className="planner-reply">{reply}</p>
           )}
         </div>
+        <p className="planner-legend" aria-label="Chú thích">
+          <span className="legend-free">Rảnh</span>
+          <span className="legend-busy">Bận</span>
+          <span className="legend-proposed">Đề xuất</span>
+          <span>Bấm ô trống để thêm việc</span>
+        </p>
         <div
           ref={calendarRef}
           className="dashboard-calendar-scroll"
@@ -459,13 +510,23 @@ export default function Planner({
                 {weekDays.map((d, day) => {
                   const event = eventAt(d, hour)
 
+                  const win = windowAt(d, hour)
+
                   return (
                     <div
                       className={`schedule-cell ${
                         week === 0 && day === todayIndex ? "today-column" : ""
+                      } ${win ? `is-${win.kind}` : ""} ${
+                        win && proposedWindows.has(win.id) ? "is-proposed" : ""
                       }`}
                       key={day}
+                      onClick={event ? undefined : () => prefill(d, hour)}
                     >
+                      {win && (
+                        <span className="window-tag">
+                          {win.kind === "free" ? "Rảnh" : "Bận"}
+                        </span>
+                      )}
                       {event && (
                         <div
                           className={`schedule-event study priority-${

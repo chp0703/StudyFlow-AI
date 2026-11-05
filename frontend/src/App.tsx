@@ -28,7 +28,7 @@ import Planner from "./pages/Planner"
 
 import Study from "./pages/Study"
 
-import type { Proposal } from "./types/planner"
+import type { Proposal, TimeWindow } from "./types/planner"
 
 import type { Task } from "./types/task"
 
@@ -80,6 +80,8 @@ export default function App() {
   const [page, setPage] = useState("Assistant")
 
   const [tasks, setTasks] = useState<Task[]>([])
+
+  const [availability, setAvailability] = useState<TimeWindow[]>([])
 
   // Pending schedule change awaiting the user's approval, and the committed schedule revision.
 
@@ -465,6 +467,8 @@ export default function App() {
           <Planner
             tasks={tasks}
             setTasks={setTasks}
+            availability={availability}
+            setAvailability={setAvailability}
             proposal={proposal}
             setProposal={setProposal}
             revision={revision}
