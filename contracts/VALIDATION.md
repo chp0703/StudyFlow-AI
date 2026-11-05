@@ -14,7 +14,7 @@ Package **1.0.1** (logical `schema_version="1.1"`) đã được phê duyệt ch
 | Data mapping | Đủ field của 10 entity, PK/nullability khớp shared schema; 5 `infrastructure_records` (thêm `WorkflowContinuationRecord` → `app_private.workflow_continuations`) |
 | Đối chiếu schema F1 nguồn | Tên field 10 entity và catalog operation khớp `docs/database/schema_F1.md` |
 | Ví dụ | 100 positive/negative fixtures trong `examples/manifest.json` (88 fixture gốc cập nhật lên `1.0.1` + 12 fixture mới cho continuation/checkpoint/context/version) |
-| Thực thi checker & test độc lập trong phiên WP0 | **EXTERNAL_RUNNER (Sol)** — không chạy lệnh trong phiên chỉnh sửa WP0; chờ Sol chạy `python contracts/check_contract.py` và `pytest backend/tests/acceptance_api_sol/test_contract_addendum.py` |
+| Thực thi checker & test độc lập | Đã chạy 05/11/2026 trên Python 3.14: `check_contract.py` PASS (122 definitions, 100 fixtures); `test_contract_addendum.py` 16/16 pass; scheduler acceptance 33, planner unit 24, tests 78 pass. Kiểm riêng: kết quả rỗng hợp lệ với `search_tasks`, bị loại với `get_study_plan` |
 | Backend/DB/auth/UI runtime | **NOT_RUN**; chưa có implementation trong phạm vi thay đổi WP0 |
 
 Môi trường kiểm tra tham chiếu: Python, `jsonschema`, `openapi-spec-validator` theo `contracts/requirements-check.txt`.

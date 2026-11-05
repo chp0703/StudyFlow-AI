@@ -4627,7 +4627,7 @@
               "const": "READ"
             },
             "data": {
-              "oneOf": [
+              "anyOf": [
                 {
                   "$ref": "#/$defs/SearchTasksData"
                 },
@@ -7472,6 +7472,236 @@
               },
               "result": {
                 "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "SUCCEEDED"
+              },
+              "operation": {
+                "const": "create_task_candidate"
+              }
+            },
+            "required": [
+              "disposition",
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "$ref": "#/$defs/create_task_candidateResult"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "SUCCEEDED"
+              },
+              "operation": {
+                "const": "confirm_task"
+              }
+            },
+            "required": [
+              "disposition",
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "$ref": "#/$defs/confirm_taskResult"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "SUCCEEDED"
+              },
+              "operation": {
+                "const": "search_tasks"
+              }
+            },
+            "required": [
+              "disposition",
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "$ref": "#/$defs/search_tasksResult"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "SUCCEEDED"
+              },
+              "operation": {
+                "const": "set_availability"
+              }
+            },
+            "required": [
+              "disposition",
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "$ref": "#/$defs/set_availabilityResult"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "SUCCEEDED"
+              },
+              "operation": {
+                "const": "set_busy_interval"
+              }
+            },
+            "required": [
+              "disposition",
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "$ref": "#/$defs/set_busy_intervalResult"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "SUCCEEDED"
+              },
+              "operation": {
+                "const": "set_scheduling_preferences"
+              }
+            },
+            "required": [
+              "disposition",
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "$ref": "#/$defs/set_scheduling_preferencesResult"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "SUCCEEDED"
+              },
+              "operation": {
+                "const": "generate_study_plan"
+              }
+            },
+            "required": [
+              "disposition",
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "$ref": "#/$defs/generate_study_planResult"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "SUCCEEDED"
+              },
+              "operation": {
+                "const": "get_study_plan"
+              }
+            },
+            "required": [
+              "disposition",
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "$ref": "#/$defs/get_study_planResult"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "SUCCEEDED"
+              },
+              "operation": {
+                "const": "approve_study_plan"
+              }
+            },
+            "required": [
+              "disposition",
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "$ref": "#/$defs/approve_study_planResult"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "SUCCEEDED"
+              },
+              "operation": {
+                "const": "reject_study_plan"
+              }
+            },
+            "required": [
+              "disposition",
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "$ref": "#/$defs/reject_study_planResult"
               }
             }
           }
