@@ -66,9 +66,6 @@ declare
     v_existing app_private.idempotency_records%rowtype;
     v_result jsonb;
 begin
-    if p_attestation_id is not null then
-        raise exception using errcode='P0001', message='APPROVAL_REQUIRED';
-    end if;
     perform app_private.lock_owner(v_user);
     select * into v_existing from app_private.idempotency_records
     where user_id = v_user and operation = 'create_task_candidate' and idempotency_key = p_idempotency_key
@@ -119,6 +116,9 @@ declare
     v_title text;
     v_result jsonb;
 begin
+    if p_attestation_id is not null then
+        raise exception using errcode='P0001', message='APPROVAL_REQUIRED';
+    end if;
     perform app_private.lock_owner(v_user);
     if p_idempotency_key is null or p_request_fingerprint is null then
         raise exception using errcode='P0001', message='INVALID_PARAMETER';
