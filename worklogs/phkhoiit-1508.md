@@ -35,3 +35,22 @@
 
 - Giữ nguyên giá trị `demo_acknowledged` / `valid_demo_draft` vì đã lưu trong IndexedDB.
 - `getAssistantReply` vẫn là stub theo kịch bản, chưa nối AI thật.
+
+## 2026-11-05 — Backend F1: sửa hợp đồng 1.0.1 và WP2a (biên DB)
+
+**Mục tiêu:** tiếp nhận bàn giao backend F1 trên `feat/f1-mvp-intergration`, chốt WP0 (hợp đồng) và làm WP2a (ranh giới bảo mật, hạ tầng, bộ xác minh) để chuẩn bị WP2b.
+
+**Đã làm**
+
+- WP0: sửa `contracts/schemas/f1.schema.json` (kết quả `READ` dùng `anyOf`; `WorkflowStepOutcome` bắt `result` khớp schema của đúng operation); cập nhật `contracts/CHANGELOG.md` và `contracts/VALIDATION.md`.
+- WP2a: migration 009 (role `sf_rpc_owner`, 6 bảng hạ tầng, FORCE RLS), 010 (`canonical_json`, `verify_rpc_request`), 011 (gỡ RPC cũ, chuyển quyền sang `sf_rpc_owner`, 27 wrapper từ chối an toàn), 012 (schema hợp đồng sinh tự động bằng `backend/scripts/generate_contract_schema_migration.py`).
+- Thêm `supabase/tests/08_wp2a_contract_schema.sql`, `backend/tests/unit/test_contract_schema_migration.py` và `docs/implementation/WP2A_NOTES.md`.
+- Cài Docker Desktop, Supabase CLI 3.0.0 và Python 3.12 để chạy DB local.
+
+**Kết quả:** nhánh `feat/f1-mvp-intergration`. Checker hợp đồng pass (122 định nghĩa, 100 fixture), test hợp đồng 16/16; scheduler 33, unit 25, tests 78 pass. pgTAP local: 03, 04, 05, 08 pass; 06 còn 12/81 lỗi, 07 còn 33/58 lỗi (đều thuộc WP2b); kết quả giống nhau khi replay từ DB trống và khi nâng cấp từ baseline 008.
+
+**Ghi chú**
+
+- Wrapper mới chỉ kiểm tra request rồi trả `UNSUPPORTED_OPERATION`; hành vi nghiệp vụ làm ở WP2b/WP2c.
+- Chưa chạy: harness đồng thời, JWT thật qua HTTP, CI mới. Chưa đụng tới project Supabase trên cloud.
+
