@@ -131,3 +131,18 @@
 
 - Với thao tác ghi cần duyệt, hệ thống mới kiểm tra action đã COMPLETED, chưa đối chiếu lại payload kết quả với dữ liệu đã lưu.
 - Hàng đợi thứ hai trong một hội thoại trả `STALE_ENTITY_VERSION` (hợp đồng chưa có mã riêng).
+
+## 2026-11-05 — Backend F1: WP2c-1 (đọc ngữ cảnh lập lịch và kế hoạch)
+
+**Mục tiêu:** giai đoạn đầu của WP2c, phần đọc của lập kế hoạch.
+
+**Đã làm**
+
+- Migration 018: `get_scheduling_context` (snapshot của owner: task, khung giờ đang dùng, kế hoạch nền đầy đủ, `schedule_revision`) và `get_study_plan` (CURRENT/HISTORY/PROPOSAL, lọc block theo khoảng thời gian nhưng giữ nguyên metadata kế hoạch).
+- Thêm `supabase/tests/14_wp2c1_plan_reads.sql` (15 kiểm tra, có đối chiếu hợp đồng) và `docs/implementation/WP2C_NOTES.md`.
+
+**Kết quả:** nhánh `feat/f1-mvp-intergration`; pgTAP local pass.
+
+**Ghi chú**
+
+- Snapshot hiện chạy nhiều câu lệnh dưới READ COMMITTED; nếu cần nhất quán tuyệt đối thì khóa owner hoặc dùng REPEATABLE READ ở tầng HTTP.
