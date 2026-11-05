@@ -49,6 +49,9 @@
 - Tách `index.css` thành nhiều file trong `styles/`, xóa CSS không còn dùng (~200 selector), gộp còn 11 file (`tokens`, `base`, `overlays`, `overrides`, `planner`, `study`...) và viết lại `DESIGN.md`.
 - Cập nhật trang Học tập (`pages/Study.tsx`, `styles/study-page.css`).
 - Cài `gsap` và `@gsap/react`; thêm animation: thẻ trượt lên khi mở trang, tin nhắn chat, panel lịch sử co/giãn, chuyển tuần và sự kiện mới trong lịch, chữ chào trang chủ, đổi cuộc trò chuyện, chuyển câu và popup giải thích trong trắc nghiệm (`pages/Study.tsx`).
+- Lập kế hoạch: đưa ô nhập yêu cầu lên hàng tiêu đề của thẻ Lịch (nút gửi nằm trong ô), hiện ngày `dd/mm/yyyy` thay cho "Tuần này", thu nhỏ hàng T2…CN và bỏ đường kẻ dưới tiêu đề.
+- Nút gửi ở Lập kế hoạch và chat tài liệu chuyển xám khi ô trống, có màu khi đã nhập (giống trang chủ).
+- Học tập: thông báo tải lên/xóa tài liệu hiện ngay trong thẻ Tài liệu thay cho toast toàn trang; bỏ prop `notify` của `Study`.
 - Cắt viền trắng quanh logo (`public/brand/`) và tăng kích thước logo trên thanh trên.
 - Thêm skill `ui-ux-pro-max` vào `.claude/skills/` và quy tắc ghi worklog vào `CLAUDE.md`.
 

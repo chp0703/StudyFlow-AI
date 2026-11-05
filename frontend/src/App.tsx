@@ -235,7 +235,7 @@ export default function App() {
           hidden={page !== "Study"}
           className={page === "Study" ? "study-page-wrapper" : ""}
         >
-          <Study notify={setNotice} />
+          <Study />
         </div>
       </main>
       {infoModal && (

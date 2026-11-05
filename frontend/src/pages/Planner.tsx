@@ -125,8 +125,21 @@ export default function Planner({
     { scope: calendarRef, dependencies: [tasks] },
   )
 
-  const weekLabel =
-    week === 0 ? "Tuần này" : week > 0 ? `+${week} tuần` : `${week} tuần`
+  // Today's date, shifted by whole weeks so it tracks the week being viewed.
+
+  const weekLabel = new Date(
+    today.getFullYear(),
+
+    today.getMonth(),
+
+    today.getDate() + week * 7,
+  ).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+
+    month: "2-digit",
+
+    year: "numeric",
+  })
 
   const monday = new Date(today)
 
@@ -160,63 +173,63 @@ export default function Planner({
 
   return (
     <div className="planner-page">
-      <Card className="planner-chat">
-        <h2 className="planner-chat-title">Trợ lý lập kế hoạch</h2>
-        <span className="sr-only" role="status" aria-live="polite">
-          {reply}
-        </span>
-        <form
-          className="planner-chat-form"
-          onSubmit={(e) => {
-            e.preventDefault()
-
-            send()
-          }}
-        >
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Nhập yêu cầu lịch học của bạn..."
-            aria-label="Yêu cầu điều chỉnh lịch"
-          />
-          <Button
-            className="primary"
-            type="submit"
-            aria-label="Gửi yêu cầu"
-            disabled={!input.trim()}
-          >
-            <Send aria-hidden="true" size={14} />
-          </Button>
-        </form>
-      </Card>
       <Card
         className="dashboard-calendar planner-calendar"
         title="Lịch"
         action={
-          <div className="dashboard-calendar-controls">
-            <span className="calendar-week-label">{weekLabel}</span>
-            {week !== 0 && (
+          <div className="planner-heading-action">
+            <span className="sr-only" role="status" aria-live="polite">
+              {reply}
+            </span>
+            <form
+              className="planner-chat-form"
+              onSubmit={(e) => {
+                e.preventDefault()
+
+                send()
+              }}
+            >
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Nhập yêu cầu lịch học của bạn..."
+                aria-label="Yêu cầu điều chỉnh lịch"
+              />
               <Button
-                className="secondary calendar-today-btn"
-                onClick={() => setWeek(0)}
+                className="primary"
+                type="submit"
+                aria-label="Gửi yêu cầu"
+                disabled={!input.trim()}
               >
-                Hôm nay
+                <Send aria-hidden="true" size={14} />
               </Button>
-            )}
-            <Button
-              className="icon-button"
-              aria-label="Tuần trước"
-              onClick={() => setWeek(week - 1)}
-            >
-              <ChevronLeft aria-hidden="true" size={18} />
-            </Button>
-            <Button
-              className="icon-button"
-              aria-label="Tuần sau"
-              onClick={() => setWeek(week + 1)}
-            >
-              <ChevronRight aria-hidden="true" size={18} />
-            </Button>
+            </form>
+
+            <div className="dashboard-calendar-controls">
+              <span className="calendar-week-label">{weekLabel}</span>
+              {week !== 0 && (
+                <Button
+                  className="secondary calendar-today-btn"
+                  onClick={() => setWeek(0)}
+                >
+                  Hôm nay
+                </Button>
+              )}
+              <Button
+                className="icon-button"
+                aria-label="Tuần trước"
+                onClick={() => setWeek(week - 1)}
+              >
+                <ChevronLeft aria-hidden="true" size={18} />
+              </Button>
+              <Button
+                className="icon-button"
+                aria-label="Tuần sau"
+                onClick={() => setWeek(week + 1)}
+              >
+                <ChevronRight aria-hidden="true" size={18} />
+              </Button>
+            </div>
           </div>
         }
       >

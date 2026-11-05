@@ -504,6 +504,7 @@
    Card 2: Tài liệu (Cột phải, Trên — Chia đều 50%)
    ========================================================================== */
 .study-materials-card {
+  position: relative;
   flex: 1 1 0;
   min-height: 0;
   height: 100%;
@@ -754,6 +755,10 @@
   place-items: center;
   flex-shrink: 0;
 }
+.qa-send-btn:disabled {
+  background: var(--border);
+  color: var(--color-muted);
+}
 
 /* Internal clean scrollbars */
 .materials-scroll-list::-webkit-scrollbar,
@@ -803,4 +808,45 @@
   .qa-message-row {
     max-width: 95%;
   }
+}
+
+/* In-card notice for upload/delete feedback */
+.doc-notice {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px -4px rgba(23, 32, 59, 0.18);
+  font-size: 13.5px;
+}
+.doc-notice > span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.doc-notice > svg {
+  color: var(--color-success);
+  flex-shrink: 0;
+}
+.doc-notice-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--color-muted);
+  flex-shrink: 0;
+}
+.doc-notice-close:hover {
+  background: var(--border);
 }

@@ -37,73 +37,57 @@
   gap: 8px;
 }
 
-/* Chat prompt card styled like the Assistant chat composer */
-.planner-chat {
-  flex: none;
+/* Request box sits on the calendar heading row, between the title and the week controls */
+.planner-heading-action {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 6px 14px;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--color-line);
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 4px 20px -2px rgba(23, 32, 59, 0.05);
-}
-.planner-chat-title {
-  flex: none;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-ink);
-  line-height: 1;
-  white-space: nowrap;
+  gap: 16px;
+  margin-left: 24px;
 }
 .planner-chat-form {
+  position: relative;
   flex: 1;
+  max-width: 400px;
   min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 .planner-chat-form input {
-  flex: 1;
-  min-width: 0;
-  min-height: 32px;
-  height: 32px;
-  padding: 0 12px;
+  width: 100%;
+  min-height: 36px;
+  height: 36px;
+  padding: 0 44px 0 14px;
   border: 1px solid var(--color-line);
   border-radius: 100px;
   background: var(--bg-card);
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--color-ink);
   box-shadow: 0 1px 3px rgba(23, 32, 59, 0.03);
+}
+.planner-chat-form .button.primary {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.planner-chat-form .button.primary:disabled {
+  background: var(--border);
+  color: var(--color-muted);
+}
+.planner-heading-action .dashboard-calendar-controls {
+  margin-left: auto;
 }
 .planner-chat-form input:focus {
   outline: 3px solid #dcdffb;
   border-color: var(--color-primary);
 }
-.planner-chat-form .button.primary {
-  width: 32px;
-  height: 32px;
-  min-height: 32px;
-  padding: 0;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-@media (max-width: 700px) {
-  .planner-chat {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .planner-chat-title,
-  .planner-chat-form {
-    flex: 1 1 100%;
-  }
-}
-
 /* Calendar Card styled with glassmorphism matching Assistant chat */
 .planner-calendar {
   flex: 1;
@@ -120,7 +104,7 @@
 }
 .planner-calendar .card-heading {
   padding: 12px 20px;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 0;
   background: transparent;
   display: flex;
   align-items: center;
@@ -155,7 +139,7 @@
 }
 .planner-calendar .schedule-header {
   flex: none;
-  padding: 8px 0 10px;
+  padding: 2px 0 4px;
   border-bottom: 1px solid var(--color-line);
 }
 .planner-calendar .schedule-day {
@@ -169,9 +153,9 @@
   justify-content: center;
 }
 .planner-calendar .schedule-day > strong {
-  min-height: 32px;
-  min-width: 32px;
-  font-size: 13px;
+  min-height: 24px;
+  min-width: 24px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--color-muted);
   letter-spacing: 0.3px;

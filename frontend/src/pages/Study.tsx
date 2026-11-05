@@ -195,11 +195,7 @@ const defaultFiles: StudyFile[] = [
   },
 ]
 
-export default function Study({
-  notify,
-}: {
-  notify: (message: string) => void
-}) {
+export default function Study() {
   // === Card 1: Quiz State ===
 
   const [quizIndex, setQuizIndex] = useState(0)
@@ -250,7 +246,9 @@ export default function Study({
 
       gsap.from(popupRef.current, {
         opacity: 0,
+
         duration: 0.2,
+
         clearProps: "opacity",
       })
 
@@ -322,14 +320,19 @@ export default function Study({
 
       tl.from(".quiz-meta, .quiz-question-title", {
         x: 28,
+
         opacity: 0,
+
         duration: 0.35,
+
         stagger: 0.06,
       })
 
         .from(
           ".quiz-option-btn",
+
           { y: 18, opacity: 0, duration: 0.35, stagger: 0.07 },
+
           "-=0.2",
         )
 
@@ -392,6 +395,57 @@ export default function Study({
 
   // === Card 2: Documents (Tài liệu) State ===
 
+  // Upload/delete feedback shows inside the documents card instead of a page-wide toast.
+
+  const [docNotice, setDocNotice] = useState("")
+
+  const noticeRef = useRef<HTMLDivElement>(null)
+
+  const noticeTimer = useRef<number>(0)
+
+  const showDocNotice = (message: string) => {
+    window.clearTimeout(noticeTimer.current)
+
+    setDocNotice(message)
+
+    noticeTimer.current = window.setTimeout(() => closeDocNotice(), 3500)
+  }
+
+  const closeDocNotice = () => {
+    window.clearTimeout(noticeTimer.current)
+
+    if (!noticeRef.current) return setDocNotice("")
+
+    gsap.to(noticeRef.current, {
+      y: 16,
+
+      opacity: 0,
+
+      duration: 0.25,
+
+      ease: "power2.in",
+
+      onComplete: () => setDocNotice(""),
+    })
+  }
+
+  useEffect(() => () => window.clearTimeout(noticeTimer.current), [])
+
+  useGSAP(
+    () => {
+      if (docNotice)
+        gsap.fromTo(
+          noticeRef.current,
+
+          { y: 24, opacity: 0 },
+
+          { y: 0, opacity: 1, duration: 0.4, ease: "back.out(1.6)" },
+        )
+    },
+
+    { dependencies: [docNotice] },
+  )
+
   const [files, setFiles] = useState<StudyFile[]>(defaultFiles)
 
   const uploadRef = useRef<HTMLInputElement>(null)
@@ -418,7 +472,7 @@ export default function Study({
 
     setFiles((prev) => [...prev, ...newFiles])
 
-    notify(`Đã tải lên ${uploaded.length} tài liệu mới.`)
+    showDocNotice(`Đã tải lên ${uploaded.length} tài liệu mới.`)
 
     e.target.value = ""
   }
@@ -426,7 +480,7 @@ export default function Study({
   const handleDeleteFile = (fileName: string) => {
     setFiles((prev) => prev.filter((f) => f.name !== fileName))
 
-    notify(`Đã xóa tài liệu: ${fileName}`)
+    showDocNotice(`Đã xóa tài liệu: ${fileName}`)
   }
 
   // === Card 3: AI Q&A (Hỏi đáp) State ===
@@ -761,6 +815,20 @@ export default function Study({
             </Button>
           }
         >
+          {docNotice && (
+            <div className="doc-notice" ref={noticeRef}>
+              <span role="status">{docNotice}</span>
+              <Check aria-hidden="true" size={16} />
+              <button
+                type="button"
+                className="doc-notice-close"
+                aria-label="Đóng thông báo"
+                onClick={closeDocNotice}
+              >
+                <X size={14} aria-hidden="true" />
+              </button>
+            </div>
+          )}
           {files.length ? (
             <div className="materials-scroll-list">
               {files.map((file, idx) => (
