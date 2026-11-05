@@ -9,8 +9,9 @@ import {
   BookOpen,
   CalendarDays,
   ChevronDown,
-  Check,
   House,
+  PanelLeft,
+  PanelLeftClose,
   Settings,
   X,
 } from "lucide-react"
@@ -46,10 +47,12 @@ type PageInfo = {
 const pageInfo: Record<string, PageInfo> = {
   Planner: {
     title: "Lập kế hoạch",
+    description: "Quản lý công việc và lịch học trong tuần.",
   },
 
   Study: {
     title: "Học tập",
+    description: "Tài liệu học tập, luyện đề và trao đổi cùng trợ lý AI.",
   },
 }
 
@@ -78,11 +81,174 @@ export default function App() {
 
   const [notice, setNotice] = useState("")
 
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem("studyflow_sidebar_open")
+
+      return saved !== null ? saved === "true" : true
+    } catch {
+      return true
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("studyflow_sidebar_open", String(sidebarOpen))
+    } catch {}
+  }, [sidebarOpen])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+        e.preventDefault()
+
+        setSidebarOpen((v) => !v)
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
+
   const mainHeadingRef = useRef<HTMLHeadingElement>(null)
 
   const mainRef = useRef<HTMLElement>(null)
 
   const firstPage = useRef(true)
+
+  // Crossing a responsive breakpoint (window resize) re-flows the layout; ease the cards into place.
+
+  useEffect(() => {
+    const queries = [1250, 800, 480].map((w) =>
+      window.matchMedia(`(max-width: ${w}px)`),
+    )
+
+    const onChange = () => {
+      const cards = gsap.utils
+
+        .toArray<HTMLElement>(".card, .assistant-shell")
+
+        .filter((el) => el.offsetParent !== null)
+
+      gsap.from(cards, {
+        opacity: 0.4,
+
+        y: 14,
+
+        scale: 0.985,
+
+        duration: 0.45,
+
+        ease: "power2.out",
+
+        stagger: 0.04,
+
+        clearProps: "transform,opacity",
+      })
+    }
+
+    queries.forEach((q) => q.addEventListener("change", onChange))
+
+    return () =>
+      queries.forEach((q) => q.removeEventListener("change", onChange))
+  }, [])
+
+  const firstSidebar = useRef(true)
+
+  // Menu open/close: items cascade in when it opens; the reveal button and logo ease in when it closes.
+
+  useGSAP(
+    () => {
+      if (firstSidebar.current) {
+        firstSidebar.current = false
+
+        return
+      }
+
+      // GSAP drives the slide itself so it also runs when OS animations are off (CSS transitions are disabled then).
+
+      gsap.fromTo(
+        ".app-shell",
+
+        { "--sb-offset": sidebarOpen ? "24px" : "220px" },
+
+        {
+          "--sb-offset": sidebarOpen ? "220px" : "24px",
+
+          duration: 0.5,
+
+          ease: "power3.inOut",
+
+          clearProps: "--sb-offset",
+        },
+      )
+
+      gsap.fromTo(
+        ".sidebar",
+
+        { x: sidebarOpen ? -208 : 0, autoAlpha: sidebarOpen ? 0 : 1 },
+
+        {
+          x: sidebarOpen ? 0 : -208,
+
+          autoAlpha: sidebarOpen ? 1 : 0,
+
+          duration: 0.5,
+
+          ease: "power3.inOut",
+
+          clearProps: "transform,opacity,visibility",
+        },
+      )
+
+      if (sidebarOpen) {
+        gsap.from(".sidebar .nav-item", {
+          x: -16,
+
+          opacity: 0,
+
+          duration: 0.4,
+
+          ease: "power2.out",
+
+          stagger: 0.05,
+
+          delay: 0.12,
+
+          clearProps: "transform,opacity",
+        })
+      } else {
+        gsap.from(".sidebar-reveal-btn", {
+          scale: 0.4,
+
+          opacity: 0,
+
+          rotate: -90,
+
+          duration: 0.5,
+
+          ease: "back.out(2)",
+
+          delay: 0.15,
+
+          clearProps: "transform,opacity",
+        })
+
+        gsap.from(".brand", {
+          x: -6,
+
+          duration: 0.45,
+
+          ease: "power2.out",
+
+          clearProps: "transform",
+        })
+      }
+    },
+
+    { dependencies: [sidebarOpen] },
+  )
 
   // Cards slide up each time a page opens.
 
@@ -143,20 +309,45 @@ export default function App() {
   const infoModal = infoModals[modal]
 
   return (
-    <div className={`app-shell ${page === "Assistant" ? "assistant-app" : ""}`}>
+    <div
+      className={`app-shell ${page === "Assistant" ? "assistant-app" : ""} ${
+        sidebarOpen ? "sidebar-open" : "sidebar-collapsed"
+      }`}
+    >
       <a className="skip-link" href="#main-content">
         Bỏ qua đến nội dung chính
       </a>
       <header className="topbar">
-        <div className="brand">
-          <img
-            className="brand-logo"
-            src="/brand/logo-horizontal-light-transparent.png"
-            alt="StudyFlow AI"
-            width={1840}
-            height={366}
-            fetchPriority="high"
-          />
+        <div
+          className={`brand-container ${
+            !sidebarOpen ? "can-open-sidebar" : ""
+          }`}
+        >
+          <div
+            className="brand"
+            onClick={() => {
+              if (!sidebarOpen) setSidebarOpen(true)
+            }}
+          >
+            <img
+              className="brand-logo"
+              src="/brand/logo-horizontal-light-transparent.png"
+              alt="StudyFlow AI"
+              width={1840}
+              height={366}
+              fetchPriority="high"
+            />
+          </div>
+          {!sidebarOpen && (
+            <Button
+              className="icon-button sidebar-reveal-btn"
+              aria-label="Mở thanh menu"
+              title="Mở menu (Ctrl+B)"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <PanelLeft aria-hidden="true" size={17} />
+            </Button>
+          )}
         </div>
         <div className="top-actions">
           <Button
@@ -179,9 +370,33 @@ export default function App() {
           </Button>
         </div>
       </header>
-      <aside className="sidebar">
+      <aside
+        className="sidebar"
+        aria-hidden={!sidebarOpen}
+        tabIndex={sidebarOpen ? undefined : -1}
+      >
         <nav aria-label="Điều hướng chính">
-          {destinations.map((n) => (
+          <div className="sidebar-home-item">
+            <Button
+              className={`nav-item ${page === "Assistant" ? "active" : ""}`}
+              aria-label="Trang chủ"
+              aria-current={page === "Assistant" ? "page" : undefined}
+              onClick={() => go("Assistant")}
+            >
+              <House size={18} />
+              <span>Trang chủ</span>
+              {page === "Assistant" && <i />}
+            </Button>
+            <Button
+              className="sidebar-collapse-btn"
+              aria-label="Thu gọn thanh menu"
+              title="Thu gọn menu (Ctrl+B)"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <PanelLeftClose aria-hidden="true" size={15} />
+            </Button>
+          </div>
+          {destinations.slice(1).map((n) => (
             <Button
               key={n.name}
               className={`nav-item ${page === n.name ? "active" : ""}`}
@@ -249,7 +464,6 @@ export default function App() {
       {notice && (
         <div className="toast">
           <span role="status">{notice}</span>
-          <Check aria-hidden="true" size={17} />
           <Button
             className="icon-button"
             aria-label="Đóng thông báo"

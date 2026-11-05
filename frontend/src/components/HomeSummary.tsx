@@ -88,7 +88,7 @@ export default function HomeSummary({
   const summary = (card: typeof cards[number]) => (
     <div className="summary-main">
       <span className="summary-icon">
-        <card.icon aria-hidden="true" size={27} />
+        <card.icon aria-hidden="true" size={20} />
       </span>
       <div>
         <p>{card.title}</p>
@@ -108,7 +108,7 @@ export default function HomeSummary({
               aria-label={`${card.title}: ${card.value}`}
             >
               {summary(card)}
-              <ChevronRight aria-hidden="true" size={20} />
+              <ChevronRight aria-hidden="true" size={17} />
             </Button>
           ) : (
             summary(card)

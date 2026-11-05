@@ -29,6 +29,11 @@
   padding: 8px 0 16px;
   box-sizing: border-box;
 }
+.main-content:has(.planner-page) .page-heading {
+  margin-top: 2px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
 .planner-page {
   flex: 1;
   min-height: 0;

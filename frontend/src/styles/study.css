@@ -834,10 +834,6 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.doc-notice > svg {
-  color: var(--color-success);
-  flex-shrink: 0;
-}
 .doc-notice-close {
   display: grid;
   place-items: center;

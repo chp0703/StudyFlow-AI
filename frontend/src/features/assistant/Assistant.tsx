@@ -805,6 +805,8 @@ export default function Assistant({
       setActiveId(null)
 
       setEmptyInput("")
+
+      closeHistory()
     } else {
       setConversations((current) =>
         current.filter((item) => item.id !== confirm.id),

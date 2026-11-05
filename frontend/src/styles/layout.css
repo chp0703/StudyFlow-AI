@@ -15,6 +15,45 @@
   top: 8px;
   z-index: 20;
 }
+.brand-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.sidebar-reveal-btn {
+  position: relative;
+  margin-left: 12px;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink);
+  box-shadow: 0 2px 8px rgba(23, 32, 59, 0.08);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.can-open-sidebar .brand {
+  cursor: pointer;
+}
+.sidebar-reveal-btn:hover {
+  background: #f0f2fd;
+  color: var(--color-primary);
+  border-color: #cbd5e1;
+}
+.brand {
+  cursor: pointer;
+}
+.sidebar-reveal-btn:hover {
+  background: #f0f2fd;
+  color: var(--color-primary);
+  border-color: #cbd5e1;
+}
 .brand {
   display: flex;
   align-items: center;
@@ -82,6 +121,42 @@
   overflow-y: auto;
   z-index: 15;
 }
+.sidebar-collapsed .sidebar {
+  transform: translateX(calc(-100% - 30px));
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+.sidebar-home-item {
+  position: relative;
+  width: 100%;
+}
+.sidebar-home-item .nav-item {
+  width: 100%;
+}
+.sidebar-collapse-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  min-height: 26px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  z-index: 2;
+}
+.sidebar-collapse-btn:hover {
+  background: rgba(23, 32, 59, 0.08);
+  color: var(--color-ink);
+}
 .nav-item {
   width: 100%;
   min-height: 40px;
@@ -115,11 +190,15 @@
   display: none;
 }
 .main-content {
-  margin-left: 220px;
+  margin-left: var(--sb-offset, 220px);
   margin-right: 24px;
   padding: 8px 0 20px;
   max-width: none;
   min-width: 0;
+}
+.sidebar-collapsed .main-content,
+.sidebar-collapsed.assistant-app .home-content {
+  margin-left: var(--sb-offset, 24px) !important;
 }
 .page-heading {
   display: flex;

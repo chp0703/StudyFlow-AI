@@ -818,7 +818,6 @@ export default function Study() {
           {docNotice && (
             <div className="doc-notice" ref={noticeRef}>
               <span role="status">{docNotice}</span>
-              <Check aria-hidden="true" size={16} />
               <button
                 type="button"
                 className="doc-notice-close"

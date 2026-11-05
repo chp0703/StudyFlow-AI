@@ -6,15 +6,16 @@
 @media(forced-colors:active) { .button,.card,.schedule-event { border: 1px solid ButtonText; }.nav-item.active { outline: 2px solid Highlight; } }
 
 /* AI-first workspace and shared refinements */
-.topbar { height: 50px; gap: 16px; padding-inline: 20px; }
-.brand { width: 160px; }
+.topbar { height: 50px; gap: 14px; padding-inline: 16px; }
+.brand { width: 150px; }
 .sidebar { top: 66px; width: 176px; padding: 10px 8px; }
 .nav-item { border-left-width: 0; border-radius: 10px; margin: 3px 0; padding-inline: 12px; }
 .nav-item.active { border-left-color: transparent; box-shadow: inset 3px 0 0 var(--color-primary); }
-.main-content { margin-left: 220px; margin-right: 24px; max-width: none; padding: 8px 0 20px; }
+.main-content { margin-left: var(--sb-offset, 220px); margin-right: 24px; max-width: none; padding: 8px 0 20px; }
+.sidebar-collapsed .main-content { margin-left: var(--sb-offset, 24px); }
 .page-heading { margin-top: 6px; margin-bottom: 12px; }
 .page-heading h1 { font-size: 24px; }
 .card { box-shadow: 0 2px 14px #17203b05; }
-.summary-card { min-height: 126px; }
+.summary-card { min-height: 74px; padding: 12px 18px; }
 .summary-main strong { font-variant-numeric: tabular-nums; }
 .priority-badge { color: var(--color-ink); background: #f0f2fc; padding: 4px 9px; border-radius: 100px; font-size: 12px; font-weight: 600; white-space: nowrap; }

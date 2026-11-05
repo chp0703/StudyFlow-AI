@@ -52,6 +52,7 @@
 - Lập kế hoạch: đưa ô nhập yêu cầu lên hàng tiêu đề của thẻ Lịch (nút gửi nằm trong ô), hiện ngày `dd/mm/yyyy` thay cho "Tuần này", thu nhỏ hàng T2…CN và bỏ đường kẻ dưới tiêu đề.
 - Nút gửi ở Lập kế hoạch và chat tài liệu chuyển xám khi ô trống, có màu khi đã nhập (giống trang chủ).
 - Học tập: thông báo tải lên/xóa tài liệu hiện ngay trong thẻ Tài liệu thay cho toast toàn trang; bỏ prop `notify` của `Study`.
+- Menu: nút mở lại luôn hiện cạnh logo khi thu gọn; thanh bên trượt ra/vào và nội dung giãn theo bằng GSAP (biến `--sb-offset`), các mục hiện lần lượt; khi kéo cửa sổ qua mốc responsive các thẻ dịch vào mượt.
 - Cắt viền trắng quanh logo (`public/brand/`) và tăng kích thước logo trên thanh trên.
 - Thêm skill `ui-ux-pro-max` vào `.claude/skills/` và quy tắc ghi worklog vào `CLAUDE.md`.
 
