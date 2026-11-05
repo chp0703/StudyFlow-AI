@@ -161,3 +161,18 @@
 **Ghi chú**
 
 - Chưa kiểm tra block có tôn trọng giờ rảnh/bận, deadline, kích thước block (việc của engine); sẽ kiểm tra lại lúc duyệt ở 2c-3.
+
+## 2026-11-05 — Backend F1: WP2c-3 (duyệt/từ chối kế hoạch)
+
+**Mục tiêu:** giai đoạn 2c-3: `approve_study_plan`, `reject_study_plan`.
+
+**Đã làm**
+
+- Migration 020: duyệt tạo kế hoạch mới và block trong một giao dịch (approval, plan version+1, block, con trỏ plan hiện tại, `schedule_revision+1`, trạng thái proposal/action, idempotency); kiểm tra lại task/deadline/kích thước block; proposal lỗi thời được đánh dấu STALE bền vững; từ chối ghi approval REJECT và hủy action.
+- Thêm `supabase/tests/16_wp2c3_approve_reject_plan.sql` (24 kiểm tra) và cập nhật `docs/implementation/WP2C_NOTES.md`.
+
+**Kết quả:** nhánh `feat/f1-mvp-intergration`; pgTAP local pass.
+
+**Ghi chú**
+
+- Chưa kiểm tra lại giờ rảnh/bận lúc duyệt; dựa vào revision guard.
