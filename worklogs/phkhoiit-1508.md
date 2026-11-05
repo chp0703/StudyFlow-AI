@@ -55,9 +55,13 @@
 - Menu: nút mở lại luôn hiện cạnh logo khi thu gọn; thanh bên trượt ra/vào và nội dung giãn theo bằng GSAP (biến `--sb-offset`), các mục hiện lần lượt; khi kéo cửa sổ qua mốc responsive các thẻ dịch vào mượt.
 - Chat trợ lý: cho đính kèm tệp/ảnh vào tin nhắn (hiển thị thẻ tệp và xem trước ảnh), `getAssistantReply` nhận thêm `attachments`, lịch sử lưu tên/dung lượng tệp và ảnh dạng `dataUrl` trong IndexedDB; thêm test cho `conversationHistory`.
 - Cắt viền trắng quanh logo (`public/brand/`) và tăng kích thước logo trên thanh trên.
+- Lập kế hoạch theo SRS F1: lệnh chat tạo đề xuất xem trước (viền nét đứt) rồi Duyệt/Từ chối, có kiểm tra lịch đã đổi (`STALE_PLAN_VERSION`) và hết hạn sau 10 phút (`EXPIRED`); thêm `types/planner.ts`, `features/planner/proposal.ts` và test.
+- Khung giờ rảnh/bận trên lịch (lệnh `rảnh`/`bận`, bấm ô trống để điền sẵn lệnh, ngày `dd/mm`), chú thích màu kèm chữ.
+- Bảng công việc bên phải lịch (`features/planner/TaskPanel.tsx`): tìm kiếm, lọc Nháp/Đã xác nhận/Chưa xếp và theo tuần, lệnh `tạo công việc … hạn …`; đóng/mở bằng GSAP.
+- Lệnh `lập kế hoạch` tự xếp việc chưa xếp theo hạn nộp và ưu tiên, báo việc không vừa (`INSUFFICIENT_AVAILABILITY`); huy hiệu "Chờ duyệt" trên menu; cập nhật `DESIGN.md`.
 - Thêm skill `ui-ux-pro-max` vào `.claude/skills/` và quy tắc ghi worklog vào `CLAUDE.md`.
 
-**Kết quả:** PR #13 (`feat/pages`). `tsc --noEmit`, `npm run build` và `npm run format` pass; test `plannerAgent` và `conversationHistory` 7/7 pass. Review PR #11 (docs kiến trúc Supabase + FastAPI) dưới dạng nhận xét.
+**Kết quả:** PR #13 (`feat/pages`). `tsc --noEmit`, `npm run build` và `npm run format` pass; test `plannerAgent`, `proposal` và `conversationHistory` pass. Review PR #11 (docs kiến trúc Supabase + FastAPI) dưới dạng nhận xét.
 
 **Ghi chú**
 
@@ -65,3 +69,4 @@
 - Nút chuyển tuần cao 32px, nhỏ hơn mức 44px trong `DESIGN.md`; còn CSS cũ không dùng.
 - Chưa kiểm tra giao diện điện thoại (~400px); drawer lịch sử trên điện thoại chưa có animation.
 - Animation GSAP luôn chạy, không kiểm tra `prefers-reduced-motion` (quyết định của nhóm).
+- Đề xuất, khung giờ rảnh/bận và việc chỉ lưu trong bộ nhớ (mất khi tải lại trang); thời hạn đề xuất 10 phút và khối 60 phút là giá trị đề xuất, SRS chưa chốt.
