@@ -1,0 +1,7 @@
+{
+  "min_block_minutes": 120,
+  "max_block_minutes": 150,
+  "allow_short_final_block": true,
+  "max_daily_minutes": 600,
+  "break_minutes": 0
+}

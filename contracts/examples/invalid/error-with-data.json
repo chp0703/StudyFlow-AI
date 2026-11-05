@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.1",
+  "request_id": "req-fixed-example",
+  "outcome": "ERROR",
+  "data": {},
+  "error": {
+    "code": "INTERNAL_ERROR",
+    "message": "Không xử lý được.",
+    "field": null,
+    "details": {},
+    "retryable": false
+  },
+  "warnings": []
+}

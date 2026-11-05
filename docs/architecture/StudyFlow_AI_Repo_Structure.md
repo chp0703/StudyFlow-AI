@@ -1,5 +1,7 @@
 # StudyFlow AI — Repository Structure
 
+> Bộ contract thực tế nằm tại [contracts/README.md](../../contracts/README.md): OpenAPI, một schema bundle dùng chung, service/data registry và fixtures. Cây bên dưới là bản thiết kế đích từ PDF; tên file minh họa trong cây không thay thế các artifact hiện có hoặc trạng thái review của chúng.
+
 > Bản chuyển đổi Markdown từ PDF nguồn `repo structure.pdf` (3 trang). Cấu trúc cây được giữ trong một khối code để bảo toàn quan hệ thư mục và chú thích gốc.
 
 ```text

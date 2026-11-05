@@ -21,6 +21,8 @@ F2 (Learning Assessment & Adaptive Revision) and F3 (Daily AI Learning) are plan
 
 ## Official data contract
 
+The [Unified F1 Integration Contract](contracts/README.md) joins the FE–BE API, Orchestrator–Tool/Service interface, and BE–DB schema/RPC boundary. It includes OpenAPI, shared JSON Schema, entity mapping, and validation fixtures. Package 1.0.0 is **REVIEW_READY**; new integration decisions still require the listed owners' review and do not constitute implemented backend/database functionality.
+
 The authoritative logical contract is [Official F1 Schema v1.1](docs/database/schema_F1.md). It defines fields, lifecycle states, ownership rules, time semantics, tool contracts, scheduling-engine inputs/outputs, proposal approval, and idempotency behavior.
 
 The database mapping is documented in [Database Design Baseline v1.1](docs/database/StudyFlow_AI_Database_Design_Baseline_v1.1.md). The v1.0 draft remains historical and is superseded for F1 integration.
@@ -105,6 +107,7 @@ Other commands: `npm run build`, `npm run preview`, and `npm run format`.
 
 | Area | Document |
 |---|---|
+| Unified API / Tool / Data integration contract | [contracts/README.md](contracts/README.md) |
 | Official F1 logical schema | [docs/database/schema_F1.md](docs/database/schema_F1.md) |
 | Database baseline | [docs/database/StudyFlow_AI_Database_Design_Baseline_v1.1.md](docs/database/StudyFlow_AI_Database_Design_Baseline_v1.1.md) |
 | Requirements | [docs/srs/StudyFlow_AI_Software_Requirements_Specification_v1.0_Draft.md](docs/srs/StudyFlow_AI_Software_Requirements_Specification_v1.0_Draft.md) |

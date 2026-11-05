@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.1",
+  "operation": "get_study_plan",
+  "arguments": {
+    "view": "CURRENT",
+    "version": null,
+    "proposal_id": null,
+    "start_at": null,
+    "end_at": null
+  }
+}

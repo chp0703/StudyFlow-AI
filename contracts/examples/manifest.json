@@ -1,0 +1,485 @@
+{
+  "contract_version": "1.0.0",
+  "cases": [
+    {
+      "file": "examples/valid/User.json",
+      "schema": "User",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/TaskCandidate.json",
+      "schema": "TaskCandidate",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/AcademicTask.json",
+      "schema": "AcademicTask",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/TimeWindow.json",
+      "schema": "TimeWindow",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/StudyPlan.json",
+      "schema": "StudyPlan",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/StudyBlock.json",
+      "schema": "StudyBlock",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/PlanProposal.json",
+      "schema": "PlanProposal",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/PendingAction.json",
+      "schema": "PendingAction",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/ApprovalAction.json",
+      "schema": "ApprovalAction",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/IdempotencyRecord.json",
+      "schema": "IdempotencyRecord",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/ActionRequest.json",
+      "schema": "ActionRequest",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/UserMessage.json",
+      "schema": "UserMessage",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/UserDecision.json",
+      "schema": "UserDecision",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/OrchestratorReply.json",
+      "schema": "OrchestratorReply",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/SchedulingContext.json",
+      "schema": "SchedulingContext",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/SchedulingResult.json",
+      "schema": "SchedulingResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/PlanView.json",
+      "schema": "PlanView",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/SchedulingPolicy.json",
+      "schema": "SchedulingPolicy",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/create_task_candidate-command.json",
+      "schema": "ValidatedCommand",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/create_task_candidate-result.json",
+      "schema": "create_task_candidateResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/confirm_task-command.json",
+      "schema": "ValidatedCommand",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/confirm_task-result.json",
+      "schema": "confirm_taskResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/search_tasks-command.json",
+      "schema": "ValidatedCommand",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/search_tasks-result.json",
+      "schema": "search_tasksResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/set_availability-command.json",
+      "schema": "ValidatedCommand",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/set_availability-result.json",
+      "schema": "set_availabilityResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/set_busy_interval-command.json",
+      "schema": "ValidatedCommand",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/set_busy_interval-result.json",
+      "schema": "set_busy_intervalResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/set_scheduling_preferences-command.json",
+      "schema": "ValidatedCommand",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/set_scheduling_preferences-result.json",
+      "schema": "set_scheduling_preferencesResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/generate_study_plan-command.json",
+      "schema": "ValidatedCommand",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/generate_study_plan-result.json",
+      "schema": "generate_study_planResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/get_study_plan-command.json",
+      "schema": "ValidatedCommand",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/get_study_plan-result.json",
+      "schema": "get_study_planResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/approve_study_plan-command.json",
+      "schema": "ValidatedCommand",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/approve_study_plan-result.json",
+      "schema": "approve_study_planResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/reject_study_plan-command.json",
+      "schema": "ValidatedCommand",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/reject_study_plan-result.json",
+      "schema": "reject_study_planResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/candidate-incomplete.json",
+      "schema": "TaskCandidate",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/current-plan-empty.json",
+      "schema": "get_study_planResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/time-window-once.json",
+      "schema": "TimeWindowInput",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/policy-override-empty.json",
+      "schema": "generate_study_planArguments",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/proposal-partial.json",
+      "schema": "PlanProposal",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/engine-none.json",
+      "schema": "generate_study_planResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/clarification.json",
+      "schema": "OrchestratorReply",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/stale-error.json",
+      "schema": "OrchestratorReply",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/client-owner.json",
+      "schema": "UserMessage",
+      "valid": false,
+      "reason": "Client must not choose owner"
+    },
+    {
+      "file": "examples/invalid/client-approval-context.json",
+      "schema": "UserDecision",
+      "valid": false,
+      "reason": "LLM/client boolean is not approval evidence"
+    },
+    {
+      "file": "examples/invalid/unknown-operation.json",
+      "schema": "ValidatedCommand",
+      "valid": false,
+      "reason": "Task mutation API outside F1"
+    },
+    {
+      "file": "examples/invalid/wrong-window-kind.json",
+      "schema": "set_availabilityArguments",
+      "valid": false,
+      "reason": "Operation and kind must match"
+    },
+    {
+      "file": "examples/invalid/archive-window-payload.json",
+      "schema": "set_availabilityArguments",
+      "valid": false,
+      "reason": "ARCHIVE requires window=null"
+    },
+    {
+      "file": "examples/invalid/weekly-mixed-absolute.json",
+      "schema": "TimeWindowInput",
+      "valid": false,
+      "reason": "WEEKLY absolute timestamps must be null"
+    },
+    {
+      "file": "examples/invalid/weekly-overnight.json",
+      "schema": "TimeWindowInput",
+      "valid": false,
+      "reason": "Overnight interval must be split"
+    },
+    {
+      "file": "examples/invalid/weekly-start-2400.json",
+      "schema": "TimeWindowInput",
+      "valid": false,
+      "reason": "24:00 is an end boundary only"
+    },
+    {
+      "file": "examples/invalid/selected-empty.json",
+      "schema": "GenerationScope",
+      "valid": false,
+      "reason": "Selected scope cannot be empty"
+    },
+    {
+      "file": "examples/invalid/all-eligible-explicit-ids.json",
+      "schema": "GenerationScope",
+      "valid": false,
+      "reason": "ALL_ELIGIBLE must resolve IDs on server"
+    },
+    {
+      "file": "examples/invalid/window-reversed.json",
+      "schema": "GenerationScope",
+      "valid": false,
+      "reason": "Interval must be positive"
+    },
+    {
+      "file": "examples/invalid/policy-null.json",
+      "schema": "SchedulingPolicyPatch",
+      "valid": false,
+      "reason": "Policy patch cannot accept null"
+    },
+    {
+      "file": "examples/invalid/policy-bad-merge.json",
+      "schema": "SchedulingPolicy",
+      "valid": false,
+      "reason": "Validate cross-field min/max after merge"
+    },
+    {
+      "file": "examples/invalid/policy-save-empty.json",
+      "schema": "set_scheduling_preferencesArguments",
+      "valid": false,
+      "reason": "Persistent policy patch must be nonempty"
+    },
+    {
+      "file": "examples/invalid/remaining-over-estimate.json",
+      "schema": "AcademicTask",
+      "valid": false,
+      "reason": "Remaining cannot exceed estimate"
+    },
+    {
+      "file": "examples/invalid/completed-positive-remaining.json",
+      "schema": "AcademicTask",
+      "valid": false,
+      "reason": "Completed task has no remaining work"
+    },
+    {
+      "file": "examples/invalid/date-deadline-cutoff.json",
+      "schema": "AcademicTask",
+      "valid": false,
+      "reason": "DATE deadline preserves local end-of-day"
+    },
+    {
+      "file": "examples/invalid/timestamp-without-offset.json",
+      "schema": "AcademicTask",
+      "valid": false,
+      "reason": "API timestamps require offset"
+    },
+    {
+      "file": "examples/invalid/timestamp-off-minute.json",
+      "schema": "ProposedStudyBlock",
+      "valid": false,
+      "reason": "Business scheduling uses whole minutes"
+    },
+    {
+      "file": "examples/invalid/summary-missing-minutes.json",
+      "schema": "TaskSchedulingSummary",
+      "valid": false,
+      "reason": "Minute conservation"
+    },
+    {
+      "file": "examples/invalid/hidden-partial-work.json",
+      "schema": "PlanProposal",
+      "valid": false,
+      "reason": "FULL must not hide unallocated work"
+    },
+    {
+      "file": "examples/invalid/proposal-none.json",
+      "schema": "PlanProposal",
+      "valid": false,
+      "reason": "NONE is not committable"
+    },
+    {
+      "file": "examples/invalid/proposal-no-diff.json",
+      "schema": "PlanProposal",
+      "valid": false,
+      "reason": "Do not create duplicate snapshot"
+    },
+    {
+      "file": "examples/invalid/proposal-cross-owner.json",
+      "schema": "PlanProposal",
+      "valid": false,
+      "reason": "Same-owner snapshot required"
+    },
+    {
+      "file": "examples/invalid/proposal-overlap.json",
+      "schema": "PlanProposal",
+      "valid": false,
+      "reason": "Nonoverlap is scoped to one snapshot"
+    },
+    {
+      "file": "examples/invalid/duplicate-diff-id.json",
+      "schema": "PlanDiff",
+      "valid": false,
+      "reason": "Diff categories are disjoint"
+    },
+    {
+      "file": "examples/invalid/current-with-history-version.json",
+      "schema": "get_study_planArguments",
+      "valid": false,
+      "reason": "CURRENT must not include version"
+    },
+    {
+      "file": "examples/invalid/approved-without-plan.json",
+      "schema": "PlanProposal",
+      "valid": false,
+      "reason": "APPROVED requires committed_plan_id"
+    },
+    {
+      "file": "examples/invalid/candidate-confirmed-without-task.json",
+      "schema": "TaskCandidate",
+      "valid": false,
+      "reason": "CONFIRMED requires backlink"
+    },
+    {
+      "file": "examples/invalid/chat-without-message.json",
+      "schema": "ApprovalAction",
+      "valid": false,
+      "reason": "CHAT source must reference stored user message"
+    },
+    {
+      "file": "examples/invalid/approval-wrong-reference.json",
+      "schema": "OrchestratorReply",
+      "valid": false,
+      "reason": "Reference binds displayed target version"
+    },
+    {
+      "file": "examples/invalid/error-with-data.json",
+      "schema": "ErrorResult",
+      "valid": false,
+      "reason": "ERROR requires data=null"
+    },
+    {
+      "file": "examples/invalid/proposal-ttl.json",
+      "schema": "PlanProposal",
+      "valid": false,
+      "reason": "No product TTL field in F1"
+    },
+    {
+      "file": "examples/invalid/bad-uuid.json",
+      "schema": "UserDecision",
+      "valid": false,
+      "reason": "UUID format must be enforced"
+    },
+    {
+      "file": "examples/invalid/invalid-timezone.json",
+      "schema": "TimeWindowInput",
+      "valid": false,
+      "reason": "IANA timezone must exist"
+    },
+    {
+      "file": "examples/invalid/wrong-kind-result.json",
+      "schema": "set_availabilityResult",
+      "valid": false,
+      "reason": "Availability operation cannot return BUSY result"
+    },
+    {
+      "file": "examples/invalid/generate-terminal-proposal.json",
+      "schema": "generate_study_planResult",
+      "valid": false,
+      "reason": "Generation returns PROPOSED status only"
+    },
+    {
+      "file": "examples/valid/rpc-write-shape-only.json",
+      "schema": "RpcRequest",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/rpc-write-missing-attestation.json",
+      "schema": "RpcRequest",
+      "valid": false,
+      "reason": "Direct write without backend proof is structurally rejected"
+    },
+    {
+      "file": "examples/invalid/rpc-write-missing-key.json",
+      "schema": "RpcRequest",
+      "valid": false,
+      "reason": "All writes need an idempotency key"
+    },
+    {
+      "file": "examples/valid/rpc-read-no-conversation.json",
+      "schema": "RpcRequest",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/rpc-read-forged-approval.json",
+      "schema": "RpcRequest",
+      "valid": false,
+      "reason": "Read context must not carry an approval claim"
+    }
+  ]
+}
