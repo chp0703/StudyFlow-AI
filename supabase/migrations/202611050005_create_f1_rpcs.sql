@@ -16,7 +16,7 @@ $$;
 create or replace function app_private.lock_owner(p_user_id uuid)
 returns void
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 begin
@@ -30,7 +30,7 @@ $$;
 create or replace function app_private.require_owner()
 returns uuid
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 declare v_user uuid;
@@ -198,7 +198,7 @@ create or replace function app_private.upsert_time_window(
     p_expected_version integer
 )
 returns jsonb
-language plpgsql security definer set search_path = ''
+language plpgsql security invoker set search_path = ''
 as $$
 declare
     v_user uuid := auth.uid(); v_id uuid := coalesce(p_window_id, extensions.gen_random_uuid());
@@ -373,6 +373,10 @@ end;
 $$;
 
 revoke all on all functions in schema app_api from public;
+grant execute on function app_private.owner_lock_key(uuid) to authenticated;
+grant execute on function app_private.lock_owner(uuid) to authenticated;
+grant execute on function app_private.require_owner() to authenticated;
+grant execute on function app_private.upsert_time_window(text,text,jsonb,uuid,integer) to authenticated;
 grant execute on function app_api.create_task_candidate(uuid,uuid,jsonb,jsonb,jsonb,text,text) to authenticated;
 grant execute on function app_api.confirm_task(uuid,integer,text,uuid,text,text) to authenticated;
 grant execute on function app_api.search_tasks(text[],text,integer,jsonb) to authenticated;
