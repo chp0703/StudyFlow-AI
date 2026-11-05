@@ -42,6 +42,10 @@ The exact contract source is `origin/feat/BE_contract_schema` at `b629a5e251be59
 
 All reservations use `(user_id, operation, idempotency_key)`, conflict on a different fingerprint, and complete in the same transaction as the business write. A rolled-back transaction does not leave a durable `IN_PROGRESS` row.
 
+## Verification coverage
+
+`supabase/tests/03_foundation.sql`, `04_f1_integrity.sql`, and `05_f1_security_transactions.sql` cover schema presence, RLS/catalog privileges, typed-target triggers, idempotency helpers, attestation privilege boundaries, and migration objects. Two-session behavior (owner-lock races, concurrent idempotency replay, concurrent attestation consumption, cross-user RLS, and rollback after failed approval) is declared for integration execution; it is not claimed as verified until the GitHub-hosted Supabase job passes.
+
 ## Verification record
 
 The repository has no Supabase CLI, Docker engine, or `psql` executable in the current environment, so `supabase db reset`, `supabase test db`, and migration replay were not run. The Python contract checker was invoked but cannot start because the optional `jsonschema` dependency is not installed. These are explicit blockers, not passing test results.
