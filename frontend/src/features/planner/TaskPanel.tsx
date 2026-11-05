@@ -179,7 +179,7 @@ export default function TaskPanel({
           <p className="task-panel-empty">
             {tasks.length
               ? "Không có công việc phù hợp."
-              : "Chưa có công việc. Thử: tạo công việc Báo cáo hạn 20/11 3 giờ"}
+              : "Chưa có công việc."}
           </p>
         )}
       </div>
