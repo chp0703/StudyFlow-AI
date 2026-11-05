@@ -8,7 +8,7 @@ Split into reviewable stages; each stage ends with local pgTAP evidence and a pu
 | 2b-2 | `create_task_candidate`, domain idempotency + `lookup_operation_result`, `update_candidate_draft` | done (migration 014, test 10) |
 | 2b-3 | `prepare/review/cancel_pending_action`, `confirm_task`, `search_tasks` | done (migration 015, test 11) |
 | 2b-4 | `set_availability`, `set_busy_interval`, `set_scheduling_preferences`, `list_time_windows` | done (migration 016, test 12) |
-| 2b-5 | `get_workflow_context`, `get_workflow_continuation`, `initialize/checkpoint_workflow_continuation` | planned |
+| 2b-5 | `get_workflow_context`, `get_workflow_continuation`, `initialize/checkpoint_workflow_continuation` | done (migration 017, test 13) |
 
 ## 2b-1 decisions
 
@@ -94,3 +94,23 @@ Not run: slow wall-clock 120 s expiry, concurrency harness.
 ## Evidence (local pgTAP, 2b-4)
 
 03, 04, 05, 06, 08, 09, 10, 11, 12 pass. 07: 22/58 fail, all in workflow reads and continuations (2b-5).
+
+## 2b-5 decisions
+
+- Reads never create state: an absent conversation, action or message is `ENTITY_NOT_FOUND`. `proposal` is always
+  null until plans exist (WP2c). The active action is the single awaiting action (unique index from 2b-3).
+- `initialize` is first-write-wins: the stored queue is returned before the extractor output is compared. It needs
+  a live origin receipt (same fingerprint, fencing version, unexpired lease) and a USER message equal to the
+  receipt's allocated `message_id`. `depends_on` must match the intent count and only point backwards.
+  A second unfinished queue in a conversation returns `STALE_ENTITY_VERSION` (no dedicated contract code).
+- `checkpoint` re-checks the receipt lease first (so even a duplicate cannot act on an expired lease), then detects
+  an identical already-applied step/WAIT as a replay, then compare-and-sets on (version, cursor). ADVANCE must
+  carry the step at the cursor with the key derived from origin key + source message + index; a step whose
+  dependency did not succeed can only be DEPENDENCY_CANCELLED (and the reverse); an awaited action must be finished.
+  Approval-gated operations (`confirm_task`, `set_*`, plan approve/reject) require a COMPLETED awaited action.
+- **Limit:** for approval-gated writes the result payload is not re-derived from the stored entities; only the
+  completed action is checked. Reads are trusted as attested.
+
+## Evidence (local pgTAP, 2b-5)
+
+All 11 suites pass (404 checks), including the whole 07 addendum.

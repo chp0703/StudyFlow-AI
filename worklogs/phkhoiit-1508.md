@@ -115,3 +115,19 @@
 
 - Chưa có cảnh báo "lịch đã duyệt bị ảnh hưởng" khi đổi khung giờ; làm ở WP2c khi đã có plan/block trong snapshot.
 
+
+## 2026-11-05 — Backend F1: WP2b-5 (workflow context và continuation)
+
+**Mục tiêu:** giai đoạn 2b-5, hoàn tất WP2b: đọc ngữ cảnh workflow và hàng đợi continuation bền vững.
+
+**Đã làm**
+
+- Migration 017: `get_workflow_context`, `get_workflow_continuation`, `initialize_workflow_continuation` (ghi lần đầu thắng, cần receipt gốc còn lease, một hàng đợi chưa xong cho mỗi hội thoại), `checkpoint_workflow_continuation` (WAIT/ADVANCE, CAS theo version và cursor, step key dẫn xuất, quy tắc phụ thuộc, bằng chứng action hoàn tất cho thao tác ghi cần duyệt).
+- Thêm `supabase/tests/13_wp2b5_workflow.sql` (17 kiểm tra) và cập nhật `docs/implementation/WP2B_NOTES.md`.
+
+**Kết quả:** nhánh `feat/f1-mvp-intergration`. pgTAP local: toàn bộ 11 suite pass (404 kiểm tra), kể cả 07 (58/58).
+
+**Ghi chú**
+
+- Với thao tác ghi cần duyệt, hệ thống mới kiểm tra action đã COMPLETED, chưa đối chiếu lại payload kết quả với dữ liệu đã lưu.
+- Hàng đợi thứ hai trong một hội thoại trả `STALE_ENTITY_VERSION` (hợp đồng chưa có mã riêng).
