@@ -41,7 +41,7 @@ create table app_private.academic_tasks (
     course_label text,
     available_from_at timestamptz,
     deadline_at timestamptz not null,
-    deadline_precision text not null check (deadline_precision in ('DATE', 'DATETIME')),
+    deadline_precision text not null,
     deadline_date date,
     deadline_timezone text not null,
     estimated_minutes bigint not null check (estimated_minutes > 0),
