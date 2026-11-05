@@ -109,5 +109,11 @@ class PlanReadServiceTests(unittest.TestCase):
             self.service.get_study_plan({**args('HISTORY'),'version':2},self.ctx)
         self.assertEqual(caught.exception.code, 'INTERNAL_ERROR')
 
+    def test_malformed_proposal_payload_returns_structured_internal_error(self):
+        self.store.proposal['payload'] = None
+        with self.assertRaises(TaskError) as caught:
+            self.service.get_study_plan({**args('PROPOSAL'),'proposal_id':U},self.ctx)
+        self.assertEqual(caught.exception.code, 'INTERNAL_ERROR')
+
 
 if __name__ == '__main__': unittest.main()

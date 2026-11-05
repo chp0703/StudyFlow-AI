@@ -34,7 +34,9 @@ class PlanReadService:
                 _require(proposal.get('user_id') == owner, 'FORBIDDEN')
                 _require(proposal.get('proposal_id') == args['proposal_id'], 'INTERNAL_ERROR')
                 data = {'kind': 'PROPOSAL_VIEW', 'proposal': copy.deepcopy(proposal)}
-                blocks = data['proposal'].get('payload', {}).get('study_blocks', [])
+                payload = data['proposal'].get('payload')
+                _require(isinstance(payload, dict), 'INTERNAL_ERROR')
+                blocks = payload.get('study_blocks')
                 _require(isinstance(blocks, list) and all(isinstance(b, dict) and b.get('user_id') == owner for b in blocks), 'FORBIDDEN')
             else:
                 plan, stored_blocks = (tx.get_current_plan(owner) if view == 'CURRENT'
