@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.1",
+  "operation": "search_tasks",
+  "arguments": {
+    "query": null,
+    "status_filter": [],
+    "page_size": 50,
+    "cursor": null
+  }
+}

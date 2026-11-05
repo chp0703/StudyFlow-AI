@@ -1,0 +1,137 @@
+name: F1 database verification
+
+on:
+  push:
+    branches:
+      - feat/supabase-database-foundation
+      - feat/f1-mvp-intergration
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  database-migrations-and-tests:
+    name: Local Supabase migrations and pgTAP
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Verify checked-out migration source
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "=== Git context ==="
+          echo "Branch: $(git branch --show-current)"
+          echo "HEAD: $(git rev-parse HEAD)"
+          echo "Event SHA: $GITHUB_SHA"
+          echo "Workspace: $GITHUB_WORKSPACE"
+
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+
+          echo "=== Migration path ==="
+          pwd
+          FILE="supabase/migrations/202611050001_create_core_entities.sql"
+          ls -l "$FILE"
+
+          echo "=== AcademicTask definition ==="
+          sed -n '/create table app_private.academic_tasks/,/^[[:space:]]*);/p' "$FILE"
+
+          echo "=== Duplicate constraint check ==="
+          if grep -nE 'deadline_precision[[:space:]]+text[[:space:]]+not null[[:space:]]+check' "$FILE"; then
+            echo "ERROR: obsolete inline CHECK still exists in checked-out migration"
+            exit 1
+          fi
+
+          COUNT=$(grep -c 'constraint academic_tasks_deadline_precision_check' "$FILE")
+          if [ "$COUNT" -ne 1 ]; then
+            echo "ERROR: expected exactly one named deadline precision constraint; found $COUNT"
+            exit 1
+          fi
+
+          echo "Migration source verification passed."
+          echo "=== Migration SHA256 ==="
+          sha256sum "$FILE"
+
+      - name: Install pinned Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 3.0.0
+
+      - name: Show CLI version
+        run: supabase --version
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Show local service status
+        run: supabase status
+
+      - name: Replay migrations and seed locally
+        run: supabase db reset --yes
+
+      - name: Run pgTAP database tests
+        run: supabase test db
+
+      - name: Check generated contract-schema migration is current
+        run: python backend/scripts/generate_contract_schema_migration.py --check
+
+      - name: Verify the upgrade route matches a clean replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          dump() { supabase db dump --local --schema app_private,app_api | grep -v '^--' | sha256sum | cut -d' ' -f1; }
+          clean=$(dump)
+          supabase db reset --version 202611050008 --yes
+          supabase migration up --yes
+          upgraded=$(dump)
+          test "$clean" = "$upgraded"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run HTTP integration tests against local Supabase
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase db reset --yes
+          python -m pip install --disable-pip-version-check -r backend/requirements.txt -r supabase/tests_concurrency/requirements.txt
+          eval "$(supabase status -o env | sed 's/^/export /')"
+          F1_LOCAL_SUPABASE_URL="$API_URL" F1_LOCAL_PUBLISHABLE_KEY="$PUBLISHABLE_KEY"           F1_LOCAL_SERVICE_KEY="$SECRET_KEY" F1_DB_TEST_DSN="$DB_URL"             python -B -m unittest discover -s backend/tests/integration -t . -v
+
+      - name: Run real-PostgreSQL concurrency tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase db reset --yes
+          python -m pip install --disable-pip-version-check -r supabase/tests_concurrency/requirements.txt
+          F1_DB_TEST_DSN='postgresql://postgres:postgres@127.0.0.1:54322/postgres'             python -B -m unittest discover -s supabase/tests_concurrency -v
+
+  backend-contract-validation:
+    name: Backend contract checker
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install checker dependencies
+        run: python -m pip install --disable-pip-version-check -r contracts/requirements-check.txt
+
+      - name: Run Backend Contract checker
+        run: python contracts/check_contract.py

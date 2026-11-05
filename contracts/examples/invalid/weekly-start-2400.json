@@ -1,0 +1,13 @@
+{
+  "kind": "AVAILABILITY",
+  "label": "Giờ học thứ Sáu",
+  "recurrence": "WEEKLY",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "start_at": null,
+  "end_at": null,
+  "weekday": 5,
+  "start_time": "24:00",
+  "end_time": "24:00",
+  "valid_from": "2026-11-05",
+  "valid_until": null
+}

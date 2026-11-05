@@ -2,10 +2,41 @@
 
 **Phase:** 03.1A — Implementation Decision Review & Architecture Foundation  
 **Logical authority:** `docs/database/schema_F1.md`, version 1.1  
-**Status:** Draft; decisions marked `PROPOSED`, `RECOMMENDED`, `USER_PREFERRED`, or `TBD` require team review.  
-**Implementation state:** No database, migration, backend, or RPC implementation is authorized by this document.
+**Status:** F1 integration contract decisions APPROVED, effective 05/11/2026; separate SRS/environment work remains open as listed below.
+**Implementation state:** Design approval recorded; no database, migration, backend, RPC, deployment or runtime-test completion is claimed.
 
-## Decision status summary
+## Current decisions — official integration contract 1.0.0
+
+The team approved the [Unified Integration Contract](../../contracts/README.md), including IC-01–IC-08, according to the user's confirmation recorded in [APPROVAL.md](../../contracts/APPROVAL.md). The logical authority remains schema F1 v1.1. This current section and the official contract supersede conflicting proposals in the historical sections below. Approval covers the delivered contract, not every unrelated item or benchmark target in earlier documents.
+
+| ID | Current status | Accepted decision / remaining scope |
+|---|---|---|
+| E-01 | APPROVED — contract stack | Supabase PostgreSQL; concrete projects/environments remain separate setup work. |
+| E-02 | APPROVED | Supabase Auth; FastAPI verifies JWT and derives the trusted principal. |
+| E-03 | APPROVED — contract boundary | FastAPI + request-scoped Data API/RPC; user JWT plus backend HMAC attestation for all writes. Earlier latency targets remain evaluation proposals, not SLOs. |
+| E-04 | APPROVED — migration tool | Supabase CLI baseline; concrete pinned versions/local/CI configuration tracked under E-14. |
+| E-05 | APPROVED — IC-05 | app_private/app_api; controlled SECURITY DEFINER wrappers, sf_rpc_owner, FORCE RLS, no authenticated private-table privileges, backend attestation. SQL grants/policies must implement the accepted model. |
+| E-06 | APPROVED — IC-04 | app_private.user_profiles keyed by auth.users.id; same-owner current-plan pointer. |
+| E-07 | APPROVED — IC-04 | Same-owner composite FKs; StudyBlock PK(plan_id,block_id); prohibit global UNIQUE(user_id,block_id). |
+| E-08 | APPROVED — IC-04 | Exactly one typed approval target FK, type/ID/owner integrity and transactional version/state/presentation checks. Concrete SQL implementation remains a deliverable. |
+| E-09 | APPROVED — shared schemas | JSONB fields use the approved shared DTOs; scalar relational keys/constraints remain normalized. |
+| E-10 | APPROVED — IC-06/IC-07 | Owner profile row lock, double idempotency lookup, consistent input snapshot and atomic commit; supersedes advisory-key proposal. |
+| E-11 | APPROVED — IC-04/IC-06 | GiST exclusion within plan_id only; btree_gist for UUID equality where required; service/RPC context revalidation remains mandatory. |
+| E-12 | OPEN — outside approval completion | Formal SRS reconciliation and acceptance of revised SRS wording have not been completed by the contract approval. |
+| E-13 | APPROVED — contract retention/indexes | Indexes/deletion restrictions in contract section 5; at least seven-day retry retention; no product TTL on candidate/action/proposal. |
+| E-14 | OPEN — concrete environment setup | Tool versions, Docker-compatible local stack, CI reset/migration setup and actual environment configuration remain implementation/setup work. |
+| E-15 | CONTRACT APPROVAL COMPLETE | IC-01–IC-08 approved; this does not mark all Phase 03 readiness tasks or runtime acceptance cases complete. |
+
+The API, Service/Tool and Data/RPC design is official and is the implementation baseline. Broader Stage 03.2 readiness still needs explicit tracking of E-12/E-14 and alignment of physical-design drafts with the approved contract. No remote deployment or completed migration/test run is inferred from this status update.
+
+## Historical Phase 03.1A proposals and review record
+
+The following material preserves the pre-approval record. Its PROPOSED/TBD labels, alternatives and NOT AUTHORIZED checklist describe the earlier state and do not override the current decisions above. Open SRS/environment work remains open; no historical item is silently marked implemented.
+
+<details>
+<summary>Earlier proposals, amendments and checklist</summary>
+
+## Historical decision status summary
 
 | ID | Question | Status | Recommendation | Required approver |
 |---|---|---|---|---|
@@ -13,10 +44,10 @@
 | E-02 | Authentication | USER_PREFERRED / PROPOSED | Supabase Auth; verified JWT becomes FastAPI trusted principal | Team security owner |
 | E-03 | Backend/data access | USER_PREFERRED / PROPOSED | FastAPI + request-scoped Supabase Data API client; no direct TCP runtime access initially | Backend owner |
 | E-04 | Migrations | USER_PREFERRED / PROPOSED | Supabase CLI as sole migration source | Database owner |
-| E-05 | Runtime role/RLS | IMPLEMENTATION_BASELINE | Authenticated JWT context, least privilege, private business schema, controlled API schema | Security + database owner |
+| E-05 | Runtime role/RLS | TBD / PROPOSED | Authenticated JWT context, least privilege, private business schema, controlled API schema | Security + database owner |
 | E-06 | User mapping | PROPOSED | One profile/settings row keyed by `auth.users.id`; retain logical `User` fields | Team + database owner |
 | E-07 | Same-owner FKs | PROPOSED | Composite owner/entity keys and foreign keys | Database owner |
-| E-08 | Approval target | IMPLEMENTATION_BASELINE | Typed nullable target FKs, exactly-one constraint, and validation trigger | Database owner |
+| E-08 | Approval target | PROPOSED | Typed nullable target FKs plus exactly-one constraint; trigger or equivalent remains TBD | Database owner |
 | E-09 | JSON persistence | PROPOSED | Normalize query-critical fields; use validated JSONB for nested contract objects | Backend + database owner |
 | E-10 | Concurrency protocol | PROPOSED | Owner transaction lock inside one RPC; `READ COMMITTED`; reload after lock | Backend + database owner |
 | E-11 | Overlap enforcement | PROPOSED | Validate inside proposal/approval RPC; constrain only within a concrete plan snapshot | Database owner |
@@ -135,9 +166,7 @@ These amendments address reviewer feedback. The register remains the single sour
 
 ### E-05 amendment — privileges and exposed schemas
 
-`IMPLEMENTATION_BASELINE`: use physical names `app_private` for business tables/internal objects and `app_api` for explicitly exposed functions/read endpoints. Schema USAGE, table privileges, function EXECUTE, and RLS are separate controls. `SECURITY INVOKER` is the default. Section 15 of the physical design records the exact role/table/function grants and policies; the only SECURITY DEFINER use is the constrained auth-event profile trigger.
-
-**Final approval-provenance baseline:** Option A direct RPC may record only an explicit authenticated UI decision after target, version, state/context, and server-derived presentation binding checks. Client-provided CHAT source/message fields and LLM booleans are not trusted. CHAT approval uses the final five-minute one-time backend attestation bound to verified user, conversation/message, exact target/version, decision, expiry, and anti-replay value; issuance is isolated to `service_role` and normal user requests never use that credential.
+`PROPOSED`: use physical names `app_private` for business tables/internal objects and `app_api` for explicitly exposed functions/read endpoints. Schema USAGE, table privileges, function EXECUTE, and RLS are separate controls. `SECURITY INVOKER` is preferred; any `SECURITY DEFINER` exception requires a least-privilege owner, fixed safe search path, schema-qualified references, restricted EXECUTE, explicit owner checks, and documented RLS behavior. Exact grants remain `TBD`.
 
 ### E-10 amendment — consistent proposal input snapshot
 
@@ -145,7 +174,7 @@ These amendments address reviewer feedback. The register remains the single sour
 
 ### E-11 amendment — snapshot-scoped overlap
 
-`IMPLEMENTATION_BASELINE`: use a GiST exclusion constraint over a half-open timestamp range keyed by `plan_id`, with `btree_gist` enabled for UUID equality. Historical plans may overlap each other. Availability, BUSY, deadline, workload, and current-context validation remain RPC/service checks. Responsible owner: Database Architect; technical reviewer: Backend Architect.
+`PROPOSED`: evaluate a GiST exclusion constraint over a half-open timestamp range keyed by `plan_id`; `btree_gist` may be required for UUID equality. Historical plans may overlap each other. Availability, BUSY, deadline, workload, and current-context validation remain RPC/service checks. Responsible owner: Database Architect; technical reviewer: Backend Architect; decision deadline: before Stage 03.2 physical design approval.
 
 ### E-07 amendment — StudyBlock uniqueness exception
 
@@ -181,22 +210,6 @@ The approved StudyBlock primary key is `(plan_id, block_id)`. A logical `block_i
 | Data API latency measurement plan added | VERIFIED |
 | SRS reconciliation owner and milestone recorded | VERIFIED |
 | Team approval gates complete | NOT COMPLETE — ADRs remain PROPOSED |
-| Stage 03.2 routine physical design finalization | IMPLEMENTATION_BASELINE — design ready; no migrations or runtime configuration executed |
+| Stage 03.2 authorized | NOT AUTHORIZED |
 
-## Stage 03.2 finalization implementation baseline
-
-**Status: IMPLEMENTATION_BASELINE — selected for F1 implementation.** The project lead authorized these low-level physical decisions for the Stage 03.2 documentation finalization. This status records an implementation baseline; it does not assert retroactive team approval of ADRs or change Schema F1 v1.1.
-
-| Decision | Final implementation baseline |
-|---|---|
-| E-01/E-03/E-04 | Supabase PostgreSQL, FastAPI, Data API/PostgREST/RPC, and Supabase CLI-only migrations. No ORM or direct PostgreSQL driver in the selected runtime path. |
-| E-05 | Expose `app_api` only; retain all business tables in unexposed `app_private`. Use SECURITY INVOKER, explicit schema/table/function grants, owner RLS, no authenticated DELETE, no PUBLIC broad EXECUTE, and no anon mutation execution. |
-| E-05 CHAT path | `chat_approval_attestations` plus a five-minute one-time server-only `service_role` issuance RPC; user RPCs consume only an attestation ID and derive CHAT provenance. Service-role use is isolated from normal user requests. |
-| E-06 | Final profile table is `app_private.user_profiles`; auth-event profile provisioning and deferred current-plan composite FK support first-plan creation. |
-| E-07 | Same-owner composite FKs are required; StudyBlock remains `(plan_id,block_id)` and global `(user_id,block_id)` uniqueness is prohibited. |
-| E-08 | Typed nullable ApprovalAction targets, exactly-one CHECK, same-owner FKs, and a BEFORE INSERT cross-table target/version/state trigger. Approval rows are immutable. |
-| E-10 | Transaction-scoped advisory owner lock, deterministic UUID-derived key, `READ COMMITTED` reload after lock, one-statement SchedulingContext read, revision-checked persistence, and idempotent approval/rejection. |
-| E-11 | `btree_gist`-supported, snapshot-scoped GiST exclusion over `(plan_id, tstzrange(start_at,end_at,'[)'))`; separate RPC scheduling validation remains mandatory. |
-| E-13/E-14 | Final dependency order and local Supabase CLI reset/replay/test workflow are in physical design section 15.5. |
-
-The finalization removes no logical contract requirement and leaves no routine low-level physical choice open. Remaining prerequisites are execution activities—not design blockers: create/review migrations, configure a Supabase project’s exposed schemas/roles/secrets, and run the documented migration/RLS/RPC/security tests before deployment.
+</details>

@@ -1,5 +1,7 @@
 # StudyFlow AI — Repository Structure
 
+> Bộ contract chính thức **1.0.0 — APPROVED**, hiệu lực 05/11/2026, nằm tại [contracts/README.md](../../contracts/README.md); căn cứ phê duyệt tại [APPROVAL.md](../../contracts/APPROVAL.md). Bộ này gồm OpenAPI, schema bundle dùng chung, service/data registry và fixtures. Cây bên dưới là bản thiết kế đích từ PDF; tên file minh họa trong cây không thay thế các artifact chính thức.
+
 > Bản chuyển đổi Markdown từ PDF nguồn `repo structure.pdf` (3 trang). Cấu trúc cây được giữ trong một khối code để bảo toàn quan hệ thư mục và chú thích gốc.
 
 ```text

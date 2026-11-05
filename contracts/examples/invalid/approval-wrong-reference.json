@@ -1,0 +1,97 @@
+{
+  "schema_version": "1.1",
+  "request_id": "req-fixed-example",
+  "state": "AWAITING_APPROVAL",
+  "message": "Xem nội dung và xác nhận thao tác.",
+  "action_reference": {
+    "action_id": "00000000-0000-4000-8000-000000000006",
+    "action_version": 1,
+    "target_type": "TASK_CANDIDATE",
+    "target_id": "00000000-0000-4000-8000-000000000004",
+    "target_version": 2
+  },
+  "questions": [],
+  "result": {
+    "schema_version": "1.1",
+    "request_id": "req-fixed-example",
+    "outcome": "DRAFTED",
+    "data": {
+      "kind": "ACTION_PRESENTATION",
+      "pending_action": {
+        "action_id": "00000000-0000-4000-8000-000000000006",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "conversation_id": "00000000-0000-4000-8000-000000000002",
+        "version": 1,
+        "intent": "CREATE_TASK",
+        "state": "AWAITING_CONFIRMATION",
+        "requires_review": false,
+        "candidate_id": "00000000-0000-4000-8000-000000000004",
+        "proposal_id": null,
+        "draft_arguments": {
+          "slots": {
+            "title": "Ôn tích phân",
+            "description": null,
+            "course_label": "Giải tích",
+            "available_from_at": null,
+            "deadline_at": "2026-11-06T17:00:00Z",
+            "deadline_precision": "DATE",
+            "deadline_date": "2026-11-06",
+            "deadline_timezone": "Asia/Ho_Chi_Minh",
+            "estimated_minutes": 60,
+            "priority": "NORMAL"
+          }
+        },
+        "missing_fields": [],
+        "ambiguities": [],
+        "depends_on_action_id": null,
+        "created_at": "2026-11-05T03:00:00Z",
+        "updated_at": "2026-11-05T03:00:00Z"
+      },
+      "candidate": {
+        "candidate_id": "00000000-0000-4000-8000-000000000004",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "conversation_id": "00000000-0000-4000-8000-000000000002",
+        "version": 1,
+        "status": "DRAFT",
+        "slots": {
+          "title": "Ôn tích phân",
+          "description": null,
+          "course_label": "Giải tích",
+          "available_from_at": null,
+          "deadline_at": "2026-11-06T17:00:00Z",
+          "deadline_precision": "DATE",
+          "deadline_date": "2026-11-06",
+          "deadline_timezone": "Asia/Ho_Chi_Minh",
+          "estimated_minutes": 60,
+          "priority": "NORMAL"
+        },
+        "raw_expressions": {
+          "deadline": "hết ngày 06/11"
+        },
+        "field_sources": {
+          "title": {
+            "source": "USER_MESSAGE",
+            "reference": "00000000-0000-4000-8000-000000000003"
+          }
+        },
+        "source_message_id": "00000000-0000-4000-8000-000000000003",
+        "confirmed_task_id": null,
+        "created_at": "2026-11-05T03:00:00Z",
+        "updated_at": "2026-11-05T03:00:00Z"
+      },
+      "proposal": null,
+      "normalized_command": {
+        "schema_version": "1.1",
+        "operation": "confirm_task",
+        "arguments": {
+          "candidate_id": "00000000-0000-4000-8000-000000000004",
+          "expected_candidate_version": 1
+        }
+      },
+      "effective_policy": null
+    },
+    "error": null,
+    "warnings": []
+  },
+  "error": null
+}

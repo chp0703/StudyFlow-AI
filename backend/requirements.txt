@@ -1,0 +1,8 @@
+# Runtime dependencies of the F1 API (pinned like the acceptance harness).
+fastapi==0.162.0
+httpx==0.28.1
+PyJWT==2.15.1
+cryptography==50.0.2
+jsonschema>=4.25,<5
+tzdata==2026.6
+uvicorn==0.40.0

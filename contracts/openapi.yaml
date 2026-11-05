@@ -1,0 +1,2189 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "StudyFlow F1 Unified Integration API",
+    "version": "1.0.1",
+    "description": "APPROVED official integration contract 1.0.1, effective 2026-11-05; team approval and A/B/C/D addendum confirmed by the user and recorded in APPROVAL.md. Logical schema_version stays 1.1. All JSON schemas resolve to schemas/f1.schema.json; no implementation is claimed."
+  },
+  "x-contract-status": "APPROVED",
+  "x-approval-record": "./APPROVAL.md",
+  "x-approved-on": "2026-11-05",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "SupabaseBearer": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "F1",
+      "description": "Intelligent Academic Planner"
+    }
+  ],
+  "paths": {
+    "/v1/messages": {
+      "post": {
+        "operationId": "send_message",
+        "tags": [
+          "F1"
+        ],
+        "responses": {
+          "200": {
+            "description": "Typed result; business clarification/proposal is not an error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Idempotency-Replayed": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid JSON, query, header, or schema version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Entity not found or not owned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version, approval, state or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 64 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid fields or unsupported operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./schemas/f1.schema.json#/$defs/UserMessage"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/actions": {
+      "post": {
+        "operationId": "prepare_action",
+        "tags": [
+          "F1"
+        ],
+        "responses": {
+          "200": {
+            "description": "Typed result; business clarification/proposal is not an error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Idempotency-Replayed": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid JSON, query, header, or schema version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Entity not found or not owned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version, approval, state or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 64 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid fields or unsupported operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./schemas/f1.schema.json#/$defs/ActionRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/actions/{action_id}/review": {
+      "post": {
+        "operationId": "review_action",
+        "tags": [
+          "F1"
+        ],
+        "responses": {
+          "200": {
+            "description": "Typed result; business clarification/proposal is not an error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Idempotency-Replayed": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid JSON, query, header, or schema version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Entity not found or not owned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version, approval, state or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 64 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid fields or unsupported operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "action_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./schemas/f1.schema.json#/$defs/ReviewActionRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/decisions": {
+      "post": {
+        "operationId": "submit_decision",
+        "tags": [
+          "F1"
+        ],
+        "responses": {
+          "200": {
+            "description": "Typed result; business clarification/proposal is not an error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Idempotency-Replayed": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid JSON, query, header, or schema version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Entity not found or not owned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version, approval, state or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 64 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid fields or unsupported operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./schemas/f1.schema.json#/$defs/UserDecision"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasks": {
+      "get": {
+        "operationId": "list_tasks",
+        "tags": [
+          "F1"
+        ],
+        "responses": {
+          "200": {
+            "description": "Typed result; business clarification/proposal is not an error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/search_tasksResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Idempotency-Replayed": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid JSON, query, header, or schema version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Entity not found or not owned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version, approval, state or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 64 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid fields or unsupported operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 500
+            }
+          },
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "./schemas/f1.schema.json#/$defs/TaskStatus"
+              }
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          }
+        ]
+      }
+    },
+    "/v1/time-windows": {
+      "get": {
+        "operationId": "list_time_windows",
+        "tags": [
+          "F1"
+        ],
+        "responses": {
+          "200": {
+            "description": "Typed result; business clarification/proposal is not an error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/TimeWindowListResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Idempotency-Replayed": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid JSON, query, header, or schema version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Entity not found or not owned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version, approval, state or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 64 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid fields or unsupported operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "AVAILABILITY",
+                "BUSY"
+              ]
+            }
+          },
+          {
+            "name": "include_archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          }
+        ]
+      }
+    },
+    "/v1/preferences": {
+      "get": {
+        "operationId": "get_preferences",
+        "tags": [
+          "F1"
+        ],
+        "responses": {
+          "200": {
+            "description": "Typed result; business clarification/proposal is not an error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/PreferencesResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Idempotency-Replayed": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid JSON, query, header, or schema version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Entity not found or not owned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version, approval, state or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 64 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid fields or unsupported operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        },
+        "parameters": []
+      }
+    },
+    "/v1/plans": {
+      "get": {
+        "operationId": "read_plan",
+        "tags": [
+          "F1"
+        ],
+        "responses": {
+          "200": {
+            "description": "Typed result; business clarification/proposal is not an error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/get_study_planResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Idempotency-Replayed": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid JSON, query, header, or schema version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Entity not found or not owned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version, approval, state or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 64 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid fields or unsupported operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable; Retry-After required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "view",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CURRENT",
+                "HISTORY",
+                "PROPOSAL"
+              ],
+              "default": "CURRENT"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "proposal_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "start_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+            }
+          },
+          {
+            "name": "end_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "SupabaseBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

@@ -1,8 +1,10 @@
 # StudyFlow AI — Database Design Baseline v1.1
 
-**Status:** proposed physical baseline for team review  
+**Status:** historical physical reference; implementation choices are superseded by the approved Unified Integration Contract 1.0.0
 **Logical source of truth:** [`schema_F1.md`](schema_F1.md), version **1.1**, agreed 04/11/2026  
 **Scope:** F1 integration only; this document does not claim that migrations, ORM, repositories, RLS policies, or tests have been implemented.
+
+The [official contract](../../contracts/README.md), approved effective 05/11/2026 with its [approval record](../../contracts/APPROVAL.md), governs current physical names, types, RPC authorization, locking and retention. In particular use `user_profiles`, controlled SECURITY DEFINER wrappers with backend attestation, and owner row locks from that contract. The proposed/TBD choices below are retained as historical design context, not competing current decisions.
 
 ## 1. Reconciliation result
 

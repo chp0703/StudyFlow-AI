@@ -1,0 +1,21 @@
+{
+  "conversation_id": "00000000-0000-4000-8000-000000000003",
+  "source_message_id": "00000000-0000-4000-8000-000000000004",
+  "expected_version": 1,
+  "expected_cursor": 0,
+  "transition": "WAIT",
+  "action_reference": {
+    "action_id": "00000000-0000-4000-8000-000000000006",
+    "action_version": 1,
+    "target_type": "TASK_CANDIDATE",
+    "target_id": "00000000-0000-4000-8000-000000000005",
+    "target_version": 1
+  },
+  "outcome": null,
+  "receipt_binding": {
+    "http_operation": "send_message",
+    "idempotency_key": "sol-addendum-0001",
+    "request_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expected_lease_version": 1
+  }
+}

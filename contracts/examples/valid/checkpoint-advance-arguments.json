@@ -1,0 +1,32 @@
+{
+  "conversation_id": "00000000-0000-4000-8000-000000000003",
+  "source_message_id": "00000000-0000-4000-8000-000000000004",
+  "expected_version": 1,
+  "expected_cursor": 0,
+  "transition": "ADVANCE",
+  "action_reference": null,
+  "outcome": {
+    "intent_index": 0,
+    "step_key": "dbbb01027c7e1d03e0cd45e641bb5ad5c399fa17385f97cc643db026059f8ca5",
+    "operation": "search_tasks",
+    "disposition": "SUCCEEDED",
+    "result": {
+      "schema_version": "1.1",
+      "request_id": "req-fixed-example",
+      "outcome": "READ",
+      "data": {
+        "items": [],
+        "next_cursor": null
+      },
+      "error": null,
+      "warnings": []
+    },
+    "error": null
+  },
+  "receipt_binding": {
+    "http_operation": "send_message",
+    "idempotency_key": "example-key-00001",
+    "request_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expected_lease_version": 1
+  }
+}

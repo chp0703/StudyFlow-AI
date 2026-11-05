@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.1",
+  "request_id": "req-fixed-example",
+  "outcome": "READ",
+  "data": {
+    "kind": "SCHEDULING_REPORT",
+    "coverage": "NONE",
+    "task_summaries": [
+      {
+        "task_id": "00000000-0000-4000-8000-000000000005",
+        "remaining_minutes": 60,
+        "retained_future_minutes": 0,
+        "newly_scheduled_minutes": 0,
+        "unallocated_minutes": 60,
+        "reason_codes": [
+          "DEADLINE_PASSED"
+        ]
+      }
+    ],
+    "plan_diff": {
+      "added": [],
+      "moved": [],
+      "removed": [],
+      "unchanged": []
+    }
+  },
+  "error": null,
+  "warnings": []
+}

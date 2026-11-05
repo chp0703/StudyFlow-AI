@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.1",
+  "request_id": "req-fixed-example",
+  "state": "ERROR",
+  "message": "Xem nội dung và xác nhận thao tác.",
+  "action_reference": null,
+  "questions": [],
+  "result": {
+    "schema_version": "1.1",
+    "request_id": "req-fixed-example",
+    "outcome": "ERROR",
+    "data": null,
+    "error": {
+      "code": "STALE_PROPOSAL",
+      "message": "Dữ liệu nền đã đổi.",
+      "field": null,
+      "details": {},
+      "retryable": false
+    },
+    "warnings": []
+  },
+  "error": {
+    "code": "STALE_PROPOSAL",
+    "message": "Dữ liệu nền đã đổi.",
+    "field": null,
+    "details": {},
+    "retryable": false
+  }
+}
