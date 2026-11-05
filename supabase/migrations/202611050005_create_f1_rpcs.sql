@@ -127,7 +127,7 @@ begin
     end if;
     v_title := nullif(btrim(v_candidate.slots->>'title'),'');
     if v_title is null then raise exception using errcode='P0001', message='MISSING_REQUIRED_FIELD'; end if;
-    v_task := gen_random_uuid();
+    v_task := extensions.gen_random_uuid();
     insert into app_private.academic_tasks
         (task_id,user_id,candidate_id,title,deadline_at,deadline_precision,deadline_timezone,estimated_minutes,remaining_minutes)
     values (v_task,v_user,p_candidate_id,v_title,
