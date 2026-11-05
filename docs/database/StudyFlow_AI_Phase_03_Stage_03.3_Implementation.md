@@ -52,3 +52,7 @@ All reservations use `(user_id, operation, idempotency_key)`, conflict on a diff
 The repository has no Supabase CLI, Docker engine, or `psql` executable in the current environment, so `supabase db reset`, `supabase test db`, and migration replay were not run. The Python contract checker was invoked but cannot start because the optional `jsonschema` dependency is not installed. These are explicit blockers, not passing test results.
 
 The pgTAP smoke test in `supabase/tests/03_foundation.sql` is designed for local execution only. No secrets, `.env` files, remote links, or production commands are part of this stage.
+
+## GitHub Actions verification
+
+`.github/workflows/database-tests.yml` runs two independent jobs on GitHub-hosted `ubuntu-latest` runners: `database-migrations-and-tests` (pinned `supabase/setup-cli@v3` with CLI `3.0.0`, local `supabase start`, status, clean `db reset`, and `supabase test db`) and `backend-contract-validation` (Python 3.13 plus `contracts/requirements-check.txt` and the actual checker). It has push, pull-request-to-main, and manual triggers with `contents: read` only and no secrets. No workflow run has been inspected from this environment because GitHub CLI authentication is unavailable; the YAML file is not treated as proof of passing CI.
