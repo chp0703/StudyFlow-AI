@@ -14,6 +14,8 @@ erDiagram
     PENDING_ACTIONS ||--o{ PENDING_ACTIONS : depends_on
     USER_PROFILES ||--o{ APPROVAL_ACTIONS : creates
     USER_PROFILES ||--o{ IDEMPOTENCY_RECORDS : owns
+    USER_PROFILES ||--o{ CHAT_APPROVAL_ATTESTATIONS : owns
+    PENDING_ACTIONS ||--o{ CHAT_APPROVAL_ATTESTATIONS : attests
 
     USER_PROFILES {
         uuid user_id PK
@@ -106,6 +108,7 @@ erDiagram
         uuid target_proposal_id FK
         text decision
         text source
+        uuid source_message_id
     }
     IDEMPOTENCY_RECORDS {
         uuid user_id PK, FK
@@ -115,4 +118,20 @@ erDiagram
         text state
         jsonb result_reference_or_response
         timestamptz expires_at
+    }
+    CHAT_APPROVAL_ATTESTATIONS {
+        uuid attestation_id PK
+        uuid user_id FK
+        uuid conversation_id
+        uuid action_id FK
+        integer action_version
+        text target_type
+        uuid target_id
+        integer target_version
+        text decision
+        uuid source_message_id
+        text request_fingerprint
+        timestamptz issued_at
+        timestamptz expires_at
+        timestamptz consumed_at
     }

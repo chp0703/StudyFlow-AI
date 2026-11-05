@@ -312,7 +312,7 @@ The `engine_result` input is accepted only from the trusted FastAPI service afte
 
 An approval RPC records a UI-origin decision only when that RPC invocation is itself the authenticated user's explicit decision action and it verifies the caller-owned target, expected target version, required state/context, and the server-derived presentation/content binding. Arbitrary client values such as `source='CHAT'`, `source_message_id`, or an LLM-generated boolean are never approval evidence.
 
-For F1 Option A, direct authenticated RPC approval is restricted to `UI` origin. CHAT-origin approval is not accepted by a direct user call; it requires a separately authenticated backend-attestation mechanism that binds the verified user, conversation/message, exact target and version, decision, and expiry/non-replay identifier. The backend-attestation credential, format, and verifier are unresolved E-05 work and must be approved before CHAT approval is enabled. Until then, CHAT-origin approval is rejected rather than inferred.
+For F1 Option A, direct authenticated RPC approval is restricted to `UI` origin. CHAT-origin approval is not accepted by a direct user call. The final one-time backend-attestation mechanism is specified in section 15.3 and binds verified user, conversation/message, exact target/version, decision, expiry, and non-replay identifier.
 
 Deferred/unsupported RPCs: task update, task cancellation, manual StudyBlock creation, and individual StudyBlock rescheduling.
 
@@ -403,9 +403,89 @@ Confirmed tasks, plans, blocks, proposals referenced by plans, approval actions,
 
 This is a design dependency plan, not executable migration content. The pointer FK may be added after both profile and plan tables exist; all migration files must remain Supabase CLI-only.
 
-## 14. Traceability and unresolved choices
+## 14. Traceability and finalization note
 
-Every table/column above maps directly to schema v1.1; physical-only support columns are `user_profiles`, typed ApprovalAction target columns, and indexes/constraints. Remaining physical choices are `PROPOSED`/`TBD`: exact profile table name, trigger versus equivalent ApprovalAction enforcement, exact grants/RLS policy text, whether `btree_gist` is enabled, and final RPC argument/result JSON schemas.
+Every table/column above maps directly to schema v1.1; physical-only support structures are `user_profiles`, typed ApprovalAction target columns, indexes/constraints, and the authorization-only attestation table. Section 15 selects the profile name, typed-target trigger, exact grant/RLS model, `btree_gist` overlap guard, and RPC argument/result baseline.
 
-Stage 03.3 remains blocked until team approval of the register and ADR gates. No SQL or migration should be generated from this draft before that approval.
+This finalized design is implementation-ready for Stage 03.3 migration authoring. Migration creation, environment configuration, review, and test execution remain separate execution work; this document neither creates them nor asserts that they have completed.
+
+## 15. Stage 03.2 implementation baseline
+
+**Status: IMPLEMENTATION_BASELINE — selected for F1 implementation.** This section resolves physical implementation details under the Stage 03.2 finalization authorization. It is not evidence of separate team approval and does not alter Schema F1 v1.1 semantics.
+
+### 15.1 Schemas, profile provisioning, and final supporting table
+
+The only application schemas are `app_private` and `app_api`. Supabase exposes `app_api` in its exposed-schemas configuration; it must not expose `app_private`. `app_private` contains the ten mapped tables plus `chat_approval_attestations`, an authorization-infrastructure table rather than an eleventh F1 domain entity. `app_api` contains only documented public RPCs; helper functions, triggers, and tables are not API entry points.
+
+`app_private.user_profiles` is final for the logical User table. A migration-owned, non-API signup trigger creates exactly one profile with `user_id = auth.users.id`, validated default `scheduling_policy`, and `schedule_revision = 0`; it is the narrowly necessary `SECURITY DEFINER` exception because auth-event insertion cannot rely on a caller's user-table privilege. The trigger owner has only the profile insert privilege, uses `SET search_path = ''`, schema-qualifies references, is not executable by `PUBLIC`, and performs no user-controlled dynamic SQL. Domain RPCs reject a caller without a profile.
+
+First-plan sequence: (1) the signup trigger creates the profile with `current_plan_id = NULL`; (2) the approval RPC inserts the plan with `previous_plan_id = NULL` for version 1; (3) it inserts its blocks; (4) it updates the same user's profile pointer and revision in the same transaction. The deferred composite FK from `(user_id,current_plan_id)` to `study_plans(user_id,plan_id)` is added after both tables exist.
+
+| Column | `app_private.chat_approval_attestations` physical rule |
+|---|---|
+| `attestation_id` | `uuid` primary key, server generated. |
+| `user_id` | `uuid NOT NULL`; same-owner FK/index to profile. |
+| `conversation_id`, `action_id`, `action_version` | `uuid`, `uuid`, `integer NOT NULL`; same-owner FK to pending action plus action-version check at issuance/consumption. |
+| `target_type`, `target_id`, `target_version`, `decision` | Contract-compatible type/id/version/decision; immutable binding to one target and `APPROVE` or `REJECT`. |
+| `source_message_id`, `request_fingerprint` | `uuid NOT NULL`, `text NOT NULL`; server-verified message reference and normalized issuance binding. |
+| `issued_at`, `expires_at`, `consumed_at` | `timestamptz NOT NULL`, `timestamptz NOT NULL`, nullable `timestamptz`; `expires_at > issued_at`, validity is five minutes, and consumption is one-time. |
+
+The five-minute expiry is security-artifact validity only; it creates no product TTL for candidates, actions, proposals, tasks, or plans. A unique `(user_id, action_id, action_version, target_type, target_id, target_version, decision, source_message_id, request_fingerprint)` prevents duplicate equivalent live issuance; consumption remains the authoritative one-time guard.
+
+### 15.2 Complete privilege and RLS baseline
+
+`anon`, `authenticated`, `service_role`, and the migration/admin owner are PostgreSQL roles, not interchangeable API keys or user identities. A publishable API key identifies the Supabase project; an authenticated user JWT produces the `authenticated` database role and `auth.uid()`. A secret API key produces `service_role` and is backend-only. The migration/admin role is deployment-only and never used by runtime requests.
+
+All normal user RPCs are `SECURITY INVOKER`. `authenticated` receives `USAGE` on both `app_api` (to call allowlisted functions) and `app_private` (required for invoker SQL resolution), but `app_private` is unexposed and therefore has no ordinary PostgREST table route. `PUBLIC` receives no `EXECUTE`; `anon` receives no mutation `EXECUTE` and no `app_private` table privilege. `DELETE` is denied to `authenticated` on every table. `service_role` receives `USAGE app_api` and `EXECUTE` only on `issue_chat_approval_attestation`; it is not used for ordinary runtime requests. Migration/admin owns objects and grants/revokes privileges.
+
+| `app_private` table | `authenticated` table grants | RLS policy baseline |
+|---|---|---|
+| `user_profiles` | `SELECT, UPDATE` | SELECT/UPDATE `USING (user_id = auth.uid())`; UPDATE also `WITH CHECK (user_id = auth.uid())`; no client INSERT/DELETE. |
+| `task_candidates` | `SELECT, INSERT, UPDATE` | SELECT/UPDATE owner `USING`; INSERT/UPDATE owner `WITH CHECK (user_id = auth.uid())`. |
+| `academic_tasks` | `SELECT, INSERT` | SELECT owner `USING`; INSERT owner `WITH CHECK`; no general UPDATE/DELETE (F1 update/cancel is unsupported). |
+| `time_windows` | `SELECT, INSERT, UPDATE` | Owner SELECT/INSERT/UPDATE policies with matching `USING` and `WITH CHECK`. |
+| `study_plans`, `study_blocks`, `approval_actions` | `SELECT, INSERT` | Owner SELECT/INSERT policies; no UPDATE/DELETE, preserving immutable/append-only rows. |
+| `plan_proposals` | `SELECT, INSERT, UPDATE` | Owner SELECT/INSERT/UPDATE policies; UPDATE policy is used only by allowlisted lifecycle RPCs. |
+| `pending_actions` | `SELECT, INSERT, UPDATE` | Owner SELECT/INSERT/UPDATE policies with matching owner checks. |
+| `idempotency_records` | `SELECT, INSERT, UPDATE` | Owner SELECT/INSERT/UPDATE policies; no DELETE. |
+| `chat_approval_attestations` | no grants | RLS enabled with no authenticated policies; service-role issuance/consumption is isolated. |
+
+Every listed owner predicate is `user_id = auth.uid()` and every write also requires `auth.uid() IS NOT NULL`. The RPC additionally resolves every referenced entity through its same-owner composite key, checks state and version, and does not accept a client/LLM supplied `user_id` as authority. The table grants are intentionally the union required by allowlisted invoker RPC SQL; unexposed private tables, RLS, absence of helper-function EXECUTE, and per-RPC ownership checks jointly prevent a client from treating these as general Data API access.
+
+`authenticated` gets `EXECUTE` only for `create_task_candidate`, `confirm_task`, `search_tasks`, `set_availability`, `set_busy_interval`, `set_scheduling_preferences`, `read_scheduling_context`, `persist_plan_proposal`, `get_study_plan`, `approve_study_plan`, and `reject_study_plan`. It gets no `EXECUTE` for issuance, consumption helpers, lock helpers, typed-target validators, or trigger functions. `anon` has no execution grant for mutations; a read grant, if later required, must be explicitly added per read RPC and is not part of F1. Before grants, migrations revoke default `PUBLIC` EXECUTE on every `app_api` function.
+
+### 15.3 Approval target and CHAT attestation enforcement
+
+`approval_actions` uses nullable `candidate_target_id`, `pending_action_target_id`, and `proposal_target_id`. A CHECK enforces exactly one non-null typed column and its correspondence to `target_type`; same-owner composite FKs enforce ownership. A migration-owned BEFORE INSERT trigger schema-qualifies target lookups, verifies that typed ID equals `target_id`, that `target_version` matches the intended current row, and that the target is in an approvable/rejectable state. It rejects updates and deletes, making ApprovalAction append-only. CHECK constraints cover same-row shape; the trigger supplies the necessary cross-table validation.
+
+UI approval RPCs accept a decision and target/version only, derive `source = 'UI'`, and store `source_message_id = NULL` after presentation/content, owner, state, and version checks. CHAT-consuming RPCs accept only `attestation_id`; they derive `source = 'CHAT'` and `source_message_id` from the attestation and reject any client-provided CHAT provenance.
+
+`app_api.issue_chat_approval_attestation` is an invoker server-only RPC executable only by `service_role`. FastAPI first validates the user's JWT and message/action/conversation/target/version/decision binding, then uses a separate immutable privileged client with the secret API key and no forwarded user Authorization header. The issuance RPC stores the five-minute attestation. Consumption occurs in the business mutation's transaction: lock owner, validate attestation owner, expiry, unconsumed status, action/version, target/type/version, decision, and current target state; insert the derived ApprovalAction; mark `consumed_at`; then commit the business result and idempotency record. Any failure rolls back consumption. A same-key/same-fingerprint retry returns its completed result rather than consuming again.
+
+### 15.4 RPC contract baseline
+
+All functions are schema-qualified and return a JSONB envelope containing `schema_version: "1.1"`, result data, and a stable error code. Normal errors include `UNAUTHENTICATED`, `FORBIDDEN`, `ENTITY_NOT_FOUND`, `STALE_ENTITY_VERSION`, `STALE_PROPOSAL`, `APPROVAL_REQUIRED`, `INVALID_PARAMETER`, `IDEMPOTENCY_CONFLICT`, and `TIME_CONFLICT`.
+
+| RPC | Exact argument outline | Result / key guarantees |
+|---|---|---|
+| `create_task_candidate` | `p_conversation_id uuid, p_source_message_id uuid, p_slots jsonb, p_raw_expressions jsonb, p_field_sources jsonb, p_idempotency_key text, p_request_fingerprint text` | Candidate result; derives owner from `auth.uid()`. |
+| `confirm_task` | `p_candidate_id uuid, p_expected_candidate_version integer, p_decision text, p_attestation_id uuid null, p_idempotency_key text, p_request_fingerprint text` | Atomic candidate→task result; UI/CHAT provenance is derived as above. |
+| `search_tasks` | `p_status_filter text[], p_query text, p_limit integer, p_cursor jsonb` | Owner-scoped paginated task result. |
+| `set_availability`, `set_busy_interval` | `p_operation text, p_window jsonb, p_window_id uuid null, p_expected_window_version integer null, p_decision text, p_attestation_id uuid null, p_idempotency_key text, p_request_fingerprint text` | Atomic window/profile revision result; kind is forced by function. |
+| `set_scheduling_preferences` | `p_policy_patch jsonb, p_expected_schedule_revision integer, p_decision text, p_attestation_id uuid null, p_idempotency_key text, p_request_fingerprint text` | Effective policy and revision result. |
+| `read_scheduling_context` | `p_scope jsonb` | One SQL-statement/snapshot JSONB context with tasks, windows, policy, current plan/blocks, and revision. |
+| `persist_plan_proposal` | `p_scope jsonb, p_engine_result jsonb, p_expected_schedule_revision integer, p_idempotency_key text, p_request_fingerprint text` | Rechecks locked revision and stores immutable proposal; Python engine remains outside PostgreSQL. |
+| `get_study_plan` | `p_view text, p_version integer null, p_proposal_id uuid null, p_start_at timestamptz null, p_end_at timestamptz null` | Owner-scoped current/history/proposal result. |
+| `approve_study_plan`, `reject_study_plan` | `p_proposal_id uuid, p_expected_proposal_version integer, p_expected_plan_version integer null, p_decision text, p_attestation_id uuid null, p_idempotency_key text, p_request_fingerprint text` | Idempotency lookup precedes stale interpretation; approval commits plan/blocks atomically; rejection atomically records REJECTED replay result. |
+| `issue_chat_approval_attestation` | `p_user_id uuid, p_conversation_id uuid, p_action_id uuid, p_action_version integer, p_target_type text, p_target_id uuid, p_target_version integer, p_decision text, p_source_message_id uuid, p_request_fingerprint text` | `service_role` only; returns attestation ID/expiry. |
+
+Writers derive a signed 64-bit advisory-lock key from the trusted UUID using one documented deterministic hash function; collisions serialize unrelated owners but cannot cross owner/RLS checks or weaken integrity. Each writer acquires `pg_advisory_xact_lock` before authoritative reads, uses `READ COMMITTED`, reloads after lock acquisition, and captures authoritative time then. Session locks are prohibited. Approval order is: lock, idempotency replay/fingerprint check, proposal/version/revision checks, full revalidation, CHAT consumption if present, immutable writes, pointer/revision/proposal/idempotency updates, commit. Proposal persistence uses the same lock/revision comparison after the pure Python scheduler returns.
+
+### 15.5 Overlap, migration order, and implementation tests
+
+Enable `btree_gist` in the extensions schema selected by Supabase (normally `extensions`) and schema-qualify its use in migrations. Add `EXCLUDE USING gist (plan_id WITH =, tstzrange(start_at, end_at, '[)') WITH &&)` to `app_private.study_blocks`, plus `end_at > start_at`. It protects one plan snapshot only; different historical plan IDs may overlap. Availability, BUSY, deadline, workload, retained-block, and policy checks remain RPC validation.
+
+Migration order is final: (1) application schemas and `btree_gist`; (2) profile base and signup trigger; (3) candidates/tasks; (4) TimeWindow; (5) plans; (6) blocks; (7) proposals; (8) pending actions; (9) approvals; (10) idempotency; (11) chat attestations; (12) deferred circular/composite FKs; (13) checks/indexes/exclusion; (14) RLS; (15) grants/exposed-schema configuration; (16) RPCs/triggers; (17) local fixtures/tests. Supabase CLI is the sole migration source; use the repository `supabase/config.toml`, a Docker-compatible local runtime, version-pinned CLI in project tooling, `supabase db reset` for clean replay, and environment variables only for non-committed project credentials. Production deployment is ordered migration replay after a backup/change window and is not authorized by this document.
+
+Required Stage 03.3 tests include every earlier authorization test plus: authenticated/anonymous issuance denial; valid service-role issuance; owner/conversation/action/target/version/decision binding; expired/reused attestation denial; forged source-message denial; target-version invalidation; cross-user denial; direct CHAT ApprovalAction fabrication denial; failed business commit rolls back consumption; owner-lock races; mixed-snapshot proposal rejection; approval lost-response replay; rejection replay; same-plan overlap failure; cross-plan historical overlap success; and all RLS policy operation paths.
 

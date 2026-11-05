@@ -22,9 +22,17 @@ Approval first resolves the owner and performs idempotency lookup. A completed m
 
 ## Overlap policy
 
-Validate half-open intervals `[start_at,end_at)` in proposal and approval RPCs. Historical plans may overlap one another. The recommended database enforcement is a GiST exclusion constraint over a timestamp range keyed by `plan_id`, so non-overlap applies within one snapshot only. `btree_gist` may be required to index the UUID/equality key; the extension dependency is `PROPOSED`. The constraint must not inspect parent plan status. Availability, BUSY, deadline, workload, and current scheduling-context checks remain service/RPC validation, not a substitute for snapshot-level non-overlap. Final enforcement remains `PROPOSED` under E-11.
+Validate half-open intervals `[start_at,end_at)` in proposal and approval RPCs. Historical plans may overlap one another. The implementation baseline uses a GiST exclusion constraint over a timestamp range keyed by `plan_id`, with `btree_gist` enabled for UUID/equality support, so non-overlap applies within one snapshot only. The constraint must not inspect parent plan status. Availability, BUSY, deadline, workload, and current scheduling-context checks remain service/RPC validation, not a substitute for snapshot-level non-overlap.
 
 ## Consequences and tests
 
 Advisory locks do not stop bypass writers, so grants, private schemas, centralized RPCs, and bypass/concurrency tests are required. Test direct RPC authorization, double approval, lost-response retry, rejection replay, stale revisions, mixed-snapshot races, concurrent scheduling-input writes, rollback, same logical block IDs across snapshots, and retained historical snapshots. See register E-10 through E-13.
+
+## Stage 03.2 implementation baseline
+
+**IMPLEMENTATION_BASELINE — selected for F1 implementation; not a claim of separate team approval.** Every scheduling-affecting writer uses `pg_advisory_xact_lock` with one deterministic signed 64-bit key derived from the trusted owner UUID. It acquires the transaction-scoped lock before authoritative reads, uses `READ COMMITTED`, reloads after waiting, and captures authoritative time after lock acquisition. A hash collision may serialize unrelated users but cannot bypass ownership, RLS, target, or version checks. Session-level locks are prohibited.
+
+`read_scheduling_context` is a one-statement/RPC snapshot of tasks, TimeWindows, effective policy, current plan and relevant blocks, and `schedule_revision`. The Python engine runs outside the transaction. `persist_plan_proposal` reacquires the lock and rejects an expected-revision mismatch. Approval locks, checks idempotency replay/fingerprint conflict before stale interpretation, revalidates authoritative state, consumes a CHAT attestation when supplied, writes plan/blocks, updates profile pointer/revision and proposal, records idempotency, and commits atomically. Rejection follows the same lock/idempotency discipline and commits its replay result atomically.
+
+The final overlap guard is `btree_gist` plus a GiST exclusion constraint scoped by `plan_id` and `tstzrange(start_at,end_at,'[)')`; it rejects overlap only inside one snapshot. All availability, BUSY, workload, deadline, retained-block, and policy validations remain independent RPC checks.
 

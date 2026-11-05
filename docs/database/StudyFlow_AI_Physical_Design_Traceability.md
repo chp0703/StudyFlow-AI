@@ -26,7 +26,7 @@ All logical fields are represented in the physical dictionary. The following phy
 | Physical addition | Reason | Approval source/status |
 |---|---|---|
 | `user_profiles` table name | Maps logical User to an authenticated `auth.users` subject | E-06 `PROPOSED` |
-| `target_candidate_id`, `target_pending_action_id`, `target_proposal_id` | Enforces one exact ApprovalAction target despite polymorphic `target_type/target_id` | E-08 `PROPOSED`; trigger/equivalent `TBD` |
+| `candidate_target_id`, `pending_action_target_id`, `proposal_target_id` | Enforces one exact ApprovalAction target despite polymorphic `target_type/target_id` | `IMPLEMENTATION_BASELINE`: exactly-one CHECK, same-owner FKs, and BEFORE INSERT validation trigger. |
 | Supporting `(user_id,id)` unique keys | Enables database-enforced same-owner composite FKs | E-07 `PROPOSED` |
 | B-tree/partial/GiST indexes | Query and snapshot integrity performance | E-11/E-13 `PROPOSED` |
 
@@ -112,6 +112,25 @@ Approval provenance is traceable to the RPC action itself: UI approval is valid 
 - [x] RLS/grant/schema exposure design documented.
 - [x] SECURITY INVOKER privilege matrix, approval provenance, and required authorization tests documented.
 - [x] Physical-only choices identified and labeled.
-- [ ] Team approval of remaining physical choices.
-- [ ] Stage 03.3 implementation authorization.
+- [x] Routine physical choices finalized as `IMPLEMENTATION_BASELINE`.
+- [ ] Stage 03.3 migration execution, environment configuration, and test evidence.
+
+## 8. Stage 03.2 implementation-baseline traceability
+
+**IMPLEMENTATION_BASELINE — selected for F1 implementation.** These physical choices are authorized design baselines, not claims of separate team approval.
+
+| Logical requirement/invariant | Final physical realization | Verification evidence required |
+|---|---|---|
+| Ten F1 entities only | Ten `app_private` business tables; `chat_approval_attestations` is authorization infrastructure, not a logical entity. | Migration inventory contains exactly the ten mapped domain tables plus the documented support table. |
+| User identity/profile | `user_profiles.user_id = auth.users.id`; migration-owned signup trigger creates one profile; deferred `(user_id,current_plan_id)` FK. | Signup, duplicate-profile, missing-profile, and first-plan sequence tests. |
+| WEEKLY end boundary | `time without time zone`; preserved `end_time = 24:00:00`; start `< 24:00:00`, end `> start`, end `<= 24:00:00`. | Five documented valid/invalid cases plus DST ambiguity/nonexistence tests. |
+| Same-owner integrity | Unique owner/entity keys and composite FKs for all owner-scoped references. | Cross-user candidate/task/plan/block/action reference tests. |
+| StudyBlock identity | PK `(plan_id,block_id)`; no global `(user_id,block_id)` uniqueness; per-plan GiST range exclusion. | Stable IDs across snapshots; within-plan overlap fails; historical-plan overlap passes. |
+| ApprovalAction target | Exactly-one typed target CHECK, same-owner FK, BEFORE INSERT target/version/state trigger, no update/delete. | Mismatched type/id/version/state and mutation attempts fail. |
+| Approval provenance | UI is derived by an explicit authenticated RPC; CHAT derives only from one-time attestation. | Forged CHAT/source message/LLM decision and reused/expired attestation tests fail. |
+| User-scoped access | Unexposed `app_private`, exposed `app_api`, invoker functions, explicit grants, and owner RLS. | Direct private Data API denial, allowlisted RPC success, invoker RLS cross-user denial. |
+| Scheduling consistency | One-statement `read_scheduling_context`; owner xact advisory lock; reload and revision compare before proposal persistence/approval. | Mixed-snapshot and concurrent writer tests. |
+| Durable mutation/retry | Atomic idempotency with approval/rejection and attestation consumption. | Lost approval response and rejection retries replay exactly one committed result. |
+
+The final physical design section 15 is the detailed implementation specification for grants, policies, RPC argument shapes, migration order, and test scope.
 
