@@ -66,6 +66,10 @@ declare
     v_existing app_private.idempotency_records%rowtype;
     v_result jsonb;
 begin
+    if p_attestation_id is not null then
+        raise exception using errcode='P0001', message='APPROVAL_REQUIRED';
+    end if;
+    perform app_private.lock_owner(v_user);
     select * into v_existing from app_private.idempotency_records
     where user_id = v_user and operation = 'create_task_candidate' and idempotency_key = p_idempotency_key
     for update;
@@ -76,7 +80,6 @@ begin
         return coalesce(v_existing.result_reference_or_response,
             jsonb_build_object('schema_version','1.1','state','IN_PROGRESS'));
     end if;
-    perform app_private.lock_owner(v_user);
     v_candidate := extensions.gen_random_uuid();
     insert into app_private.idempotency_records
         (user_id, operation, idempotency_key, request_fingerprint, state, expires_at)
@@ -111,10 +114,28 @@ as $$
 declare
     v_user uuid := app_private.require_owner();
     v_candidate app_private.task_candidates%rowtype;
+    v_existing app_private.idempotency_records%rowtype;
     v_task uuid;
     v_title text;
+    v_result jsonb;
 begin
     perform app_private.lock_owner(v_user);
+    if p_idempotency_key is null or p_request_fingerprint is null then
+        raise exception using errcode='P0001', message='INVALID_PARAMETER';
+    end if;
+    select * into v_existing from app_private.idempotency_records
+    where user_id=v_user and operation='confirm_task' and idempotency_key=p_idempotency_key
+    for update;
+    if found then
+        if v_existing.request_fingerprint <> p_request_fingerprint then
+            raise exception using errcode='P0001', message='IDEMPOTENCY_CONFLICT';
+        end if;
+        return coalesce(v_existing.result_reference_or_response,
+            jsonb_build_object('schema_version','1.1','state','IN_PROGRESS'));
+    end if;
+    insert into app_private.idempotency_records
+        (user_id,operation,idempotency_key,request_fingerprint,state,expires_at)
+    values(v_user,'confirm_task',p_idempotency_key,p_request_fingerprint,'IN_PROGRESS',clock_timestamp()+interval '24 hours');
     select * into v_candidate from app_private.task_candidates
     where candidate_id = p_candidate_id and user_id = v_user for update;
     if not found then raise exception using errcode='P0001', message='ENTITY_NOT_FOUND'; end if;
@@ -123,24 +144,31 @@ begin
     end if;
     if p_decision <> 'APPROVE' then
         update app_private.task_candidates set status='CANCELLED', version=version+1 where candidate_id=p_candidate_id;
-        return jsonb_build_object('schema_version','1.1','candidate_id',p_candidate_id,'status','CANCELLED');
+        v_result := jsonb_build_object('schema_version','1.1','candidate_id',p_candidate_id,'status','CANCELLED');
+        update app_private.idempotency_records set state='COMPLETED', result_reference_or_response=v_result
+        where user_id=v_user and operation='confirm_task' and idempotency_key=p_idempotency_key;
+        return v_result;
     end if;
     v_title := nullif(btrim(v_candidate.slots->>'title'),'');
     if v_title is null then raise exception using errcode='P0001', message='MISSING_REQUIRED_FIELD'; end if;
     v_task := extensions.gen_random_uuid();
     insert into app_private.academic_tasks
-        (task_id,user_id,candidate_id,title,deadline_at,deadline_precision,deadline_timezone,estimated_minutes,remaining_minutes)
+        (task_id,user_id,candidate_id,title,deadline_at,deadline_precision,deadline_date,deadline_timezone,estimated_minutes,remaining_minutes)
     values (v_task,v_user,p_candidate_id,v_title,
-            (v_candidate.slots->>'deadline_at')::timestamptz,
+        (v_candidate.slots->>'deadline_at')::timestamptz,
             coalesce(v_candidate.slots->>'deadline_precision','DATETIME'),
+            (v_candidate.slots->>'deadline_date')::date,
             coalesce(v_candidate.slots->>'deadline_timezone','UTC'),
             greatest(1,coalesce((v_candidate.slots->>'estimated_minutes')::bigint,1)),
             greatest(1,coalesce((v_candidate.slots->>'estimated_minutes')::bigint,1)));
     update app_private.task_candidates
     set status='CONFIRMED', confirmed_task_id=v_task, version=version+1
     where candidate_id=p_candidate_id and user_id=v_user;
-    return jsonb_build_object('schema_version','1.1','candidate_id',p_candidate_id,
-                              'task_id',v_task,'status','CONFIRMED');
+    v_result := jsonb_build_object('schema_version','1.1','candidate_id',p_candidate_id,
+                                   'task_id',v_task,'status','CONFIRMED');
+    update app_private.idempotency_records set state='COMPLETED', result_reference_or_response=v_result
+    where user_id=v_user and operation='confirm_task' and idempotency_key=p_idempotency_key;
+    return v_result;
 end;
 $$;
 
@@ -235,6 +263,9 @@ create or replace function app_api.set_availability(
 returns jsonb language plpgsql security invoker set search_path = ''
 as $$
 begin
+    if p_attestation_id is not null then
+        raise exception using errcode='P0001', message='APPROVAL_REQUIRED';
+    end if;
     if p_decision <> 'APPROVE' then raise exception using errcode='P0001', message='APPROVAL_REQUIRED'; end if;
     return app_private.upsert_time_window('AVAILABILITY',p_operation,p_window,p_window_id,p_expected_window_version);
 end;
@@ -247,6 +278,9 @@ create or replace function app_api.set_busy_interval(
 returns jsonb language plpgsql security invoker set search_path = ''
 as $$
 begin
+    if p_attestation_id is not null then
+        raise exception using errcode='P0001', message='APPROVAL_REQUIRED';
+    end if;
     if p_decision <> 'APPROVE' then raise exception using errcode='P0001', message='APPROVAL_REQUIRED'; end if;
     return app_private.upsert_time_window('BUSY',p_operation,p_window,p_window_id,p_expected_window_version);
 end;
@@ -260,6 +294,9 @@ returns jsonb language plpgsql security invoker set search_path = ''
 as $$
 declare v_user uuid := app_private.require_owner(); v_revision bigint;
 begin
+    if p_attestation_id is not null then
+        raise exception using errcode='P0001', message='APPROVAL_REQUIRED';
+    end if;
     if p_decision <> 'APPROVE' then raise exception using errcode='P0001', message='APPROVAL_REQUIRED'; end if;
     perform app_private.lock_owner(v_user);
     update app_private.user_profiles
@@ -312,6 +349,9 @@ declare
     v_user uuid := app_private.require_owner(); v_prop app_private.plan_proposals%rowtype;
     v_plan uuid := extensions.gen_random_uuid(); v_version bigint; v_previous uuid; v_revision bigint; v_block jsonb;
 begin
+    if p_attestation_id is not null then
+        raise exception using errcode='P0001', message='APPROVAL_REQUIRED';
+    end if;
     if p_decision <> 'APPROVE' then raise exception using errcode='P0001', message='APPROVAL_REQUIRED'; end if;
     perform app_private.lock_owner(v_user);
     select * into v_prop from app_private.plan_proposals where proposal_id=p_proposal_id and user_id=v_user for update;
@@ -346,6 +386,9 @@ returns jsonb language plpgsql security invoker set search_path = ''
 as $$
 declare v_user uuid := app_private.require_owner();
 begin
+    if p_attestation_id is not null then
+        raise exception using errcode='P0001', message='APPROVAL_REQUIRED';
+    end if;
     perform app_private.lock_owner(v_user);
     update app_private.plan_proposals set status='REJECTED'
     where proposal_id=p_proposal_id and user_id=v_user and status='PROPOSED' and version=p_expected_proposal_version;

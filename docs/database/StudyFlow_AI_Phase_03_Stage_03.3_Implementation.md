@@ -23,7 +23,7 @@ The exact contract source is `origin/feat/BE_contract_schema` at `b629a5e251be59
 - `READ COMMITTED` is the intended protocol isolation; callers must reload inputs after lock acquisition.
 - `app_private` is not in the exposed Supabase schema list. Public API access is through allow-listed `app_api` functions.
 - CHAT approval issuance is restricted to `service_role`; attestation data is one-time and short-lived. It is not a product TTL.
-- The current RPC foundation is intentionally small and requires backend adapter hardening for full idempotency/replay, proposal payload validation, typed approval target validation, and attestation consumption before production use.
+- The current RPC foundation is intentionally small and requires backend adapter hardening for full idempotency/replay, proposal payload validation, typed approval target validation, and attestation consumption before production use. Until that consumption path is implemented, user-facing mutation RPCs reject a supplied attestation rather than treating it as proof.
 
 ## Verification record
 
