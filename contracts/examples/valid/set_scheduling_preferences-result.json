@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.1",
+  "request_id": "req-fixed-example",
+  "outcome": "COMMITTED",
+  "data": {
+    "scheduling_policy": {
+      "min_block_minutes": 25,
+      "max_block_minutes": 90,
+      "allow_short_final_block": true,
+      "max_daily_minutes": 240,
+      "break_minutes": 10
+    },
+    "schedule_revision": 2
+  },
+  "error": null,
+  "warnings": []
+}

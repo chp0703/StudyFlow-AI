@@ -1,0 +1,1119 @@
+{
+  "contract_version": "1.0.0",
+  "schema_version": "1.1",
+  "status": "REVIEW_READY",
+  "private_schema": "app_private",
+  "exposed_schema": "app_api",
+  "entities": [
+    {
+      "entity": "User",
+      "table": "app_private.user_profiles",
+      "schema": "User",
+      "primary_key": [
+        "user_id"
+      ],
+      "columns": [
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/User/properties/user_id"
+        },
+        {
+          "name": "timezone",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/User/properties/timezone"
+        },
+        {
+          "name": "locale",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/User/properties/locale"
+        },
+        {
+          "name": "current_plan_id",
+          "postgres_type": "uuid",
+          "nullable": true,
+          "schema_pointer": "#/$defs/User/properties/current_plan_id"
+        },
+        {
+          "name": "schedule_revision",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/User/properties/schedule_revision"
+        },
+        {
+          "name": "scheduling_policy",
+          "postgres_type": "jsonb",
+          "nullable": false,
+          "schema_pointer": "#/$defs/User/properties/scheduling_policy"
+        },
+        {
+          "name": "created_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/User/properties/created_at"
+        },
+        {
+          "name": "updated_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/User/properties/updated_at"
+        }
+      ]
+    },
+    {
+      "entity": "TaskCandidate",
+      "table": "app_private.task_candidates",
+      "schema": "TaskCandidate",
+      "primary_key": [
+        "candidate_id"
+      ],
+      "columns": [
+        {
+          "name": "candidate_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TaskCandidate/properties/candidate_id"
+        },
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TaskCandidate/properties/user_id"
+        },
+        {
+          "name": "conversation_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TaskCandidate/properties/conversation_id"
+        },
+        {
+          "name": "version",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TaskCandidate/properties/version"
+        },
+        {
+          "name": "status",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TaskCandidate/properties/status"
+        },
+        {
+          "name": "slots",
+          "postgres_type": "jsonb",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TaskCandidate/properties/slots"
+        },
+        {
+          "name": "raw_expressions",
+          "postgres_type": "jsonb",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TaskCandidate/properties/raw_expressions"
+        },
+        {
+          "name": "field_sources",
+          "postgres_type": "jsonb",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TaskCandidate/properties/field_sources"
+        },
+        {
+          "name": "source_message_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TaskCandidate/properties/source_message_id"
+        },
+        {
+          "name": "confirmed_task_id",
+          "postgres_type": "uuid",
+          "nullable": true,
+          "schema_pointer": "#/$defs/TaskCandidate/properties/confirmed_task_id"
+        },
+        {
+          "name": "created_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TaskCandidate/properties/created_at"
+        },
+        {
+          "name": "updated_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TaskCandidate/properties/updated_at"
+        }
+      ]
+    },
+    {
+      "entity": "AcademicTask",
+      "table": "app_private.academic_tasks",
+      "schema": "AcademicTask",
+      "primary_key": [
+        "task_id"
+      ],
+      "columns": [
+        {
+          "name": "task_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/task_id"
+        },
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/user_id"
+        },
+        {
+          "name": "candidate_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/candidate_id"
+        },
+        {
+          "name": "version",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/version"
+        },
+        {
+          "name": "title",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/title"
+        },
+        {
+          "name": "description",
+          "postgres_type": "text",
+          "nullable": true,
+          "schema_pointer": "#/$defs/AcademicTask/properties/description"
+        },
+        {
+          "name": "course_label",
+          "postgres_type": "text",
+          "nullable": true,
+          "schema_pointer": "#/$defs/AcademicTask/properties/course_label"
+        },
+        {
+          "name": "available_from_at",
+          "postgres_type": "timestamptz",
+          "nullable": true,
+          "schema_pointer": "#/$defs/AcademicTask/properties/available_from_at"
+        },
+        {
+          "name": "deadline_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/deadline_at"
+        },
+        {
+          "name": "deadline_precision",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/deadline_precision"
+        },
+        {
+          "name": "deadline_date",
+          "postgres_type": "date",
+          "nullable": true,
+          "schema_pointer": "#/$defs/AcademicTask/properties/deadline_date"
+        },
+        {
+          "name": "deadline_timezone",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/deadline_timezone"
+        },
+        {
+          "name": "estimated_minutes",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/estimated_minutes"
+        },
+        {
+          "name": "remaining_minutes",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/remaining_minutes"
+        },
+        {
+          "name": "priority",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/priority"
+        },
+        {
+          "name": "status",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/status"
+        },
+        {
+          "name": "confirmed_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/confirmed_at"
+        },
+        {
+          "name": "created_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/created_at"
+        },
+        {
+          "name": "updated_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/updated_at"
+        }
+      ]
+    },
+    {
+      "entity": "TimeWindow",
+      "table": "app_private.time_windows",
+      "schema": "TimeWindow",
+      "primary_key": [
+        "window_id"
+      ],
+      "columns": [
+        {
+          "name": "window_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TimeWindow/properties/window_id"
+        },
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TimeWindow/properties/user_id"
+        },
+        {
+          "name": "version",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TimeWindow/properties/version"
+        },
+        {
+          "name": "kind",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TimeWindow/properties/kind"
+        },
+        {
+          "name": "label",
+          "postgres_type": "text",
+          "nullable": true,
+          "schema_pointer": "#/$defs/TimeWindow/properties/label"
+        },
+        {
+          "name": "recurrence",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TimeWindow/properties/recurrence"
+        },
+        {
+          "name": "timezone",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TimeWindow/properties/timezone"
+        },
+        {
+          "name": "start_at",
+          "postgres_type": "timestamptz",
+          "nullable": true,
+          "schema_pointer": "#/$defs/TimeWindow/properties/start_at"
+        },
+        {
+          "name": "end_at",
+          "postgres_type": "timestamptz",
+          "nullable": true,
+          "schema_pointer": "#/$defs/TimeWindow/properties/end_at"
+        },
+        {
+          "name": "weekday",
+          "postgres_type": "bigint",
+          "nullable": true,
+          "schema_pointer": "#/$defs/TimeWindow/properties/weekday"
+        },
+        {
+          "name": "start_time",
+          "postgres_type": "time(0) without time zone",
+          "nullable": true,
+          "schema_pointer": "#/$defs/TimeWindow/properties/start_time"
+        },
+        {
+          "name": "end_time",
+          "postgres_type": "time(0) without time zone",
+          "nullable": true,
+          "schema_pointer": "#/$defs/TimeWindow/properties/end_time"
+        },
+        {
+          "name": "valid_from",
+          "postgres_type": "date",
+          "nullable": true,
+          "schema_pointer": "#/$defs/TimeWindow/properties/valid_from"
+        },
+        {
+          "name": "valid_until",
+          "postgres_type": "date",
+          "nullable": true,
+          "schema_pointer": "#/$defs/TimeWindow/properties/valid_until"
+        },
+        {
+          "name": "archived_at",
+          "postgres_type": "timestamptz",
+          "nullable": true,
+          "schema_pointer": "#/$defs/TimeWindow/properties/archived_at"
+        },
+        {
+          "name": "created_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TimeWindow/properties/created_at"
+        },
+        {
+          "name": "updated_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/TimeWindow/properties/updated_at"
+        }
+      ]
+    },
+    {
+      "entity": "StudyPlan",
+      "table": "app_private.study_plans",
+      "schema": "StudyPlan",
+      "primary_key": [
+        "plan_id"
+      ],
+      "columns": [
+        {
+          "name": "plan_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/StudyPlan/properties/plan_id"
+        },
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/StudyPlan/properties/user_id"
+        },
+        {
+          "name": "version",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/StudyPlan/properties/version"
+        },
+        {
+          "name": "previous_plan_id",
+          "postgres_type": "uuid",
+          "nullable": true,
+          "schema_pointer": "#/$defs/StudyPlan/properties/previous_plan_id"
+        },
+        {
+          "name": "source_proposal_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/StudyPlan/properties/source_proposal_id"
+        },
+        {
+          "name": "approved_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/StudyPlan/properties/approved_at"
+        },
+        {
+          "name": "created_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/StudyPlan/properties/created_at"
+        }
+      ]
+    },
+    {
+      "entity": "StudyBlock",
+      "table": "app_private.study_blocks",
+      "schema": "StudyBlock",
+      "primary_key": [
+        "plan_id",
+        "block_id"
+      ],
+      "columns": [
+        {
+          "name": "plan_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/StudyBlock/properties/plan_id"
+        },
+        {
+          "name": "block_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/StudyBlock/properties/block_id"
+        },
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/StudyBlock/properties/user_id"
+        },
+        {
+          "name": "task_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/StudyBlock/properties/task_id"
+        },
+        {
+          "name": "start_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/StudyBlock/properties/start_at"
+        },
+        {
+          "name": "end_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/StudyBlock/properties/end_at"
+        },
+        {
+          "name": "is_locked",
+          "postgres_type": "boolean",
+          "nullable": false,
+          "schema_pointer": "#/$defs/StudyBlock/properties/is_locked"
+        },
+        {
+          "name": "created_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/StudyBlock/properties/created_at"
+        }
+      ]
+    },
+    {
+      "entity": "PlanProposal",
+      "table": "app_private.plan_proposals",
+      "schema": "PlanProposal",
+      "primary_key": [
+        "proposal_id"
+      ],
+      "columns": [
+        {
+          "name": "proposal_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PlanProposal/properties/proposal_id"
+        },
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PlanProposal/properties/user_id"
+        },
+        {
+          "name": "version",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PlanProposal/properties/version"
+        },
+        {
+          "name": "status",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PlanProposal/properties/status"
+        },
+        {
+          "name": "base_plan_id",
+          "postgres_type": "uuid",
+          "nullable": true,
+          "schema_pointer": "#/$defs/PlanProposal/properties/base_plan_id"
+        },
+        {
+          "name": "base_plan_version",
+          "postgres_type": "bigint",
+          "nullable": true,
+          "schema_pointer": "#/$defs/PlanProposal/properties/base_plan_version"
+        },
+        {
+          "name": "base_schedule_revision",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PlanProposal/properties/base_schedule_revision"
+        },
+        {
+          "name": "generation_scope",
+          "postgres_type": "jsonb",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PlanProposal/properties/generation_scope"
+        },
+        {
+          "name": "payload",
+          "postgres_type": "jsonb",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PlanProposal/properties/payload"
+        },
+        {
+          "name": "algorithm_version",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PlanProposal/properties/algorithm_version"
+        },
+        {
+          "name": "policy_snapshot",
+          "postgres_type": "jsonb",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PlanProposal/properties/policy_snapshot"
+        },
+        {
+          "name": "generated_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PlanProposal/properties/generated_at"
+        },
+        {
+          "name": "committed_plan_id",
+          "postgres_type": "uuid",
+          "nullable": true,
+          "schema_pointer": "#/$defs/PlanProposal/properties/committed_plan_id"
+        },
+        {
+          "name": "created_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PlanProposal/properties/created_at"
+        },
+        {
+          "name": "updated_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PlanProposal/properties/updated_at"
+        }
+      ]
+    },
+    {
+      "entity": "PendingAction",
+      "table": "app_private.pending_actions",
+      "schema": "PendingAction",
+      "primary_key": [
+        "action_id"
+      ],
+      "columns": [
+        {
+          "name": "action_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PendingAction/properties/action_id"
+        },
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PendingAction/properties/user_id"
+        },
+        {
+          "name": "conversation_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PendingAction/properties/conversation_id"
+        },
+        {
+          "name": "version",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PendingAction/properties/version"
+        },
+        {
+          "name": "intent",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PendingAction/properties/intent"
+        },
+        {
+          "name": "state",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PendingAction/properties/state"
+        },
+        {
+          "name": "requires_review",
+          "postgres_type": "boolean",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PendingAction/properties/requires_review"
+        },
+        {
+          "name": "candidate_id",
+          "postgres_type": "uuid",
+          "nullable": true,
+          "schema_pointer": "#/$defs/PendingAction/properties/candidate_id"
+        },
+        {
+          "name": "proposal_id",
+          "postgres_type": "uuid",
+          "nullable": true,
+          "schema_pointer": "#/$defs/PendingAction/properties/proposal_id"
+        },
+        {
+          "name": "draft_arguments",
+          "postgres_type": "jsonb",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PendingAction/properties/draft_arguments"
+        },
+        {
+          "name": "missing_fields",
+          "postgres_type": "jsonb",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PendingAction/properties/missing_fields"
+        },
+        {
+          "name": "ambiguities",
+          "postgres_type": "jsonb",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PendingAction/properties/ambiguities"
+        },
+        {
+          "name": "depends_on_action_id",
+          "postgres_type": "uuid",
+          "nullable": true,
+          "schema_pointer": "#/$defs/PendingAction/properties/depends_on_action_id"
+        },
+        {
+          "name": "created_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PendingAction/properties/created_at"
+        },
+        {
+          "name": "updated_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/PendingAction/properties/updated_at"
+        }
+      ]
+    },
+    {
+      "entity": "ApprovalAction",
+      "table": "app_private.approval_actions",
+      "schema": "ApprovalAction",
+      "primary_key": [
+        "approval_action_id"
+      ],
+      "columns": [
+        {
+          "name": "approval_action_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApprovalAction/properties/approval_action_id"
+        },
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApprovalAction/properties/user_id"
+        },
+        {
+          "name": "target_type",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApprovalAction/properties/target_type"
+        },
+        {
+          "name": "target_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApprovalAction/properties/target_id"
+        },
+        {
+          "name": "target_version",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApprovalAction/properties/target_version"
+        },
+        {
+          "name": "decision",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApprovalAction/properties/decision"
+        },
+        {
+          "name": "source",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApprovalAction/properties/source"
+        },
+        {
+          "name": "source_message_id",
+          "postgres_type": "uuid",
+          "nullable": true,
+          "schema_pointer": "#/$defs/ApprovalAction/properties/source_message_id"
+        },
+        {
+          "name": "created_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApprovalAction/properties/created_at"
+        }
+      ]
+    },
+    {
+      "entity": "IdempotencyRecord",
+      "table": "app_private.idempotency_records",
+      "schema": "IdempotencyRecord",
+      "primary_key": [
+        "user_id",
+        "operation",
+        "idempotency_key"
+      ],
+      "columns": [
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/IdempotencyRecord/properties/user_id"
+        },
+        {
+          "name": "operation",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/IdempotencyRecord/properties/operation"
+        },
+        {
+          "name": "idempotency_key",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/IdempotencyRecord/properties/idempotency_key"
+        },
+        {
+          "name": "request_fingerprint",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/IdempotencyRecord/properties/request_fingerprint"
+        },
+        {
+          "name": "state",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/IdempotencyRecord/properties/state"
+        },
+        {
+          "name": "result_reference_or_response",
+          "postgres_type": "jsonb",
+          "nullable": true,
+          "schema_pointer": "#/$defs/IdempotencyRecord/properties/result_reference_or_response"
+        },
+        {
+          "name": "created_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/IdempotencyRecord/properties/created_at"
+        },
+        {
+          "name": "expires_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/IdempotencyRecord/properties/expires_at"
+        }
+      ]
+    }
+  ],
+  "physical_support_columns": {
+    "app_private.approval_actions": [
+      {
+        "name": "target_candidate_id",
+        "postgres_type": "uuid",
+        "nullable": true,
+        "purpose": "Typed same-owner FK; exactly one matches target_type/target_id."
+      },
+      {
+        "name": "target_pending_action_id",
+        "postgres_type": "uuid",
+        "nullable": true,
+        "purpose": "Typed same-owner FK; exactly one matches target_type/target_id."
+      },
+      {
+        "name": "target_proposal_id",
+        "postgres_type": "uuid",
+        "nullable": true,
+        "purpose": "Typed same-owner FK; exactly one matches target_type/target_id."
+      }
+    ]
+  },
+  "infrastructure_records": [
+    {
+      "schema": "ConversationRecord",
+      "table": "app_private.conversation_records",
+      "primary_key": [
+        "user_id",
+        "conversation_id"
+      ],
+      "columns": [
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ConversationRecord/properties/user_id"
+        },
+        {
+          "name": "conversation_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ConversationRecord/properties/conversation_id"
+        },
+        {
+          "name": "created_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ConversationRecord/properties/created_at"
+        }
+      ]
+    },
+    {
+      "schema": "SourceMessageRecord",
+      "table": "app_private.source_messages",
+      "primary_key": [
+        "message_id"
+      ],
+      "columns": [
+        {
+          "name": "message_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/SourceMessageRecord/properties/message_id"
+        },
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/SourceMessageRecord/properties/user_id"
+        },
+        {
+          "name": "conversation_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/SourceMessageRecord/properties/conversation_id"
+        },
+        {
+          "name": "source",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/SourceMessageRecord/properties/source"
+        },
+        {
+          "name": "role",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/SourceMessageRecord/properties/role"
+        },
+        {
+          "name": "text",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/SourceMessageRecord/properties/text"
+        },
+        {
+          "name": "received_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/SourceMessageRecord/properties/received_at"
+        }
+      ]
+    },
+    {
+      "schema": "ApiReceipt",
+      "table": "app_private.api_request_receipts",
+      "primary_key": [
+        "user_id",
+        "http_operation",
+        "idempotency_key"
+      ],
+      "columns": [
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApiReceipt/properties/user_id"
+        },
+        {
+          "name": "http_operation",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApiReceipt/properties/http_operation"
+        },
+        {
+          "name": "idempotency_key",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApiReceipt/properties/idempotency_key"
+        },
+        {
+          "name": "request_fingerprint",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApiReceipt/properties/request_fingerprint"
+        },
+        {
+          "name": "state",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApiReceipt/properties/state"
+        },
+        {
+          "name": "lease_version",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApiReceipt/properties/lease_version"
+        },
+        {
+          "name": "lease_until",
+          "postgres_type": "timestamptz",
+          "nullable": true,
+          "schema_pointer": "#/$defs/ApiReceipt/properties/lease_until"
+        },
+        {
+          "name": "message_id",
+          "postgres_type": "uuid",
+          "nullable": true,
+          "schema_pointer": "#/$defs/ApiReceipt/properties/message_id"
+        },
+        {
+          "name": "action_id",
+          "postgres_type": "uuid",
+          "nullable": true,
+          "schema_pointer": "#/$defs/ApiReceipt/properties/action_id"
+        },
+        {
+          "name": "http_status",
+          "postgres_type": "bigint",
+          "nullable": true,
+          "schema_pointer": "#/$defs/ApiReceipt/properties/http_status"
+        },
+        {
+          "name": "response",
+          "postgres_type": "jsonb",
+          "nullable": true,
+          "schema_pointer": "#/$defs/ApiReceipt/properties/response"
+        },
+        {
+          "name": "created_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApiReceipt/properties/created_at"
+        },
+        {
+          "name": "updated_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ApiReceipt/properties/updated_at"
+        }
+      ]
+    },
+    {
+      "schema": "ActionPresentationRecord",
+      "table": "app_private.action_presentations",
+      "primary_key": [
+        "user_id",
+        "action_id",
+        "action_version"
+      ],
+      "columns": [
+        {
+          "name": "user_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ActionPresentationRecord/properties/user_id"
+        },
+        {
+          "name": "action_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ActionPresentationRecord/properties/action_id"
+        },
+        {
+          "name": "action_version",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ActionPresentationRecord/properties/action_version"
+        },
+        {
+          "name": "target_type",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ActionPresentationRecord/properties/target_type"
+        },
+        {
+          "name": "target_id",
+          "postgres_type": "uuid",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ActionPresentationRecord/properties/target_id"
+        },
+        {
+          "name": "target_version",
+          "postgres_type": "bigint",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ActionPresentationRecord/properties/target_version"
+        },
+        {
+          "name": "content_digest",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ActionPresentationRecord/properties/content_digest"
+        },
+        {
+          "name": "presentation",
+          "postgres_type": "jsonb",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ActionPresentationRecord/properties/presentation"
+        },
+        {
+          "name": "source_message_id",
+          "postgres_type": "uuid",
+          "nullable": true,
+          "schema_pointer": "#/$defs/ActionPresentationRecord/properties/source_message_id"
+        },
+        {
+          "name": "created_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/ActionPresentationRecord/properties/created_at"
+        }
+      ]
+    }
+  ],
+  "security_support": {
+    "table": "app_private.rpc_attestation_keys",
+    "public_dto": false,
+    "columns": [
+      {
+        "name": "key_id",
+        "postgres_type": "text",
+        "nullable": false
+      },
+      {
+        "name": "key_material",
+        "postgres_type": "bytea",
+        "nullable": false
+      },
+      {
+        "name": "not_before",
+        "postgres_type": "timestamptz",
+        "nullable": false
+      },
+      {
+        "name": "not_after",
+        "postgres_type": "timestamptz",
+        "nullable": false
+      }
+    ],
+    "primary_key": [
+      "key_id"
+    ],
+    "invariants": [
+      "key material contains at least 32 cryptographically random bytes",
+      "not_after > not_before",
+      "No API/LLM serialization; no PUBLIC/anon/authenticated privileges",
+      "Only migration/key rotation owner writes; sf_rpc_owner may SELECT through private verifier",
+      "ENABLE/FORCE RLS; sf_rpc_owner SELECT policy is role-restricted, not user-owner scoped for this global key store"
+    ]
+  }
+}

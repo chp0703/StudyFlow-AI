@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.1",
+  "operation": "set_scheduling_preferences",
+  "arguments": {
+    "policy_patch": {
+      "min_block_minutes": 120,
+      "max_block_minutes": 150
+    },
+    "expected_schedule_revision": 1
+  }
+}
