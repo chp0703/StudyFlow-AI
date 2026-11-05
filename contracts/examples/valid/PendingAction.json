@@ -1,0 +1,30 @@
+{
+  "action_id": "00000000-0000-4000-8000-000000000006",
+  "user_id": "00000000-0000-4000-8000-000000000001",
+  "conversation_id": "00000000-0000-4000-8000-000000000002",
+  "version": 1,
+  "intent": "CREATE_TASK",
+  "state": "AWAITING_CONFIRMATION",
+  "requires_review": false,
+  "candidate_id": "00000000-0000-4000-8000-000000000004",
+  "proposal_id": null,
+  "draft_arguments": {
+    "slots": {
+      "title": "Ôn tích phân",
+      "description": null,
+      "course_label": "Giải tích",
+      "available_from_at": null,
+      "deadline_at": "2026-11-06T17:00:00Z",
+      "deadline_precision": "DATE",
+      "deadline_date": "2026-11-06",
+      "deadline_timezone": "Asia/Ho_Chi_Minh",
+      "estimated_minutes": 60,
+      "priority": "NORMAL"
+    }
+  },
+  "missing_fields": [],
+  "ambiguities": [],
+  "depends_on_action_id": null,
+  "created_at": "2026-11-05T03:00:00Z",
+  "updated_at": "2026-11-05T03:00:00Z"
+}

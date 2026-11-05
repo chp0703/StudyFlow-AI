@@ -1,14 +1,14 @@
 # ADR-005 — Concurrency and Transaction Strategy
 
-**Status: PROPOSED — Pending team approval**  
+**Status: ACCEPTED — Unified Integration Contract 1.0.0, IC-06/IC-07**
 **Created:** 2026-11-04
 **Last updated:** 2026-11-05
 
-Decision status and approvers remain authoritative in the [decision register](../../database/StudyFlow_AI_Phase_03_Implementation_Decision_Register.md), especially E-10, E-11, E-12, and E-13. **The lock protocol below is PROPOSED — Pending team approval**, not finalized.
+Accepted effective 05/11/2026 through the [official contract, section 7](../../../contracts/README.md#7-transaction-và-idempotency) and [approval record](../../../contracts/APPROVAL.md), with scope tracked in the [decision register](../../database/StudyFlow_AI_Phase_03_Implementation_Decision_Register.md). The owner row lock below supersedes the earlier advisory-key proposal; E-12/SRS work remains separate.
 
-## Recommendation (E-10, E-11)
+## Decision (E-10, E-11)
 
-Use a transaction-scoped owner-level lock within the RPC that performs a scheduling-affecting write. Derive the key from the verified owner UUID, acquire it before authoritative reads, use `READ COMMITTED`, and reload after waiting. Capture authoritative time after lock acquisition.
+Use `SELECT ... FOR UPDATE` on the verified owner's `app_private.user_profiles` row inside the single mutation RPC transaction. Acquire it before authoritative reads, use `READ COMMITTED`, reload after waiting and capture authoritative time after lock acquisition. Profile initialization uses controlled insert-on-conflict before the lock when needed. All writers follow the same owner-first lock order; do not derive separate advisory-lock keys.
 
 All task confirmation, TimeWindow/policy writes, proposal persistence, rejection, approval, and current-plan/revision changes must use the same protocol. LLM, PDF, and network calls occur outside the scheduling transaction.
 
@@ -18,21 +18,15 @@ A multi-statement `READ COMMITTED` read transaction alone is not sufficient: eac
 
 The engine must receive all inputs and the revision from that same snapshot. After computation, the persistence RPC reacquires the owner lock, reloads authoritative conditions as needed, and compares the expected revision. A mismatch rejects persistence and requires regeneration. Test the race where a TimeWindow changes after the read snapshot but before persistence; no proposal based on mixed state may be stored.
 
-Approval first resolves the owner and performs idempotency lookup. A completed matching request returns its original committed result immediately; a different fingerprint returns `IDEMPOTENCY_CONFLICT`. Only when no completed record exists does approval check proposal state, acquire the owner lock, revalidate, and commit. It atomically creates the immutable StudyPlan and all StudyBlocks, updates `current_plan_id`, increments `schedule_revision`, changes proposal state, and completes idempotency. Failure rolls back all writes. This ordering supports safe retry after a successful commit whose response was lost.
+Mutation ordering is JWT/attestation verification → fast idempotency lookup → owner row lock → idempotency lookup again → authoritative state/version reads → validation → atomic write/result. A completed matching request returns the original result before terminal/stale checks; a different fingerprint returns `IDEMPOTENCY_CONFLICT`. Approval atomically creates StudyPlan/all StudyBlocks, updates current_plan_id/revision, proposal state/backlink, ApprovalAction, action completion and idempotency. A technical failure rolls back all writes. A terminal stale rejection may instead commit the STALE state and typed error receipt without creating a plan, as specified in the contract.
+
+Generation fingerprints use the original generation_scope/policy_overrides, not newly generated IDs/timestamps. The service checks lookup_operation_result before engine execution; persist_plan_proposal checks again after the lock. Domain idempotency/API receipts retain retry results for at least seven days. API receipt leases last 120 seconds, renew at most every 30 seconds and use lease_version fencing; recovery reuses stable message/action IDs and domain keys. These operational leases do not expire business actions/proposals.
 
 ## Overlap policy
 
-Validate half-open intervals `[start_at,end_at)` in proposal and approval RPCs. Historical plans may overlap one another. The implementation baseline uses a GiST exclusion constraint over a timestamp range keyed by `plan_id`, with `btree_gist` enabled for UUID/equality support, so non-overlap applies within one snapshot only. The constraint must not inspect parent plan status. Availability, BUSY, deadline, workload, and current scheduling-context checks remain service/RPC validation, not a substitute for snapshot-level non-overlap.
+Validate half-open intervals `[start_at,end_at)` in proposal and approval RPCs. Historical plans may overlap one another. The accepted database enforcement is a GiST exclusion constraint over a timestamp range keyed by plan_id, with btree_gist for UUID equality as required by the selected PostgreSQL setup. Non-overlap applies within one snapshot only; do not inspect parent plan status or reject overlaps across snapshots. Availability, BUSY, deadline, workload and current-context checks remain separate service/RPC validation.
 
 ## Consequences and tests
 
-Advisory locks do not stop bypass writers, so grants, private schemas, centralized RPCs, and bypass/concurrency tests are required. Test direct RPC authorization, double approval, lost-response retry, rejection replay, stale revisions, mixed-snapshot races, concurrent scheduling-input writes, rollback, same logical block IDs across snapshots, and retained historical snapshots. See register E-10 through E-13.
-
-## Stage 03.2 implementation baseline
-
-**IMPLEMENTATION_BASELINE — selected for F1 implementation; not a claim of separate team approval.** Every scheduling-affecting writer uses `pg_advisory_xact_lock` with one deterministic signed 64-bit key derived from the trusted owner UUID. It acquires the transaction-scoped lock before authoritative reads, uses `READ COMMITTED`, reloads after waiting, and captures authoritative time after lock acquisition. A hash collision may serialize unrelated users but cannot bypass ownership, RLS, target, or version checks. Session-level locks are prohibited.
-
-`read_scheduling_context` is a one-statement/RPC snapshot of tasks, TimeWindows, effective policy, current plan and relevant blocks, and `schedule_revision`. The Python engine runs outside the transaction. `persist_plan_proposal` reacquires the lock and rejects an expected-revision mismatch. Approval locks, checks idempotency replay/fingerprint conflict before stale interpretation, revalidates authoritative state, consumes a CHAT attestation when supplied, writes plan/blocks, updates profile pointer/revision and proposal, records idempotency, and commits atomically. Rejection follows the same lock/idempotency discipline and commits its replay result atomically.
-
-The final overlap guard is `btree_gist` plus a GiST exclusion constraint scoped by `plan_id` and `tstzrange(start_at,end_at,'[)')`; it rejects overlap only inside one snapshot. All availability, BUSY, workload, deadline, retained-block, and policy validations remain independent RPC checks.
+Row locking requires every writer to participate, so attestation, least-privilege grants, private schemas and centralized RPCs must prevent bypass writers. Test direct RPC authorization, double approval, lost-response retry, rejection replay, stale revisions, mixed-snapshot races, concurrent writes, rollback, lease fencing and block identity continuity across historical snapshots. The design is accepted; these runtime cases remain unrun until implementation evidence is recorded.
 

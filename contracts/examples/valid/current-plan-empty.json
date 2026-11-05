@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.1",
+  "request_id": "req-fixed-example",
+  "outcome": "READ",
+  "data": {
+    "kind": "PLAN_VIEW",
+    "plan": null,
+    "study_blocks": []
+  },
+  "error": null,
+  "warnings": []
+}

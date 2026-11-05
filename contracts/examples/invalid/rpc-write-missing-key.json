@@ -1,0 +1,47 @@
+{
+  "contract_version": "1.0.0",
+  "schema_version": "1.1",
+  "request_id": "req-fixed-example",
+  "operation": "confirm_task",
+  "arguments": {
+    "candidate_id": "00000000-0000-4000-8000-000000000004",
+    "expected_candidate_version": 1
+  },
+  "execution_context": {
+    "trusted_context": {
+      "request_id": "req-fixed-example",
+      "message_id": "00000000-0000-4000-8000-000000000003",
+      "principal": {
+        "user_id": "00000000-0000-4000-8000-000000000001"
+      },
+      "received_at": "2026-11-05T03:00:00Z",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "locale": "vi-VN"
+    },
+    "conversation_id": "00000000-0000-4000-8000-000000000002",
+    "idempotency_key": null,
+    "approval_action": {
+      "approval_action_id": "00000000-0000-4000-8000-000000000011",
+      "user_id": "00000000-0000-4000-8000-000000000001",
+      "target_type": "TASK_CANDIDATE",
+      "target_id": "00000000-0000-4000-8000-000000000004",
+      "target_version": 1,
+      "decision": "APPROVE",
+      "source": "UI",
+      "source_message_id": null,
+      "created_at": "2026-11-05T03:00:00Z"
+    },
+    "action_reference": {
+      "action_id": "00000000-0000-4000-8000-000000000006",
+      "action_version": 1,
+      "target_type": "TASK_CANDIDATE",
+      "target_id": "00000000-0000-4000-8000-000000000004",
+      "target_version": 1
+    }
+  },
+  "attestation": {
+    "key_id": "fixture-only-not-a-real-key",
+    "payload": "Zml4dHVyZQ",
+    "signature": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+}

@@ -1,0 +1,258 @@
+{
+  "contract_version": "1.0.0",
+  "schema_version": "1.1",
+  "status": "APPROVED",
+  "approval": {
+    "record": "APPROVAL.md",
+    "approved_on": "2026-11-05",
+    "effective_on": "2026-11-05",
+    "basis": "Team approval confirmed by the user in this conversation"
+  },
+  "signature": "execute(command: ValidatedCommand, context: ExecutionContext) -> operation-specific ToolResult",
+  "operations": [
+    {
+      "operation": "create_task_candidate",
+      "arguments_schema": "create_task_candidateArguments",
+      "result_schema": "create_task_candidateResult",
+      "read_only": false,
+      "idempotency_required": true,
+      "approval_target": null,
+      "rpc": "create_task_candidate",
+      "http_entrypoint": "POST /v1/actions or POST /v1/messages",
+      "success_outcomes": [
+        "DRAFTED"
+      ]
+    },
+    {
+      "operation": "confirm_task",
+      "arguments_schema": "confirm_taskArguments",
+      "result_schema": "confirm_taskResult",
+      "read_only": false,
+      "idempotency_required": true,
+      "approval_target": "TASK_CANDIDATE",
+      "rpc": "confirm_task",
+      "http_entrypoint": "POST /v1/decisions",
+      "success_outcomes": [
+        "COMMITTED"
+      ]
+    },
+    {
+      "operation": "search_tasks",
+      "arguments_schema": "search_tasksArguments",
+      "result_schema": "search_tasksResult",
+      "read_only": true,
+      "idempotency_required": false,
+      "approval_target": null,
+      "rpc": "search_tasks",
+      "http_entrypoint": "GET /v1/tasks",
+      "success_outcomes": [
+        "READ"
+      ]
+    },
+    {
+      "operation": "set_availability",
+      "arguments_schema": "set_availabilityArguments",
+      "result_schema": "set_availabilityResult",
+      "read_only": false,
+      "idempotency_required": true,
+      "approval_target": "PENDING_ACTION",
+      "rpc": "set_availability",
+      "http_entrypoint": "POST /v1/actions or POST /v1/messages",
+      "success_outcomes": [
+        "COMMITTED"
+      ]
+    },
+    {
+      "operation": "set_busy_interval",
+      "arguments_schema": "set_busy_intervalArguments",
+      "result_schema": "set_busy_intervalResult",
+      "read_only": false,
+      "idempotency_required": true,
+      "approval_target": "PENDING_ACTION",
+      "rpc": "set_busy_interval",
+      "http_entrypoint": "POST /v1/actions or POST /v1/messages",
+      "success_outcomes": [
+        "COMMITTED"
+      ]
+    },
+    {
+      "operation": "set_scheduling_preferences",
+      "arguments_schema": "set_scheduling_preferencesArguments",
+      "result_schema": "set_scheduling_preferencesResult",
+      "read_only": false,
+      "idempotency_required": true,
+      "approval_target": "PENDING_ACTION",
+      "rpc": "set_scheduling_preferences",
+      "http_entrypoint": "POST /v1/actions or POST /v1/messages",
+      "success_outcomes": [
+        "COMMITTED"
+      ]
+    },
+    {
+      "operation": "generate_study_plan",
+      "arguments_schema": "generate_study_planArguments",
+      "result_schema": "generate_study_planResult",
+      "read_only": false,
+      "idempotency_required": true,
+      "approval_target": null,
+      "rpc": "persist_plan_proposal",
+      "http_entrypoint": "POST /v1/actions or POST /v1/messages",
+      "success_outcomes": [
+        "PROPOSED",
+        "READ"
+      ]
+    },
+    {
+      "operation": "get_study_plan",
+      "arguments_schema": "get_study_planArguments",
+      "result_schema": "get_study_planResult",
+      "read_only": true,
+      "idempotency_required": false,
+      "approval_target": null,
+      "rpc": "get_study_plan",
+      "http_entrypoint": "GET /v1/plans",
+      "success_outcomes": [
+        "READ"
+      ]
+    },
+    {
+      "operation": "approve_study_plan",
+      "arguments_schema": "approve_study_planArguments",
+      "result_schema": "approve_study_planResult",
+      "read_only": false,
+      "idempotency_required": true,
+      "approval_target": "PLAN_PROPOSAL",
+      "rpc": "approve_study_plan",
+      "http_entrypoint": "POST /v1/decisions",
+      "success_outcomes": [
+        "COMMITTED"
+      ]
+    },
+    {
+      "operation": "reject_study_plan",
+      "arguments_schema": "reject_study_planArguments",
+      "result_schema": "reject_study_planResult",
+      "read_only": false,
+      "idempotency_required": true,
+      "approval_target": null,
+      "rpc": "reject_study_plan",
+      "http_entrypoint": "POST /v1/decisions",
+      "success_outcomes": [
+        "REJECTED"
+      ]
+    }
+  ],
+  "internal_interfaces": [
+    {
+      "rpc": "get_scheduling_context",
+      "arguments_schema": "GetSchedulingSnapshotArguments",
+      "data_schema": "SchedulingInputSnapshot",
+      "read_only": true,
+      "attestation_required": false,
+      "llm_callable": false,
+      "result_schema": "get_scheduling_contextInternalResult"
+    },
+    {
+      "rpc": "persist_plan_proposal",
+      "arguments_schema": "PersistProposalArguments",
+      "data_schema": "generate_study_planResult",
+      "read_only": false,
+      "attestation_required": true,
+      "llm_callable": false,
+      "result_schema": "persist_plan_proposalInternalResult"
+    },
+    {
+      "rpc": "prepare_pending_action",
+      "arguments_schema": "PreparePendingActionArguments",
+      "data_schema": "ActionPresentation",
+      "read_only": false,
+      "attestation_required": true,
+      "llm_callable": false,
+      "result_schema": "prepare_pending_actionInternalResult"
+    },
+    {
+      "rpc": "review_pending_action",
+      "arguments_schema": "ReviewPendingActionArguments",
+      "data_schema": "ActionPresentation",
+      "read_only": false,
+      "attestation_required": true,
+      "llm_callable": false,
+      "result_schema": "review_pending_actionInternalResult"
+    },
+    {
+      "rpc": "update_candidate_draft",
+      "arguments_schema": "UpdateCandidateDraftArguments",
+      "data_schema": "TaskCandidate",
+      "read_only": false,
+      "attestation_required": true,
+      "llm_callable": false,
+      "result_schema": "update_candidate_draftInternalResult"
+    },
+    {
+      "rpc": "cancel_pending_action",
+      "arguments_schema": "CancelPendingActionArguments",
+      "data_schema": "PendingAction",
+      "read_only": false,
+      "attestation_required": true,
+      "llm_callable": false,
+      "result_schema": "cancel_pending_actionInternalResult"
+    },
+    {
+      "rpc": "record_source_message",
+      "arguments_schema": "RecordSourceMessageArguments",
+      "data_schema": "SourceMessageRecord",
+      "read_only": false,
+      "attestation_required": true,
+      "llm_callable": false,
+      "result_schema": "record_source_messageInternalResult"
+    },
+    {
+      "rpc": "claim_api_receipt",
+      "arguments_schema": "ClaimApiReceiptArguments",
+      "data_schema": "ApiReceipt",
+      "read_only": false,
+      "attestation_required": true,
+      "llm_callable": false,
+      "result_schema": "claim_api_receiptInternalResult"
+    },
+    {
+      "rpc": "complete_api_receipt",
+      "arguments_schema": "CompleteApiReceiptArguments",
+      "data_schema": "ApiReceipt",
+      "read_only": false,
+      "attestation_required": true,
+      "llm_callable": false,
+      "result_schema": "complete_api_receiptInternalResult"
+    },
+    {
+      "rpc": "lookup_operation_result",
+      "arguments_schema": "LookupOperationResultArguments",
+      "data_schema": "LookupOperationResultData",
+      "read_only": true,
+      "attestation_required": false,
+      "llm_callable": false,
+      "result_schema": "lookup_operation_resultInternalResult"
+    },
+    {
+      "rpc": "renew_api_receipt",
+      "arguments_schema": "ApiReceiptLeaseArguments",
+      "data_schema": "ApiReceipt",
+      "read_only": false,
+      "attestation_required": true,
+      "llm_callable": false,
+      "result_schema": "renew_api_receiptInternalResult"
+    },
+    {
+      "rpc": "release_api_receipt",
+      "arguments_schema": "ApiReceiptLeaseArguments",
+      "data_schema": "ApiReceipt",
+      "read_only": false,
+      "attestation_required": true,
+      "llm_callable": false,
+      "result_schema": "release_api_receiptInternalResult"
+    }
+  ],
+  "internal_result_envelope": "Internal RPCs return {schema_version, request_id, outcome: READ or COMMITTED, data: data_schema, error:null, warnings:Issue[]} or ErrorResult. persist_plan_proposal uses generate_study_planResult unchanged.",
+  "rpc_argument_name": "p_request",
+  "rpc_envelope_schema": "RpcRequest"
+}
