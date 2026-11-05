@@ -34,9 +34,7 @@ import {
   describeChanges,
   diffTasks,
   diffWindows,
-  isExpired,
   isStale,
-  PROPOSAL_TTL_MS,
 } from "../features/planner/proposal"
 
 import TaskPanel from "../features/planner/TaskPanel"
@@ -397,22 +395,6 @@ export default function Planner({
     ) &&
     !shownWindows.some((w) => weekDays.some((d) => toIsoDate(d) === w.date))
 
-  // Ticks only while a proposal is pending, so the expiry shows up without a refresh.
-
-  const [now, setNow] = useState(Date.now())
-
-  useEffect(() => {
-    if (!proposal) return
-
-    setNow(Date.now())
-
-    const timer = window.setInterval(() => setNow(Date.now()), 15000)
-
-    return () => window.clearInterval(timer)
-  }, [proposal])
-
-  const expired = proposal ? isExpired(proposal, now) : false
-
   const stale = proposal ? isStale(proposal, revision) : false
 
   const send = () => {
@@ -454,7 +436,7 @@ export default function Planner({
   }
 
   const approve = () => {
-    if (!proposal || stale || expired) return
+    if (!proposal || stale) return
 
     setTasks(proposal.next.tasks)
 
@@ -571,15 +553,11 @@ export default function Planner({
                   Đề xuất:{" "}
                   {describeChanges(proposal.changes, proposal.windowChanges) ||
                     "không đổi"}
-                  {!expired &&
-                    ` · còn ${Math.max(1, Math.ceil((PROPOSAL_TTL_MS - (now - proposal.createdAt)) / 60000))} phút`}
                 </strong>
                 <span>
-                  {expired
-                    ? "Đề xuất đã hết hạn (EXPIRED). Hãy từ chối và tạo lại."
-                    : stale
-                      ? "Lịch đã thay đổi từ lúc tạo đề xuất (STALE_PLAN_VERSION). Hãy từ chối và tạo lại."
-                      : reply || proposal.reply}
+                  {stale
+                    ? "Lịch đã thay đổi từ lúc tạo đề xuất (STALE). Hãy từ chối và tạo lại."
+                    : reply || proposal.reply}
                 </span>
                 {proposal.issues.length > 0 && (
                   <details className="proposal-issues">
@@ -600,7 +578,7 @@ export default function Planner({
               <Button
                 className="primary proposal-approve"
                 onClick={approve}
-                disabled={stale || expired}
+                disabled={stale}
               >
                 <Check aria-hidden="true" size={14} /> Duyệt
               </Button>
