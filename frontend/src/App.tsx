@@ -205,7 +205,10 @@ export default function App() {
           </aside>
         </div>
         {page === "Planner" && <Planner tasks={tasks} setTasks={setTasks} />}
-        <div hidden={page !== "Study"}>
+        <div
+          hidden={page !== "Study"}
+          className={page === "Study" ? "study-page-wrapper" : ""}
+        >
           <Study notify={setNotice} />
         </div>
       </main>
