@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/supabase-database-foundation
+      - feat/f1-mvp-intergration
   pull_request:
     branches:
       - main
@@ -91,7 +92,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.12'
 
       - name: Install checker dependencies
         run: python -m pip install --disable-pip-version-check -r contracts/requirements-check.txt

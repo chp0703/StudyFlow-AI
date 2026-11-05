@@ -7,7 +7,7 @@
 - Sources: TV1 `f0d079e`, TV2 `c8b4865`, TV3 `431991d`, TV4 `fecb9f9`.
 - Approved logical schema v1.1 and integration package 1.0.0 remain authoritative.
 - Sol authors independent acceptance tests, performs Git operations, runs checks and reviews changes.
-- Gemini 4 Argon High implements work packages through Antigravity; Gemini 3.8 Flash High is the quota-exhaustion fallback.
+- Gemini 4 Argon High implements work packages through official Antigravity CLI `agy`; Gemini 3.8 Flash High is the quota-exhaustion fallback. CLI 1.5.1 returned a real successful pinned Argon High response on 2026-11-05 using existing Google sign-in, without an API key. Legacy Gemini CLI OAuth returned `UNSUPPORTED_CLIENT`.
 - Runtime Gemini is not part of F1: the demo extractor uses DeepSeek.
 
 ## Gates
@@ -19,6 +19,16 @@
 | G3 live demo | NOT_STARTED | DeepSeek + new Supabase demo project, live acceptance evidence, UI handoff |
 
 Never mark a gate complete from fixture-only checks. Cloud project credentials and a DeepSeek API key are environment inputs; secrets must not enter tracked files.
+
+## Independent evidence so far (2026-11-05)
+
+- Integrated contract checker passed. Existing TV2 suite: 78 tests passed; planner unit suite: 24 tests passed.
+- Initial independent scheduler baseline before Argon: 29 methods, 8 failures and 40 errors. First Argon implementation passed those 29; follow-up review added three methods exposing 3 failures and 4 errors. WP1 remains under correction until the full 32-method suite and review pass.
+- Independent HTTP suite contains 27 methods. Runtime app is absent, so setup fails; no HTTP acceptance success is claimed.
+- SQL test files parse with pglast, including the boundary, golden canonical/HMAC and rollback cases. No PostgreSQL/pgTAP execution has yet occurred locally; CI is required for runtime evidence.
+- Vietnamese extractor dataset contains 40 validated cases. No live model evaluation has yet run.
+- User supplied shared-or-demo Supabase project ref `phomrutsdhdgejlskwcb`; public JWKS responded 200 with an ES256 key. Schema, permissions, migration history and existing data remain unverified. Do not reset or deploy blindly.
+- Review found missing private read/recovery seams in the approved RPC inventory. A concrete contract addendum is being prepared; do not invent new public operations or silently change approved contracts.
 
 ## Work packages
 

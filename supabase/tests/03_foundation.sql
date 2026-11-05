@@ -1,8 +1,8 @@
--- Stage 03.3 local pgTAP smoke checks.
+-- Approved F1 contract foundation (local pgTAP).
 -- Run only with `supabase test db` against a local database. No remote target.
 
 begin;
-select plan(14);
+select plan(18);
 
 select has_schema('app_private');
 select has_schema('app_api');
@@ -16,7 +16,11 @@ select has_table('app_private'::name, 'plan_proposals'::name);
 select has_table('app_private'::name, 'pending_actions'::name);
 select has_table('app_private'::name, 'approval_actions'::name);
 select has_table('app_private'::name, 'idempotency_records'::name);
-select has_table('app_private'::name, 'chat_approval_attestations'::name);
+select has_table('app_private'::name, 'conversation_records'::name);
+select has_table('app_private'::name, 'source_messages'::name);
+select has_table('app_private'::name, 'api_request_receipts'::name);
+select has_table('app_private'::name, 'action_presentations'::name);
+select has_table('app_private'::name, 'rpc_attestation_keys'::name);
 select has_index(
     'app_private'::name,
     'study_blocks'::name,
