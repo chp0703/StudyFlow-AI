@@ -2,6 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:studyflow:f1:1.1:integration:1.0.0",
   "title": "StudyFlow F1 shared boundary schemas",
+  "x-contract-status": "APPROVED",
+  "x-approval-record": "../APPROVAL.md",
+  "x-approved-on": "2026-11-05",
   "$defs": {
     "TaskStatus": {
       "type": "string",

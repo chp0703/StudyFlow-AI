@@ -2,8 +2,12 @@
 
 Ngày kiểm tra: **05/11/2026**, múi giờ Việt Nam.
 
+Package **1.0.0** đã được phê duyệt chính thức theo [APPROVAL.md](APPROVAL.md). Phê duyệt được ghi riêng với kết quả kiểm tra; việc đổi trạng thái không thay đổi 104 definitions, 8 endpoint hoặc các fixture nghiệp vụ.
+
 | Hạng mục | Kết quả |
 |---|---|
+| Metadata phê duyệt | PASS — APPROVED đồng bộ ở API, schema bundle, service/data registry; ngày hiệu lực 05/11/2026 |
+| Đối chiếu bản team đã duyệt | PASS — endpoint/components, 104 definitions, tool/data mapping và version giữ nguyên so với commit b629a5e |
 | JSON Schema 2020-12 | PASS — 104 definitions |
 | OpenAPI 3.1.1 | PASS — 8 paths; external schema references resolve local |
 | Service registry | PASS — đúng 10 operation F1, arguments/result schema tồn tại |

@@ -1,12 +1,12 @@
 # ADR-004 — Database Migration Strategy
 
-**Status: PROPOSED — Pending team approval**  
+**Status: ACCEPTED — Supabase CLI baseline; environment setup remains open**
 **Created:** 2026-11-04
 **Last updated:** 2026-11-05
 
-Decision status and approval state remain authoritative in the [decision register](../../database/StudyFlow_AI_Phase_03_Implementation_Decision_Register.md), especially E-01, E-04, and E-14. This ADR records migration rationale and safeguards only.
+The Supabase CLI baseline is accepted effective 05/11/2026 in the [official contract](../../../contracts/README.md), with the user's confirmation recorded in [APPROVAL.md](../../../contracts/APPROVAL.md). Decision scope is tracked in the [decision register](../../database/StudyFlow_AI_Phase_03_Implementation_Decision_Register.md), especially E-01/E-04; concrete versions, local/CI configuration and environment readiness under E-14 remain open. The dependency order below is implementation guidance, not a completed migration or blanket approval of every prior draft.
 
-## Recommendation (E-01, E-04, E-14)
+## Decision and implementation guidance (E-01, E-04, E-14)
 
 Use Supabase CLI as the sole migration source. Commit `supabase/config.toml`, ordered migration files, and non-production seed data. Do not maintain Alembic or dashboard-only changes in parallel.
 

@@ -2,10 +2,10 @@
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Contract package | **1.0.0 — REVIEW_READY**, ngày 05/11/2026, giờ Việt Nam |
+| Contract package | **1.0.0 — APPROVED / CHÍNH THỨC**, hiệu lực 05/11/2026, giờ Việt Nam |
 | Logical schema | **F1 v1.1**, `schema_version: "1.1"` |
 | Phạm vi | API FE ↔ BE; Tool/Service Orchestrator ↔ BE; Data/RPC BE ↔ DB |
-| Trạng thái phê duyệt | Bản tích hợp cụ thể được soạn theo yêu cầu của chủ dự án; chưa tự nhận các thành viên đã review/ký duyệt |
+| Trạng thái phê duyệt | **Team đã phê duyệt**, theo xác nhận của người dùng ngày 05/11/2026; căn cứ và phạm vi tại [APPROVAL.md](APPROVAL.md) |
 | Trạng thái triển khai | Đặc tả + schemas + fixtures + kiểm tra contract; chưa có API handler, migration hoặc DB chạy thật |
 
 ## 1. Nguồn chuẩn và cách sử dụng
@@ -14,7 +14,8 @@
 
 | File | Là nguồn chuẩn cho |
 |---|---|
-| [README.md](README.md) | Luồng xử lý, trust boundary, transaction, invariants và quyết định cần review |
+| [README.md](README.md) | Luồng xử lý, trust boundary, transaction, invariants và quyết định đã phê duyệt |
+| [APPROVAL.md](APPROVAL.md) | Căn cứ, phạm vi và ngày hiệu lực của bản chính thức |
 | [schemas/f1.schema.json](schemas/f1.schema.json) | Kiểu/enum/nullability/required của mọi DTO và 10 entity logic; JSON Schema 2020-12 |
 | [openapi.yaml](openapi.yaml) | Method/path/header/query/request/response HTTP; OpenAPI 3.1.1, viết bằng cú pháp JSON hợp lệ trong YAML |
 | [service-contract.json](service-contract.json) | 10 operation chính thức, schema arguments/result, approval và mapping RPC |
@@ -25,7 +26,7 @@
 
 FE sinh/đối chiếu TypeScript types từ schema chung; BE tạo Pydantic validator tương đương; DB đối chiếu mapping và invariants. Không duy trì ba bộ enum riêng. `contract_version` dùng để quản lý package/RPC, không thêm vào các DTO v1.1 vốn không có field này.
 
-Các ADR và physical design đang `PROPOSED/DRAFT` là đầu vào thiết kế, không phải bằng chứng đã được duyệt. Những lựa chọn mới ở mục 10 là đề xuất tích hợp có thể review ngay. Bộ này không tự cập nhật approval gate trong Decision Register.
+Các quyết định IC-01–IC-08 ở mục 10 đã được team phê duyệt theo [ghi nhận phê duyệt](APPROVAL.md). Decision Register và ADR được đồng bộ theo phạm vi này. Khi tài liệu baseline/physical design cũ còn ghi phương án `PROPOSED/DRAFT` khác với bộ contract, áp dụng bộ contract chính thức; không suy ra toàn bộ nội dung hoặc công việc ngoài phạm vi của tài liệu cũ cũng đã được duyệt.
 
 ## 2. Quy ước chung
 
@@ -161,7 +162,7 @@ Chỉ lưu proposal khi coverage FULL/PARTIAL, không có hard conflict và diff
 
 ### 5.1. Tên, kiểu và mapping
 
-Chọn Supabase PostgreSQL, FastAPI, Data API/RPC và Supabase CLI làm **baseline đề xuất cho bộ contract này**. `app_private` không exposed; `app_api` chỉ expose routines allowlist. Data dictionary máy đọc ở data-contract.json bao phủ đủ field của 10 entity; không phải SQL migration.
+Chọn Supabase PostgreSQL, FastAPI, Data API/RPC và Supabase CLI làm **baseline chính thức cho bộ contract này**. `app_private` không exposed; `app_api` chỉ expose routines allowlist. Data dictionary máy đọc ở data-contract.json bao phủ đủ field của 10 entity; không phải SQL migration.
 
 | Entity | Table | Khóa và bất biến chính |
 |---|---|---|
@@ -178,7 +179,7 @@ Chọn Supabase PostgreSQL, FastAPI, Data API/RPC và Supabase CLI làm **baseli
 
 UUID → uuid; instant → timestamptz; date → date; local time → time(0) without time zone; enum/string/timezone → text; integer → bigint với CHECK miền JSON an toàn; boolean → boolean; nested object/array → jsonb có validator đúng schema. Cột required không-null dùng NOT NULL. DB lưu đủ metadata created_at/updated_at đúng entity; StudyBlock chỉ có created_at. Không tự thêm duration/status/source_block_id vào block.
 
-`data-contract.json` quyết định tên physical table/cột của bộ này: User dùng `user_profiles` (thay tên gợi ý `user_settings` ở baseline cũ). Đây là lựa chọn tích hợp mới cần DB owner review; không đổi logical User. Không tạo SQL ENUM chưa khai báo; text CHECK enum theo schema chung. JSONB không thay FK, ownership hay constraint scalar.
+`data-contract.json` quyết định tên physical table/cột của bộ này: User dùng `user_profiles` (thay tên gợi ý `user_settings` ở baseline cũ). Đây là lựa chọn tích hợp đã phê duyệt tại IC-04; không đổi logical User. Không tạo SQL ENUM chưa khai báo; text CHECK enum theo schema chung. JSONB không thay FK, ownership hay constraint scalar.
 
 ### 5.2. Constraints ngoài khả năng JSON Schema
 
@@ -206,7 +207,7 @@ Các record hạ tầng này được đặc tả tại `data-contract.json.infr
 
 ### 6.1. Quyết định bảo vệ boundary
 
-Forward cùng JWT của FE **không chứng minh request xuất phát từ FastAPI**. Bộ này chọn hướng **user JWT + attestation backend cho mọi RPC ghi**, thay vì tin owner field hay LLM approval. Đây là refinement cần team review của Option A trong ADR-002 và có thể thay thế quyết định CHAT attestation còn mở ở PR #15.
+Forward cùng JWT của FE **không chứng minh request xuất phát từ FastAPI**. Bộ này chốt hướng **user JWT + attestation backend cho mọi RPC ghi**, thay vì tin owner field hay LLM approval. IC-05 đã được phê duyệt, cụ thể hóa Option A trong ADR-002 và thay thế phương án để ngỏ về CHAT attestation trong tài liệu đầu vào của PR #15.
 
 - FastAPI forward user JWT để DB có auth.uid(); không dùng service_role cho request người dùng.
 - `authenticated`: USAGE app_api + EXECUTE đúng wrappers; không có table DML/SELECT/USAGE app_private, không execute helper signing/verifier trực tiếp. `anon`/PUBLIC không có EXECUTE wrappers.
@@ -214,7 +215,7 @@ Forward cùng JWT của FE **không chứng minh request xuất phát từ FastA
 - Routines đọc được gọi bằng user JWT và enforce ownership; không nhận arbitrary SQL/table name. Mọi routine ghi, gồm helper lưu message/action/receipt/proposal, cần attestation hợp lệ; revoke mọi helper/bypass writer khác.
 - Secret attestation chỉ ở backend secret store và private verifier key store, không nằm trong repo/env example/FE/log. Dùng ít nhất 32 byte ngẫu nhiên mật mã; DB key store/rotation/grants được mô tả tại data-contract.json.security_support. Key store toàn cục có FORCE RLS và policy SELECT riêng chỉ cho sf_rpc_owner, không áp policy user_id của bảng nghiệp vụ; chỉ migration/key-rotation owner được ghi. Deployment thiếu key hoặc quyền đúng phải fail closed.
 
-Chọn wrapper SECURITY DEFINER có kiểm soát để không mắc cấu hình “chỉ EXECUTE nhưng SECURITY INVOKER cần quyền bảng”. Đây là đề xuất mới có chủ đích so với ADR ưu tiên INVOKER; không đánh dấu ngoại lệ đã được nhóm duyệt. Đọc [Supabase API security](https://supabase.com/docs/guides/api/securing-your-api) và [PostgreSQL function security](https://www.postgresql.org/docs/current/sql-createfunction.html).
+Chốt wrapper SECURITY DEFINER có kiểm soát theo IC-05, thay cho phương án ưu tiên INVOKER trước đây. Không cấp quyền bảng cho authenticated để bù thiếu quyền wrapper; triển khai phải tuân thủ role, grants, FORCE RLS và owner checks đã nêu. Đọc [Supabase API security](https://supabase.com/docs/guides/api/securing-your-api) và [PostgreSQL function security](https://www.postgresql.org/docs/current/sql-createfunction.html).
 
 ### 6.2. RpcEnvelope và attestation
 
@@ -306,11 +307,13 @@ python contracts/check_contract.py
 
 Checker xác minh schema, OpenAPI, references, registry, entity mapping, fixtures hợp lệ/không hợp lệ và các invariant thuần quan trọng. Fixture `rpc-write-shape-only` chứa chữ ký giả chỉ để kiểm tra cấu trúc, **không phải attestation hợp lệ để gọi DB**. Checker không chứng minh JWT verification, grants/RLS, attestation verifier, transaction, concurrency, DB storage hoặc UI rendering đã chạy thật. Các ca đó có owner và expected result tại acceptance-cases.md.
 
-M0 đạt khi: FE/TV2/TV3/TV1/TV4 review ranh giới mình sử dụng; schema fixtures chạy được; mock/real adapter dùng cùng contract; các quyết định mục 10 có biên bản phê duyệt. Không cần đợi toàn bộ module chạy thật để review contract. Mốc tích hợp thật cần thêm evidence ở acceptance-cases.
+Phần phê duyệt contract của M0 đã hoàn tất theo [APPROVAL.md](APPROVAL.md); schema và fixtures đã được kiểm tra theo VALIDATION.md. Việc mock/real adapter cùng tuân thủ contract vẫn cần bằng chứng triển khai, không tự coi toàn bộ M0 hoặc mốc tích hợp thật đã hoàn tất chỉ từ phê duyệt tài liệu. Các ca runtime tiếp tục theo dõi ở acceptance-cases.md.
 
-## 10. Quyết định mới và trách nhiệm review
+## 10. Quyết định đã phê duyệt và trách nhiệm duy trì
 
-| ID | Lựa chọn cụ thể trong bản này | Người review |
+Tất cả IC-01–IC-08 dưới đây có trạng thái **APPROVED**, hiệu lực 05/11/2026. Cột trách nhiệm chỉ vai trò duy trì và review thay đổi về sau, không tự gán tên người ký.
+
+| ID | Lựa chọn chính thức | Vai trò duy trì / review thay đổi |
 |---|---|---|
 | IC-01 | 8 endpoint; POST chuẩn bị khác POST quyết định; GET timewindows/preferences là read adapter | FE + TV2 + TV3 |
 | IC-02 | Typed ActionPresentation để hiển thị full policy/target; bốn mã lỗi transport bổ sung | FE + TV2 + TV3 |
@@ -321,7 +324,7 @@ M0 đạt khi: FE/TV2/TV3/TV1/TV4 review ranh giới mình sử dụng; schema f
 | IC-07 | Request receipt/message/presentation persistence; retry 7 ngày; transport token 60 giây | TV1 + TV2 + TV3 |
 | IC-08 | Datetime theo phút, query defaults/cursors/filter; 64KiB/8000 ký tự/100 items | FE + TV2 |
 
-Vai trò TV1–TV4 theo bản phân công hiện có; không tự gán tên người. Có thể chấp nhận hoặc sửa từng IC bằng review cụ thể. Nếu thay trust model, phải cập nhật đồng thời API/service/data và acceptance cases, không chỉ sửa một ADR. Sau review, cập nhật Decision Register/ADR và physical design để cùng trạng thái; merge tài liệu đơn thuần không tự thay chữ ký phê duyệt.
+Vai trò TV1–TV4 theo bản phân công hiện có; không tự gán tên người. Thay đổi từng IC sau phê duyệt cần review cụ thể từ các consumer liên quan. Nếu thay trust model, phải cập nhật đồng thời API/service/data và acceptance cases, không chỉ sửa một ADR. Decision Register/ADR đã ghi nhận bản chính thức; physical design khi triển khai phải đối chiếu lại với bộ này. Merge tài liệu không thay thế căn cứ phê duyệt đã được ghi nhận.
 
 Breaking change về field/enum/nullability/side effect tăng major contract; additive thay đổi vẫn phải review consumer và cập nhật fixtures/changelog. Nếu đổi ngữ nghĩa F1 phải tăng schema gốc theo quy trình của nó. Không tái sử dụng version 1.1 cho behavior khác mà không ghi nhận.
 

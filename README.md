@@ -21,7 +21,7 @@ F2 (Learning Assessment & Adaptive Revision) and F3 (Daily AI Learning) are plan
 
 ## Official data contract
 
-The [Unified F1 Integration Contract](contracts/README.md) joins the FE–BE API, Orchestrator–Tool/Service interface, and BE–DB schema/RPC boundary. It includes OpenAPI, shared JSON Schema, entity mapping, and validation fixtures. Package 1.0.0 is **REVIEW_READY**; new integration decisions still require the listed owners' review and do not constitute implemented backend/database functionality.
+The [Unified F1 Integration Contract](contracts/README.md) joins the FE–BE API, Orchestrator–Tool/Service interface, and BE–DB schema/RPC boundary. It includes OpenAPI, shared JSON Schema, entity mapping, and validation fixtures. Package **1.0.0 is APPROVED**, effective 05/11/2026, covering IC-01–IC-08; the [approval record](contracts/APPROVAL.md) records the user's confirmation of team approval. The logical schema remains v1.1. Approval does not constitute implemented backend/database functionality.
 
 The authoritative logical contract is [Official F1 Schema v1.1](docs/database/schema_F1.md). It defines fields, lifecycle states, ownership rules, time semantics, tool contracts, scheduling-engine inputs/outputs, proposal approval, and idempotency behavior.
 
@@ -129,6 +129,6 @@ Other commands: `npm run build`, `npm run preview`, and `npm run format`.
 
 ## Status and implementation blockers
 
-The documentation baseline is ready for team review, not implementation. Before backend/database work begins, the team still needs to approve nested payload/policy storage, same-owner composite foreign keys, polymorphic approval-target enforcement, overlap enforcement, runtime role/RLS behavior, idempotency retention, indexes, and corresponding SRS scope revisions.
+The unified integration contract is the approved design baseline for F1 implementation. It settles payload/policy storage, same-owner foreign keys, typed approval targets, snapshot-scoped overlap, runtime authorization/attestation, owner row locking, idempotency retention, and indexes within its scope. Formal SRS reconciliation, concrete environment/tool versions, and implementation/runtime validation remain separate work; see the [decision register](docs/database/StudyFlow_AI_Phase_03_Implementation_Decision_Register.md).
 
 Do not treat design documents, proposal diagrams, or frontend mock data as evidence that backend or database functionality has been implemented.

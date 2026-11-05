@@ -2,10 +2,41 @@
 
 **Phase:** 03.1A — Implementation Decision Review & Architecture Foundation  
 **Logical authority:** `docs/database/schema_F1.md`, version 1.1  
-**Status:** Draft; decisions marked `PROPOSED`, `RECOMMENDED`, `USER_PREFERRED`, or `TBD` require team review.  
-**Implementation state:** No database, migration, backend, or RPC implementation is authorized by this document.
+**Status:** F1 integration contract decisions APPROVED, effective 05/11/2026; separate SRS/environment work remains open as listed below.
+**Implementation state:** Design approval recorded; no database, migration, backend, RPC, deployment or runtime-test completion is claimed.
 
-## Decision status summary
+## Current decisions — official integration contract 1.0.0
+
+The team approved the [Unified Integration Contract](../../contracts/README.md), including IC-01–IC-08, according to the user's confirmation recorded in [APPROVAL.md](../../contracts/APPROVAL.md). The logical authority remains schema F1 v1.1. This current section and the official contract supersede conflicting proposals in the historical sections below. Approval covers the delivered contract, not every unrelated item or benchmark target in earlier documents.
+
+| ID | Current status | Accepted decision / remaining scope |
+|---|---|---|
+| E-01 | APPROVED — contract stack | Supabase PostgreSQL; concrete projects/environments remain separate setup work. |
+| E-02 | APPROVED | Supabase Auth; FastAPI verifies JWT and derives the trusted principal. |
+| E-03 | APPROVED — contract boundary | FastAPI + request-scoped Data API/RPC; user JWT plus backend HMAC attestation for all writes. Earlier latency targets remain evaluation proposals, not SLOs. |
+| E-04 | APPROVED — migration tool | Supabase CLI baseline; concrete pinned versions/local/CI configuration tracked under E-14. |
+| E-05 | APPROVED — IC-05 | app_private/app_api; controlled SECURITY DEFINER wrappers, sf_rpc_owner, FORCE RLS, no authenticated private-table privileges, backend attestation. SQL grants/policies must implement the accepted model. |
+| E-06 | APPROVED — IC-04 | app_private.user_profiles keyed by auth.users.id; same-owner current-plan pointer. |
+| E-07 | APPROVED — IC-04 | Same-owner composite FKs; StudyBlock PK(plan_id,block_id); prohibit global UNIQUE(user_id,block_id). |
+| E-08 | APPROVED — IC-04 | Exactly one typed approval target FK, type/ID/owner integrity and transactional version/state/presentation checks. Concrete SQL implementation remains a deliverable. |
+| E-09 | APPROVED — shared schemas | JSONB fields use the approved shared DTOs; scalar relational keys/constraints remain normalized. |
+| E-10 | APPROVED — IC-06/IC-07 | Owner profile row lock, double idempotency lookup, consistent input snapshot and atomic commit; supersedes advisory-key proposal. |
+| E-11 | APPROVED — IC-04/IC-06 | GiST exclusion within plan_id only; btree_gist for UUID equality where required; service/RPC context revalidation remains mandatory. |
+| E-12 | OPEN — outside approval completion | Formal SRS reconciliation and acceptance of revised SRS wording have not been completed by the contract approval. |
+| E-13 | APPROVED — contract retention/indexes | Indexes/deletion restrictions in contract section 5; at least seven-day retry retention; no product TTL on candidate/action/proposal. |
+| E-14 | OPEN — concrete environment setup | Tool versions, Docker-compatible local stack, CI reset/migration setup and actual environment configuration remain implementation/setup work. |
+| E-15 | CONTRACT APPROVAL COMPLETE | IC-01–IC-08 approved; this does not mark all Phase 03 readiness tasks or runtime acceptance cases complete. |
+
+The API, Service/Tool and Data/RPC design is official and is the implementation baseline. Broader Stage 03.2 readiness still needs explicit tracking of E-12/E-14 and alignment of physical-design drafts with the approved contract. No remote deployment or completed migration/test run is inferred from this status update.
+
+## Historical Phase 03.1A proposals and review record
+
+The following material preserves the pre-approval record. Its PROPOSED/TBD labels, alternatives and NOT AUTHORIZED checklist describe the earlier state and do not override the current decisions above. Open SRS/environment work remains open; no historical item is silently marked implemented.
+
+<details>
+<summary>Earlier proposals, amendments and checklist</summary>
+
+## Historical decision status summary
 
 | ID | Question | Status | Recommendation | Required approver |
 |---|---|---|---|---|
@@ -180,3 +211,5 @@ The approved StudyBlock primary key is `(plan_id, block_id)`. A logical `block_i
 | SRS reconciliation owner and milestone recorded | VERIFIED |
 | Team approval gates complete | NOT COMPLETE — ADRs remain PROPOSED |
 | Stage 03.2 authorized | NOT AUTHORIZED |
+
+</details>

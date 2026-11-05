@@ -1,12 +1,12 @@
 # ADR-003 — Data Access and RPC Boundaries
 
-**Status: PROPOSED — Pending team approval**  
+**Status: ACCEPTED — Unified Integration Contract 1.0.0**
 **Created:** 2026-11-04
 **Last updated:** 2026-11-05
 
-Decision status and approvers remain authoritative in the [decision register](../../database/StudyFlow_AI_Phase_03_Implementation_Decision_Register.md), especially E-03, E-04, E-05, E-10, E-12, and E-14. This ADR records data-access rationale and constraints.
+Accepted effective 05/11/2026 through the [official contract](../../../contracts/README.md) and [approval record](../../../contracts/APPROVAL.md). The [decision register](../../database/StudyFlow_AI_Phase_03_Implementation_Decision_Register.md) tracks the accepted scope and separate E-12/E-14 work. The official service-contract.json registry governs operation arguments/results and internal RPCs; the overview below does not create a competing registry.
 
-## Recommendation (E-03, E-05, E-10)
+## Decision (E-03, E-05, E-10)
 
 FastAPI uses a request-scoped Supabase Data API client or equivalent immutable HTTPX wrapper. No shared mutable client may overwrite Authorization headers between concurrent requests. Ordinary reads may use controlled PostgREST access. Any multi-table business write uses one PostgreSQL RPC call.
 
@@ -14,12 +14,12 @@ Initial RPC inventory:
 
 | Function | Lock | Revision/idempotency |
 |---|---:|---|
-| `create_task_candidate` | owner lock if write protocol requires | idempotency; revision as applicable |
+| `create_task_candidate` | owner row lock | idempotency; no revision increment |
 | `confirm_task` | yes | approval + idempotency + revision |
 | `search_tasks` | no | read-only |
 | `set_availability` / `set_busy_interval` | yes | approval + idempotency + revision |
 | `set_scheduling_preferences` | yes | approval + idempotency + revision |
-| `generate_study_plan` persistence step | yes | idempotency; revision compare |
+| `generate_study_plan` via `persist_plan_proposal` | yes | idempotency over original command arguments; revision compare; no revision increment |
 | `get_study_plan` | no | read-only |
 | `approve_study_plan` | yes | approval + idempotency + revision |
 | `reject_study_plan` | yes | approval/version validation + idempotency |
@@ -28,7 +28,9 @@ RPC functions must not manually commit or roll back inside normal PostgREST exec
 
 ## Direct invocation and F1 scope
 
-If Option A in ADR-002 is approved, a user JWT may call an exposed mutation RPC directly. FastAPI validation is not sufficient: every RPC independently enforces ownership, versions, states, approval evidence, payload validation, and idempotency. If Option B is later approved, ordinary frontend roles must lose mutation EXECUTE and a separately approved backend identity must be designed. Neither option is currently approved.
+The accepted boundary is a forwarded user JWT plus backend HMAC attestation for every write, through controlled SECURITY DEFINER wrappers as specified in ADR-002 and contract IC-05. Every RPC independently enforces ownership, versions, states, trusted approval evidence, payload validation and idempotency; a frontend JWT alone cannot authorize a direct mutation. Read routines enforce owner access without a mutation attestation.
+
+Each routine accepts `p_request jsonb` validated against RpcRequest and the operation-specific arguments/result schema. Internal snapshot, proposal persistence, source-message, pending-action, receipt and lease helpers are listed in service-contract.json; they are not extra LLM tools. `lookup_operation_result` allows generation retries to reuse a persisted proposal before rerunning the engine.
 
 The following are explicitly `DEFERRED / UNSUPPORTED IN F1 v1.1` and must not be added to the RPC inventory: task update API, task cancellation API, manual StudyBlock creation, and individual StudyBlock rescheduling.
 
@@ -46,5 +48,5 @@ The following are `PROPOSED` evaluation targets, not SLOs: same-region p95 ≤30
 
 ## Consequences
 
-HTTP latency and pagination must be measured. Independent API calls cannot be treated as one transaction. RPC contracts, grants, direct-RPC authorization, rejection replay, approval replay, and error mapping require integration tests before implementation approval. See register E-03, E-05, E-10, E-12, E-13, and E-14.
+HTTP latency and pagination must be measured. Independent API calls cannot be treated as one transaction. The contract and authorization design are approved; RPC/grants, direct-RPC authorization, rejection/approval replay and error mapping still need implementation/runtime evidence. Proposed latency targets above remain evaluation proposals, not SLOs approved by the contract. See register E-03, E-05, E-10, E-12, E-13, and E-14.
 
