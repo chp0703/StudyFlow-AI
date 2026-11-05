@@ -81,6 +81,28 @@ jobs:
       - name: Run pgTAP database tests
         run: supabase test db
 
+      - name: Check generated contract-schema migration is current
+        run: python backend/scripts/generate_contract_schema_migration.py --check
+
+      - name: Verify the upgrade route matches a clean replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          dump() { supabase db dump --local --schema app_private,app_api | grep -v '^--' | sha256sum | cut -d' ' -f1; }
+          clean=$(dump)
+          supabase db reset --version 202611050008 --yes
+          supabase migration up --yes
+          upgraded=$(dump)
+          test "$clean" = "$upgraded"
+
+      - name: Run real-PostgreSQL concurrency tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase db reset --yes
+          python -m pip install --disable-pip-version-check -r supabase/tests_concurrency/requirements.txt
+          F1_DB_TEST_DSN='postgresql://postgres:postgres@127.0.0.1:54322/postgres'             python -B -m unittest discover -s supabase/tests_concurrency -v
+
   backend-contract-validation:
     name: Backend contract checker
     runs-on: ubuntu-latest

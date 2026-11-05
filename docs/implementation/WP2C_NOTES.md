@@ -6,6 +6,7 @@
 | 2c-2 | `persist_plan_proposal` (+ generation idempotency, scope/policy cross-check) | done (migration 019, test 15) |
 | 2c-3 | `approve_study_plan`, `reject_study_plan`, durable STALE | done (migration 020, test 16) |
 | 2c-4 | window-change warnings for affected approved blocks | done (migration 021, tests 12) |
+| 2c-5 | real-PostgreSQL concurrency suite and CI wiring | done |
 
 ## 2c-1 decisions
 
@@ -56,3 +57,13 @@
   listed. The warning is stored with the idempotent result, so replays carry it.
 - Approval does not yet reject blocks in the past or blocks that fall in busy/outside availability windows
   (README: approval transaction). Past-block checks depend on the DB clock, so tests would need a controllable clock.
+
+## 2c-5 evidence
+
+- `supabase/tests_concurrency` (6 scenarios: same-key/distinct-key confirmation races, competing proposals,
+  revision-only stale + replay, second-block failure, 120 s receipt fencing) passes 6/6 on local Postgres.
+  It found one real gap: the stale error from `approve_study_plan` was not saved, so a same-key retry returned a
+  different message. Migration 020 now stores the stale error as the idempotent result.
+- The suite leaves committed rows by design, so run `supabase db reset` before pgTAP afterwards (CI does).
+- `database-tests.yml` now also runs the generator `--check`, the upgrade-route comparison (reset to
+  `202611050008`, `migration up`, same `app_private`/`app_api` dump as a clean replay) and the concurrency suite.

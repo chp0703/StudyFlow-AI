@@ -191,3 +191,18 @@
 **Ghi chú**
 
 - Cảnh báo thận trọng (liệt kê mọi block tương lai), chưa đối chiếu chính xác với khung giờ lặp.
+
+## 2026-11-05 — Backend F1: WP2c-5 (kiểm thử đồng thời và CI)
+
+**Mục tiêu:** chạy bộ kiểm thử đồng thời trên PostgreSQL thật và nối vào CI.
+
+**Đã làm**
+
+- Chạy `supabase/tests_concurrency` (6 kịch bản) trên Postgres local: 6/6 pass sau khi sửa một lỗ hổng mà bộ test phát hiện (lỗi STALE của `approve_study_plan` chưa được lưu làm kết quả idempotent nên retry cùng khóa trả thông báo khác); đã sửa trong migration 020.
+- `database-tests.yml` thêm: kiểm tra migration schema hợp đồng được sinh (`--check`), so sánh đường nâng cấp với replay sạch (dump `app_private`/`app_api` giống nhau, đã xác minh local), và bộ kiểm thử đồng thời.
+
+**Kết quả:** nhánh `feat/f1-mvp-intergration`; pgTAP local 14 bộ (465 kiểm tra) pass; concurrency 6/6.
+
+**Ghi chú**
+
+- Bộ concurrency cố ý để lại dữ liệu, cần `supabase db reset` trước khi chạy lại pgTAP. Các bước CI mới chưa chạy trên GitHub Actions.

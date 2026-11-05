@@ -1,7 +1,7 @@
 # Independent real PostgreSQL concurrency acceptance
 
 These are executable `unittest` + psycopg tests, deliberately outside backend
-test discovery. **Authored, AST/import checked; database execution NOT_RUN.**
+test discovery. **Authored, AST/import checked; database execution: 6/6 pass locally on 2026-11-05 (Supabase CLI 3.0.0), now also run in CI.**
 Contract package **1.0.1** and its runtime migrations must be installed first.
 The suite refuses an older registry, missing DSN or unavailable prerequisites;
 it does not silently skip, mock responses or accept fake success.

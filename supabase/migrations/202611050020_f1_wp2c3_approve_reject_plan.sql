@@ -118,7 +118,12 @@ begin
         -- A changed schedule makes the proposal permanently stale; the status survives this returned error.
         if pr.base_schedule_revision <> v_user.schedule_revision or pr.base_plan_id is distinct from v_user.current_plan_id then
             update app_private.plan_proposals set status = 'STALE' where proposal_id = pr.proposal_id;
-            return app_private.error_result(p_request, 'STALE_PROPOSAL', 'The schedule changed after the proposal was generated.');
+            v_result := app_private.error_result(p_request, 'STALE_PROPOSAL', 'The schedule changed after the proposal was generated.');
+            -- The same key replays this saved error instead of reporting a different one.
+            insert into app_private.idempotency_records
+                (user_id, operation, idempotency_key, request_fingerprint, state, result_reference_or_response, expires_at)
+            values (v_uid, 'approve_study_plan', v_key, v_fp, 'COMPLETED', v_result, clock_timestamp() + interval '7 days');
+            return v_result;
         end if;
         if (v_args ->> 'expected_plan_version')::bigint is distinct from v_cur.version then
             return app_private.error_result(p_request, 'STALE_PLAN_VERSION', 'The current plan version is not the expected one.');
