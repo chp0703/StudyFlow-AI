@@ -95,6 +95,20 @@ jobs:
           upgraded=$(dump)
           test "$clean" = "$upgraded"
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run HTTP integration tests against local Supabase
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase db reset --yes
+          python -m pip install --disable-pip-version-check -r backend/requirements.txt -r supabase/tests_concurrency/requirements.txt
+          eval "$(supabase status -o env | sed 's/^/export /')"
+          F1_LOCAL_SUPABASE_URL="$API_URL" F1_LOCAL_PUBLISHABLE_KEY="$PUBLISHABLE_KEY"           F1_LOCAL_SERVICE_KEY="$SECRET_KEY" F1_DB_TEST_DSN="$DB_URL"             python -B -m unittest discover -s backend/tests/integration -t . -v
+
       - name: Run real-PostgreSQL concurrency tests
         shell: bash
         run: |

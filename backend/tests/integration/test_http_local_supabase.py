@@ -1,0 +1,169 @@
+"""End-to-end HTTP tests against the real local Supabase stack (GoTrue, PostgREST, Postgres).
+
+Nothing is mocked: real ES256 access tokens, real JWKS, the real signed-RPC boundary and RLS.
+Required environment (loopback only; never a cloud project):
+  F1_LOCAL_SUPABASE_URL      e.g. http://127.0.0.1:54321
+  F1_LOCAL_PUBLISHABLE_KEY   the local publishable/anon key
+  F1_LOCAL_SERVICE_KEY       the local service-role/secret key (creates the two test users)
+  F1_DB_TEST_DSN             postgresql://postgres:postgres@127.0.0.1:54322/postgres (registers the HMAC key)
+"""
+
+import base64
+import os
+import secrets
+import unittest
+from urllib.parse import urlparse
+from uuid import uuid4
+
+import httpx
+import psycopg
+from fastapi.testclient import TestClient
+
+from backend.app.core.config import Settings
+from backend.app.main import create_app
+
+REQUIRED = ("F1_LOCAL_SUPABASE_URL", "F1_LOCAL_PUBLISHABLE_KEY", "F1_LOCAL_SERVICE_KEY", "F1_DB_TEST_DSN")
+
+
+class LocalSupabaseHttp(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        missing = [name for name in REQUIRED if not os.environ.get(name)]
+        if missing:
+            raise AssertionError(f"Missing environment: {', '.join(missing)}")
+        cls.url = os.environ["F1_LOCAL_SUPABASE_URL"].rstrip("/")
+        if urlparse(cls.url).hostname not in ("127.0.0.1", "localhost", "::1"):
+            raise AssertionError("Refusing to run against a non-loopback Supabase URL")
+        cls.publishable = os.environ["F1_LOCAL_PUBLISHABLE_KEY"]
+        cls.key_id = f"http-it-{secrets.token_hex(4)}"
+        cls.secret = secrets.token_bytes(32)
+        with psycopg.connect(os.environ["F1_DB_TEST_DSN"], autocommit=True) as db:
+            db.execute("insert into app_private.rpc_attestation_keys(key_id,key_material,not_before,not_after) "
+                       "values (%s,%s,now()-interval '1 hour',now()+interval '2 hours')", (cls.key_id, cls.secret))
+        cls.users = {name: cls.sign_in(name) for name in ("a", "b")}
+
+    @classmethod
+    def sign_in(cls, name):
+        email, password = f"http-it-{name}-{uuid4().hex[:8]}@example.test", secrets.token_urlsafe(16)
+        service = os.environ["F1_LOCAL_SERVICE_KEY"]
+        with httpx.Client(base_url=cls.url, timeout=20) as http:
+            made = http.post("/auth/v1/admin/users", headers={"apikey": service, "Authorization": f"Bearer {service}"},
+                             json={"email": email, "password": password, "email_confirm": True})
+            assert made.status_code in (200, 201), made.text
+            token = http.post("/auth/v1/token?grant_type=password", headers={"apikey": cls.publishable},
+                              json={"email": email, "password": password})
+            assert token.status_code == 200, token.text
+        return token.json()["access_token"], made.json()["id"]
+
+    def client(self):
+        settings = Settings(
+            supabase_url=self.url, supabase_publishable_key=self.publishable, rpc_signing_key_id=self.key_id,
+            rpc_signing_secret_base64=base64.b64encode(self.secret).decode(), cors_origins=["http://localhost:5173"])
+        return TestClient(create_app(settings))
+
+    def auth(self, who, **extra):
+        return {"Authorization": f"Bearer {self.users[who][0]}", **extra}
+
+    def post(self, client, path, body, who="a", key=None):
+        return client.post(path, json=body, headers=self.auth(who, **{"Idempotency-Key": key or f"it-{uuid4().hex}"}))
+
+    @staticmethod
+    def task_body(conversation, title="Ôn giải tích"):
+        return {"schema_version": "1.1", "conversation_id": conversation, "operation": "create_task_candidate",
+                "arguments": {"slots": {"title": title, "description": None, "course_label": "Giải tích",
+                                        "available_from_at": None, "deadline_at": None, "deadline_precision": "DATE",
+                                        "deadline_date": "2027-03-01", "deadline_timezone": "Asia/Ho_Chi_Minh",
+                                        "estimated_minutes": 90, "priority": "HIGH"}}}
+
+    def test_candidate_decision_read_survives_retry_and_restart(self):
+        conversation, key = str(uuid4()), f"it-prepare-{uuid4().hex}"
+        with self.client() as app:
+            first = self.post(app, "/v1/actions", self.task_body(conversation), key=key)
+            self.assertEqual(first.status_code, 200, first.text)
+            body = first.json()
+            self.assertEqual(body["state"], "AWAITING_APPROVAL")
+            self.assertEqual(first.headers["Idempotency-Replayed"], "false")
+            reference = body["action_reference"]
+            self.assertEqual(reference["target_type"], "TASK_CANDIDATE")
+        with self.client() as restarted:  # a cold app: only the database remembers the first call
+            again = self.post(restarted, "/v1/actions", self.task_body(conversation), key=key)
+            self.assertEqual(again.status_code, 200, again.text)
+            self.assertEqual(again.headers["Idempotency-Replayed"], "true")
+            self.assertEqual(again.json()["action_reference"], reference)
+            self.assertNotEqual(again.json()["request_id"], body["request_id"])
+            conflict = self.post(restarted, "/v1/actions", self.task_body(conversation, "Khác"), key=key)
+            self.assertEqual(conflict.status_code, 409)
+            self.assertEqual(conflict.json()["error"]["code"], "IDEMPOTENCY_CONFLICT")
+
+            # Another user cannot decide on this action.
+            foreign = self.post(restarted, "/v1/decisions", {"schema_version": "1.1", "conversation_id": conversation,
+                                                              "action_reference": reference, "decision": "APPROVE"}, who="b")
+            self.assertEqual(foreign.status_code, 404, foreign.text)
+
+            decide = {"schema_version": "1.1", "conversation_id": conversation, "action_reference": reference, "decision": "APPROVE"}
+            dkey = f"it-decide-{uuid4().hex}"
+            done = self.post(restarted, "/v1/decisions", decide, key=dkey)
+            self.assertEqual(done.status_code, 200, done.text)
+            self.assertEqual(done.json()["state"], "SUCCEEDED")
+            self.assertEqual(done.json()["result"]["outcome"], "COMMITTED")
+            task_id = done.json()["result"]["data"]["task_id"]
+            replay = self.post(restarted, "/v1/decisions", decide, key=dkey)
+            self.assertEqual(replay.headers["Idempotency-Replayed"], "true")
+            self.assertEqual(replay.json()["result"]["data"]["task_id"], task_id)
+
+            # A second decision with a new key finds the action already completed: no second task.
+            late = self.post(restarted, "/v1/decisions", decide)
+            self.assertEqual(late.status_code, 409, late.text)
+
+            mine = restarted.get("/v1/tasks", headers=self.auth("a")).json()
+            self.assertEqual([t["task_id"] for t in mine["data"]["items"]], [task_id])
+            self.assertEqual(mine["data"]["items"][0]["deadline_at"], "2027-03-01T17:00:00.000000Z")
+            self.assertEqual(restarted.get("/v1/tasks", headers=self.auth("b")).json()["data"]["items"], [])
+
+    def test_incomplete_form_asks_questions_and_stores_nothing(self):
+        conversation = str(uuid4())
+        body = self.task_body(conversation)
+        body["arguments"]["slots"].update(title=None, estimated_minutes=None)
+        with self.client() as app:
+            response = self.post(app, "/v1/actions", body, who="b")
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["state"], "NEEDS_CLARIFICATION")
+        self.assertEqual({q["field"] for q in response.json()["questions"]}, {"title", "estimated_minutes"})
+
+    def test_reject_cancels_without_saving(self):
+        conversation = str(uuid4())
+        with self.client() as app:
+            prepared = self.post(app, "/v1/actions", self.task_body(conversation, "Sẽ bị hủy"), who="b").json()
+            rejected = self.post(app, "/v1/decisions", {"schema_version": "1.1", "conversation_id": conversation,
+                                                        "action_reference": prepared["action_reference"], "decision": "REJECT"}, who="b")
+            self.assertEqual(rejected.status_code, 200, rejected.text)
+            self.assertEqual(rejected.json()["result"]["data"]["pending_action"]["state"], "CANCELLED")
+            titles = [t["title"] for t in app.get("/v1/tasks", headers=self.auth("b")).json()["data"]["items"]]
+            self.assertNotIn("Sẽ bị hủy", titles)
+
+    def test_preferences_change_needs_a_decision_then_shows_in_the_read(self):
+        conversation = str(uuid4())
+        with self.client() as app:
+            before = app.get("/v1/preferences", headers=self.auth("b")).json()["data"]
+            command = {"schema_version": "1.1", "conversation_id": conversation, "operation": "set_scheduling_preferences",
+                       "arguments": {"policy_patch": {"break_minutes": 20}, "expected_schedule_revision": before["schedule_revision"]}}
+            prepared = self.post(app, "/v1/actions", command, who="b").json()
+            self.assertEqual(prepared["result"]["data"]["effective_policy"]["break_minutes"], 20)
+            self.assertEqual(app.get("/v1/preferences", headers=self.auth("b")).json()["data"], before)
+            done = self.post(app, "/v1/decisions", {"schema_version": "1.1", "conversation_id": conversation,
+                                                    "action_reference": prepared["action_reference"], "decision": "APPROVE"}, who="b")
+            self.assertEqual(done.status_code, 200, done.text)
+            after = app.get("/v1/preferences", headers=self.auth("b")).json()["data"]
+            self.assertEqual(after["scheduling_policy"]["break_minutes"], 20)
+            self.assertEqual(after["schedule_revision"], before["schedule_revision"] + 1)
+
+    def test_tampered_or_foreign_token_is_rejected_before_the_database(self):
+        with self.client() as app:
+            token = self.users["a"][0]
+            bad = token[:-4] + ("AAAA" if not token.endswith("AAAA") else "BBBB")
+            response = app.get("/v1/tasks", headers={"Authorization": f"Bearer {bad}"})
+            self.assertEqual(response.status_code, 401)
+
+
+if __name__ == "__main__":
+    unittest.main()

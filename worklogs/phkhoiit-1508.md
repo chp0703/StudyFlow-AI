@@ -221,3 +221,20 @@
 **Ghi chú**
 
 - Chưa chạy với Supabase thật qua HTTP (JWT thật/PostgREST): sẽ kiểm ở bước tích hợp.
+
+## 2026-11-05 — Backend F1: WP3b (luồng có cấu trúc: tạo candidate → quyết định → đọc task)
+
+**Mục tiêu:** `POST /v1/actions`, `/v1/actions/{id}/review`, `/v1/decisions` chạy thật trên DB, bền qua retry và restart.
+
+**Đã làm**
+
+- `backend/app/api/v1/workflow.py`: claim receipt → replay hoặc xử lý → complete; mọi bước DB dùng khóa dẫn xuất từ Idempotency-Key nên retry sau sự cố lặp lại đúng các bước và DB trả lại kết quả đã commit; lỗi tạm thời nhả lease, lỗi nghiệp vụ cuối cùng được lưu để replay. Hỗ trợ `create_task_candidate` (biểu mẫu thiếu trường thì hỏi lại, không lưu gì), `set_availability`, `set_busy_interval`, `set_scheduling_preferences` (trình bày policy hiệu lực đầy đủ), review, APPROVE/REJECT (`confirm_task`, thao tác cần duyệt, `approve/reject_study_plan` khi có proposal).
+- `backend/tests/integration/test_http_local_supabase.py`: 5 test HTTP chạy trên Supabase local thật (token ES256 thật từ GoTrue, JWKS thật, PostgREST, RLS, attestation): replay, restart app, đổi body cùng khóa → conflict, người khác không quyết định được action của bạn (404), chốt chỉ một task, REJECT không lưu, đổi preferences cần quyết định. Đã thêm bước CI tương ứng.
+
+**Kết quả:** 5/5 integration pass; 30/30 test HTTP của Sol vẫn pass.
+
+**Ghi chú**
+
+- `generate_study_plan` qua actions chưa có (cần engine + persist, bước tiếp theo); `POST /v1/messages` chưa có (cần DeepSeek).
+- Hợp đồng không có kết quả "đã hủy"; hủy trả `SUCCEEDED` kèm presentation của action ở trạng thái CANCELLED, cần nhóm xác nhận.
+- Dữ liệu của set_availability/busy chỉ được DB kiểm tra khi quyết định, chưa có dry-run lúc chuẩn bị.
