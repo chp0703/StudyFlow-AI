@@ -6,18 +6,22 @@ select plan(14);
 
 select has_schema('app_private');
 select has_schema('app_api');
-select has_table('app_private', 'user_profiles');
-select has_table('app_private', 'task_candidates');
-select has_table('app_private', 'academic_tasks');
-select has_table('app_private', 'time_windows');
-select has_table('app_private', 'study_plans');
-select has_table('app_private', 'study_blocks');
-select has_table('app_private', 'plan_proposals');
-select has_table('app_private', 'pending_actions');
-select has_table('app_private', 'approval_actions');
-select has_table('app_private', 'idempotency_records');
-select has_table('app_private', 'chat_approval_attestations');
-select has_index('app_private', 'study_blocks', 'ex_study_blocks_plan_time');
+select has_table('app_private'::name, 'user_profiles'::name);
+select has_table('app_private'::name, 'task_candidates'::name);
+select has_table('app_private'::name, 'academic_tasks'::name);
+select has_table('app_private'::name, 'time_windows'::name);
+select has_table('app_private'::name, 'study_plans'::name);
+select has_table('app_private'::name, 'study_blocks'::name);
+select has_table('app_private'::name, 'plan_proposals'::name);
+select has_table('app_private'::name, 'pending_actions'::name);
+select has_table('app_private'::name, 'approval_actions'::name);
+select has_table('app_private'::name, 'idempotency_records'::name);
+select has_table('app_private'::name, 'chat_approval_attestations'::name);
+select has_index(
+    'app_private'::name,
+    'study_blocks'::name,
+    'ex_study_blocks_plan_time'::name
+);
 
 select * from finish();
 rollback;

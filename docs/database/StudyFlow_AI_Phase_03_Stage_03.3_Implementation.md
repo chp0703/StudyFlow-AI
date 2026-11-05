@@ -45,11 +45,13 @@ All reservations use `(user_id, operation, idempotency_key)`, conflict on a diff
 
 ## Verification coverage
 
-`supabase/tests/03_foundation.sql`, `04_f1_integrity.sql`, and `05_f1_security_transactions.sql` cover schema presence, RLS/catalog privileges, typed-target triggers, idempotency helpers, attestation privilege boundaries, and migration objects. Two-session behavior (owner-lock races, concurrent idempotency replay, concurrent attestation consumption, cross-user RLS, and rollback after failed approval) is declared for integration execution; it is not claimed as verified until the GitHub-hosted Supabase job passes.
+`supabase/tests/03_foundation.sql`, `04_f1_integrity.sql`, and `05_f1_security_transactions.sql` cover schema presence, RLS/catalog privileges, typed-target triggers, idempotency helpers, attestation privilege boundaries, and migration objects. The CI run for the migration-source diagnostic commit completed startup, health check, migration replay, seed, and contract validation, but pgTAP failed. Its causes were test-call issues: `has_table`/`has_index` overloads were ambiguous with untyped literals, and three `has_function` assertions were incorrectly nested in `ok()`.
+
+The test corrections explicitly cast schema/object identifiers to `name`, call `has_function` directly with `name[]` argument signatures, and preserve plans of 14 (`03_foundation.sql`), 16 (`04_f1_integrity.sql`), and 18 (`05_f1_security_transactions.sql`). This correction is awaiting a new GitHub-hosted run; it is not yet claimed as passing. Two-session behavior (owner-lock races, concurrent idempotency replay, concurrent attestation consumption, cross-user RLS, and rollback after failed approval) remains integration coverage and is not claimed as verified.
 
 ## Verification record
 
-The repository has no Supabase CLI, Docker engine, or `psql` executable in the current environment, so `supabase db reset`, `supabase test db`, and migration replay were not run. The Python contract checker was invoked but cannot start because the optional `jsonschema` dependency is not installed. These are explicit blockers, not passing test results.
+The repository has no Supabase CLI, Docker engine, or `psql` executable in the current environment, so local `supabase db reset`, `supabase test db`, and migration replay were not run. GitHub-hosted CI is the runtime verification path. The Python contract checker passed in the prior GitHub run.
 
 The pgTAP smoke test in `supabase/tests/03_foundation.sql` is designed for local execution only. No secrets, `.env` files, remote links, or production commands are part of this stage.
 

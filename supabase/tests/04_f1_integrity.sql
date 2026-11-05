@@ -16,9 +16,24 @@ select ok(exists(select 1 from pg_constraint where conname='idempotency_expiry_c
 select ok(exists(select 1 from pg_constraint where conname='chat_attestation_max_lifetime_check'), 'attestation lifetime check');
 select ok(exists(select 1 from pg_policies where schemaname='app_private' and tablename='academic_tasks' and policyname='tasks_owner_select'), 'owner task policy');
 select ok(not exists(select 1 from information_schema.role_table_grants where table_schema='app_private' and table_name='chat_approval_attestations' and grantee='authenticated'), 'attestation table not granted');
-select ok(has_function('app_api', 'create_task_candidate', ARRAY['uuid','uuid','jsonb','jsonb','jsonb','text','text']), 'candidate RPC exists');
-select ok(has_function('app_api', 'approve_study_plan', ARRAY['uuid','integer','integer','text','uuid','text','text']), 'approval RPC exists');
-select ok(has_function('app_api', 'issue_chat_approval_attestation', ARRAY['uuid','uuid','uuid','integer','text','uuid','integer','text','uuid','text']), 'attestation RPC exists');
+select has_function(
+    'app_api'::name,
+    'create_task_candidate'::name,
+    ARRAY['uuid', 'uuid', 'jsonb', 'jsonb', 'jsonb', 'text', 'text']::name[],
+    'candidate RPC exists'
+);
+select has_function(
+    'app_api'::name,
+    'approve_study_plan'::name,
+    ARRAY['uuid', 'integer', 'integer', 'text', 'uuid', 'text', 'text']::name[],
+    'approval RPC exists'
+);
+select has_function(
+    'app_api'::name,
+    'issue_chat_approval_attestation'::name,
+    ARRAY['uuid', 'uuid', 'uuid', 'integer', 'text', 'uuid', 'integer', 'text', 'uuid', 'text']::name[],
+    'attestation RPC exists'
+);
 select ok(not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
                      where n.nspname='app_api' and p.proname='issue_chat_approval_attestation'
                        and has_function_privilege('authenticated', p.oid, 'EXECUTE')), 'authenticated cannot issue attestations');
