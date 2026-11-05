@@ -702,3 +702,14 @@
 .proposal-issues { font-size: 12px; margin-top: 2px; }
 .proposal-issues summary { cursor: pointer; font-weight: 600; }
 .proposal-issues ul { margin: 4px 0 0; padding-left: 18px; }
+
+.legend-confirmed::before { background: #8b5cf6; }
+.nav-badge {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: var(--color-primary);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+}

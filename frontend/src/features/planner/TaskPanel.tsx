@@ -51,16 +51,26 @@ export function statusOf(task: Task, proposedIds: Set<number>): Status {
 
 export default function TaskPanel({
   tasks,
+
   proposedIds,
+
+  week,
+
   onClose,
 }: {
   tasks: Task[]
+
   proposedIds: Set<number>
+
+  week?: string[]
+
   onClose?: () => void
 }) {
   const [query, setQuery] = useState("")
 
   const [filter, setFilter] = useState<"all" | Status>("all")
+
+  const [weekOnly, setWeekOnly] = useState(false)
 
   const rows = tasks
 
@@ -71,7 +81,8 @@ export default function TaskPanel({
           .toLocaleLowerCase("vi")
 
           .includes(query.trim().toLocaleLowerCase("vi")) &&
-        (filter === "all" || statusOf(t, proposedIds) === filter),
+        (filter === "all" || statusOf(t, proposedIds) === filter) &&
+        (!weekOnly || !week || week.includes(t.date ?? t.deadline)),
     )
 
     .sort((a, b) => a.deadline.localeCompare(b.deadline))
@@ -126,6 +137,16 @@ export default function TaskPanel({
               {f.label}
             </button>
           ))}
+          {week && (
+            <button
+              type="button"
+              className={weekOnly ? "is-active" : ""}
+              aria-pressed={weekOnly}
+              onClick={() => setWeekOnly((v) => !v)}
+            >
+              Tuần đang xem
+            </button>
+          )}
         </div>
         <ul className="task-panel-list">
           {rows.map((t) => {

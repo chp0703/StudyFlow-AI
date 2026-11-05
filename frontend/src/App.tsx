@@ -426,6 +426,9 @@ export default function App() {
             >
               <n.icon size={18} />
               <span>{n.label}</span>
+              {n.name === "Planner" && proposal && (
+                <span className="nav-badge">Chờ duyệt</span>
+              )}
               {page === n.name && <i />}
             </Button>
           ))}

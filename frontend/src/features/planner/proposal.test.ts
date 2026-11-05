@@ -60,3 +60,10 @@ test("diffWindows reports new, changed and removed windows", async () => {
     ],
   )
 })
+
+test("a proposal expires after the TTL", async () => {
+  const { isExpired, PROPOSAL_TTL_MS } = await import("./proposal.ts")
+  const p = { createdAt: 1000 } as never
+  assert.equal(isExpired(p, 1000 + PROPOSAL_TTL_MS - 1), false)
+  assert.equal(isExpired(p, 1000 + PROPOSAL_TTL_MS), true)
+})
