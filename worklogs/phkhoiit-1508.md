@@ -84,3 +84,19 @@
 
 - Chưa thêm FK từ `task_candidates.source_message_id` để không làm hỏng dữ liệu cũ khi nâng cấp; ràng buộc kiểm ở tầng wrapper.
 
+## 2026-11-05 — Backend F1: WP2b-3 (hành động chờ duyệt, xác nhận công việc, tìm kiếm)
+
+**Mục tiêu:** giai đoạn 2b-3: bản trình bày do server cấp, xác nhận công việc nguyên tử và tìm kiếm có phân trang.
+
+**Đã làm**
+
+- Migration 015: `prepare/review/cancel_pending_action` (bản trình bày kèm digest, một hành động chờ cho mỗi hội thoại bằng unique index), `confirm_task` (ApprovalAction + AcademicTask + backlink + hoàn tất action + tăng `schedule_revision` + idempotency trong một giao dịch), `search_tasks` (keyset, cursor ký, ràng buộc owner/bộ lọc); sửa trigger đích duyệt dùng `current_uid()`.
+- Thêm `supabase/tests/11_wp2b3_actions_confirm_search.sql` (47 kiểm tra) và cập nhật `docs/implementation/WP2B_NOTES.md`.
+
+**Kết quả:** nhánh `feat/f1-mvp-intergration`. pgTAP local: 03, 04, 05, 06, 08, 09, 10, 11 pass; 07 còn 24/58 lỗi (giờ rảnh/bận và workflow, thuộc 2b-4/2b-5).
+
+**Ghi chú**
+
+- Hành động thứ hai trong cùng hội thoại trả `ACTION_REVIEW_REQUIRED` (hợp đồng chưa có mã riêng); cần nhóm xác nhận.
+- Cursor dùng khóa dẫn xuất từ khóa attestation đang hoạt động nên đổi khóa sẽ làm cursor đang mở mất hiệu lực.
+
