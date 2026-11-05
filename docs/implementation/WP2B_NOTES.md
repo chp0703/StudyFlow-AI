@@ -5,7 +5,7 @@ Split into reviewable stages; each stage ends with local pgTAP evidence and a pu
 | Stage | Scope | Status |
 |---|---|---|
 | 2b-1 | Wrapper helpers, `ensure_user_context`, `record_source_message`, `claim/renew/release/complete_api_receipt` | done (migration 013, test 09) |
-| 2b-2 | `create_task_candidate`, domain idempotency + `lookup_operation_result`, `update_candidate_draft` | planned |
+| 2b-2 | `create_task_candidate`, domain idempotency + `lookup_operation_result`, `update_candidate_draft` | done (migration 014, test 10) |
 | 2b-3 | `prepare/review/cancel_pending_action`, `confirm_task`, `search_tasks` | planned |
 | 2b-4 | `set_availability`, `set_busy_interval`, `set_scheduling_preferences`, `list_time_windows` | planned |
 | 2b-5 | `get_workflow_context`, `get_workflow_continuation`, `initialize/checkpoint_workflow_continuation` | planned |
@@ -25,7 +25,26 @@ Split into reviewable stages; each stage ends with local pgTAP evidence and a pu
 - `record_source_message` creates the conversation record and requires the message to match the verified owner,
   the request conversation and the trusted message ID. Re-recording identical content is idempotent.
 
-## Evidence (local pgTAP, 2b-1)
+## Evidence (local pgTAP, 2b-1, historical)
 
 03, 04, 05, 08, 09 pass. 06: 10/81 fail (candidate creation, WP2b-2). 07: 24/58 fail (windows, workflow, 2b-4/2b-5).
 Not run: slow wall-clock 120 s expiry, concurrency harness.
+
+## 2b-2 decisions
+
+- Domain idempotency follows the contract order: fast lookup, owner lock, lookup again, validate, write and
+  complete the record in one subtransaction. The record stores the full result envelope; a replay swaps in the
+  current `request_id`. Fingerprint is `SHA256(canonical{schema_version,user_id,operation,arguments,decision_binding})`.
+  Records are retained 7 days (`expires_at`).
+- `create_task_candidate` requires a non-null idempotency key, a conversation and a source message that was
+  recorded for that owner and conversation (`ENTITY_NOT_FOUND` otherwise). No FK was added on
+  `task_candidates.source_message_id` so existing rows stay valid on upgrade.
+- `field_sources` records `USER_MESSAGE` provenance for supplied non-null slots; the LLM does not choose it.
+- `update_candidate_draft` has no domain-idempotency record: a retry that finds exactly the requested content one
+  version ahead is a replay, anything else with an old version is `STALE_ENTITY_VERSION`.
+  Invalidating awaiting presentations for an edited candidate is checked in 2b-3 (target version no longer matches).
+- `lookup_operation_result` is read-only: stored result, `null`, or `IDEMPOTENCY_CONFLICT` for another fingerprint.
+
+## Evidence (local pgTAP, 2b-2)
+
+03, 04, 05, 06, 08, 09, 10 pass (06 is now fully green). 07: 24/58 fail (windows 2b-4, workflow 2b-5).

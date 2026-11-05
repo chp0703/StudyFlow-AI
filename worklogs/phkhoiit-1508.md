@@ -69,3 +69,18 @@
 
 - Chưa chạy: chờ lease 120 giây thật, harness đồng thời, CI mới.
 
+## 2026-11-05 — Backend F1: WP2b-2 (ứng viên công việc, idempotency miền)
+
+**Mục tiêu:** giai đoạn 2b-2: tạo/sửa ứng viên công việc, idempotency miền và tra cứu kết quả đã lưu.
+
+**Đã làm**
+
+- Migration 014: `create_task_candidate` (tra cứu nhanh, khóa owner, tra lại, ghi cùng bản ghi idempotency lưu 7 ngày), `update_candidate_draft` (CAS theo version, replay an toàn), `lookup_operation_result`.
+- Thêm `supabase/tests/10_wp2b2_candidates_idempotency.sql` (21 kiểm tra) và cập nhật `docs/implementation/WP2B_NOTES.md`.
+
+**Kết quả:** nhánh `feat/f1-mvp-intergration`. pgTAP local: 03, 04, 05, 06 (xanh hoàn toàn), 08, 09, 10 pass; 07 còn 24/58 lỗi (giờ rảnh/bận và workflow, thuộc 2b-4/2b-5).
+
+**Ghi chú**
+
+- Chưa thêm FK từ `task_candidates.source_message_id` để không làm hỏng dữ liệu cũ khi nâng cấp; ràng buộc kiểm ở tầng wrapper.
+
