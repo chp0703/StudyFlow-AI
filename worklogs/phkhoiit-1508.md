@@ -206,3 +206,18 @@
 **Ghi chú**
 
 - Bộ concurrency cố ý để lại dữ liệu, cần `supabase db reset` trước khi chạy lại pgTAP. Các bước CI mới chưa chạy trên GitHub Actions.
+
+## 2026-11-05 — Backend F1: WP3a (nền FastAPI: JWT, RPC ký, lỗi, CORS)
+
+**Mục tiêu:** dựng lớp HTTP nền cho 8 endpoint theo hợp đồng, đạt bộ 30 test HTTP của Sol.
+
+**Đã làm**
+
+- `backend/app/main.py` (`create_app`, các transport và clock tiêm được), `core/config.py` (`Settings`), `core/security.py` (JWT/JWKS: thuật toán, kid, issuer, audience, hết hạn theo clock tiêm vào), `core/contract.py` (validate theo schema chuẩn, canonical JSON), `clients/rpc.py` (gọi `app_api.*` bằng JWT của chính người dùng, ký attestation HMAC 60 giây cho thao tác ghi), `api/v1/` (4 GET đọc, 4 POST có Idempotency-Key, giới hạn 64 KiB, envelope lỗi, request id do server cấp, CORS, replay receipt đã hoàn tất).
+- `POST /v1/messages`, xử lý `actions/review/decisions` trả `UNSUPPORTED_OPERATION` cho tới bước sau (receipt được nhả lease).
+
+**Kết quả:** 30/30 test HTTP của Sol pass (chỉ giả lập HTTP ngoài), 16 test addendum và test dịch vụ cũ vẫn pass.
+
+**Ghi chú**
+
+- Chưa chạy với Supabase thật qua HTTP (JWT thật/PostgREST): sẽ kiểm ở bước tích hợp.
