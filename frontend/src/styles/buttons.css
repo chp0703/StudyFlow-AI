@@ -1,9 +1,0 @@
-.skip-link { position: fixed; left: 24px; top: -100px; background: var(--color-ink); color: white; padding: 12px 20px; z-index: 100; border-radius: 6px; text-decoration: underline; }
-.skip-link:focus { top: 12px; }
-.button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--color-muted); font-size: 14px; font-weight: 500; padding: 8px 12px; white-space: normal; line-height: 1.4; }
-.button:hover:not(:disabled) { background: #f0f2fd; }
-.primary { background: var(--color-primary); color: white; padding: 11px 18px; }
-.primary:hover:not(:disabled) { background: var(--indigo); }
-.secondary { background: var(--color-surface); border-color: var(--color-control); }
-.text-button { color: var(--color-primary); text-decoration: underline; text-underline-offset: 4px; }
-.icon-button { height: 44px; width: 44px; padding: 10px; flex-shrink: 0; }

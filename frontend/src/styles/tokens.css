@@ -1,3 +1,4 @@
+/* Design tokens: brand palette (:root) and Tailwind @theme aliases. */
 /* StudyFlow AI — Color Palette & Design Tokens */
 :root {
   /* Requested Color Palette */
@@ -63,4 +64,21 @@
   --sf-radius-card: 16px;
   --sf-radius-button: 10px;
   --sf-space-unit: 8px;
+}
+
+@theme {
+  --color-primary: var(--primary);
+  --color-canvas: var(--background);
+  --color-ink: var(--text-primary);
+  --color-muted: var(--text-secondary);
+  --color-line: var(--border);
+  --color-control: var(--text-secondary);
+  --color-focus: var(--indigo);
+  --color-surface: var(--bg-card);
+  --color-info-bg: #eef1fe;
+  --color-info-text: var(--indigo);
+  --color-warning-bg: #fff8f0;
+  --color-warning-text: #b45309;
+  --color-success: var(--teal);
+  --radius-card: var(--sf-radius-card);
 }

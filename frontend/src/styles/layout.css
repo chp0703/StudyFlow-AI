@@ -32,41 +32,6 @@
   height: auto;
   object-fit: contain;
 }
-.search-wrap {
-  height: 44px;
-  max-width: 460px;
-  flex: 1;
-  border: 1px solid var(--color-line);
-  border-radius: 10px;
-  padding: 0 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--color-muted);
-  background: var(--bg-card);
-  backdrop-filter: blur(8px);
-}
-.search-wrap:focus-within {
-  outline: 3px solid #dcdffb;
-  border-color: var(--color-primary);
-  outline-offset: 0;
-}
-.search-wrap input {
-  background: transparent;
-  border: 0;
-  min-width: 0;
-  flex: 1;
-  width: 100%;
-  outline: 0;
-  padding: 8px 0;
-  font-size: 14px;
-  color: var(--color-ink);
-}
-.search-wrap kbd {
-  font-size: 12px;
-  white-space: nowrap;
-  color: var(--color-muted);
-}
 .top-actions {
   margin-left: auto;
   display: flex;

@@ -1,17 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap');
 @import 'tailwindcss';
-@import './brand.css';
-@import './theme.css';
+
+/* Foundation */
+@import './tokens.css';
 @import './base.css';
-@import './buttons.css';
+/* Shell and shared components */
 @import './layout.css';
 @import './cards.css';
-@import './planner.css';
-@import './pages.css';
-@import './responsive.css';
-@import './refinements.css';
+@import './overlays.css';
+@import './overrides.css';
+/* Features and pages */
 @import './assistant.css';
 @import './history.css';
 @import './home.css';
-@import './planner-page.css';
-@import './study-page.css';
+@import './planner.css';
+@import './study.css';

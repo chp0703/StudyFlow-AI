@@ -1,0 +1,20 @@
+/* Responsive breakpoints, then shared refinements. Order matters: refinements intentionally follow the media queries. */
+@media(max-width:1250px) {.main-content { padding: 12px 0 48px; } }
+@media(max-width:800px) { .topbar { height: auto; min-height: 64px; margin: 8px 10px 0; padding: 10px 16px; flex-wrap: wrap; gap: 12px; position: relative; top: auto; border-radius: 14px; border: 1px solid var(--color-line); }.brand { width: auto; }.top-actions { gap: 4px; }.sidebar { position: static; width: auto; margin: 8px 10px 0; padding: 8px 10px; border: 1px solid var(--color-line); border-radius: 14px; background: var(--bg-card); backdrop-filter: blur(12px); display: block; box-shadow: 0 4px 16px rgba(23, 32, 59, 0.04); }.sidebar nav { display: flex; flex-wrap: wrap; gap: 4px; }.nav-item { width: auto; min-height: 44px; margin: 0; padding: 8px 12px; font-size: 13px; gap: 7px; }.nav-item svg { width: 17px; }.sidebar-bottom { margin: 0; padding: 6px 0 0; border-top: 1px solid var(--color-line); display: flex; gap: 4px; }.sidebar-bottom .nav-item { font-size: 12px; }.main-content { margin-left: 0; margin-right: 0; padding: 14px 10px 36px; }.main-content:has(.planner-page) { height: auto; min-height: calc(100dvh - 140px); padding: 12px 10px 20px; }.page-heading { align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-top: 6px; margin-bottom: 16px; }h1 { font-size: 27px; }.page-heading p { font-size: 14px; }.summary-card { padding: 20px 16px; }.summary-main { gap: 12px; }.summary-main strong { font-size: 26px; }.summary-main p { font-size: 13px; }.top-divider { display: none; }.card-heading { padding: 20px; } }
+@media(max-width:480px) { .topbar { margin: 6px 8px 0; padding: 8px 12px; border-radius: 12px; }.sidebar { margin: 6px 8px 0; padding: 6px 8px; border-radius: 12px; }.brand { font-size: 19px; gap: 6px; }.profile>span:not(.avatar),.profile>svg { display: none; }.nav-item { font-size: 12px; padding: 8px 10px; }.main-content { padding: 10px 8px 28px; }.summary-card { min-height: 0; padding: 20px; }.summary-main { gap: 16px; }.summary-main strong { font-size: 28px; }.summary-main p { font-size: 14px; }.dashboard-calendar-controls { gap: 4px; }.dashboard-calendar-controls>span { width: 100%; margin-bottom: 4px; }.modal { padding: 20px; }.modal-heading h2 { font-size: 19px; }.document { padding: 24px; }.toast { width: calc(100% - 32px); bottom: 12px; }.card-heading { padding: 18px; } }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+@media(forced-colors:active) { .button,.card,.schedule-event { border: 1px solid ButtonText; }.nav-item.active { outline: 2px solid Highlight; } }
+
+/* AI-first workspace and shared refinements */
+.topbar { height: 68px; gap: 24px; padding-inline: 24px; }
+.brand { width: 188px; }
+.sidebar { top: 92px; width: 232px; padding: 16px 12px; }
+.nav-item { border-left-width: 0; border-radius: 10px; margin: 3px 0; padding-inline: 14px; }
+.nav-item.active { border-left-color: transparent; box-shadow: inset 3px 0 0 var(--color-primary); }
+.main-content { margin-left: 280px; margin-right: 24px; max-width: none; padding: 12px 0 60px; }
+.page-heading { margin-top: 10px; margin-bottom: 20px; }
+.page-heading h1 { font-size: 28px; }
+.card { box-shadow: 0 2px 14px #17203b05; }
+.summary-card { min-height: 126px; }
+.summary-main strong { font-variant-numeric: tabular-nums; }
+.priority-badge { color: var(--color-ink); background: #f0f2fc; padding: 4px 9px; border-radius: 100px; font-size: 12px; font-weight: 600; white-space: nowrap; }
