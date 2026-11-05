@@ -146,3 +146,18 @@
 **Ghi chú**
 
 - Snapshot hiện chạy nhiều câu lệnh dưới READ COMMITTED; nếu cần nhất quán tuyệt đối thì khóa owner hoặc dùng REPEATABLE READ ở tầng HTTP.
+
+## 2026-11-05 — Backend F1: WP2c-2 (lưu đề xuất kế hoạch)
+
+**Mục tiêu:** giai đoạn 2c-2: `persist_plan_proposal`.
+
+**Đã làm**
+
+- Migration 019: lưu đề xuất do engine sinh sau khi DB tự kiểm tra lại phạm vi, policy hiệu lực, revision và kế hoạch nền (sai thì `STALE_PROPOSAL`), chủ sở hữu/chồng lấn/phạm vi của block; idempotency theo lệnh gốc nên retry với ID mới trả lại đề xuất đã lưu; không đổi `schedule_revision`.
+- Thêm `supabase/tests/15_wp2c2_persist_proposal.sql` (17 kiểm tra) và cập nhật `docs/implementation/WP2C_NOTES.md`.
+
+**Kết quả:** nhánh `feat/f1-mvp-intergration`; pgTAP local pass 13 bộ (436 kiểm tra).
+
+**Ghi chú**
+
+- Chưa kiểm tra block có tôn trọng giờ rảnh/bận, deadline, kích thước block (việc của engine); sẽ kiểm tra lại lúc duyệt ở 2c-3.
