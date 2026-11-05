@@ -1,8 +1,10 @@
-export type IntentCandidate = "CREATE_TASK" | "UPDATE_TASK" | "DELETE_TASK" | "SET_AVAILABILITY" | "GENERATE_STUDY_PLAN" | "RESCHEDULE_STUDY_BLOCK" | "GET_STUDY_PLAN" | "CREATE_STUDY_BLOCK"
+import type { ActionReference } from "../api/types"
+
+export type IntentCandidate = "SEARCH_TASKS" | "SET_BUSY_INTERVAL" | "SET_SCHEDULING_PREFERENCES" | "CREATE_TASK" | "UPDATE_TASK" | "DELETE_TASK" | "SET_AVAILABILITY" | "GENERATE_STUDY_PLAN" | "RESCHEDULE_STUDY_BLOCK" | "GET_STUDY_PLAN" | "CREATE_STUDY_BLOCK"
 
 export type ResponseCategory = "MESSAGE" | "CLARIFICATION" | "PROPOSAL" | "UNSUPPORTED" | "ERROR"
 
-export type ApprovalStatus = "awaiting_approval" | "review_required" | "cancelled" | "demo_acknowledged"
+export type ApprovalStatus = "awaiting_approval" | "review_required" | "cancelled" | "demo_acknowledged" | "approved"
 
 export type AssistantScenario = "task" | "plan" | "view" | "reschedule"
 
@@ -22,6 +24,10 @@ export type ActionProposal = {
   caveat: string
 
   status: ApprovalStatus
+
+  // API mode: the server-issued action this card decides on. Without it the card is a local demo.
+
+  reference?: ActionReference
 }
 
 export type ChatAttachment = {

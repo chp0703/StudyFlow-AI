@@ -30,6 +30,12 @@ import {
 
 import { getAssistantReply } from "./assistantService"
 
+import { api } from "../../api"
+
+import { apiEnabled } from "../../api/config"
+
+import { errorToMessage, replyToMessage } from "./apiAssistant"
+
 import type {
   ActionProposal,
   ChatAttachment,
@@ -48,6 +54,7 @@ import {
   putActiveId,
   putConversation,
   removeConversation,
+  setProposal as replaceProposal,
   setProposalStatus,
   type Conversation,
   type Draft,
@@ -77,9 +84,16 @@ const message = (item: Omit<ChatMessage, "id" | "timestamp">): ChatMessage => ({
 
 export default function Assistant({
   onOpenPlanner,
+
+  onServerChange,
 }: {
   onOpenPlanner: () => void
+
+  // Called after the server may have changed tasks or the schedule (API mode).
+
+  onServerChange?: () => void
 }) {
+  const [thinking, setThinking] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
 
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -156,7 +170,7 @@ export default function Assistant({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const processFiles = (fileList: File[]) => {
-    if (!fileList.length) return
+    if (!fileList.length || apiEnabled) return
 
     fileList.forEach((file) => {
       const isImg = file.type.startsWith("image/")
@@ -646,6 +660,12 @@ export default function Assistant({
       submitting.current = false
     })
 
+    if (apiEnabled) {
+      if (text && !thinking) void sendApi(text)
+
+      return
+    }
+
     const currentAttachments = [...attachedFiles]
 
     setAttachedFiles([])
@@ -827,7 +847,124 @@ export default function Assistant({
     patchActive((conversation) => appendMessages(conversation, [proposed]))
   }
 
+
+  // API mode: the message goes to the server; its reply (question, approval card, result or error) is the answer.
+
+  const attempt = useRef<{ key: string; text: string; id: string } | null>(null)
+
+  function appendAssistant(conversationId: string, item: ReturnType<typeof message>) {
+    setConversations((current) =>
+      current.map((conversation) =>
+        conversation.id === conversationId
+          ? appendMessages(conversation, [item])
+          : conversation,
+      ),
+    )
+
+    shouldScroll.current = true
+  }
+
+  async function sendApi(text: string) {
+    const user = message({ role: "user", category: "MESSAGE", text })
+
+    const starting = active ?? createConversation(text)
+
+    const updated = appendMessages(starting, [user])
+
+    shouldScroll.current = true
+
+    setConversations((current) =>
+      activeId
+        ? current.map((item) => (item.id === activeId ? updated : item))
+        : [...current, updated],
+    )
+
+    if (!activeId) setActiveId(updated.id)
+
+    setEmptyInput("")
+
+    setThinking(true)
+
+    // Sending the same text again after a failure reuses the key, so a lost response never runs twice.
+
+    const same = attempt.current?.id === starting.id && attempt.current.text === text
+
+    const key = same ? attempt.current!.key : crypto.randomUUID()
+
+    attempt.current = { key, text, id: starting.id }
+
+    try {
+      const reply = await api.sendMessage(starting.id, text, key)
+
+      attempt.current = null
+
+      appendAssistant(starting.id, message(replyToMessage(reply)))
+
+      if (reply.state === "SUCCEEDED") onServerChange?.()
+    } catch (error) {
+      appendAssistant(starting.id, message(errorToMessage(error)))
+    } finally {
+      setThinking(false)
+    }
+  }
+
+  async function decideApi(entry: ChatMessage, status: ActionProposal["status"]) {
+    const reference = entry.proposal?.reference
+
+    if (!reference || !active || thinking) return
+
+    const conversationId = active.id
+
+    setThinking(true)
+
+    try {
+      if (status === "awaiting_approval") {
+        // After a reload the stored card is only a reference; the server rebuilds what it would do.
+        const reply = await api.reviewAction(conversationId, reference.action_id, reference.action_version)
+
+        const fresh = replyToMessage(reply).proposal
+
+        if (fresh)
+          setConversations((current) =>
+            current.map((conversation) =>
+              conversation.id === conversationId
+                ? replaceProposal(conversation, entry.id, fresh)
+                : conversation,
+            ),
+          )
+
+        return
+      }
+
+      const reply = await api.decide(
+        conversationId,
+        reference,
+        status === "cancelled" ? "REJECT" : "APPROVE",
+      )
+
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id === conversationId
+            ? setProposalStatus(conversation, entry.id, status === "cancelled" ? "cancelled" : "approved")
+            : conversation,
+        ),
+      )
+
+      appendAssistant(conversationId, message(replyToMessage(reply)))
+
+      onServerChange?.()
+    } catch (error) {
+      appendAssistant(conversationId, message(errorToMessage(error)))
+    } finally {
+      setThinking(false)
+    }
+  }
+
   function decide(id: string, status: ActionProposal["status"]) {
+    const entry = messages.find((item) => item.id === id)
+
+    if (apiEnabled && entry?.proposal?.reference) return void decideApi(entry, status)
+
     patchActive((conversation) => setProposalStatus(conversation, id, status))
   }
 
@@ -1264,7 +1401,7 @@ export default function Assistant({
       className={`assistant-shell ${
         messages.length ? "has-messages" : "is-empty"
       } ${historyOpen && !mobile ? "history-visible" : ""}`}
-      aria-label="Trợ lý AI bản mẫu"
+      aria-label={apiEnabled ? "Trợ lý AI" : "Trợ lý AI bản mẫu"}
     >
       <div className="assistant-main">
         <div className="assistant-topline">
@@ -1353,7 +1490,11 @@ export default function Assistant({
                   )}
                   <div className="assistant-message-body">
                     <span className="assistant-sender">
-                      {entry.role === "user" ? "Bạn" : "StudyFlow · Bản mẫu"}
+                      {entry.role === "user"
+                        ? "Bạn"
+                        : apiEnabled
+                          ? "StudyFlow"
+                          : "StudyFlow · Bản mẫu"}
                     </span>
                     <div className="assistant-bubble">
                       {entry.category !== "MESSAGE" && (
@@ -1363,7 +1504,9 @@ export default function Assistant({
                           {entry.category === "CLARIFICATION"
                             ? "Cần thêm thông tin"
                             : entry.category === "PROPOSAL"
-                              ? "Bản nháp cần xem lại"
+                              ? entry.proposal?.reference
+                                ? "Chờ xác nhận"
+                                : "Bản nháp cần xem lại"
                               : entry.category === "UNSUPPORTED"
                                 ? "Chưa hỗ trợ"
                                 : "Có lỗi"}
@@ -1426,9 +1569,11 @@ export default function Assistant({
                               </div>
                             ))}
                           </dl>
-                          <p className="assistant-caveat">
-                            {entry.proposal.caveat}
-                          </p>
+                          {entry.proposal.caveat && (
+                            <p className="assistant-caveat">
+                              {entry.proposal.caveat}
+                            </p>
+                          )}
                           {entry.proposal.status === "awaiting_approval" ? (
                             <div className="assistant-proposal-actions">
                               <button
@@ -1438,8 +1583,10 @@ export default function Assistant({
                                   decide(entry.id, "demo_acknowledged")
                                 }
                               >
-                                <Check size={16} aria-hidden="true" /> Xác nhận
-                                bản mẫu
+                                <Check size={16} aria-hidden="true" />{" "}
+                                {entry.proposal.reference
+                                  ? "Xác nhận"
+                                  : "Xác nhận bản mẫu"}
                               </button>
                               <button
                                 className="button secondary"
@@ -1453,8 +1600,9 @@ export default function Assistant({
                             <div className="assistant-review">
                               <p role="status">
                                 Bản nháp được khôi phục sau khi tải lại. Hãy xem
-                                lại trước khi xác nhận trong bản mẫu; chưa có
-                                thao tác nào được thực hiện.
+                                lại trước khi xác nhận
+                                {entry.proposal.reference ? "" : " trong bản mẫu"}
+                                ; chưa có thao tác nào được thực hiện.
                               </p>
                               <button
                                 className="button secondary"
@@ -1470,7 +1618,9 @@ export default function Assistant({
                             <p className="assistant-result" role="status">
                               {entry.proposal.status === "cancelled"
                                 ? "Đã hủy bản nháp. Không có thay đổi nào được lưu."
-                                : "Đã ghi nhận xác nhận trong bản mẫu. Chưa gửi đến backend và chưa lưu thay đổi."}
+                                : entry.proposal.status === "approved"
+                                  ? "Đã xác nhận và lưu vào tài khoản."
+                                  : "Đã ghi nhận xác nhận trong bản mẫu. Chưa gửi đến backend và chưa lưu thay đổi."}
                             </p>
                           )}
                         </div>
@@ -1513,7 +1663,7 @@ export default function Assistant({
                 aria-label="Đính kèm ảnh hoặc tệp"
                 title="Đính kèm ảnh, tệp..."
                 onClick={() => fileInputRef.current?.click()}
-                disabled={!hydrated}
+                disabled={!hydrated || apiEnabled}
               >
                 <Plus size={20} aria-hidden="true" />
               </button>
@@ -1576,13 +1726,20 @@ export default function Assistant({
                 }
                 disabled={!hydrated}
               />
+              {thinking && (
+                <p className="assistant-thinking" role="status">
+                  Đang xử lý...
+                </p>
+              )}
             </div>
             <div className="assistant-composer-bottom">
               <button
                 type="submit"
                 aria-label="Gửi tin nhắn"
                 disabled={
-                  !hydrated || (!input.trim() && attachedFiles.length === 0)
+                  !hydrated ||
+                  thinking ||
+                  (!input.trim() && attachedFiles.length === 0)
                 }
               >
                 <Send size={18} aria-hidden="true" />
@@ -1590,7 +1747,9 @@ export default function Assistant({
             </div>
           </form>
           <p className="assistant-disclaimer">
-            {storageMode === "persistent"
+            {apiEnabled
+              ? "Lịch sử hội thoại chỉ lưu trên trình duyệt này. Công việc và lịch chỉ được lưu khi bạn xác nhận. Chưa hỗ trợ đính kèm tệp."
+              : storageMode === "persistent"
               ? "Lịch sử lưu trên trình duyệt này, chưa đồng bộ với tài khoản. Trợ lý vẫn là bản mẫu, không ghi dữ liệu học tập lên máy chủ."
               : storageMode === "memory"
                 ? "Chỉ lưu tạm trong phiên này. Trợ lý vẫn là bản mẫu, chưa kết nối AI."

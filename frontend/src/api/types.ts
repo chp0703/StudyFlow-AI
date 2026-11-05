@@ -88,7 +88,7 @@ export type PendingActionRef = {
   action_id: string
 }
 
-export type Page<T> = {
+export type Page<T,> = {
   items: T[]
 
   next_cursor: string | null

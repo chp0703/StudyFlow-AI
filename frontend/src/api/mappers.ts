@@ -44,6 +44,7 @@ export function deadlineDate(task: ApiTask): string {
 }
 
 // A task for the list. Its first block (if any) gives the "confirmed" calendar slot.
+
 export function mapTask(task: ApiTask, firstBlock?: ApiBlock): Task {
   const start = firstBlock ? new Date(firstBlock.start_at) : undefined
 
@@ -69,6 +70,7 @@ export function mapTask(task: ApiTask, firstBlock?: ApiBlock): Task {
 }
 
 // One calendar event per study block; its id is the block id, its title the task's.
+
 export function blockEvent(block: ApiBlock, task: Task | undefined): Task {
   const start = new Date(block.start_at)
 
@@ -103,6 +105,7 @@ export type MappedData = {
 
 export function mapTasksAndEvents(
   apiTasks: ApiTask[],
+
   blocks: ApiBlock[],
 ): MappedData {
   const firstBlock = new Map<string, ApiBlock>()
@@ -130,9 +133,12 @@ const toMinutes = (hhmm: string) => {
 }
 
 // Free/busy cells (one per grid hour) for `days` days from `from`. Busy wins over free on the same hour.
+
 export function expandWindows(
   windows: ApiTimeWindow[],
+
   from: Date,
+
   days: number,
 ): TimeWindow[] {
   const cells = new Map<string, TimeWindow>()
@@ -140,7 +146,9 @@ export function expandWindows(
   for (let i = 0; i < days; i++) {
     const day = new Date(
       from.getFullYear(),
+
       from.getMonth(),
+
       from.getDate() + i,
     )
 
@@ -151,8 +159,11 @@ export function expandWindows(
     for (let hour = FIRST_HOUR; hour <= LAST_HOUR; hour++) {
       const cellStart = new Date(
         day.getFullYear(),
+
         day.getMonth(),
+
         day.getDate(),
+
         hour,
       )
 
@@ -189,12 +200,17 @@ export function expandWindows(
 const CHANGE_FROM = (e: Task) => ({ date: e.date, hour: e.hour })
 
 // The pending proposal as the calendar understands it. Non-plan proposals carry no calendar change.
+
 export function proposalFromReply(
   reply: OrchestratorReply,
+
   ctx: {
     tasks: Task[]
+
     events: Task[]
+
     availability: TimeWindow[]
+
     revision: number
   },
 ): Proposal | null {
@@ -213,8 +229,11 @@ export function proposalFromReply(
 
   const server = {
     reference,
+
     title: summary.title,
+
     details: summary.details,
+
     taskIds: [] as string[],
   }
 
@@ -223,13 +242,21 @@ export function proposalFromReply(
   if (!plan)
     return {
       id: reference.action_id,
+
       createdAt: Date.now(),
+
       baseRevision: ctx.revision,
+
       next: { tasks: ctx.events, availability: ctx.availability },
+
       changes: [],
+
       windowChanges: [],
+
       issues: [],
+
       reply: reply.message,
+
       server,
     }
 
@@ -255,7 +282,9 @@ export function proposalFromReply(
         ? [
             {
               kind: "moved" as const,
+
               task: next.get(id)!,
+
               from: current.has(id) ? CHANGE_FROM(current.get(id)!) : undefined,
             },
           ]
@@ -272,29 +301,41 @@ export function proposalFromReply(
   server.taskIds = [
     ...new Set(
       plan.payload.study_blocks
+
         .filter(
           (b) =>
             diff.added.includes(b.block_id) || diff.moved.includes(b.block_id),
         )
+
         .map((b) => b.task_id),
     ),
   ]
 
   const issues: PlannerIssue[] = plan.payload.warnings.map((w, i) => ({
     code: w.code,
+
     message: w.message,
+
     taskId: `${w.code}-${i}`,
   }))
 
   return {
     id: plan.proposal_id,
+
     createdAt: Date.now(),
+
     baseRevision: plan.base_schedule_revision,
+
     next: { tasks: nextEvents, availability: ctx.availability },
+
     changes,
+
     windowChanges: [],
+
     issues,
+
     reply: reply.message,
+
     server,
   }
 }
@@ -313,12 +354,19 @@ export type DetailRow = {
 
 const WEEKDAYS = [
   "",
+
   "Thứ 2",
+
   "Thứ 3",
+
   "Thứ 4",
+
   "Thứ 5",
+
   "Thứ 6",
+
   "Thứ 7",
+
   "Chủ nhật",
 ]
 
@@ -340,25 +388,30 @@ function windowDetails(args: Record<string, unknown>): DetailRow[] {
 }
 
 // Title and rows describing what an approval would do, from the server-issued presentation.
-export function summarize(
-  p: ActionPresentation,
-): Summary {
+
+export function summarize(p: ActionPresentation): Summary {
   if (p.proposal) {
     const diff = p.proposal.payload.plan_diff
 
     return {
       title: "Kế hoạch học được đề xuất",
+
       details: [
         {
           label: "Khối học",
+
           value: String(p.proposal.payload.study_blocks.length),
         },
+
         {
           label: "Thêm / dời / xóa",
+
           value: `${diff.added.length} / ${diff.moved.length} / ${diff.removed.length}`,
         },
+
         {
           label: "Mức phủ",
+
           value: p.proposal.payload.coverage === "FULL" ? "Đầy đủ" : "Một phần",
         },
       ],
@@ -370,18 +423,24 @@ export function summarize(
 
     return {
       title: `Thêm công việc: ${s.title ?? ""}`,
+
       details: [
         { label: "Môn học", value: String(s.course_label ?? "Chưa có") },
+
         {
           label: "Hạn nộp",
+
           value: String(s.deadline_date ?? s.deadline_at ?? "Chưa có"),
         },
+
         {
           label: "Thời lượng",
+
           value: s.estimated_minutes
             ? `${s.estimated_minutes} phút`
             : "Chưa có",
         },
+
         { label: "Ưu tiên", value: String(s.priority ?? "NORMAL") },
       ],
     }
@@ -392,6 +451,7 @@ export function summarize(
   if (command?.operation === "set_scheduling_preferences")
     return {
       title: "Cập nhật tùy chọn lập lịch",
+
       details: Object.entries(p.effective_policy ?? {}).map(
         ([label, value]) => ({ label, value: String(value) }),
       ),
@@ -403,6 +463,7 @@ export function summarize(
         command.operation === "set_busy_interval"
           ? "Thêm giờ bận"
           : "Thêm giờ rảnh",
+
       details: windowDetails(command.arguments),
     }
 

@@ -1,3 +1,5 @@
+import type { ActionReference } from "../../api/types.ts"
+
 import type {
   ChatMessage,
   ChatAttachment,
@@ -38,7 +40,7 @@ export const emptyDraft = (): Draft => ({
   target: "",
 })
 
-export type WorkflowStatus = "idle" | "awaiting_clarification" | "awaiting_approval" | "review_required" | "cancelled" | "demo_acknowledged"
+export type WorkflowStatus = "idle" | "awaiting_clarification" | "awaiting_approval" | "review_required" | "cancelled" | "demo_acknowledged" | "approved"
 
 export type Conversation = {
   schemaVersion: 1
@@ -150,6 +152,39 @@ export function setProposalStatus(
     ),
 
     workflow: { ...conversation.workflow, status },
+  }
+}
+
+function isReference(value: unknown): value is ActionReference {
+  return (
+    isObject(value) &&
+    typeof value.action_id === "string" &&
+    typeof value.action_version === "number" &&
+    ["TASK_CANDIDATE", "PENDING_ACTION", "PLAN_PROPOSAL"].includes(
+      String(value.target_type),
+    ) &&
+    typeof value.target_id === "string" &&
+    typeof value.target_version === "number"
+  )
+}
+
+export function setProposal(
+  conversation: Conversation,
+
+  messageId: string,
+
+  proposal: ActionProposal,
+): Conversation {
+  return {
+    ...conversation,
+
+    updatedAt: new Date().toISOString(),
+
+    messages: conversation.messages.map((message) =>
+      message.id === messageId ? { ...message, proposal } : message,
+    ),
+
+    workflow: { ...conversation.workflow, status: proposal.status },
   }
 }
 
@@ -271,7 +306,7 @@ function safeMessage(value: unknown): ChatMessage | null {
         typeof item.value === "string",
     )
 
-    const status = ["cancelled", "demo_acknowledged"].includes(
+    const status = ["cancelled", "demo_acknowledged", "approved"].includes(
       String(value.proposal.status),
     )
       ? value.proposal.status as ActionProposal["status"]
@@ -287,6 +322,10 @@ function safeMessage(value: unknown): ChatMessage | null {
       details,
 
       status,
+
+      ...(isReference(value.proposal.reference)
+        ? { reference: value.proposal.reference }
+        : {}),
     }
   }
 
@@ -322,7 +361,7 @@ export function restoreConversation(value: unknown): Conversation | null {
       ? "review_required"
       : last?.category === "CLARIFICATION"
         ? "awaiting_clarification"
-        : ["idle", "cancelled", "demo_acknowledged"].includes(
+        : ["idle", "cancelled", "demo_acknowledged", "approved"].includes(
               String(savedWorkflow.status),
             )
           ? savedWorkflow.status as WorkflowStatus
