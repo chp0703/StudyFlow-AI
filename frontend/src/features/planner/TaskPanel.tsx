@@ -43,7 +43,7 @@ const STATUS = {
 
 // Draft = part of the pending proposal; otherwise confirmed if placed on the calendar, else unscheduled.
 
-export function statusOf(task: Task, proposedIds: Set<number>): Status {
+export function statusOf(task: Task, proposedIds: Set<string>): Status {
   if (proposedIds.has(task.id)) return "draft"
 
   return task.date && task.hour !== undefined ? "confirmed" : "unscheduled"
@@ -60,7 +60,7 @@ export default function TaskPanel({
 }: {
   tasks: Task[]
 
-  proposedIds: Set<number>
+  proposedIds: Set<string>
 
   week?: string[]
 

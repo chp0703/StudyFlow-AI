@@ -20,6 +20,18 @@ import {
   X,
 } from "lucide-react"
 
+import { api } from "../api"
+
+import { apiEnabled } from "../api/config"
+
+import { ApiError, errorText } from "../api/client"
+
+import { proposalFromReply } from "../api/mappers"
+
+import { savePending } from "../api/pending"
+
+import type { OrchestratorReply } from "../api/types"
+
 import Button from "../components/ui/Button"
 
 import Card from "../components/ui/Card"
@@ -60,6 +72,14 @@ const hours = Array.from(
 export default function Planner({
   tasks,
 
+  events,
+
+  userId,
+
+  conversationId,
+
+  reload,
+
   setTasks,
 
   availability,
@@ -78,6 +98,16 @@ export default function Planner({
 }: {
   tasks: Task[]
 
+  // Calendar events: one per study block in API mode, the tasks themselves in demo mode.
+
+  events: Task[]
+
+  userId: string
+
+  conversationId: string
+
+  reload: () => Promise<void>
+
   setTasks: Dispatch<SetStateAction<Task[]>>
 
   availability: TimeWindow[]
@@ -95,6 +125,12 @@ export default function Planner({
   notify?: (message: string) => void
 }) {
   const [input, setInput] = useState("")
+
+  const [busy, setBusy] = useState(false)
+
+  // A retried send of the same text keeps its idempotency key, so a lost response is never executed twice.
+
+  const attempt = useRef<{ text: string; key: string } | null>(null)
 
   const [reply, setReply] = useState("")
 
@@ -171,7 +207,9 @@ export default function Planner({
 
   const prevWeek = useRef(0)
 
-  const prevTasks = useRef(tasks)
+  const source = apiEnabled ? events : tasks
+
+  const prevTasks = useRef(source)
 
   // Changing week slides the calendar content in from the direction of travel.
 
@@ -205,7 +243,7 @@ export default function Planner({
     () => {
       const before = new Map(prevTasks.current.map((t) => [t.id, t]))
 
-      const changed = tasks
+      const changed = source
 
         .filter((t) => {
           const old = before.get(t.id)
@@ -215,7 +253,7 @@ export default function Planner({
 
         .map((t) => `[data-task-id="${t.id}"]`)
 
-      prevTasks.current = tasks
+      prevTasks.current = source
 
       if (changed.length) {
         gsap.fromTo(
@@ -238,7 +276,7 @@ export default function Planner({
       }
     },
 
-    { scope: calendarRef, dependencies: [tasks] },
+    { scope: calendarRef, dependencies: [source] },
   )
 
   // GSAP drives the task panel because CSS transitions are disabled by reduced-motion.
@@ -347,7 +385,7 @@ export default function Planner({
 
   // The calendar shows the proposal's preview while one is pending; committed tasks otherwise.
 
-  const shown = proposal ? proposal.next.tasks : tasks
+  const shown = proposal ? proposal.next.tasks : source
 
   const shownWindows = proposal ? proposal.next.availability : availability
 
@@ -369,12 +407,19 @@ export default function Planner({
   const prefill = (date: Date, hour: number) => {
     const d = `${date.getDate()}/${date.getMonth() + 1}`
 
-    setInput(`thêm  lúc ${hour}h ngày ${d}`)
+    const text = apiEnabled
+      ? `Thêm công việc hạn ngày ${d}, làm khoảng 60 phút`
+      : `thêm  lúc ${hour}h ngày ${d}`
+
+    setInput(text)
 
     requestAnimationFrame(() => {
       inputRef.current?.focus()
 
-      inputRef.current?.setSelectionRange(5, 5)
+      inputRef.current?.setSelectionRange(
+        apiEnabled ? text.length : 5,
+        apiEnabled ? text.length : 5,
+      )
     })
   }
 
@@ -397,10 +442,72 @@ export default function Planner({
 
   const stale = proposal ? isStale(proposal, revision) : false
 
+  // API mode: show what the server answered. A reply that waits for approval becomes the pending proposal.
+
+  const showReply = async (r: OrchestratorReply) => {
+    if (r.state === "AWAITING_APPROVAL") {
+      const next = proposalFromReply(r, {
+        tasks,
+        events,
+        availability,
+        revision,
+      })
+
+      setProposal(next)
+
+      setReply(r.message)
+
+      if (next && r.action_reference)
+        savePending(userId, {
+          conversationId,
+          reference: r.action_reference,
+        })
+
+      return
+    }
+
+    setProposal(null)
+
+    savePending(userId, null)
+
+    const questions = r.questions.map((q) => q.message).join(" ")
+
+    setReply(questions ? `${r.message} ${questions}` : r.message)
+
+    if (r.state === "SUCCEEDED") await reload()
+  }
+
+  const sendToServer = async (text: string) => {
+    const key =
+      attempt.current?.text === text ? attempt.current.key : crypto.randomUUID()
+
+    attempt.current = { text, key }
+
+    setBusy(true)
+
+    try {
+      await showReply(await api.sendMessage(conversationId, text, key))
+
+      attempt.current = null
+
+      setInput("")
+    } catch (e) {
+      setReply(errorText(e))
+
+      // Only a failure that may have reached the server keeps the key for the retry.
+
+      if (e instanceof ApiError && !e.retryable) attempt.current = null
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const send = () => {
     const text = input.trim()
 
-    if (!text) return
+    if (!text || busy) return
+
+    if (apiEnabled) return void sendToServer(text)
 
     // Commands stack on a pending proposal, but are always diffed against the committed schedule.
 
@@ -435,7 +542,40 @@ export default function Planner({
     })
   }
 
+  const decideOnServer = async (decision: "APPROVE" | "REJECT") => {
+    if (!proposal?.server || busy) return
+
+    setBusy(true)
+
+    try {
+      const r = await api.decide(
+        conversationId,
+        proposal.server.reference,
+        decision,
+      )
+
+      setProposal(null)
+
+      savePending(userId, null)
+
+      await reload()
+
+      if (r.state === "AWAITING_APPROVAL") await showReply(r)
+      else {
+        setReply("")
+
+        showPlannerNotice(r.message)
+      }
+    } catch (e) {
+      setReply(errorText(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const approve = () => {
+    if (apiEnabled) return void decideOnServer("APPROVE")
+
     if (!proposal || stale) return
 
     setTasks(proposal.next.tasks)
@@ -452,6 +592,8 @@ export default function Planner({
   }
 
   const reject = () => {
+    if (apiEnabled) return void decideOnServer("REJECT")
+
     setProposal(null)
 
     setReply("")
@@ -481,12 +623,13 @@ export default function Planner({
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Nhập yêu cầu lịch học"
                 aria-label="Yêu cầu điều chỉnh lịch"
+                disabled={busy}
               />
               <Button
                 className="primary"
                 type="submit"
                 aria-label="Gửi yêu cầu"
-                disabled={!input.trim()}
+                disabled={!input.trim() || busy}
               >
                 <Send aria-hidden="true" size={14} />
               </Button>
@@ -550,10 +693,25 @@ export default function Planner({
               <Sparkles aria-hidden="true" size={16} />
               <span className="proposal-text">
                 <strong>
-                  Đề xuất:{" "}
-                  {describeChanges(proposal.changes, proposal.windowChanges) ||
-                    "không đổi"}
+                  {proposal.server ? (
+                    proposal.server.title
+                  ) : (
+                    <>
+                      Đề xuất:{" "}
+                      {describeChanges(
+                        proposal.changes,
+                        proposal.windowChanges,
+                      ) || "không đổi"}
+                    </>
+                  )}
                 </strong>
+                {proposal.server && proposal.server.details.length > 0 && (
+                  <span>
+                    {proposal.server.details
+                      .map((d) => `${d.label}: ${d.value}`)
+                      .join(" · ")}
+                  </span>
+                )}
                 <span>
                   {stale
                     ? "Lịch đã thay đổi từ lúc tạo đề xuất (STALE). Hãy từ chối và tạo lại."
@@ -572,13 +730,17 @@ export default function Planner({
                   </details>
                 )}
               </span>
-              <Button className="secondary proposal-reject" onClick={reject}>
+              <Button
+                className="secondary proposal-reject"
+                onClick={reject}
+                disabled={busy}
+              >
                 <X aria-hidden="true" size={14} /> Từ chối
               </Button>
               <Button
                 className="primary proposal-approve"
                 onClick={approve}
-                disabled={stale}
+                disabled={stale || busy}
               >
                 <Check aria-hidden="true" size={14} /> Duyệt
               </Button>
@@ -707,14 +869,16 @@ export default function Planner({
         inert={!taskPanelOpen ? true : undefined}
       >
         <TaskPanel
-          tasks={shown}
+          tasks={apiEnabled ? tasks : shown}
           proposedIds={
             new Set(
-              proposal?.changes
+              proposal?.server
+                ? proposal.server.taskIds
+                : proposal?.changes
 
-                .filter((c) => c.kind !== "removed")
+                    .filter((c) => c.kind !== "removed")
 
-                .map((c) => c.task.id),
+                    .map((c) => c.task.id),
             )
           }
           week={weekDays.map(toIsoDate)}

@@ -12,12 +12,17 @@ Prototype React để mô phỏng không gian học tập của sinh viên, gồ
 | **Lập kế hoạch** (`Planner`) | Khung chat điều khiển lịch tuần (agent theo luật: thêm / dời / xóa) |
 | **Học tập** (`Study`) | Tài liệu, ghi chú và đồng hồ buổi học |
 
-Dữ liệu học tập (công việc, tệp) chỉ nằm trong bộ nhớ và bắt đầu rỗng. Riêng **lịch sử hội thoại** được lưu trong IndexedDB của trình duyệt (đã được duyệt cho riêng tính năng này). Không có backend, đăng nhập, đồng bộ tài khoản, đọc tệp, truy xuất nguồn hay AI thật.
+Ứng dụng chạy ở **hai chế độ**:
+
+- **Chế độ demo** (không đặt biến `VITE_*`): dữ liệu học tập (công việc, tệp) chỉ nằm trong bộ nhớ và bắt đầu rỗng; không có backend, đăng nhập, đồng bộ tài khoản, đọc tệp, truy xuất nguồn hay AI thật. Mọi quy tắc demo bên dưới áp dụng nguyên vẹn.
+- **Chế độ API** (đặt đủ `VITE_API_BASE_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`): đăng nhập email + mật khẩu qua Supabase, công việc, giờ rảnh/bận và kế hoạch đọc/ghi qua API backend F1, trợ lý và khung chat của Planner gọi `POST /v1/messages`. Việc ghi chỉ xảy ra khi người dùng bấm xác nhận một thao tác do server phát hành. Tệp đính kèm chưa được hỗ trợ (nút bị khóa).
+
+Riêng **lịch sử hội thoại** được lưu trong IndexedDB của trình duyệt (đã được duyệt cho riêng tính năng này); ở chế độ API, supabase-js lưu phiên đăng nhập trong localStorage và Planner giữ `conversation_id` cùng tham chiếu thao tác đang chờ (không lưu nội dung) trong localStorage.
 
 Quy tắc bắt buộc:
 - Giữ các dòng tuyên bố demo/nguồn. Không trình bày dữ liệu minh họa như bằng chứng học tập đã xác minh.
 - Không tuyên bố đã thành thạo, đã tải lên, đã trích xuất tài liệu hay có AI thật.
-- Không thêm analytics, dịch vụ ngoài hoặc lưu trữ nào khác ngoài IndexedDB cho lịch sử hội thoại nếu chưa được duyệt.
+- Không thêm analytics, dịch vụ ngoài hoặc lưu trữ nào khác ngoài IndexedDB cho lịch sử hội thoại, phiên Supabase và các khóa `studyflow_*` nêu trên nếu chưa được duyệt.
 - Ngày, môn học, đáp án và tin nhắn mẫu phải rõ là minh họa.
 
 ## 2. Công nghệ và lệnh
@@ -34,7 +39,7 @@ React 19 · Vite 8 · TypeScript (strict) · Tailwind CSS v4 (`@tailwindcss/vite
 | `npx tsc --noEmit` | kiểm tra kiểu (không có script lint) |
 | `node --test <file>` | chạy test (không có `npm test`) |
 
-Test hiện có: `src/features/assistant/conversationHistory.test.ts`, `src/features/planner/plannerAgent.test.ts`.
+Test hiện có (`node --test <file>`): `src/features/assistant/{conversationHistory,apiAssistant}.test.ts`, `src/features/planner/{plannerAgent,proposal}.test.ts`, `src/api/{client,mappers}.test.ts`.
 
 Trước khi mở PR: `npm run format && npm run build && npx tsc --noEmit`.
 
@@ -48,7 +53,10 @@ src/App.tsx               khung ứng dụng: điều hướng, state dùng chun
 src/pages/                Planner, Study
 src/components/           HomeSummary (3 thẻ tóm tắt); ui/ Button, Card, Modal
 src/features/assistant/   Assistant (UI), assistantService (trả lời mẫu), conversationHistory (IndexedDB)
-src/features/planner/     plannerAgent (lệnh chat -> chỉnh lịch)
+src/features/planner/    plannerAgent (lệnh chat -> chỉnh lịch, chỉ chế độ demo), proposal, TaskPanel
+src/features/auth/       LoginPage (chế độ API)
+src/api/                 client (fetch + token + Idempotency-Key + lỗi catalog), endpoints, types (DTO hợp đồng),
+                         mappers (DTO -> Task/sự kiện lịch/ô rảnh bận/đề xuất), auth (supabase-js), useServerData, pending
 src/types/                kiểu dùng chung (Task, hợp đồng assistant)
 src/utils/                hàm ngày (date.ts)
 src/styles/               xem mục 5
@@ -71,6 +79,7 @@ Sinh tự động: `dist/`, `node_modules/` — không sửa, không commit.
 - **Bảng công việc (Planner)**: cột phải cạnh lịch (`features/planner/TaskPanel.tsx`), có tìm kiếm + lọc trạng thái. Trạng thái suy ra, không lưu: **Nháp** = thuộc đề xuất đang chờ, **Đã xác nhận** = đã xếp lên lịch và được duyệt, **Chưa xếp** = chưa có ngày/giờ. Mỗi trạng thái có icon + chữ. Lệnh `tạo công việc <tên> hạn <ngày> [N giờ]` tạo việc chưa xếp.
 - **Lập kế hoạch tự động (Planner)**: lệnh `lập kế hoạch` xếp các việc chưa xếp theo hạn nộp rồi mức ưu tiên, mỗi việc một khối 60 phút vào giờ trống sớm nhất (bỏ giờ bận; nếu ngày có khai giờ rảnh thì chỉ dùng giờ rảnh). Cùng đầu vào cho cùng kết quả. Việc không vừa trước hạn nằm trong mục "Chưa xếp được (n)" của thanh đề xuất (mã `INSUFFICIENT_AVAILABILITY`); phần xếp được vẫn xem trước và duyệt riêng. Quy tắc khối 60 phút là đề xuất, chưa chốt trong SRS.
 - **Chú thích, huy hiệu (Planner)**: đề xuất không tự hết hạn (schema F1 v1.1 đã bỏ `EXPIRED`), chỉ chuyển `STALE` khi lịch nền đổi. Hàng chú thích trên lịch có Đã xác nhận / Rảnh / Bận / Đề xuất; tuần không có việc thì hiện gợi ý lệnh mẫu. Bảng công việc có nút lọc "Tuần đang xem". Menu "Lập kế hoạch" hiện huy hiệu "Chờ duyệt" khi còn đề xuất chưa quyết định (đề xuất nằm ở `App` nên không mất khi đổi trang).
+- **Chế độ API**: `App` đọc `tasks`, sự kiện lịch (mỗi khối học một sự kiện), ô rảnh/bận và `revision` (= `schedule_revision`) từ `useServerData` và gọi `reload()` sau mọi thao tác có thể làm đổi dữ liệu. Chat của Planner gửi `POST /v1/messages`; trả lời `AWAITING_APPROVAL` thành `Proposal` (có `server.reference` = `ActionReference` giữ nguyên, không sửa) với thanh Duyệt/Từ chối gọi `POST /v1/decisions`; `NEEDS_CLARIFICATION` hiện câu hỏi, câu trả lời kế tiếp là tin nhắn mới. Mỗi lần gửi dùng một `Idempotency-Key`; gửi lại đúng nội dung sau lỗi tạm thời dùng lại khóa cũ. Sau khi tải lại trang, đề xuất đang chờ được dựng lại bằng `POST /v1/actions/{id}/review` từ tham chiếu đã lưu. Task panel hiện công việc từ server (Nháp/Đã xác nhận/Chưa xếp); lịch hiện khối học của kế hoạch hiện tại. Giờ hiển thị theo múi giờ trình duyệt; lịch chỉ hiện 8h–17h theo giờ bắt đầu khối.
 - Dùng lại `Button`, `Card`, `Modal` (Modal là `<dialog>` gốc, có khôi phục focus) trước khi viết wrapper mới.
 - Chọn tệp chỉ lưu tên và nhãn trạng thái; không tải lên hay đọc nội dung.
 - Icon: chỉ dùng `lucide-react`.

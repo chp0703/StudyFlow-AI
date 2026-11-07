@@ -323,3 +323,39 @@
 **Ghi chú**
 
 - Chưa xử lý các chỗ còn lệch v1.1: thẻ xác nhận công việc, nối chat với công việc, chia khối theo thời lượng, cấu hình lập lịch, lịch hiện hành/lịch sử.
+
+## 2026-11-06 — Frontend F1: lớp API (nhánh feat/f1-frontend-integration)
+
+**Mục tiêu:** bước 1 nối FE với BE: lớp gọi API có kiểu, tách khỏi giao diện.
+
+**Đã làm**
+
+- `frontend/src/api/`: `client.ts` (bearer token, `Idempotency-Key` cố định trước lần gửi đầu và giữ nguyên khi thử lại, lỗi theo catalog, thử lại một lần với lỗi tạm thời, bảng thông báo tiếng Việt), `endpoints.ts` (8 endpoint, tự lật trang), `types.ts` (kiểu DTO hợp đồng), `mappers.ts` (task → UI, khối học → sự kiện lịch, khung giờ lặp/một lần → ô rảnh/bận, đề xuất → bản xem trước lịch, presentation → tiêu đề và dòng chi tiết).
+- `Task.id` đổi thành `string` (UUID từ server); cập nhật `plannerAgent`, `TaskPanel` và các test.
+- Thêm `@supabase/supabase-js`; 15 test mới (client, mappers có dùng ví dụ hợp đồng).
+
+**Kết quả:** `tsc` sạch; 30 test `node --test` pass (api + planner + assistant). Chưa đổi giao diện nào.
+
+**Ghi chú**
+
+- Giờ hiển thị theo múi giờ trình duyệt (mặc định backend là Asia/Ho_Chi_Minh).
+
+## 2026-11-06 — Frontend F1: đăng nhập, Planner và Assistant chạy với API (chế độ API)
+
+**Mục tiêu:** nối frontend với backend F1; vẫn giữ chế độ demo khi không cấu hình API.
+
+**Đã làm**
+
+- Chế độ API bật khi đặt đủ `VITE_API_BASE_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (xem `frontend/.env.example`); không đặt thì ứng dụng chạy như trước.
+- Đăng nhập/đăng ký email + mật khẩu (`LoginPage`, supabase-js), khung tài khoản có đăng xuất; dữ liệu server (`useServerData`) cấp công việc, sự kiện lịch từ khối học, ô rảnh/bận và `schedule_revision` cho Trang chủ, Planner.
+- Planner: chat gửi `POST /v1/messages`; đề xuất (công việc, giờ rảnh/bận, tùy chọn, kế hoạch) thành thanh Duyệt/Từ chối gọi `POST /v1/decisions` với `action_reference` nguyên vẹn; xem trước khối học trên lịch; tải lại trang vẫn dựng lại đề xuất đang chờ qua `/review`.
+- Assistant: tin nhắn qua API, thẻ xác nhận/hủy thật, câu hỏi làm rõ, danh sách kết quả tìm kiếm; khóa đính kèm tệp ở chế độ API; sửa nhãn demo.
+- Backend: `reject` một đề xuất đã STALE giờ hủy action đang chờ (trước đó hội thoại bị kẹt), có test tích hợp.
+- Tài liệu: `frontend/DESIGN.md`, `backend/README.md` (cách chạy API cục bộ), `supabase/scripts/register_dev_key.sql`.
+
+**Kết quả:** `tsc` sạch, build ok, 34 test `node --test` pass, 7 test tích hợp backend pass. Đã chạy trình duyệt thật (Puppeteer) trên Supabase local + API: đăng ký → chat thêm việc → duyệt → rảnh → lập kế hoạch → duyệt → tải lại vẫn còn; Assistant làm rõ → xác nhận → tìm kiếm; tải lại giữa chừng rồi "Xem lại bản nháp"; chế độ demo vẫn chạy.
+
+**Ghi chú**
+
+- Phần hiểu ngôn ngữ trong lần chạy trình duyệt là extractor kịch bản (chưa có khóa DeepSeek); chưa kiểm với DeepSeek thật.
+- Lịch hiển thị 8h–17h theo giờ bắt đầu khối, múi giờ trình duyệt.

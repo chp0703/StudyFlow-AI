@@ -331,13 +331,19 @@ class ActionProcessor:
             approval = {"approval_action_id": str(uuid4()), "user_id": ctx.user_id, "target_type": "PLAN_PROPOSAL",
                         "target_id": ref["target_id"], "target_version": ref["target_version"], "decision": "REJECT",
                         "source": "UI", "source_message_id": None, "created_at": iso(datetime.now(timezone.utc))}
-            result = self.step(ctx, "reject_study_plan", {"proposal_id": ref["target_id"],
-                                                          "expected_proposal_version": ref["target_version"]},
-                               conversation_id=conversation, idempotency_key=child_key(key, "decision"),
-                               approval_action=approval, action_reference=ref, message_id=receipt["message_id"])
-            done = reply(ctx.request_id, "SUCCEEDED", DONE_TEXT["reject_study_plan"],
-                         result={**result, "request_id": ctx.request_id})
-            return 200, self.chat.resume(ctx, receipt, key, conversation, ref, None, None, True, done) or done
+            try:
+                result = self.step(ctx, "reject_study_plan", {"proposal_id": ref["target_id"],
+                                                              "expected_proposal_version": ref["target_version"]},
+                                   conversation_id=conversation, idempotency_key=child_key(key, "decision"),
+                                   approval_action=approval, action_reference=ref, message_id=receipt["message_id"])
+            except Terminal as exc:
+                if exc.error["code"] != "STALE_PROPOSAL":
+                    raise
+                result = None  # already stale: there is no proposal left to reject, only the waiting action to release
+            if result is not None:
+                done = reply(ctx.request_id, "SUCCEEDED", DONE_TEXT["reject_study_plan"],
+                             result={**result, "request_id": ctx.request_id})
+                return 200, self.chat.resume(ctx, receipt, key, conversation, ref, None, None, True, done) or done
         candidate_id = ref["target_id"] if ref["target_type"] == "TASK_CANDIDATE" else None
         cancelled = self.step(ctx, "cancel_pending_action", {"action_reference": ref, "candidate_id": candidate_id},
                               conversation_id=conversation, idempotency_key=child_key(key, "cancel"),
