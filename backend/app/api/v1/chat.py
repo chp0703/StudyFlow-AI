@@ -13,8 +13,9 @@ from datetime import datetime, timedelta, timezone
 from ...clients.rpc import child_key, iso
 from ...core import contract
 from ...nlu.extractor import ExtractionError, ExtractorUnavailable
-from .http import ApiError
-from .workflow import AWAITING, DONE_TEXT, INTENT, Terminal, _ok, reply
+from ...orchestrator.workflow_ports import ChatActions, Clock, WorkflowError
+from ...nlu.extractor import Extractor
+from ...orchestrator.workflow_shared import AWAITING, DONE_TEXT, INTENT, Terminal, _ok, reply
 
 WRITE_INTENTS = {"CREATE_TASK", "SET_AVAILABILITY", "SET_BUSY_INTERVAL", "SET_SCHEDULING_PREFERENCES", "GENERATE_STUDY_PLAN"}
 APPROVAL_OPERATIONS = {"confirm_task", "set_availability", "set_busy_interval", "set_scheduling_preferences",
@@ -33,8 +34,9 @@ def step_key(origin_key: str, source_message_id: str, index: int) -> str:
 
 
 class ChatProcessor:
-    def __init__(self, api, processor, extractor):
-        self.api, self.proc, self.extractor = api, processor, extractor
+    def __init__(self, processor: ChatActions, extractor: Extractor, *, clock: Clock, timezone: str):
+        self.proc, self.extractor = processor, extractor
+        self.clock, self.timezone = clock, timezone
 
     # ------------------------------------------------------------ đầu vào: POST /v1/messages
     def handle_message(self, ctx, receipt, key, body):
@@ -61,13 +63,13 @@ class ChatProcessor:
 
     def extract(self, ctx, conversation, text, active):
         try:
-            result = self.extractor.extract(text, now=self.api.clock(), timezone=self.api.settings.default_timezone, active=active)
+            result = self.extractor.extract(text, now=self.clock(), timezone=self.timezone, active=active)
         except ExtractorUnavailable:
-            raise ApiError("SERVICE_UNAVAILABLE", "Dịch vụ hiểu ngôn ngữ chưa sẵn sàng.", retryable=True, retry_after=5) from None
+            raise WorkflowError("SERVICE_UNAVAILABLE", "Dịch vụ hiểu ngôn ngữ chưa sẵn sàng.", retryable=True, retry_after=5) from None
         except ExtractionError:
-            raise ApiError("SERVICE_UNAVAILABLE", "Chưa đọc được kết quả phân tích, hãy thử lại.", retryable=True, retry_after=2) from None
+            raise WorkflowError("SERVICE_UNAVAILABLE", "Chưa đọc được kết quả phân tích, hãy thử lại.", retryable=True, retry_after=2) from None
         if not contract.is_valid("ExtractionResult", result):
-            raise ApiError("SERVICE_UNAVAILABLE", "Chưa đọc được kết quả phân tích, hãy thử lại.", retryable=True, retry_after=2)
+            raise WorkflowError("SERVICE_UNAVAILABLE", "Chưa đọc được kết quả phân tích, hãy thử lại.", retryable=True, retry_after=2)
         return result
 
     @staticmethod
@@ -220,7 +222,7 @@ class ChatProcessor:
             profile = self.proc.step(ctx, "ensure_user_context", {})["data"]
             arguments = {"policy_patch": slots.get("policy_patch"), "expected_schedule_revision": profile["schedule_revision"]}
             return "set_scheduling_preferences", arguments if contract.is_valid("set_scheduling_preferencesArguments", arguments) else None
-        now = self.api.clock().replace(second=0, microsecond=0) + timedelta(minutes=1)
+        now = self.clock().replace(second=0, microsecond=0) + timedelta(minutes=1)
         scope = {"start_at": slots.get("start_at") or iso(now).replace(".000000", ""),
                  "end_at": slots.get("end_at") or iso(now + timedelta(days=7)).replace(".000000", ""),
                  "selection_mode": "ALL_ELIGIBLE", "task_ids": []}

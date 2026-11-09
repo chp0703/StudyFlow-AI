@@ -18,6 +18,7 @@ from ...core.config import Settings
 from ...core.security import AuthError, AuthUnavailable, JwtVerifier
 from .http import STATUS, ApiError, error_body, error_response, respond
 from .workflow import ActionProcessor
+from ...orchestrator.workflow_ports import WorkflowError
 
 log = logging.getLogger("studyflow.api")
 _KEY = re.compile(r"^[A-Za-z0-9._:-]{16,128}$")
@@ -206,7 +207,7 @@ class Api:
             try:
                 ctx = await self.authenticate(request, request_id)
                 return await handler(request, ctx)
-            except ApiError as exc:
+            except WorkflowError as exc:
                 return error_response(exc, request_id, post=post)
             except Exception:  # noqa: BLE001 - lớp bảo vệ cuối; chi tiết chỉ nằm trong log, không trả về client
                 log.exception("unhandled error request_id=%s", request_id)
