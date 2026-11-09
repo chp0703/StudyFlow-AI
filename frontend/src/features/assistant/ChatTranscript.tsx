@@ -7,6 +7,8 @@ import type {
 } from "../../types/assistant"
 
 type Props = {
+  apiEnabled: boolean
+  thinking: boolean
   messages: ChatMessage[]
   transcriptRef: RefObject<HTMLDivElement | null>
   shouldScroll: RefObject<boolean>
@@ -17,6 +19,8 @@ type Props = {
 }
 
 export default function ChatTranscript({
+  apiEnabled,
+  thinking,
   messages,
   transcriptRef,
   shouldScroll,
@@ -54,7 +58,11 @@ export default function ChatTranscript({
             )}
             <div className="assistant-message-body">
               <span className="assistant-sender">
-                {entry.role === "user" ? "Bạn" : "StudyFlow · Bản mẫu"}
+                {entry.role === "user"
+                  ? "Bạn"
+                  : apiEnabled
+                    ? "StudyFlow"
+                    : "StudyFlow · Bản mẫu"}
               </span>
               <div className="assistant-bubble">
                 {entry.category !== "MESSAGE" && (
@@ -64,7 +72,9 @@ export default function ChatTranscript({
                     {entry.category === "CLARIFICATION"
                       ? "Cần thêm thông tin"
                       : entry.category === "PROPOSAL"
-                        ? "Bản nháp cần xem lại"
+                        ? entry.proposal?.reference
+                          ? "Chờ xác nhận"
+                          : "Bản nháp cần xem lại"
                         : entry.category === "UNSUPPORTED"
                           ? "Chưa hỗ trợ"
                           : "Có lỗi"}
@@ -124,20 +134,28 @@ export default function ChatTranscript({
                         </div>
                       ))}
                     </dl>
-                    <p className="assistant-caveat">{entry.proposal.caveat}</p>
+                    {entry.proposal.caveat && (
+                      <p className="assistant-caveat">
+                        {entry.proposal.caveat}
+                      </p>
+                    )}
                     {entry.proposal.status === "awaiting_approval" ? (
                       <div className="assistant-proposal-actions">
                         <button
                           className="button primary"
                           type="button"
+                          disabled={thinking}
                           onClick={() => decide(entry.id, "demo_acknowledged")}
                         >
-                          <Check size={16} aria-hidden="true" /> Xác nhận bản
-                          mẫu
+                          <Check size={16} aria-hidden="true" />{" "}
+                          {entry.proposal.reference
+                            ? "Xác nhận"
+                            : "Xác nhận bản mẫu"}
                         </button>
                         <button
                           className="button secondary"
                           type="button"
+                          disabled={thinking}
                           onClick={() => decide(entry.id, "cancelled")}
                         >
                           <X size={16} aria-hidden="true" /> Hủy
@@ -147,13 +165,15 @@ export default function ChatTranscript({
                       <div className="assistant-review">
                         <p role="status">
                           Bản nháp được khôi phục sau khi tải lại. Hãy xem lại
-                          trước khi xác nhận trong bản mẫu; chưa có thao tác nào
-                          được thực hiện.
+                          trước khi xác nhận
+                          {entry.proposal.reference ? "" : " trong bản mẫu"};
+                          chưa có thao tác nào được thực hiện.
                         </p>
                         <button
                           className="button secondary"
                           type="button"
                           onClick={() => decide(entry.id, "awaiting_approval")}
+                          disabled={thinking}
                         >
                           Xem lại bản nháp
                         </button>
@@ -162,7 +182,9 @@ export default function ChatTranscript({
                       <p className="assistant-result" role="status">
                         {entry.proposal.status === "cancelled"
                           ? "Đã hủy bản nháp. Không có thay đổi nào được lưu."
-                          : "Đã ghi nhận xác nhận trong bản mẫu. Chưa gửi đến backend và chưa lưu thay đổi."}
+                          : entry.proposal.status === "approved"
+                            ? "Đã xác nhận và lưu vào tài khoản."
+                            : "Đã ghi nhận xác nhận trong bản mẫu. Chưa gửi đến backend và chưa lưu thay đổi."}
                       </p>
                     )}
                   </div>

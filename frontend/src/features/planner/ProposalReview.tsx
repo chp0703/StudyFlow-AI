@@ -6,6 +6,7 @@ import { describeChanges } from "./proposal"
 type Props = {
   proposal: Proposal | null
   stale: boolean
+  busy: boolean
   reply: string
   approve: () => void
   reject: () => void
@@ -14,6 +15,7 @@ type Props = {
 export default function ProposalReview({
   proposal,
   stale,
+  busy,
   reply,
   approve,
   reject,
@@ -25,10 +27,23 @@ export default function ProposalReview({
           <Sparkles aria-hidden="true" size={16} />
           <span className="proposal-text">
             <strong>
-              Đề xuất:{" "}
-              {describeChanges(proposal.changes, proposal.windowChanges) ||
-                "không đổi"}
+              {proposal.server ? (
+                proposal.server.title
+              ) : (
+                <>
+                  Đề xuất:{" "}
+                  {describeChanges(proposal.changes, proposal.windowChanges) ||
+                    "không đổi"}
+                </>
+              )}
             </strong>
+            {proposal.server && proposal.server.details.length > 0 && (
+              <span>
+                {proposal.server.details
+                  .map((d) => `${d.label}: ${d.value}`)
+                  .join(" · ")}
+              </span>
+            )}
             <span>
               {stale
                 ? "Lịch đã thay đổi từ lúc tạo đề xuất (STALE). Hãy từ chối và tạo lại."
@@ -47,13 +62,17 @@ export default function ProposalReview({
               </details>
             )}
           </span>
-          <Button className="secondary proposal-reject" onClick={reject}>
+          <Button
+            className="secondary proposal-reject"
+            onClick={reject}
+            disabled={busy}
+          >
             <X aria-hidden="true" size={14} /> Từ chối
           </Button>
           <Button
             className="primary proposal-approve"
             onClick={approve}
-            disabled={stale}
+            disabled={stale || busy}
           >
             <Check aria-hidden="true" size={14} /> Duyệt
           </Button>

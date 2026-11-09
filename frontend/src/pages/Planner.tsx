@@ -15,6 +15,8 @@ import Card from "../components/ui/Card"
 
 import { FIRST_HOUR, LAST_HOUR } from "../features/planner/plannerAgent"
 
+import { apiEnabled } from "../api/config"
+
 import TaskPanel from "../features/planner/TaskPanel"
 
 import type { Task } from "../types/task"
@@ -35,6 +37,14 @@ const hours = Array.from(
 
 export default function Planner({
   tasks,
+
+  events,
+
+  userId,
+
+  conversationId,
+
+  reload,
 
   setTasks,
 
@@ -85,6 +95,7 @@ export default function Planner({
   }
 
   const {
+    busy,
     input,
     setInput,
     reply,
@@ -98,6 +109,10 @@ export default function Planner({
   } = usePlanner(
     {
       tasks,
+      events,
+      userId,
+      conversationId,
+      reload,
       setTasks,
       availability,
       setAvailability,
@@ -150,7 +165,9 @@ export default function Planner({
 
   const prevWeek = useRef(0)
 
-  const prevTasks = useRef(tasks)
+  const source = apiEnabled ? events : tasks
+
+  const prevTasks = useRef(source)
 
   // Khi đổi tuần, nội dung lịch trượt vào theo hướng di chuyển.
 
@@ -184,7 +201,7 @@ export default function Planner({
     () => {
       const before = new Map(prevTasks.current.map((t) => [t.id, t]))
 
-      const changed = tasks
+      const changed = source
 
         .filter((t) => {
           const old = before.get(t.id)
@@ -194,7 +211,7 @@ export default function Planner({
 
         .map((t) => `[data-task-id="${t.id}"]`)
 
-      prevTasks.current = tasks
+      prevTasks.current = source
 
       if (changed.length) {
         gsap.fromTo(
@@ -217,7 +234,7 @@ export default function Planner({
       }
     },
 
-    { scope: calendarRef, dependencies: [tasks] },
+    { scope: calendarRef, dependencies: [source] },
   )
 
   // GSAP điều khiển khung công việc vì reduced-motion vô hiệu hóa CSS transition.
@@ -342,12 +359,19 @@ export default function Planner({
   const prefill = (date: Date, hour: number) => {
     const d = `${date.getDate()}/${date.getMonth() + 1}`
 
-    setInput(`thêm  lúc ${hour}h ngày ${d}`)
+    const text = apiEnabled
+      ? `Thêm công việc hạn ngày ${d}, làm khoảng 60 phút`
+      : `thêm  lúc ${hour}h ngày ${d}`
+
+    setInput(text)
 
     requestAnimationFrame(() => {
       inputRef.current?.focus()
 
-      inputRef.current?.setSelectionRange(5, 5)
+      inputRef.current?.setSelectionRange(
+        apiEnabled ? text.length : 5,
+        apiEnabled ? text.length : 5,
+      )
     })
   }
 
@@ -392,12 +416,13 @@ export default function Planner({
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Nhập yêu cầu lịch học"
                 aria-label="Yêu cầu điều chỉnh lịch"
+                disabled={busy}
               />
               <Button
                 className="primary"
                 type="submit"
                 aria-label="Gửi yêu cầu"
-                disabled={!input.trim()}
+                disabled={!input.trim() || busy}
               >
                 <Send aria-hidden="true" size={14} />
               </Button>
@@ -458,6 +483,7 @@ export default function Planner({
         <ProposalReview
           proposal={proposal}
           stale={stale}
+          busy={busy}
           reply={reply}
           approve={approve}
           reject={reject}
@@ -509,14 +535,16 @@ export default function Planner({
         inert={!taskPanelOpen ? true : undefined}
       >
         <TaskPanel
-          tasks={shown}
+          tasks={apiEnabled ? tasks : shown}
           proposedIds={
             new Set(
-              proposal?.changes
+              proposal?.server
+                ? proposal.server.taskIds
+                : proposal?.changes
 
-                .filter((c) => c.kind !== "removed")
+                    .filter((c) => c.kind !== "removed")
 
-                .map((c) => c.task.id),
+                    .map((c) => c.task.id),
             )
           }
           week={weekDays.map(toIsoDate)}

@@ -1,3 +1,5 @@
+import type { ActionReference } from "../api/types"
+
 import type { Task } from "./task"
 
 export type TaskSlot = {
@@ -19,11 +21,11 @@ export type TaskChange = {
 // Mã theo SRS §12; chỉ gồm các mã planner hiện có thể phát sinh.
 
 export type PlannerIssue = {
-  code: "INSUFFICIENT_AVAILABILITY"
+  code: string
 
   message: string
 
-  taskId: number
+  taskId: string
 }
 
 // Một giờ người dùng khai báo rảnh/bận; id là "<date>-<hour>" để mỗi giờ chỉ có một khung.
@@ -70,4 +72,18 @@ export type Proposal = {
   issues: PlannerIssue[]
 
   reply: string
+
+  // Set in API mode: the server-issued action this proposal asks the user to decide on.
+
+  server?: {
+    reference: ActionReference
+
+    title: string
+
+    details: { label: string; value: string }[]
+
+    // Tasks touched by the proposal (calendar events are keyed by block id, the task list by task id).
+
+    taskIds: string[]
+  }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import gsap from "gsap"
 
@@ -25,6 +25,20 @@ import Modal from "./components/ui/Modal"
 import Assistant from "./features/assistant/Assistant"
 
 import Planner from "./pages/Planner"
+
+import LoginPage from "./features/auth/LoginPage"
+
+import { signOut, useSession } from "./api/auth"
+
+import { apiEnabled } from "./api/config"
+
+import { useServerData } from "./api/useServerData"
+
+import { loadPending, plannerConversationId, savePending } from "./api/pending"
+
+import { api } from "./api"
+
+import { proposalFromReply } from "./api/mappers"
 
 import Study from "./pages/Study"
 
@@ -79,15 +93,27 @@ const infoModals: Record<string, ModalInfo> = {
 export default function App() {
   const [page, setPage] = useState("Assistant")
 
-  const [tasks, setTasks] = useState<Task[]>([])
+  // Demo mode keeps everything in memory; API mode reads it from the server (see api/useServerData).
 
-  const [availability, setAvailability] = useState<TimeWindow[]>([])
+  const { session, loading: sessionLoading } = useSession()
+
+  const server = useServerData(apiEnabled && !!session)
+
+  const [demoTasks, setTasks] = useState<Task[]>([])
+
+  const [demoAvailability, setAvailability] = useState<TimeWindow[]>([])
 
   // Thay đổi lịch đang chờ người dùng duyệt và số phiên bản sửa đổi của lịch đã xác nhận.
 
   const [proposal, setProposal] = useState<Proposal | null>(null)
 
-  const [revision, setRevision] = useState(0)
+  const [demoRevision, setRevision] = useState(0)
+
+  const tasks = apiEnabled ? server.tasks : demoTasks
+
+  const availability = apiEnabled ? server.availability : demoAvailability
+
+  const revision = apiEnabled ? server.revision : demoRevision
 
   const [modal, setModal] = useState("")
 
@@ -324,7 +350,62 @@ export default function App() {
     setPage(p)
   }
 
+  // After a reload the pending approval is rebuilt by the server from its reference, never from stored content.
+
+  const restoredFor = useRef("")
+
+  useEffect(() => {
+    const userId = session?.user.id
+
+    if (!apiEnabled || !userId || server.loading || restoredFor.current === userId)
+      return
+
+    restoredFor.current = userId
+
+    const pending = loadPending(userId)
+
+    if (!pending) return
+
+    api
+      .reviewAction(
+        pending.conversationId,
+        pending.reference.action_id,
+        pending.reference.action_version,
+      )
+
+      .then((reply) => {
+        const next = proposalFromReply(reply, {
+          tasks: server.tasks,
+          events: server.events,
+          availability: server.availability,
+          revision: server.revision,
+        })
+
+        if (next && reply.action_reference) {
+          setProposal(next)
+
+          savePending(userId, {
+            conversationId: pending.conversationId,
+            reference: reply.action_reference,
+          })
+        } else savePending(userId, null)
+      })
+
+      .catch(() => savePending(userId, null))
+  }, [session?.user.id, server])
+
   const info = pageInfo[page]
+
+  const email = session?.user.email ?? ""
+
+  const conversationId = useMemo(
+    () => plannerConversationId(session?.user.id ?? "demo"),
+    [session?.user.id],
+  )
+
+  if (apiEnabled && sessionLoading) return null
+
+  if (apiEnabled && !session) return <LoginPage />
 
   const infoModal = infoModals[modal]
 
@@ -384,8 +465,10 @@ export default function App() {
             aria-label="Tài khoản sinh viên"
             onClick={() => setModal("account")}
           >
-            <span className="avatar">S</span>
-            <span>Sinh viên</span>
+            <span className="avatar">
+              {(email[0] ?? "S").toUpperCase()}
+            </span>
+            <span>{apiEnabled ? email.split("@")[0] : "Sinh viên"}</span>
             <ChevronDown aria-hidden="true" size={13} />
           </Button>
         </div>
@@ -461,7 +544,10 @@ export default function App() {
           </div>
         )}
         <div className="home-layout" hidden={page !== "Assistant"}>
-          <Assistant onOpenPlanner={() => go("Planner")} />
+          <Assistant
+            onOpenPlanner={() => go("Planner")}
+            onServerChange={() => void server.reload()}
+          />
           <aside className="home-summary" aria-label="Tổng quan việc học">
             <HomeSummary tasks={tasks} go={go} />
           </aside>
@@ -469,6 +555,10 @@ export default function App() {
         {page === "Planner" && (
           <Planner
             tasks={tasks}
+            events={apiEnabled ? server.events : tasks}
+            userId={session?.user.id ?? "demo"}
+            conversationId={conversationId}
+            reload={server.reload}
             setTasks={setTasks}
             availability={availability}
             setAvailability={setAvailability}
@@ -486,7 +576,15 @@ export default function App() {
           <Study />
         </div>
       </main>
-      {infoModal && (
+      {modal === "account" && apiEnabled && (
+        <Modal title="Tài khoản" close={() => setModal("")}>
+          <p>Đăng nhập với {email}.</p>
+          <Button className="secondary" onClick={() => void signOut()}>
+            Đăng xuất
+          </Button>
+        </Modal>
+      )}
+      {infoModal && !(modal === "account" && apiEnabled) && (
         <Modal title={infoModal.title} close={() => setModal("")}>
           <p>{infoModal.text}</p>
           <Button className="secondary" onClick={() => setModal("")}>

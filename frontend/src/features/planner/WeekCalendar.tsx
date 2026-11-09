@@ -12,7 +12,7 @@ type Props = {
   windowAt: (date: Date, hour: number) => TimeWindow | undefined
   proposedWindows: Set<string>
   prefill: (date: Date, hour: number) => void
-  changeOf: Map<number, TaskChange["kind"]>
+  changeOf: Map<Task["id"], TaskChange["kind"]>
   nowHour: number
   nowMinutes: number
 }

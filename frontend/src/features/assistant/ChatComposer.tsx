@@ -9,6 +9,8 @@ import { FileText, Plus, Send, X } from "lucide-react"
 import type { ChatAttachment } from "../../types/assistant"
 
 type Props = {
+  apiEnabled: boolean
+  thinking: boolean
   isDragging: boolean
   setIsDragging: (value: boolean) => void
   handleDrop: DragEventHandler<HTMLFormElement>
@@ -31,6 +33,8 @@ type Props = {
 }
 
 export default function ChatComposer({
+  apiEnabled,
+  thinking,
   isDragging,
   setIsDragging,
   handleDrop,
@@ -83,7 +87,7 @@ export default function ChatComposer({
             aria-label="Đính kèm ảnh hoặc tệp"
             title="Đính kèm ảnh, tệp..."
             onClick={() => fileInputRef.current?.click()}
-            disabled={!hydrated}
+            disabled={!hydrated || apiEnabled}
           >
             <Plus size={20} aria-hidden="true" />
           </button>
@@ -146,13 +150,20 @@ export default function ChatComposer({
             }
             disabled={!hydrated}
           />
+          {thinking && (
+            <p className="assistant-thinking" role="status">
+              Đang xử lý...
+            </p>
+          )}
         </div>
         <div className="assistant-composer-bottom">
           <button
             type="submit"
             aria-label="Gửi tin nhắn"
             disabled={
-              !hydrated || (!input.trim() && attachedFiles.length === 0)
+              !hydrated ||
+              thinking ||
+              (!input.trim() && attachedFiles.length === 0)
             }
           >
             <Send size={18} aria-hidden="true" />
@@ -160,11 +171,13 @@ export default function ChatComposer({
         </div>
       </form>
       <p className="assistant-disclaimer">
-        {storageMode === "persistent"
-          ? "Lịch sử lưu trên trình duyệt này, chưa đồng bộ với tài khoản. Trợ lý vẫn là bản mẫu, không ghi dữ liệu học tập lên máy chủ."
-          : storageMode === "memory"
-            ? "Chỉ lưu tạm trong phiên này. Trợ lý vẫn là bản mẫu, chưa kết nối AI."
-            : "Đang tải lịch sử hội thoại..."}
+        {apiEnabled
+          ? "Lịch sử hội thoại chỉ lưu trên trình duyệt này. Công việc và lịch chỉ được lưu khi bạn xác nhận. Chưa hỗ trợ đính kèm tệp."
+          : storageMode === "persistent"
+            ? "Lịch sử lưu trên trình duyệt này, chưa đồng bộ với tài khoản. Trợ lý vẫn là bản mẫu, không ghi dữ liệu học tập lên máy chủ."
+            : storageMode === "memory"
+              ? "Chỉ lưu tạm trong phiên này. Trợ lý vẫn là bản mẫu, chưa kết nối AI."
+              : "Đang tải lịch sử hội thoại..."}
       </p>
       {storageError && (
         <div className="history-storage-error" role="alert">

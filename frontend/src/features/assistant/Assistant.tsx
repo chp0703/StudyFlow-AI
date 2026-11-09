@@ -21,6 +21,12 @@ import { ArrowRight, History, ArrowLeft, Plus, X } from "lucide-react"
 
 import { getAssistantReply } from "./assistantService"
 
+import { api } from "../../api"
+
+import { apiEnabled } from "../../api/config"
+
+import { errorToMessage, replyToMessage } from "./apiAssistant"
+
 import type {
   ActionProposal,
   ChatAttachment,
@@ -32,6 +38,7 @@ import {
   appendMessages,
   createConversation,
   emptyDraft,
+  setProposal as replaceProposal,
   setProposalStatus,
   type Draft,
 } from "./conversationHistory"
@@ -48,9 +55,16 @@ const message = (item: Omit<ChatMessage, "id" | "timestamp">): ChatMessage => ({
 
 export default function Assistant({
   onOpenPlanner,
+
+  onServerChange,
+
+  // Called after the server may have changed tasks or the schedule (API mode).
 }: {
   onOpenPlanner: () => void
+
+  onServerChange?: () => void
 }) {
+  const [thinking, setThinking] = useState(false)
   const {
     conversations,
     setConversations,
@@ -118,7 +132,7 @@ export default function Assistant({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const processFiles = (fileList: File[]) => {
-    if (!fileList.length) return
+    if (!fileList.length || apiEnabled) return
 
     fileList.forEach((file) => {
       const isImg = file.type.startsWith("image/")
@@ -470,6 +484,12 @@ export default function Assistant({
       submitting.current = false
     })
 
+    if (apiEnabled) {
+      if (text && !thinking) void sendApi(text)
+
+      return
+    }
+
     const currentAttachments = [...attachedFiles]
 
     setAttachedFiles([])
@@ -651,7 +671,143 @@ export default function Assistant({
     patchActive((conversation) => appendMessages(conversation, [proposed]))
   }
 
+  // API mode: the message goes to the server; its reply (question, approval card, result or error) is the answer.
+
+  const attempt = useRef<{
+ key: string
+ text: string
+ id: string
+} | null>(null)
+
+  function appendAssistant(
+    conversationId: string,
+    item: ReturnType<typeof message>,
+  ) {
+    setConversations((current) =>
+      current.map((conversation) =>
+        conversation.id === conversationId
+          ? appendMessages(conversation, [item])
+          : conversation,
+      ),
+    )
+
+    shouldScroll.current = true
+  }
+
+  async function sendApi(text: string) {
+    const user = message({ role: "user", category: "MESSAGE", text })
+
+    const starting = active ?? createConversation(text)
+
+    const updated = appendMessages(starting, [user])
+
+    shouldScroll.current = true
+
+    setConversations((current) =>
+      activeId
+        ? current.map((item) => (item.id === activeId ? updated : item))
+        : [...current, updated],
+    )
+
+    if (!activeId) setActiveId(updated.id)
+
+    setEmptyInput("")
+
+    setThinking(true)
+
+    // Sending the same text again after a failure reuses the key, so a lost response never runs twice.
+
+    const same =
+      attempt.current?.id === starting.id && attempt.current.text === text
+
+    const key = same ? attempt.current!.key : crypto.randomUUID()
+
+    attempt.current = { key, text, id: starting.id }
+
+    try {
+      const reply = await api.sendMessage(starting.id, text, key)
+
+      attempt.current = null
+
+      appendAssistant(starting.id, message(replyToMessage(reply)))
+
+      if (reply.state === "SUCCEEDED") onServerChange?.()
+    } catch (error) {
+      appendAssistant(starting.id, message(errorToMessage(error)))
+    } finally {
+      setThinking(false)
+    }
+  }
+
+  async function decideApi(
+    entry: ChatMessage,
+    status: ActionProposal["status"],
+  ) {
+    const reference = entry.proposal?.reference
+
+    if (!reference || !active || thinking) return
+
+    const conversationId = active.id
+
+    setThinking(true)
+
+    try {
+      if (status === "awaiting_approval") {
+        // After a reload the stored card is only a reference; the server rebuilds what it would do.
+        const reply = await api.reviewAction(
+          conversationId,
+          reference.action_id,
+          reference.action_version,
+        )
+
+        const fresh = replyToMessage(reply).proposal
+
+        if (fresh)
+          setConversations((current) =>
+            current.map((conversation) =>
+              conversation.id === conversationId
+                ? replaceProposal(conversation, entry.id, fresh)
+                : conversation,
+            ),
+          )
+
+        return
+      }
+
+      const reply = await api.decide(
+        conversationId,
+        reference,
+        status === "cancelled" ? "REJECT" : "APPROVE",
+      )
+
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id === conversationId
+            ? setProposalStatus(
+                conversation,
+                entry.id,
+                status === "cancelled" ? "cancelled" : "approved",
+              )
+            : conversation,
+        ),
+      )
+
+      appendAssistant(conversationId, message(replyToMessage(reply)))
+
+      onServerChange?.()
+    } catch (error) {
+      appendAssistant(conversationId, message(errorToMessage(error)))
+    } finally {
+      setThinking(false)
+    }
+  }
+
   function decide(id: string, status: ActionProposal["status"]) {
+    const entry = messages.find((item) => item.id === id)
+
+    if (apiEnabled && entry?.proposal?.reference)
+      return void decideApi(entry, status)
+
     patchActive((conversation) => setProposalStatus(conversation, id, status))
   }
 
@@ -899,7 +1055,7 @@ export default function Assistant({
       className={`assistant-shell ${
         messages.length ? "has-messages" : "is-empty"
       } ${historyOpen && !mobile ? "history-visible" : ""}`}
-      aria-label="Trợ lý AI bản mẫu"
+      aria-label={apiEnabled ? "Trợ lý AI" : "Trợ lý AI bản mẫu"}
     >
       <div className="assistant-main">
         <div className="assistant-topline">
@@ -965,9 +1121,13 @@ export default function Assistant({
             clarificationForm={clarificationForm}
             onOpenPlanner={onOpenPlanner}
             decide={decide}
+            apiEnabled={apiEnabled}
+            thinking={thinking}
           />
         )}
         <ChatComposer
+          apiEnabled={apiEnabled}
+          thinking={thinking}
           isDragging={isDragging}
           setIsDragging={setIsDragging}
           handleDrop={handleDrop}

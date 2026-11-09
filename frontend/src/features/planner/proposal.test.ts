@@ -5,7 +5,7 @@ import type { Task } from "../../types/task.ts"
 import type { Proposal } from "../../types/planner.ts"
 
 const task = (id: number, date?: string, hour?: number): Task => ({
-  id,
+  id: String(id),
   title: `T${id}`,
   course: "c",
   time: "",
@@ -24,9 +24,9 @@ test("diffTasks reports added, moved and removed tasks", () => {
   assert.deepEqual(
     changes.map((c) => [c.kind, c.task.id]),
     [
-      ["moved", 1],
-      ["added", 3],
-      ["removed", 2],
+      ["moved", "1"],
+      ["added", "3"],
+      ["removed", "2"],
     ],
   )
   assert.equal(describeChanges(changes), "Thêm 1 · Dời 1 · Xóa 1")

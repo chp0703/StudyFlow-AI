@@ -41,7 +41,7 @@ class LocalSupabaseHttp(unittest.TestCase):
         with psycopg.connect(os.environ["F1_DB_TEST_DSN"], autocommit=True) as db:
             db.execute("insert into app_private.rpc_attestation_keys(key_id,key_material,not_before,not_after) "
                        "values (%s,%s,now()-interval '1 hour',now()+interval '2 hours')", (cls.key_id, cls.secret))
-        cls.users = {name: cls.sign_in(name) for name in ("a", "b", "c")}
+        cls.users = {name: cls.sign_in(name) for name in ("a", "b", "c", "d")}
 
     @classmethod
     def sign_in(cls, name):
@@ -213,6 +213,36 @@ class LocalSupabaseHttp(unittest.TestCase):
             self.assertEqual(again.status_code, 200, again.text)
             self.assertEqual(again.json()["state"], "SUCCEEDED")
             self.assertEqual(again.json()["result"]["data"]["coverage"], "NO_CHANGE")
+
+
+    def test_a_stale_plan_proposal_can_still_be_rejected_and_frees_the_conversation(self):
+        tomorrow = (datetime.now(timezone.utc) + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        scope = {"start_at": tomorrow.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                 "end_at": (tomorrow + timedelta(days=8)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                 "selection_mode": "ALL_ELIGIBLE", "task_ids": []}
+        weekly = {"kind": "AVAILABILITY", "label": "Giờ học", "recurrence": "WEEKLY", "timezone": "Asia/Ho_Chi_Minh",
+                  "start_at": None, "end_at": None, "weekday": (tomorrow + timedelta(days=1)).isoweekday(),
+                  "start_time": "09:00", "end_time": "24:00", "valid_from": datetime.now(timezone.utc).date().isoformat(),
+                  "valid_until": None}
+        conversation = str(uuid4())
+        with self.client() as app:
+            self.approve(app, self.task_body(str(uuid4()), "Việc thứ nhất"), "d")
+            self.approve(app, {"schema_version": "1.1", "conversation_id": str(uuid4()), "operation": "set_availability",
+                               "arguments": {"change_type": "ADD", "window_id": None, "expected_window_version": None, "window": weekly}}, "d")
+            prepared = self.post(app, "/v1/actions", {"schema_version": "1.1", "conversation_id": conversation, "operation": "generate_study_plan",
+                                                      "arguments": {"generation_scope": scope, "policy_overrides": {}}}, who="d")
+            self.assertEqual(prepared.json()["state"], "AWAITING_APPROVAL", prepared.text)
+            reference = prepared.json()["action_reference"]
+            self.approve(app, self.task_body(str(uuid4()), "Việc thứ hai"), "d")  # moves the schedule revision on
+            decision = {"schema_version": "1.1", "conversation_id": conversation, "action_reference": reference}
+            stale = self.post(app, "/v1/decisions", {**decision, "decision": "APPROVE"}, who="d")
+            self.assertEqual((stale.status_code, stale.json()["error"]["code"]), (409, "STALE_PROPOSAL"), stale.text)
+            rejected = self.post(app, "/v1/decisions", {**decision, "decision": "REJECT"}, who="d")
+            self.assertEqual(rejected.status_code, 200, rejected.text)
+            self.assertEqual(rejected.json()["result"]["data"]["pending_action"]["state"], "CANCELLED")
+            again = self.post(app, "/v1/actions", {"schema_version": "1.1", "conversation_id": conversation, "operation": "generate_study_plan",
+                                                   "arguments": {"generation_scope": scope, "policy_overrides": {}}}, who="d")
+            self.assertEqual(again.json()["state"], "AWAITING_APPROVAL", again.text)  # the conversation is free again
 
     def test_tampered_or_foreign_token_is_rejected_before_the_database(self):
         with self.client() as app:
