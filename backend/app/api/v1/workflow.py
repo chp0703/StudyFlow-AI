@@ -13,6 +13,7 @@ from uuid import uuid4
 
 from ...clients.rpc import child_key, iso
 from ...f1.planning.generate import generate
+from ...orchestrator.chat import ChatProcessor
 from .http import STATUS, ApiError, error_body, respond
 from ...orchestrator.workflow_shared import (
     AWAITING, DONE_TEXT, FORM_TEXT, INTENT, POLICY_DEFAULT, Terminal, _ok, deadline_instant, reply,
@@ -22,8 +23,6 @@ from ...orchestrator.workflow_shared import (
 
 class ActionProcessor:
     def __init__(self, api):
-        from .chat import ChatProcessor  # chat phụ thuộc mô-đun này nên chỉ import khi khởi tạo
-
         self.api = api
         self.chat = ChatProcessor(self, api.extractor, clock=api.clock, timezone=api.settings.default_timezone)
 
