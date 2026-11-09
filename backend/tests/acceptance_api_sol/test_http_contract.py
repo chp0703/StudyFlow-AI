@@ -1,8 +1,8 @@
-"""Exercise the actual FastAPI app through its frozen transport injection seam.
+"""Kiểm tra ứng dụng FastAPI thật qua giao diện truyền transport đã chốt.
 
-Only external HTTP dependencies are replaced. Authentication, request parsing,
-schema validation, context construction, and RPC adaptation remain real code.
-The RPC responder is NOT evidence of PostgreSQL RLS or wrapper security.
+Chỉ thay các phụ thuộc HTTP bên ngoài. Xác thực, đọc yêu cầu, kiểm tra schema,
+tạo context và chuyển đổi RPC đều chạy bằng code thật.
+Bộ giả lập phản hồi RPC không chứng minh RLS PostgreSQL hay bảo mật wrapper.
 """
 
 import base64
@@ -38,7 +38,7 @@ TEST_SIGNING_SECRET = b"test-only-signing-material-32bytes!"
 
 
 def validate_schema(value, name):
-    """Resolve only approved local definitions, with UUID/date-time checking."""
+    """Chỉ phân giải các định nghĩa cục bộ đã duyệt, có kiểm tra UUID và date-time."""
     selected = {"$ref": f"#/$defs/{name}", "$defs": SCHEMA["$defs"]}
     Draft202012Validator(selected, format_checker=FormatChecker()).validate(value)
 
@@ -89,7 +89,7 @@ class HttpContractAcceptance(unittest.TestCase):
         self.client = self.client_context.__enter__()
 
     def new_client(self):
-        """Create a distinct app, preserving only external fake dependency state."""
+        """Tạo ứng dụng khác, chỉ giữ trạng thái của các phụ thuộc giả bên ngoài."""
         app = self.create_app(
             self.settings,
             rpc_transport=httpx.MockTransport(self.rpc_response),
@@ -171,8 +171,8 @@ class HttpContractAcceptance(unittest.TestCase):
         self.assertIn(operations, (["search_tasks"], ["ensure_user_context", "search_tasks"]))
         result = fixture("search_tasks-result.json")
         result["request_id"] = envelope["request_id"]
-        # Rebind fixture ownership for each simulated database response. The
-        # test separately checks that the adapter built this principal from JWT.
+        # Gán lại chủ sở hữu fixture cho mỗi phản hồi database mô phỏng.
+        # Test kiểm tra riêng việc adapter lấy principal này từ JWT.
         for task in result["data"]["items"]:
             task["user_id"] = user
         validate_schema(result, "search_tasksResult")
@@ -287,8 +287,8 @@ class HttpContractAcceptance(unittest.TestCase):
         self.assert_error(response, 400, "INVALID_PARAMETER", post=True)
 
     def test_body_size_is_measured_in_utf8_bytes(self):
-        # Legal 8,000-character text, but >64 KiB including JSON whitespace.
-        # The parser must enforce the transport limit before business validation.
+        # Văn bản 8.000 ký tự hợp lệ nhưng vượt 64 KiB khi tính cả khoảng trắng JSON.
+        # Bộ đọc phải kiểm soát giới hạn transport trước khi kiểm tra nghiệp vụ.
         payload = json.dumps(self.message(text="ắ" * 8000), ensure_ascii=False).encode("utf-8")
         payload += b" " * (65537 - len(payload))
         self.assertEqual(len(payload), 65537)
@@ -351,8 +351,8 @@ class HttpContractAcceptance(unittest.TestCase):
 
     def test_two_users_do_not_share_rpc_authorization(self):
         tokens = {USER_A: self.token(USER_A), USER_B: self.token(USER_B)}
-        # Overlap requests through the same application/client to catch mutable
-        # shared outbound Authorization headers, in addition to sequential reuse.
+        # Cho các yêu cầu chồng thời gian trên cùng ứng dụng/client để phát hiện header
+        # Authorization dùng chung bị sửa, bên cạnh kiểm tra tái sử dụng tuần tự.
         users = [USER_A, USER_B, USER_A, USER_B]
         with ThreadPoolExecutor(max_workers=4) as pool:
             responses = list(pool.map(lambda user: self.client.get("/v1/tasks", headers=self.headers(tokens[user])), users))
@@ -368,8 +368,8 @@ class HttpContractAcceptance(unittest.TestCase):
             self.assert_task_rpc(index, tokens[user], user, {"query": None, "status_filter": [], "page_size": 50, "cursor": None})
 
     def test_invalid_task_query_is_catalog_error(self):
-        # The contract specifies bounds and rejection, but does not resolve
-        # whether semantic query constraints are classified as HTTP 400 or 422.
+        # Contract quy định giới hạn và việc từ chối, nhưng chưa chốt lỗi ngữ nghĩa
+        # của query được phân loại là HTTP 400 hay 422.
         for params in ({"page_size": "101"}, {"page_size": "0"}, {"cursor": ""}, {"cursor": "x" * 2049}, {"query": "a" * 501}, {"status_filter": "UNKNOWN"}):
             with self.subTest(params=params):
                 self.assert_error(self.client.get("/v1/tasks", params=params, headers=self.headers()), (400, 422), "INVALID_PARAMETER")
@@ -382,7 +382,7 @@ class HttpContractAcceptance(unittest.TestCase):
         self.assert_error(self.client.get("/v1/plans", params=params, headers=self.headers()), 422, "INVALID_PARAMETER")
 
     def assert_signed_mutation(self, request, envelope, operation, token, *, user=USER_A):
-        """Independent protocol check; this is not a simulated DB verifier."""
+        """Kiểm tra giao thức độc lập; đây không phải bộ xác minh database mô phỏng."""
         validate_schema(envelope, "RpcRequest")
         self.assertEqual(str(request.url), f"{SUPABASE_URL}/rest/v1/rpc/{operation}")
         self.assertEqual(request.headers["Authorization"], f"Bearer {token}")
@@ -413,10 +413,10 @@ class HttpContractAcceptance(unittest.TestCase):
         self.assertEqual(attestation["signature"], expected_signature)
 
     def assert_completed_receipt_replay_after_restart(self, path, command, http_operation, stored_reply, stored_status):
-        """A preexisting external receipt survives two entirely new app instances.
+        """Receipt có sẵn bên ngoài vẫn dùng được qua hai ứng dụng tạo mới hoàn toàn.
 
-        This proves replay routing avoids re-extraction/domain execution; it does
-        not prove a real database stored the receipt or any workflow state.
+        Điều này chứng minh nhánh phát lại không trích xuất/thực thi nghiệp vụ lại;
+        không chứng minh database thật đã lưu receipt hay trạng thái workflow.
         """
         token = self.token()
         fingerprints = []
@@ -448,8 +448,8 @@ class HttpContractAcceptance(unittest.TestCase):
 
         self.rpc_override = completed_receipt
         replies = []
-        # Neither app has processed the original operation. The receipt is the
-        # only source of the issued response, not an in-process cache.
+        # Cả hai ứng dụng đều chưa xử lý thao tác gốc. Receipt là nguồn duy nhất
+        # của phản hồi đã cấp, không phải bộ nhớ đệm trong tiến trình.
         for _ in range(2):
             with self.new_client() as restarted_client:
                 response = restarted_client.post(path, json=command, headers=self.headers(token, **{"Idempotency-Key": IDEMPOTENCY_KEY}))

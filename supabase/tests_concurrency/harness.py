@@ -1,4 +1,4 @@
-"""Real local PostgreSQL fixtures; no runtime adapters or mocked DB responses."""
+"""Fixture PostgreSQL local thật; không dùng adapter runtime hay phản hồi database mô phỏng."""
 from __future__ import annotations
 
 import base64
@@ -40,7 +40,7 @@ def stamp(value=None):
 
 
 def canonical(value):
-    """Independent signer; the SQL implementation is never used to sign."""
+    """Bộ ký độc lập; không bao giờ dùng phần triển khai SQL để ký."""
     def check(item):
         if item is None or type(item) in (str, bool):
             return
@@ -69,7 +69,7 @@ def local_dsn():
         raise RuntimeError("F1_DB_TEST_DSN must explicitly select one localhost/127.0.0.1/::1 host; service files, sockets and remote/multi-host DSNs are rejected")
     if options.get("hostaddr") not in (None, "127.0.0.1", "::1"):
         raise RuntimeError("F1_DB_TEST_DSN hostaddr must also be loopback")
-    # Explicit hostaddr prevents environment overrides and DNS forwarding.
+    # Chỉ định hostaddr để tránh biến môi trường ghi đè hoặc chuyển tiếp DNS.
     return make_conninfo(raw, hostaddr="::1" if host == "::1" else "127.0.0.1", connect_timeout=5)
 
 
@@ -146,7 +146,7 @@ class Database:
                 connection.execute("set local statement_timeout='20s'")
                 connection.execute("select set_config('request.jwt.claims',%s,true),set_config('request.jwt.claim.sub',%s,true)",
                     (json.dumps({"sub": fixture.owner, "role": "authenticated"}), fixture.owner))
-                # Construct and HMAC-sign immediately before SQL, after any start barrier.
+                # Tạo và ký HMAC ngay trước khi chạy SQL, sau mọi điểm đồng bộ khởi chạy.
                 request = self.envelope(fixture, call)
                 result = connection.execute(sql.SQL("select app_api.{}(%s)").format(sql.Identifier(call.operation)), (Jsonb(request),)).fetchone()[0]
                 self.validate(self.registry[call.operation]["result_schema"], result)
@@ -164,7 +164,7 @@ class Database:
         return result["data"]
 
     def race(self, fixture, calls):
-        """Both requests must demonstrably queue behind the owner's row lock."""
+        """Cả hai yêu cầu phải được chứng minh là cùng chờ khóa dòng của chủ sở hữu."""
         if len(calls) != 2:
             raise ValueError("race requires exactly two independent request sessions")
         pids = queue.Queue()
@@ -200,12 +200,12 @@ class Database:
                         break
                     if any(future.done() for future in futures):
                         break
-                    time.sleep(0.025)  # Poll cadence; the lock graph is the evidence.
+                    time.sleep(0.025)  # Nhịp kiểm tra; đồ thị khóa mới là bằng chứng.
                 if not observations:
                     raise AssertionError(f"both authenticated sessions did not queue on owner row lock: {graph}")
                 print("OWNER_LOCK_BARRIER", json.dumps({"holder": holder_pid, "workers": worker_pids, "blocking": observations}), flush=True)
             finally:
-                # Release before joining workers, including all failure paths.
+                # Giải phóng trước khi chờ các worker kết thúc, kể cả mọi nhánh lỗi.
                 holder.rollback()
             return [future.result(timeout=25) for future in futures]
 
@@ -215,7 +215,7 @@ class Database:
 
 
 class Fixture:
-    """Synthetic backend caller; every business setup write uses approved RPCs."""
+    """Bên gọi backend dùng dữ liệu giả lập; mọi thao tác ghi chuẩn bị nghiệp vụ dùng RPC đã duyệt."""
     def __init__(self, db):
         self.db = db
         self.owner = uid()

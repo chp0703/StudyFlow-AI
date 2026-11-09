@@ -1,2 +1,2 @@
-"""Planner test suite."""
+"""Bộ kiểm thử planner."""
 

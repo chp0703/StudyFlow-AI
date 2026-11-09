@@ -1,5 +1,5 @@
--- Approved F1 persistence integrity, catalog and constraint behavior.
--- Run only against a disposable local Supabase database.
+-- Tính toàn vẹn lưu trữ F1 đã duyệt, danh mục và hành vi ràng buộc.
+-- Chỉ chạy với database Supabase local có thể xóa sau test.
 begin;
 select no_plan();
 set local search_path = public, extensions;
@@ -9,7 +9,7 @@ select ok((select c.relrowsecurity and c.relforcerowsecurity
  where n.nspname='app_private' and c.relname='academic_tasks'),
  'academic tasks enable and force RLS');
 
--- Preserve original same-owner FK coverage and scope names to owning tables.
+-- Giữ kiểm tra khóa ngoại cùng chủ sở hữu ban đầu và ràng buộc tên theo bảng sở hữu.
 select ok(exists(select 1 from pg_constraint c join pg_class t on t.oid=c.conrelid
  join pg_namespace n on n.oid=t.relnamespace
  where n.nspname='app_private' and t.relname=e.table_name
@@ -49,7 +49,7 @@ select ok(exists(select 1 from pg_constraint c join pg_class t on t.oid=c.conrel
  and t.relname='idempotency_records' and c.conname='idempotency_expiry_check' and c.contype='c'),
  'domain idempotency has an expiry-order constraint');
 
--- Exact approved keys for domain entities and durable infrastructure.
+-- Tập khóa chính xác đã duyệt cho thực thể nghiệp vụ và hạ tầng lưu bền vững.
 select is((select array_agg(a.attname::text order by key.position)
  from pg_constraint c join pg_class t on t.oid=c.conrelid
  join pg_namespace n on n.oid=t.relnamespace
@@ -75,7 +75,7 @@ select is((select array_agg(a.attname::text order by key.position)
  ('workflow_continuations',array['user_id','source_message_id']),
  ('rpc_attestation_keys',array['key_id'])) e(table_name,columns);
 
--- Durable versions must not truncate JSON-safe integers to int4.
+-- Version lưu bền vững không được cắt số nguyên an toàn JSON xuống int4.
 select ok(exists(select 1 from pg_attribute a join pg_class t on t.oid=a.attrelid
  join pg_namespace n on n.oid=t.relnamespace
  where n.nspname='app_private' and t.relname=e.table_name and a.attname=e.column_name
@@ -101,7 +101,7 @@ select ok(exists(select 1 from pg_attribute a join pg_class t on t.oid=a.attreli
  ('rpc_attestation_keys','not_after','timestamptz',true))
  e(table_name,column_name,type_name,not_null);
 
--- Behavioral checks do not depend on implementer constraint names.
+-- Kiểm tra hành vi không phụ thuộc tên constraint do bên triển khai đặt.
 select throws_ok($q$insert into app_private.rpc_attestation_keys
  (key_id,key_material,not_before,not_after) values
  ('sol-short-key',decode('00','hex'),clock_timestamp(),clock_timestamp()+interval '1 hour')$q$,

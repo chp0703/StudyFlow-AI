@@ -293,7 +293,7 @@ function safeMessage(value: unknown): ChatMessage | null {
   return message
 }
 
-// A restored transcript is historical information. Pending approval always needs a fresh review.
+// Tin nhắn được khôi phục chỉ là lịch sử. Thao tác chờ duyệt luôn cần xem lại trước.
 
 export function restoreConversation(value: unknown): Conversation | null {
   if (

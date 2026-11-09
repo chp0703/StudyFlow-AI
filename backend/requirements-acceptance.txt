@@ -1,4 +1,4 @@
-# Independent HTTP acceptance harness; production dependencies belong in pyproject.toml.
+# Bộ nghiệm thu HTTP độc lập; phụ thuộc môi trường thật thuộc pyproject.toml.
 -r ../contracts/requirements-check.txt
 fastapi==0.162.0
 httpx==0.28.1

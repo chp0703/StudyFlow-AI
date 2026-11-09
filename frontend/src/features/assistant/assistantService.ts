@@ -1,6 +1,6 @@
 import type { ChatMessage, ChatAttachment } from "../../types/assistant"
 
-// This deliberately recognizes only four entry points. It is not an NLP or API client.
+// Chỉ nhận diện bốn dạng yêu cầu mở đầu; đây không phải bộ NLP hay client gọi API.
 
 export function getAssistantReply(
   input: string,

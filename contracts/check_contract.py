@@ -1,4 +1,4 @@
-"""Validate contract artifacts and pure invariants; this is not a backend/DB test."""
+"""Kiểm tra artifact contract và bất biến thuần; đây không phải test backend/database."""
 from __future__ import annotations
 
 import json
@@ -33,7 +33,7 @@ def instant(value):
 
 
 def semantic_errors(value, path='$'):
-    """Only invariants that can be checked from one payload, without trusted state."""
+    """Chỉ kiểm tra bất biến từ một payload, không cần trạng thái đáng tin cậy."""
     errors = []
     if isinstance(value, list):
         for i, item in enumerate(value):
@@ -282,7 +282,7 @@ def main():
     catalog = source.split('### Danh mục operation chính thức')[1].split('### Kiểu arguments')[0]
     assert set(re.findall(r'^\| `([a-z_]+)`', catalog, re.M)) == operations
 
-    # Every local/external JSON pointer must resolve without network.
+    # Mọi con trỏ JSON cục bộ/bên ngoài đều phải phân giải được mà không dùng mạng.
     def check_refs(node, document):
         if isinstance(node, list):
             for item in node:

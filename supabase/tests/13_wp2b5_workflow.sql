@@ -1,5 +1,5 @@
--- WP2b-5: workflow context reads and continuation WAIT/ADVANCE rules (local pgTAP, rolled back).
--- Complements the 07 addendum, which covers initialize/read/ADVANCE-of-reads.
+-- WP2b-5: đọc context workflow và quy tắc continuation WAIT/ADVANCE; pgTAP local, có rollback.
+-- Bổ sung cho addendum 07, vốn kiểm tra khởi tạo/đọc/ADVANCE bước đọc.
 begin;
 select no_plan();
 set local search_path = public, extensions;
@@ -45,7 +45,7 @@ insert into auth.users(id) values ('d1310000-0000-4000-8000-000000000001');
 insert into app_private.rpc_attestation_keys(key_id,key_material,not_before,not_after)
  values ('q13-key',decode(repeat('13',32),'hex'),clock_timestamp()-interval '1 hour',clock_timestamp()+interval '1 hour');
 
--- Origin: a claimed receipt and its recorded USER message, for two different conversations.
+-- Nguồn: receipt đã nhận quyền xử lý và tin nhắn USER đã lưu, cho hai hội thoại khác nhau.
 create function pg_temp.q_origin(conv uuid, key text) returns jsonb language plpgsql as $$
 declare c jsonb; mid text;
 begin
@@ -69,7 +69,7 @@ create function pg_temp.q_init(o text, conv uuid) returns jsonb language sql as 
   'depends_on','[[],[0]]'::jsonb,'receipt_binding',res->'binding'),'q13-'||o||'-init-000001',conv,(res->>'message_id')::uuid)
  from q13 where name=o $$;
 select ok(pg_temp.q_init('o1','d1310000-0000-4000-8000-000000000003')->>'outcome'='COMMITTED','initialize the first queue');
--- A second unfinished queue in the same conversation is refused.
+-- Từ chối hàng đợi chưa xong thứ hai trong cùng hội thoại.
 insert into q13 values ('o3',pg_temp.q_origin('d1310000-0000-4000-8000-000000000003','q13-origin-key-0003'));
 select ok(pg_temp.q_is(pg_temp.q_init('o3','d1310000-0000-4000-8000-000000000003'),'STALE_ENTITY_VERSION'),
  'a conversation holds at most one unfinished continuation');
@@ -80,7 +80,7 @@ select ok(pg_temp.q_is(pg_temp.q_call('initialize_workflow_continuation',jsonb_b
  'depends_on','[[]]'::jsonb,'receipt_binding',(select res->'binding' from q13 where name='o1')),'q13-bad-init-00001'),
  'ENTITY_NOT_FOUND'),'a source message from another conversation is not found');
 
--- Workflow context: active, selected and message lookups.
+-- Context workflow: tra action đang hoạt động, action được chọn và tin nhắn.
 insert into app_private.pending_actions(action_id,user_id,conversation_id,intent,state)
  values ('d1310000-0000-4000-8000-0000000000a1','d1310000-0000-4000-8000-000000000001','d1310000-0000-4000-8000-000000000003',
  'CREATE_TASK','AWAITING_CLARIFICATION');
@@ -95,7 +95,7 @@ select ok(pg_temp.q_is(pg_temp.q_call('get_workflow_context',jsonb_build_object(
 select ok(pg_temp.q_is(pg_temp.q_call('get_workflow_context',jsonb_build_object('conversation_id','d1310000-0000-4000-8000-000000000013',
  'action_id','d1310000-0000-4000-8000-0000000000a1','message_id',null)),'ENTITY_NOT_FOUND'),'an action from another conversation is not found');
 
--- WAIT then ADVANCE rules on the first queue.
+-- Quy tắc WAIT rồi ADVANCE trên hàng đợi đầu tiên.
 create function pg_temp.q_cp(o text, args jsonb) returns jsonb language sql as $$
  select pg_temp.q_call('checkpoint_workflow_continuation',jsonb_build_object('conversation_id',
   'd1310000-0000-4000-8000-000000000003','source_message_id',res->>'message_id','receipt_binding',res->'binding') || args,

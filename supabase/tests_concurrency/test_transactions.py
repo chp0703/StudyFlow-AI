@@ -1,4 +1,4 @@
-"""Executable independent acceptance. Missing DB configuration is an error, not a skip."""
+"""Nghiệm thu độc lập có thể thực thi. Thiếu cấu hình database là lỗi, không bỏ qua test."""
 from dataclasses import replace
 from datetime import datetime
 import hashlib
@@ -33,7 +33,7 @@ class RealDatabaseTransactions(unittest.TestCase):
         return self.scalar("select schedule_revision from app_private.user_profiles where user_id=%s", (self.fixture.owner,))
 
     def error(self, result, codes):
-        # Database.invoke already validates the operation-specific public schema.
+        # Database.invoke đã kiểm tra schema công khai riêng của từng thao tác.
         self.assertEqual("ERROR", result["outcome"], result)
         self.assertIsNone(result["data"])
         self.assertIn(result["error"]["code"], codes, result)
@@ -57,7 +57,7 @@ class RealDatabaseTransactions(unittest.TestCase):
         self.assertEqual(first["data"], second["data"])
         self.assert_promotion(candidate, call, revision)
         self.assertEqual(1, self.count("idempotency_records", "and operation='confirm_task' and idempotency_key=%s", (call.key,)))
-        # invoke opens a fresh connection and refreshes request_id/attestation.
+        # invoke mở kết nối mới và làm mới request_id/chứng thực.
         replay = self.db.invoke(self.fixture, call)
         self.assertEqual("COMMITTED", replay["outcome"])
         self.assertEqual(first["data"], replay["data"])
@@ -119,7 +119,7 @@ class RealDatabaseTransactions(unittest.TestCase):
         self.assertEqual(0, self.count("study_plans"))
         self.assertEqual(0, self.count("study_blocks"))
         self.assertEqual(0, self.count("approval_actions", "and target_type='PLAN_PROPOSAL'"))
-        # A new authenticated session must observe the committed STALE transition.
+        # Phiên xác thực mới phải thấy chuyển trạng thái STALE đã commit.
         view = self.db.invoke(self.fixture, Call("get_study_plan", {"view": "PROPOSAL", "version": None,
             "proposal_id": proposal["proposal_id"], "start_at": None, "end_at": None}, None, uid(), None))
         self.assertEqual("READ", view["outcome"])
@@ -136,8 +136,8 @@ class RealDatabaseTransactions(unittest.TestCase):
         before = self.db.snapshot(self.fixture.owner)
         function = "sol_fault_" + uid().replace("-", "")
         trigger = "sol_fault_" + uid().replace("-", "")
-        # Test-only temporary trigger function is not an application helper seam.
-        # It is invoked by the actual approval INSERT, with the wrapper's role.
+        # Hàm trigger tạm chỉ dùng cho test, không phải giao diện hỗ trợ của ứng dụng.
+        # Nó được lệnh INSERT phê duyệt thật gọi bằng role của wrapper.
         self.db.admin.execute(sql.SQL("""create function pg_temp.{}() returns trigger language plpgsql
             set search_path='' as $fault$ begin
             if new.user_id={}::uuid and (select count(*) from app_private.study_blocks b
@@ -172,7 +172,7 @@ class RealDatabaseTransactions(unittest.TestCase):
             datetime.fromisoformat(first["created_at"].replace("Z", "+00:00"))).total_seconds()
         self.assertGreaterEqual(seconds, 119)
         self.assertLessEqual(seconds, 121)
-        # Explicit operational-clock fixture only; does not prove real expiry.
+        # Chỉ là fixture điều chỉnh đồng hồ vận hành; không chứng minh hết hạn theo thời gian thật.
         changed = self.db.admin.execute("update app_private.api_request_receipts set lease_until=clock_timestamp()-interval '1 second' where user_id=%s and http_operation=%s and idempotency_key=%s",
             (self.fixture.owner, "send_message", origin_key)).rowcount
         self.assertEqual(1, changed)

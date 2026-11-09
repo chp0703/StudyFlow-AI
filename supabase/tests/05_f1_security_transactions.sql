@@ -1,6 +1,6 @@
--- Approved F1 security catalog regression coverage.
--- Behavioral attestation, typed public failures, idempotency and rollback live
--- in 06_sol_rpc_boundary.sql. These checks do not claim two-session execution.
+-- Test hồi quy danh mục bảo mật F1 đã duyệt.
+-- Test hành vi chứng thực, lỗi công khai đúng kiểu, chống ghi trùng và rollback nằm
+-- trong 06_sol_rpc_boundary.sql. Các kiểm tra này không chứng minh chạy hai phiên đồng thời.
 begin;
 select no_plan();
 set local search_path = public, extensions;
@@ -102,7 +102,7 @@ select ok(to_regprocedure('app_private.verify_rpc_request(jsonb,text)') is not n
 select * from finish();
 rollback;
 
--- Still required separately: two-session owner-row-lock serialization and
--- concurrent idempotency, receipt lease fencing/reclaim, stale proposal approve,
--- cross-user read isolation, and failure halfway through a full plan snapshot.
--- Documentation alone is never passing evidence for these cases.
+-- Vẫn cần kiểm tra riêng: khóa dòng chủ sở hữu tuần tự hóa hai phiên,
+-- chống ghi trùng đồng thời, chặn worker cũ/nhận lại lease receipt, duyệt đề xuất STALE,
+-- cô lập đọc giữa người dùng và lỗi giữa lúc ghi toàn bộ snapshot lịch.
+-- Chỉ có tài liệu không bao giờ được tính là bằng chứng test đạt.

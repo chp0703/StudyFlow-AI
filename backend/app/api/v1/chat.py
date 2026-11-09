@@ -1,8 +1,8 @@
-"""POST /v1/messages: free text -> untrusted extraction -> durable, ordered workflow.
+"""POST /v1/messages: văn bản tự do -> trích xuất chưa đáng tin cậy -> workflow có thứ tự, được lưu bền vững.
 
-The first extraction of a message is stored (initialize_workflow_continuation) and never recomputed; every later
-request - a retry, a clarification answer, a decision - works from that stored queue. Chat can only *prepare* writes:
-approval always arrives through /v1/decisions with a server-issued action reference.
+Kết quả trích xuất đầu tiên được lưu bằng initialize_workflow_continuation và không tính lại; các yêu cầu sau đó
+(gửi lại, bổ sung thông tin, quyết định) đều dùng hàng đợi đã lưu. Chat chỉ chuẩn bị thao tác ghi:
+việc phê duyệt luôn đi qua /v1/decisions với tham chiếu thao tác do server cấp.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ GENERIC_QUESTION = {"field": "intent", "message": "Bạn muốn thêm công vi�
 
 
 def action_id_for(source_message_id: str, index: int) -> str:
-    """Stable per (message, intent): a retry derives the same ID instead of inventing another."""
+    """Ổn định theo (tin nhắn, ý định): lần gửi lại suy ra cùng ID thay vì tạo ID khác."""
     return str(uuid.uuid5(uuid.UUID(source_message_id), f"action-{index}"))
 
 
@@ -36,7 +36,7 @@ class ChatProcessor:
     def __init__(self, api, processor, extractor):
         self.api, self.proc, self.extractor = api, processor, extractor
 
-    # ------------------------------------------------------------ entry: POST /v1/messages
+    # ------------------------------------------------------------ đầu vào: POST /v1/messages
     def handle_message(self, ctx, receipt, key, body):
         conversation, text, message_id = body["conversation_id"], body["text"], receipt["message_id"]
         self.proc.step(ctx, "record_source_message", {"message": {
@@ -72,7 +72,7 @@ class ChatProcessor:
 
     @staticmethod
     def dependencies(extraction: dict) -> list[list[int]]:
-        """A plan request waits for every write before it; everything else is independent."""
+        """Yêu cầu lập lịch chờ mọi thao tác ghi đứng trước; các ý định còn lại độc lập."""
         depends, writes = [], []
         for index, item in enumerate(extraction["intents"]):
             depends.append(list(writes) if item["intent"] == "GENERATE_STUDY_PLAN" else [])
@@ -91,7 +91,7 @@ class ChatProcessor:
         return {"http_operation": http_operation, "idempotency_key": key,
                 "request_fingerprint": receipt["request_fingerprint"], "expected_lease_version": receipt["lease_version"]}
 
-    # ------------------------------------------------------------ the queue loop
+    # ------------------------------------------------------------ vòng lặp xử lý hàng đợi
     def advance(self, ctx, receipt, key, cont, http_operation="send_message", fallback=None):
         binding = self.binding(receipt, http_operation, key)
         conversation = cont["conversation_id"]
@@ -126,7 +126,7 @@ class ChatProcessor:
                 "operation": operation, "disposition": disposition, "result": result, "error": error}
 
     def run_step(self, ctx, key, cont, index):
-        """Runs the intent at `index`. Returns (outcome, None) for a finished step or (None, reference) when it waits."""
+        """Chạy ý định tại `index`. Trả (outcome, None) khi xong hoặc (None, reference) khi phải chờ."""
         done = cont["completed_steps"]
         if any(done[d]["disposition"] != "SUCCEEDED" for d in cont["depends_on"][index]):
             return self.outcome(cont, index, None, "DEPENDENCY_CANCELLED"), None
@@ -165,11 +165,11 @@ class ChatProcessor:
         return args if contract.is_valid("get_study_planArguments", args) else None
 
     def write(self, ctx, key, cont, index, item, tag, conversation, message_id):
-        """Prepares a write behind approval. Returns (None, reference) because the step waits for the user."""
+        """Chuẩn bị thao tác ghi cần phê duyệt. Trả (None, reference) vì bước này chờ người dùng."""
         slots, kind = item["slots"], item["intent"]
         active = self.proc.workflow_context(ctx, conversation, None, key, True)["active_action"]
         if active is not None and active["pending_action"]["action_id"] == action_id_for(message_id, index):
-            return None, self.reference_for(active)  # created by an earlier attempt of this very step
+            return None, self.reference_for(active)  # đã được tạo ở lần thử trước của chính bước này
         if active is not None:
             return self.outcome(cont, index, None, "FAILED", error=self.error(
                 "ACTION_REVIEW_REQUIRED", "Đang có một thao tác chờ xác nhận; hãy xác nhận hoặc hủy trước.")), None
@@ -227,9 +227,9 @@ class ChatProcessor:
         arguments = {"generation_scope": scope, "policy_overrides": {}}
         return "generate_study_plan", arguments if contract.is_valid("generate_study_planArguments", arguments) else None
 
-    # ------------------------------------------------------------ an open queue already exists in the conversation
+    # ------------------------------------------------------------ hội thoại đã có hàng đợi chưa hoàn tất
     def answer_open_queue(self, ctx, receipt, key, conversation, text, queue):
-        """A new message while an earlier one still waits: only a clarification answer is accepted."""
+        """Có tin nhắn mới khi tin trước vẫn đang chờ: chỉ nhận câu trả lời bổ sung thông tin."""
         reference = queue["awaiting_reference"]
         action = None
         if reference is not None:
@@ -271,10 +271,10 @@ class ChatProcessor:
             return 200, reply(ctx.request_id, "NEEDS_CLARIFICATION", "Mình cần thêm thông tin.", questions=self.proc.questions(merged))
         return 200, self.proc.awaiting_reply(ctx, stored, ("TASK_CANDIDATE", updated["candidate_id"], updated["version"]))
 
-    # ------------------------------------------------------------ resume after a decision
+    # ------------------------------------------------------------ tiếp tục sau quyết định
     def resume(self, ctx, receipt, key, conversation, reference, operation, result, rejected, cancelled_reply=None):
-        """Called after /v1/decisions finished the awaited action. Returns the combined reply, or None when
-        the decided action does not belong to a message queue (e.g. it came from a form)."""
+        """Được gọi sau khi /v1/decisions xử lý xong thao tác đang chờ. Trả phản hồi tổng hợp, hoặc None nếu
+        thao tác đó không thuộc hàng đợi tin nhắn (ví dụ: được tạo từ biểu mẫu)."""
         queue = self.continuation(ctx, conversation, None)
         if queue is None or queue["awaiting_reference"] is None or queue["awaiting_reference"]["action_id"] != reference["action_id"]:
             return None
@@ -284,10 +284,10 @@ class ChatProcessor:
         else:
             outcome = self.outcome(queue, index, operation, "SUCCEEDED", result={**result, "request_id": ctx.request_id})
         queue = self.checkpoint(ctx, key, queue, self.binding(receipt, "submit_decision", key), "ADVANCE", outcome=outcome)
-        # Later steps run under the queue's own message ID; only the receipt and child keys come from this request.
+        # Các bước sau dùng ID tin nhắn gốc của hàng đợi; chỉ receipt và khóa con lấy từ yêu cầu này.
         return self.advance(ctx, receipt, key, queue, "submit_decision", fallback=cancelled_reply)
 
-    # ------------------------------------------------------------ reply composition (pure function of stored state)
+    # ------------------------------------------------------------ ghép phản hồi từ trạng thái đã lưu
     def compose(self, ctx, cont, conversation, fallback=None):
         lines, last_ok = [], None
         for step in cont["completed_steps"]:

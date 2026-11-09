@@ -1,4 +1,4 @@
--- Stage 03.3 local seed entry point.
--- Deliberately contains no user, task, or plan rows: auth.users is owned by the
--- local Supabase Auth service and domain fixtures belong in isolated tests.
--- This file must remain synthetic and must never contain credentials or PII.
+-- Điểm nạp dữ liệu mẫu local của giai đoạn 03.3.
+-- Chủ động không thêm dòng người dùng, task hay lịch: auth.users do
+-- dịch vụ Supabase Auth local quản lý; fixture nghiệp vụ thuộc các test độc lập.
+-- File này chỉ được chứa dữ liệu giả lập, tuyệt đối không chứa thông tin đăng nhập hay dữ liệu cá nhân.

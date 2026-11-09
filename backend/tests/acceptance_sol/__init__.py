@@ -1,1 +1,1 @@
-"""Independent contract acceptance tests authored before scheduler fixes."""
+"""Các test nghiệm thu contract độc lập, được viết trước khi sửa scheduler."""

@@ -1,4 +1,4 @@
-"""Application factory. The three transports and the clock are injectable so tests simulate only outbound HTTP."""
+"""Hàm tạo ứng dụng. Ba transport và đồng hồ có thể truyền vào để test chỉ mô phỏng HTTP ra ngoài."""
 
 from __future__ import annotations
 
@@ -26,11 +26,11 @@ def create_app(settings: Settings | None = None, *, rpc_transport: httpx.BaseTra
         extractor = (DeepSeekExtractor(settings.deepseek_base_url, settings.deepseek_api_key, settings.deepseek_model, llm_transport)
                      if settings.deepseek_api_key else UnavailableExtractor())
     api = Api(settings, RpcClient(settings, rpc_transport, clock), JwtVerifier(settings, jwks_transport, clock), clock, extractor)
-    app.state.llm_transport = llm_transport  # used by the extraction stage
+    app.state.llm_transport = llm_transport  # được dùng ở bước trích xuất
     api.register(app)
 
     @app.exception_handler(StarletteHTTPException)
-    async def _not_found(request, exc):  # catalog envelope instead of the framework default
+    async def _not_found(request, exc):  # dùng cấu trúc lỗi theo danh mục thay cho mặc định của framework
         return fallback_response(request, exc.status_code)
 
     app.add_middleware(

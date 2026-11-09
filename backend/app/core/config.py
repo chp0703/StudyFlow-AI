@@ -1,4 +1,4 @@
-"""Runtime settings. Secrets come from the environment or the caller, never from Git."""
+"""Cấu hình khi chạy. Bí mật lấy từ biến môi trường hoặc bên gọi, không lưu trong Git."""
 
 from __future__ import annotations
 

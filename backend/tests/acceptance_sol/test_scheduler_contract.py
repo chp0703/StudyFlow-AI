@@ -1,7 +1,7 @@
-"""Behavioral regressions from schema_F1.md sections 6/7 and contract 4.2.
+"""Test hồi quy hành vi theo schema_F1.md mục 6/7 và contract mục 4.2.
 
-These tests use the public planner/validator boundaries and literal expected
-outcomes. They deliberately do not import the implementation team's test helpers.
+Các test dùng giao diện planner/validator công khai và kết quả kỳ vọng cụ thể.
+Chủ động không import hàm hỗ trợ test của nhóm triển khai.
 """
 
 import unittest
@@ -52,7 +52,7 @@ def context(minutes=60):
 
 class SchedulingContractAcceptance(unittest.TestCase):
     def test_identical_partial_replacement_keeps_partial_without_duplicate_proposal(self):
-        """Coverage describes remaining demand even when the materialized diff is empty."""
+        """Coverage phản ánh nhu cầu còn lại ngay cả khi phần chênh lệch snapshot rỗng."""
         original = StudyBlock(BLOCK_A, OWNER, TASK, instant(8), instant(9))
         ctx = replace(
             context(minutes=120),
@@ -71,7 +71,7 @@ class SchedulingContractAcceptance(unittest.TestCase):
         self.assertIsNone(outcome.proposal_payload)
 
     def test_materialization_preserves_exact_match_before_pairing_moved_blocks(self):
-        """Same task: deleting 08-09 must not steal 10-11's logical identity."""
+        """Cùng một task: xóa block 08–09 không được lấy ID logic của block 10–11."""
         old_a = StudyBlock(BLOCK_A, OWNER, TASK, instant(8), instant(9))
         old_b = StudyBlock(BLOCK_B, OWNER, TASK, instant(10), instant(11))
         snapshot, diff = materialize_snapshot(
@@ -90,7 +90,7 @@ class SchedulingContractAcceptance(unittest.TestCase):
 
     def test_result_validator_rejects_zero_duration_even_with_short_final_enabled(self):
         ctx = replace(context(), tasks=(task(minutes=60), task(OTHER_TASK, 60)))
-        # A zero-minute result must not be accepted as the task's final remainder.
+        # Kết quả 0 phút không được chấp nhận là phần thời lượng cuối cùng của task.
         ctx = replace(ctx, retained_blocks=(
             StudyBlock(BLOCK_B, OWNER, TASK, instant(10), instant(11), True),
         ))
@@ -98,7 +98,7 @@ class SchedulingContractAcceptance(unittest.TestCase):
         self.assertTrue(issues, "Generated zero-duration block was accepted")
 
     def test_result_validator_rejects_negative_duration(self):
-        # Avoid an incidental short-final violation masking the malformed interval.
+        # Tránh lỗi buổi cuối quá ngắn vô tình che mất khoảng thời gian sai cấu trúc.
         ctx = replace(context(), policy=SchedulingPolicy(min_block_minutes=1))
         issues = validate_generated_result(ctx, (EngineBlock(TASK, instant(9), instant(8)),))
         self.assertTrue(issues, "Generated negative-duration block was accepted")
@@ -116,7 +116,7 @@ class SchedulingContractAcceptance(unittest.TestCase):
         self.assertTrue(issues, "Generated timestamp with seconds was accepted")
 
     def test_result_validator_handles_naive_datetime_as_validation_failure(self):
-        # The public validator returns issues; TypeError is an uncontrolled crash.
+        # Validator công khai phải trả danh sách lỗi; TypeError là sự cố không được kiểm soát.
         issues = validate_generated_result(context(), (
             EngineBlock(TASK, instant(8).replace(tzinfo=None),
                         instant(9).replace(tzinfo=None)),
@@ -135,7 +135,7 @@ class SchedulingContractAcceptance(unittest.TestCase):
         self.assertTrue(issues, "Validator accepted a full snapshot with retained BUSY conflict")
 
     def test_history_over_current_daily_limit_does_not_block_future_planning(self):
-        """A previous day's 300-minute history must survive today's 240-minute policy."""
+        """Lịch sử 300 phút của ngày trước phải được giữ khi policy hôm nay giới hạn 240 phút."""
         historical = StudyBlock(
             BLOCK_B, OWNER, OTHER_TASK, instant(8, day=4), instant(13, day=4),
         )
@@ -155,7 +155,7 @@ class SchedulingContractAcceptance(unittest.TestCase):
         self.assertEqual(outcome.scheduling_result.task_summaries[0].unallocated_minutes, 0)
 
     def test_clock_seconds_are_supported_and_new_blocks_never_start_before_actual_now(self):
-        """Audit clocks can have seconds; minute precision belongs to business blocks."""
+        """Đồng hồ kiểm toán có thể có giây; độ chính xác theo phút áp dụng cho block nghiệp vụ."""
         actual_now = instant(8, second=30) + timedelta(microseconds=123456)
         result = generate_schedule(replace(context(), now=actual_now))
         self.assertFalse(result.conflicts)

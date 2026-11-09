@@ -1,4 +1,4 @@
-"""JWT verification against the Supabase JWKS."""
+"""Xác minh JWT bằng bộ khóa JWKS của Supabase."""
 
 from __future__ import annotations
 
@@ -15,11 +15,11 @@ _JWKS_REFETCH_SECONDS = 30
 
 
 class AuthError(Exception):
-    """Any reason a bearer token is not acceptable; never carries token content."""
+    """Lỗi khiến bearer token không được chấp nhận; không bao giờ chứa nội dung token."""
 
 
 class AuthUnavailable(AuthError):
-    """The signing keys could not be fetched; the caller may retry."""
+    """Không tải được khóa ký; bên gọi có thể thử lại."""
 
 
 class JwtVerifier:
@@ -45,7 +45,7 @@ class JwtVerifier:
             try:
                 self._refresh(force=False)
                 if kid not in self._keys:
-                    self._refresh(force=True)  # key rotation: look again, but not on every bad token
+                    self._refresh(force=True)  # xoay vòng khóa: tải lại nhưng không tải cho mọi token lỗi
             except (httpx.HTTPError, ValueError):
                 raise AuthUnavailable("signing keys unavailable") from None
             jwk = self._keys.get(kid)
@@ -54,7 +54,7 @@ class JwtVerifier:
         return jwt.PyJWK(jwk).key
 
     def verify(self, authorization: str | None) -> str:
-        """Returns the verified subject (user id) or raises AuthError."""
+        """Trả subject đã xác minh (ID người dùng) hoặc ném AuthError."""
         if not authorization or not authorization.startswith("Bearer "):
             raise AuthError("missing bearer token")
         token = authorization[len("Bearer "):].strip()
@@ -70,7 +70,7 @@ class JwtVerifier:
         except jwt.PyJWTError:
             raise AuthError("invalid token") from None
         now = self._clock().timestamp()
-        # Time is checked against the injected clock so tests and production share one rule.
+        # Kiểm tra thời gian bằng đồng hồ được truyền vào để test và môi trường thật dùng cùng quy tắc.
         if not isinstance(claims["exp"], (int, float)) or claims["exp"] <= now or claims.get("nbf", 0) > now:
             raise AuthError("token expired")
         try:

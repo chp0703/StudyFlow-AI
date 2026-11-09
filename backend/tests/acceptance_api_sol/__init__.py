@@ -1,1 +1,1 @@
-"""Independent Sol acceptance tests for the approved public HTTP boundary."""
+"""Kiểm thử nghiệm thu độc lập của Sol cho ranh giới HTTP công khai đã duyệt."""

@@ -21,7 +21,7 @@ def _date_time(value):
     if not _RFC3339.fullmatch(value):
         return False
     try:
-        # shortcut: leap seconds and year 0000 are rejected; upgrade if the agreed time contract needs them.
+        # đơn giản hóa: từ chối giây nhuận và năm 0000; mở rộng nếu contract thời gian đã thống nhất yêu cầu
         datetime.fromisoformat(value[:-1] + '+00:00' if value[-1] in 'Zz' else value)
         return True
     except ValueError:
@@ -35,7 +35,7 @@ class Principal:
 
 @dataclass(frozen=True)
 class TrustedContext:
-    # The caller must construct this only after authentication; services verify evidence.
+    # Bên gọi chỉ được tạo sau xác thực; các service kiểm tra bằng chứng.
     request_id: str
     principal: Principal | None
     approval_action_id: str | None = None
@@ -99,7 +99,7 @@ class Dispatcher:
                             'outcome': outcome, 'error_code': code,
                             'duration_ms': (perf_counter() - started) * 1000})
             except Exception:
-                # A logging failure must not mask an already committed service result.
+                # Lỗi ghi log không được che mất kết quả service đã commit.
                 pass
 
     def _dispatch(self, command, context):

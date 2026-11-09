@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap');
 @import 'tailwindcss';
 
-/* Foundation */
+/* Thành phần nền tảng */
 @import './tokens.css';
 @import './base.css';
-/* Shell and shared components */
+/* Khung ứng dụng và thành phần dùng chung */
 @import './layout.css';
 @import './cards.css';
 @import './overlays.css';
 @import './overrides.css';
-/* Features and pages */
+/* Tính năng và trang */
 @import './assistant.css';
 @import './history.css';
 @import './home.css';

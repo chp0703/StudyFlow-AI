@@ -10,7 +10,7 @@ import type { Task } from "../types/task"
 
 import { daysUntil } from "../utils/date"
 
-// Time the user opened the web app; the clock counts from here.
+// Thời điểm người dùng mở ứng dụng web; đồng hồ bắt đầu đếm từ đây.
 
 const sessionStart = Date.now()
 

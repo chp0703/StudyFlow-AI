@@ -41,7 +41,7 @@ const STATUS = {
   unscheduled: { label: "Chưa xếp", Icon: CircleDashed },
 }
 
-// Draft = part of the pending proposal; otherwise confirmed if placed on the calendar, else unscheduled.
+// Nháp nếu thuộc đề xuất đang chờ; ngoài ra đã xác nhận nếu có trên lịch, còn lại là chưa xếp lịch.
 
 export function statusOf(task: Task, proposedIds: Set<number>): Status {
   if (proposedIds.has(task.id)) return "draft"

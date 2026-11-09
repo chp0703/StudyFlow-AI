@@ -1,10 +1,10 @@
-"""HTTP plumbing shared by every endpoint: request IDs, catalog error envelopes, status mapping."""
+"""Xử lý HTTP dùng chung: ID yêu cầu, cấu trúc lỗi theo danh mục và ánh xạ mã trạng thái."""
 
 from __future__ import annotations
 
 from fastapi.responses import JSONResponse
 
-# Domain/transport error code -> HTTP status (contracts/README.md section 3.1).
+# Mã lỗi nghiệp vụ/transport -> trạng thái HTTP (contracts/README.md mục 3.1).
 STATUS = {
     "INVALID_PARAMETER": 422, "MISSING_REQUIRED_FIELD": 422, "UNSUPPORTED_OPERATION": 422,
     "UNAUTHENTICATED": 401, "FORBIDDEN": 403, "ENTITY_NOT_FOUND": 404,

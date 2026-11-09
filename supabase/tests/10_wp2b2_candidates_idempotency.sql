@@ -1,4 +1,4 @@
--- WP2b-2: task candidates, domain idempotency and lookup_operation_result (local pgTAP, rolled back).
+-- WP2b-2: candidate, chống ghi trùng nghiệp vụ và lookup_operation_result; pgTAP local, có rollback.
 begin;
 select no_plan();
 set local search_path = public, extensions;
@@ -24,7 +24,7 @@ begin
  return jsonb_set(req,'{attestation}',jsonb_build_object('key_id','q10-key','payload',payload,
  'signature',encode(extensions.hmac(convert_to(payload,'UTF8'),decode(repeat('10',32),'hex'),'sha256'),'hex')));
 end $$;
--- Reads carry no attestation; mutations are signed. Signing happens before the role switch.
+-- Đọc không cần chứng thực; ghi có chữ ký. Ký trước khi chuyển role.
 create function pg_temp.q_call(op text, args jsonb, idem text default 'q10-default-key-0001',
  uid uuid default 'd1010000-0000-4000-8000-000000000001', msg uuid default 'd1010000-0000-4000-8000-000000000004')
  returns jsonb language plpgsql as $$
@@ -50,7 +50,7 @@ insert into app_private.rpc_attestation_keys(key_id,key_material,not_before,not_
  values ('q10-key',decode(repeat('10',32),'hex'),clock_timestamp()-interval '1 hour',clock_timestamp()+interval '1 hour');
 create temporary table q10(name text primary key, res jsonb);
 
--- A candidate needs a recorded source message in its conversation.
+-- Candidate cần tin nhắn nguồn đã lưu trong cùng hội thoại.
 insert into q10 values ('nosource',pg_temp.q_call('create_task_candidate','{"slots":{"title":"A"}}'));
 select ok(pg_temp.q_is(res,'ENTITY_NOT_FOUND'),'creating a candidate before its source message is recorded fails') from q10 where name='nosource';
 select ok(not exists(select 1 from app_private.task_candidates)
@@ -59,7 +59,7 @@ select ok(pg_temp.q_call('record_source_message',pg_temp.q_msg())->>'outcome'='C
 select ok(pg_temp.q_is(pg_temp.q_call('create_task_candidate','{"slots":{"title":"A"}}',null),'INVALID_PARAMETER'),
  'a null idempotency key is rejected');
 
--- Create, then replay with a fresh request returns the identical candidate.
+-- Tạo rồi gửi lại bằng yêu cầu mới phải nhận cùng candidate.
 insert into q10 values ('c1',pg_temp.q_call('create_task_candidate',
  '{"slots":{"title":"Ôn giải tích","estimated_minutes":90,"priority":null}}','q10-candidate-key-01'));
 select ok(res->>'outcome'='DRAFTED' and res#>>'{data,status}'='DRAFT' and res#>>'{data,version}'='1'
@@ -77,7 +77,7 @@ select ok(pg_temp.q_is(pg_temp.q_call('create_task_candidate','{"slots":{"title"
 select is((select schedule_revision from app_private.user_profiles where user_id='d1010000-0000-4000-8000-000000000001'),
  0::bigint,'drafting does not change the schedule revision');
 
--- lookup_operation_result: found, absent, conflicting.
+-- lookup_operation_result: tìm thấy, không có, xung đột.
 insert into q10 values ('l1',pg_temp.q_call('lookup_operation_result',jsonb_build_object('operation','create_task_candidate',
  'idempotency_key','q10-candidate-key-01','request_fingerprint',app_private.domain_fingerprint(
  'd1010000-0000-4000-8000-000000000001','create_task_candidate','{"slots":{"title":"Ôn giải tích","estimated_minutes":90,"priority":null}}'))));
@@ -93,7 +93,7 @@ select ok(pg_temp.q_is(pg_temp.q_call('lookup_operation_result',jsonb_build_obje
 select ok(exists(select 1 from app_private.idempotency_records where idempotency_key='q10-candidate-key-01' and state='COMPLETED'
  and expires_at>=created_at+interval '7 days'-interval '1 second'),'domain record is completed and retained 7 days');
 
--- update_candidate_draft: versioned edit, replay-safe, owner scoped.
+-- update_candidate_draft: sửa có version, gửi lại an toàn, giới hạn theo chủ sở hữu.
 create function pg_temp.q_upd(version bigint, title text) returns jsonb language sql as $$
  select jsonb_build_object('candidate_id',(select res#>>'{data,candidate_id}' from q10 where name='c1'),
  'expected_candidate_version',version,'slots',jsonb_build_object('title',title),
@@ -109,7 +109,7 @@ select is((select version from app_private.task_candidates),2::bigint,'stale and
 select ok(pg_temp.q_is(pg_temp.q_call('update_candidate_draft',pg_temp.q_upd(2,'Của người khác'),'q10-default-key-0001',
  'd1010000-0000-4000-8000-000000000002'),'ENTITY_NOT_FOUND'),'another owner cannot see or edit the candidate');
 
--- Atomicity: an internal failure after the insert rolls back candidate, idempotency record and profile changes.
+-- Tính nguyên tử: lỗi nội bộ sau INSERT phải rollback candidate, bản ghi chống ghi trùng và thay đổi hồ sơ.
 create function pg_temp.q_fail() returns trigger language plpgsql as $$
 begin raise exception using errcode='XX000',message='Q10_INJECTED'; end $$;
 create trigger q10_fail after insert on app_private.task_candidates for each row execute function pg_temp.q_fail();

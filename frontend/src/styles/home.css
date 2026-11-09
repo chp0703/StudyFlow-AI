@@ -1,4 +1,4 @@
-/* The assistant owns its viewport; only its transcript and history list scroll. */
+/* Trợ lý chiếm vùng hiển thị riêng; chỉ phần tin nhắn và danh sách lịch sử được cuộn. */
 .assistant-app { height: 100dvh; min-height: 0; display: grid; grid-template-rows: 58px minmax(0,1fr); overflow: hidden; }
 .assistant-app .topbar { position: relative; top: auto; }
 .main-content:has(.home-layout),
@@ -28,7 +28,7 @@
   .assistant-app .home-content { height: auto; min-height: calc(100dvh - 140px); overflow: visible; margin-left: 0; margin-right: 0; padding: 8px 10px 12px; }
   .assistant-app .assistant-shell { height: calc(100dvh - 160px); min-height: 520px; }
 }
-/* Home fits the viewport without page scroll: cards show under an empty chat and hide once a conversation starts. */
+/* Trang chủ vừa vùng hiển thị, không cuộn trang: hiện thẻ khi chat trống, ẩn khi bắt đầu hội thoại. */
 .home-layout { display: flex; flex-direction: column; flex: 1; height: 100%; min-height: 0; }
 .home-layout .assistant-shell { flex: 1; min-height: 0; height: auto; border: 1px solid var(--color-line); border-radius: var(--radius-card); overflow: hidden; box-shadow: 0 4px 20px -2px rgba(23, 32, 59, 0.05); }
 .home-layout:has(.assistant-shell.has-messages) .home-summary { display: none; }
@@ -36,7 +36,7 @@
 .home-summary { flex: none; padding: 14px 0 0; border-top: 0; }
 .home-stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
 @media(max-width:800px) { .home-layout { height: auto; }.home-layout .assistant-shell { flex: none; height: calc(100dvh - 160px); }.home-stats { grid-template-columns: minmax(0,1fr); } }
-/* Chat header: back button left, conversation title centred, actions right. */
+/* Đầu khung chat: nút quay lại bên trái, tiêu đề hội thoại ở giữa, thao tác bên phải. */
 .assistant-topline { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,auto) minmax(0,1fr); }
 .assistant-back { grid-column: 1; justify-self: start; }
 .assistant-thread-heading { grid-column: 2; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

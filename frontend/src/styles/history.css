@@ -1,4 +1,4 @@
-/* Conversation history */
+/* Lịch sử hội thoại */
 .assistant-shell { flex-direction: row; }
 .assistant-main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .assistant-topline { width: min(100%,1080px); }
