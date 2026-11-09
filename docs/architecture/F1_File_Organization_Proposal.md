@@ -1,5 +1,19 @@
 # Bản đồ code F1 và đề xuất tổ chức file
 
+## Bản đồ sau triển khai refactor ngày 09/11/2026
+
+Các thay đổi được triển khai qua PR [#25](https://github.com/chp0703/StudyFlow-AI/pull/25), [#26](https://github.com/chp0703/StudyFlow-AI/pull/26), [#27](https://github.com/chp0703/StudyFlow-AI/pull/27), [#28](https://github.com/chp0703/StudyFlow-AI/pull/28) và [#29](https://github.com/chp0703/StudyFlow-AI/pull/29).
+
+| Trách nhiệm | Vị trí sau refactor |
+|---|---|
+| HTTP, xác thực và dựng response | `backend/app/api/v1/routes.py`, `http.py`, `workflow.py`; factory vẫn ở `backend/app/main.py` |
+| Chat, action, receipt | `backend/app/orchestrator/chat.py`, `actions.py`, `receipts.py`; helper và interface ở `workflow_shared.py`, `workflow_ports.py` |
+| Import tương thích chat | `backend/app/api/v1/chat.py` xuất lại cùng processor từ orchestrator |
+| UI và lưu trữ Assistant | `features/assistant/Assistant.tsx` ghép `ChatComposer`, `ChatTranscript`, `ConversationSidebar`; `useConversationHistory.ts` quản lý state và hàng đợi IndexedDB bằng các helper hiện có |
+| UI và xử lý Planner | `pages/Planner.tsx` ghép `WeekCalendar`, `ProposalReview`; `features/planner/usePlanner.ts` xử lý lệnh và quyết định bằng state do `App` sở hữu |
+
+Đường dẫn frontend trong bảng tính từ `frontend/src/`. Các mục 1–8 bên dưới ghi lại baseline trước refactor, phương án đã duyệt và bằng chứng của các lượt documentation/comment trước đó. Kết quả kiểm tra từng commit nằm trong mô tả và Actions của PR tương ứng.
+
 Ngày đọc code: **07/11/2026**. Nhánh local: `feat/f1-mvp-intergration`, HEAD `77916bf`.
 Cập nhật theo góp ý team và đối chiếu lại source ngày **09/11/2026**; HEAD local vẫn là `77916bf`.
 Phạm vi đối chiếu là checkout local; không fetch remote và không xác nhận môi trường triển khai.
