@@ -1,4 +1,4 @@
-"""Fixture-only executor for conversation tests; it never performs domain writes."""
+"""Bộ thực thi chỉ dùng fixture cho test hội thoại; không bao giờ ghi dữ liệu nghiệp vụ."""
 
 import copy
 import json

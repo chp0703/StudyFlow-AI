@@ -1,11 +1,11 @@
-"""End-to-end HTTP tests against the real local Supabase stack (GoTrue, PostgREST, Postgres).
+"""Test HTTP đầu cuối với Supabase local thật (GoTrue, PostgREST, Postgres).
 
-Nothing is mocked: real ES256 access tokens, real JWKS, the real signed-RPC boundary and RLS.
-Required environment (loopback only; never a cloud project):
-  F1_LOCAL_SUPABASE_URL      e.g. http://127.0.0.1:54321
-  F1_LOCAL_PUBLISHABLE_KEY   the local publishable/anon key
-  F1_LOCAL_SERVICE_KEY       the local service-role/secret key (creates the two test users)
-  F1_DB_TEST_DSN             postgresql://postgres:postgres@127.0.0.1:54322/postgres (registers the HMAC key)
+Không mock: dùng access token ES256, JWKS, ranh giới RPC có chữ ký và RLS thật.
+Biến môi trường bắt buộc (chỉ loopback; không dùng dự án cloud):
+  F1_LOCAL_SUPABASE_URL      ví dụ http://127.0.0.1:54321
+  F1_LOCAL_PUBLISHABLE_KEY   khóa publishable/anon local
+  F1_LOCAL_SERVICE_KEY       khóa service-role/secret local để tạo hai người dùng test
+  F1_DB_TEST_DSN             postgresql://postgres:postgres@127.0.0.1:54322/postgres để đăng ký khóa HMAC
 """
 
 import base64
@@ -86,7 +86,7 @@ class LocalSupabaseHttp(unittest.TestCase):
             self.assertEqual(first.headers["Idempotency-Replayed"], "false")
             reference = body["action_reference"]
             self.assertEqual(reference["target_type"], "TASK_CANDIDATE")
-        with self.client() as restarted:  # a cold app: only the database remembers the first call
+        with self.client() as restarted:  # ứng dụng mới khởi tạo: chỉ database còn nhớ lần gọi đầu
             again = self.post(restarted, "/v1/actions", self.task_body(conversation), key=key)
             self.assertEqual(again.status_code, 200, again.text)
             self.assertEqual(again.headers["Idempotency-Replayed"], "true")
@@ -96,7 +96,7 @@ class LocalSupabaseHttp(unittest.TestCase):
             self.assertEqual(conflict.status_code, 409)
             self.assertEqual(conflict.json()["error"]["code"], "IDEMPOTENCY_CONFLICT")
 
-            # Another user cannot decide on this action.
+            # Người dùng khác không thể quyết định thao tác này.
             foreign = self.post(restarted, "/v1/decisions", {"schema_version": "1.1", "conversation_id": conversation,
                                                               "action_reference": reference, "decision": "APPROVE"}, who="b")
             self.assertEqual(foreign.status_code, 404, foreign.text)
@@ -112,7 +112,7 @@ class LocalSupabaseHttp(unittest.TestCase):
             self.assertEqual(replay.headers["Idempotency-Replayed"], "true")
             self.assertEqual(replay.json()["result"]["data"]["task_id"], task_id)
 
-            # A second decision with a new key finds the action already completed: no second task.
+            # Quyết định thứ hai với khóa mới thấy thao tác đã xong: không tạo task thứ hai.
             late = self.post(restarted, "/v1/decisions", decide)
             self.assertEqual(late.status_code, 409, late.text)
 
@@ -208,7 +208,7 @@ class LocalSupabaseHttp(unittest.TestCase):
             self.assertEqual({b["block_id"] for b in current["study_blocks"]}, {b["block_id"] for b in blocks})
             self.assertEqual(app.get("/v1/preferences", headers=self.auth("c")).json()["data"]["schedule_revision"], before + 1)
 
-            # Everything is already scheduled: a second generation proposes nothing.
+            # Mọi việc đã có lịch: lần sinh lịch thứ hai không có thay đổi để đề xuất.
             again = self.post(app, "/v1/actions", generate(), who="c")
             self.assertEqual(again.status_code, 200, again.text)
             self.assertEqual(again.json()["state"], "SUCCEEDED")

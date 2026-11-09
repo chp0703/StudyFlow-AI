@@ -1,8 +1,8 @@
-"""Chat workflow over HTTP against the real local Supabase stack, with a scripted extractor.
+"""Test workflow chat qua HTTP với Supabase local thật và bộ trích xuất theo kịch bản.
 
-The extractor is the only simulated part (no DeepSeek key is needed or used). Everything else - JWT, signed RPCs,
-the stored queue, clarification merge, approvals through /v1/decisions - is real. Same environment as
-test_http_local_supabase.py.
+Chỉ bộ trích xuất được mô phỏng (không cần hay dùng khóa DeepSeek). JWT, RPC có chữ ký,
+hàng đợi đã lưu, ghép thông tin bổ sung và phê duyệt qua /v1/decisions đều là thật.
+Dùng cùng môi trường với test_http_local_supabase.py.
 """
 
 import base64
@@ -97,19 +97,19 @@ class ChatHttp(unittest.TestCase):
             self.assertEqual(body["state"], "AWAITING_APPROVAL")
             self.assertIn("Tìm thấy 0 công việc.", body["message"])
             self.assertEqual(body["action_reference"]["target_type"], "TASK_CANDIDATE")
-            self.assertEqual(self.tasks(app, "u1"), [])  # chat alone never writes
+            self.assertEqual(self.tasks(app, "u1"), [])  # chỉ chat không ghi dữ liệu chính thức
         with self.client() as restarted:
             again = self.say(restarted, "u1", conversation, "tìm bài tập rồi thêm bài OOP và lập kế hoạch", key)
             self.assertEqual(again.headers["Idempotency-Replayed"], "true")
             self.assertEqual(again.json()["action_reference"], body["action_reference"])
             done = self.decide(restarted, "u1", conversation, body["action_reference"])
             self.assertEqual(done.status_code, 200, done.text)
-            # The third intent (plan) ran after the approval, from the stored queue, without a new extraction.
+            # Ý định thứ ba (lập lịch) chạy sau phê duyệt từ hàng đợi đã lưu, không trích xuất lại.
             self.assertEqual(done.json()["state"], "SUCCEEDED", done.text)
             self.assertEqual(len(self.tasks(restarted, "u1")), 1)
             queue = restarted.post("/v1/messages", json={"schema_version": "1.1", "conversation_id": conversation, "text": "tìm công việc"},
                                    headers={"Authorization": f"Bearer {self.token('u1')}", "Idempotency-Key": f"chat-{uuid4().hex}"})
-            self.assertEqual(queue.status_code, 200, queue.text)  # the finished queue no longer blocks the conversation
+            self.assertEqual(queue.status_code, 200, queue.text)  # hàng đợi đã xong không còn chặn hội thoại
             self.assertEqual(queue.json()["result"]["data"]["items"][0]["title"], "Bài tập OOP")
 
     def test_clarification_is_merged_into_the_same_draft(self):

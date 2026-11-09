@@ -1,9 +1,9 @@
--- Independent acceptance for approved additive package 1.0.1 (logical 1.1).
--- A/B/C/D were explicitly approved on 2026-11-05; these tests are authored
--- before WP0 schema synchronization and WP2 SQL. They intentionally remain red
--- on the eight-migration baseline. Run: supabase test db
--- Synthetic key, all fixtures and mutations are rolled back. No cloud target.
--- This suite is standalone: it does not reuse pg_temp state from test 06.
+-- Nghiệm thu độc lập cho gói bổ sung 1.0.1 đã duyệt, schema logic 1.1.
+-- A/B/C/D được duyệt rõ ngày 05/11/2026; test được viết
+-- trước khi đồng bộ schema WP0 và SQL WP2, chủ động vẫn thất bại
+-- trên baseline tám migration. Chạy: supabase test db
+-- Rollback khóa giả lập, mọi fixture và thay đổi dữ liệu; không chạy trên cloud.
+-- Bộ test độc lập, không dùng lại trạng thái pg_temp của test 06.
 begin;
 select no_plan();
 set local search_path = public, extensions;
@@ -36,8 +36,8 @@ select ok(exists(select 1 from pg_index i join pg_class t on t.oid=i.indrelid
  and t.relname='workflow_continuations' and i.indisunique and i.indpred is not null),
  'unfinished continuations have a partial unique guard');
 
--- Captures undefined functions/SQL errors as failed assertions, never as valid
--- public security errors. Administrative fixtures remain separate from RPC calls.
+-- Ghi lỗi hàm chưa định nghĩa/SQL thành khẳng định thất bại, không coi là
+-- lỗi bảo mật công khai hợp lệ. Tách fixture quản trị khỏi lần gọi RPC.
 create function pg_temp.q7_canonical(value jsonb) returns text language plpgsql as $$
 declare result text;
 begin execute 'select app_private.canonical_json($1)' into result using value; return result;
@@ -145,8 +145,8 @@ select ok(pg_temp.q7_error(pg_temp.q7_call(pg_temp.q7_request('get_workflow_cont
  array['ENTITY_NOT_FOUND']),'workflow read does not create an absent conversation');
 select is(pg_temp.q7_snapshot(),value,'read/invalid owner fields do not mutate existing state') from q7_before;
 
--- Obtain a real active origin receipt, then persist its allocated original USER
--- message through the approved RPC. No fabricated receipt or lease success.
+-- Lấy receipt nguồn đang hiệu lực thật rồi lưu tin nhắn USER gốc đã được cấp ID
+-- qua RPC đã duyệt. Không tự tạo receipt hay giả kết quả nhận lease thành công.
 insert into q7_results values ('claim',pg_temp.q7_call(pg_temp.q7_request('claim_api_receipt',
  jsonb_build_object('http_operation','send_message','idempotency_key','sol07-origin-key-0001',
  'request_fingerprint',repeat('a',64),'conversation_id','d0710000-0000-4000-8000-000000000003'),
@@ -211,8 +211,8 @@ select is((select result->'data' from q7_results where name='initialize_race_rep
  (select result->'data' from q7_results where name='initialize'),
  'same source/origin replay returns first extraction before comparing duplicate extractor output');
 
--- Move only the mapped operational lease clock in an administrative fixture;
--- this tests guard semantics, not actual 120-second wall-clock expiration.
+-- Chỉ dịch đồng hồ lease vận hành tương ứng trong fixture quản trị;
+-- kiểm tra quy tắc bảo vệ, không kiểm chứng hết hạn sau 120 giây thực.
 create function pg_temp.q7_lease(expire boolean) returns text language plpgsql as $$
 declare changed bigint;
 begin
@@ -245,9 +245,9 @@ select ok(pg_temp.q7_error(pg_temp.q7_call(pg_temp.q7_request('get_workflow_cont
  'd0710000-0000-4000-8000-000000000002')),array['FORBIDDEN','UNAUTHENTICATED']),
  'read principal cannot differ from authenticated owner');
 
--- Positive ADVANCE of an immediate read needs no made-up action/presentation.
--- The approved design trusts attested schema-valid read results, but domain
--- writes below must prove durable terminal action + derived operation result.
+-- ADVANCE hợp lệ cho bước đọc tức thì không cần tự tạo action/presentation.
+-- Thiết kế đã duyệt tin kết quả đọc đúng schema có chứng thực; nhưng thao tác
+-- ghi bên dưới phải chứng minh action kết thúc đã lưu bền vững và kết quả operation tương ứng.
 insert into q7_requests select 'advance',pg_temp.q7_request('checkpoint_workflow_continuation',
  jsonb_build_object('conversation_id','d0710000-0000-4000-8000-000000000003',
  'source_message_id',request#>>'{arguments,source_message_id}',
@@ -307,8 +307,8 @@ select ok(pg_temp.q7_error(pg_temp.q7_call(pg_temp.q7_sign(jsonb_set(request,
  array['STALE_ENTITY_VERSION','IDEMPOTENCY_CONFLICT','INVALID_PARAMETER']),
  'old cursor cannot be overwritten with incompatible recorded outcome') from q7_requests where name='advance';
 
--- Advance step1 with its own deterministic key, then distinguish exact completed
--- lookup from active lookup (which must not choose the most recent old queue).
+-- Chuyển step1 bằng khóa xác định riêng, rồi phân biệt tra chính xác bản đã xong
+-- với tra bản đang hoạt động; không được chọn hàng đợi cũ gần nhất làm bản đang hoạt động.
 insert into q7_requests select 'advance_last',pg_temp.q7_sign(jsonb_set(jsonb_set(jsonb_set(jsonb_set(jsonb_set(request,
  '{arguments,expected_version}','2'),'{arguments,expected_cursor}','1'),'{arguments,outcome,intent_index}','1'),
  '{arguments,outcome,step_key}',to_jsonb(encode(extensions.digest(convert_to(pg_temp.q7_canonical(

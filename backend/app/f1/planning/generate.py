@@ -1,7 +1,7 @@
-"""Turns the database scheduling snapshot into a PlanProposal (or a read-only report) using the real engine.
+"""Dùng engine thật chuyển snapshot lập lịch từ database thành PlanProposal hoặc báo cáo chỉ đọc.
 
-The engine never commits anything: the result is persisted as a proposal and only an approved decision
-makes it the current plan.
+Engine không commit dữ liệu: kết quả được lưu thành đề xuất và chỉ trở thành lịch hiện hành
+khi có quyết định phê duyệt.
 """
 
 from __future__ import annotations
@@ -26,8 +26,8 @@ DEFAULT_POLICY = {"min_block_minutes": 25, "max_block_minutes": 90, "allow_short
 
 @dataclass(frozen=True)
 class Generated:
-    proposal: dict | None  # a complete PlanProposal, ready for persist_plan_proposal
-    report: dict | None  # SchedulingReadData when there is nothing to propose
+    proposal: dict | None  # PlanProposal đầy đủ, sẵn sàng cho persist_plan_proposal
+    report: dict | None  # SchedulingReadData khi không có thay đổi để đề xuất
     conflicts: tuple[Issue, ...] = ()
 
 
@@ -57,7 +57,7 @@ def _block(raw: dict) -> StudyBlock:
 
 
 def generate(snapshot: dict, command: dict, *, now: datetime, block_id_factory: Callable[[], UUID] = uuid4) -> Generated:
-    """snapshot: SchedulingInputSnapshot; command: generate_study_planArguments (already validated)."""
+    """snapshot: SchedulingInputSnapshot; command: generate_study_planArguments đã được kiểm tra."""
     user = snapshot["user"]
     scope_raw = command["generation_scope"]
     start, end = _when(scope_raw["start_at"]), _when(scope_raw["end_at"])

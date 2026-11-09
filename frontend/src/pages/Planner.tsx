@@ -163,7 +163,7 @@ export default function Planner({
     try {
       localStorage.setItem("studyflow_task_panel_open", String(taskPanelOpen))
     } catch {
-      // Ignore storage errors in restricted contexts
+      // Bỏ qua lỗi lưu trữ trong môi trường bị hạn chế quyền
     }
   }, [taskPanelOpen])
 
@@ -173,7 +173,7 @@ export default function Planner({
 
   const prevTasks = useRef(tasks)
 
-  // Changing week slides the calendar content in from the direction of travel.
+  // Khi đổi tuần, nội dung lịch trượt vào theo hướng di chuyển.
 
   useGSAP(
     () => {
@@ -199,7 +199,7 @@ export default function Planner({
     { scope: calendarRef, dependencies: [week] },
   )
 
-  // Events the agent just added or moved pop in, so the change is easy to spot.
+  // Sự kiện agent vừa thêm hoặc dời hiện bật lên để người dùng dễ nhận ra thay đổi.
 
   useGSAP(
     () => {
@@ -241,7 +241,7 @@ export default function Planner({
     { scope: calendarRef, dependencies: [tasks] },
   )
 
-  // GSAP drives the task panel because CSS transitions are disabled by reduced-motion.
+  // GSAP điều khiển khung công việc vì reduced-motion vô hiệu hóa CSS transition.
 
   const pageRef = useRef<HTMLDivElement>(null)
 
@@ -281,7 +281,7 @@ export default function Planner({
     { scope: pageRef, dependencies: [taskPanelOpen] },
   )
 
-  // Proposed blocks pop in so the pending change is easy to spot before approving.
+  // Block đề xuất hiện bật lên để người dùng dễ thấy thay đổi trước khi duyệt.
 
   useGSAP(
     () => {
@@ -308,7 +308,7 @@ export default function Planner({
     { scope: calendarRef, dependencies: [proposal] },
   )
 
-  // A plain reply (error or no-op) fades away on its own; a proposal stays until decided.
+  // Phản hồi thông thường (lỗi hoặc không thay đổi) tự mờ đi; đề xuất giữ lại đến khi có quyết định.
 
   useEffect(() => {
     if (!reply || proposal) return
@@ -318,7 +318,7 @@ export default function Planner({
     return () => window.clearTimeout(timer)
   }, [reply, proposal])
 
-  // Today's date, shifted by whole weeks so it tracks the week being viewed.
+  // Ngày hôm nay dịch theo số tuần nguyên để theo đúng tuần đang xem.
 
   const weekLabel = new Date(
     today.getFullYear(),
@@ -345,7 +345,7 @@ export default function Planner({
       new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i),
   )
 
-  // The calendar shows the proposal's preview while one is pending; committed tasks otherwise.
+  // Khi có đề xuất chờ duyệt, lịch hiển thị bản xem trước; nếu không thì hiển thị công việc đã xác nhận.
 
   const shown = proposal ? proposal.next.tasks : tasks
 
@@ -364,7 +364,7 @@ export default function Planner({
 
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Clicking an empty cell starts an add command for that slot.
+  // Nhấn ô trống để bắt đầu lệnh thêm vào khung giờ đó.
 
   const prefill = (date: Date, hour: number) => {
     const d = `${date.getDate()}/${date.getMonth() + 1}`
@@ -402,7 +402,7 @@ export default function Planner({
 
     if (!text) return
 
-    // Commands stack on a pending proposal, but are always diffed against the committed schedule.
+    // Các lệnh tiếp tục sửa đề xuất đang chờ nhưng luôn so sánh với lịch đã xác nhận.
 
     const result = runPlannerCommand(text, shown, shownWindows)
 

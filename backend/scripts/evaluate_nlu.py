@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Runs the production DeepSeek extractor over the 40-sentence Vietnamese set. Needs DEEPSEEK_API_KEY.
+"""Chạy bộ trích xuất DeepSeek thật trên tập 40 câu tiếng Việt. Cần DEEPSEEK_API_KEY.
 
     DEEPSEEK_API_KEY=... python backend/scripts/evaluate_nlu.py
 
-Exit code 0 only when at least 38 of 40 cases pass. Without a key it refuses to run (it never fakes a pass).
+Chỉ trả mã thoát 0 khi đạt ít nhất 38/40 ca. Thiếu khóa thì từ chối chạy, không giả kết quả đạt.
 """
 
 import os

@@ -1,5 +1,5 @@
--- WP2b-1: signed bootstrap, source messages and API receipt leases (local pgTAP, rolled back).
--- The lease clock is moved administratively and labeled as such; no real 120 s wait here.
+-- WP2b-1: khởi tạo có chữ ký, tin nhắn nguồn và lease API receipt; pgTAP local, có rollback.
+-- Đồng hồ lease được dịch bằng quyền quản trị và ghi rõ; không chờ 120 giây thực ở đây.
 begin;
 select no_plan();
 set local search_path = public, extensions;
@@ -57,14 +57,14 @@ insert into app_private.rpc_attestation_keys(key_id,key_material,not_before,not_
  values ('q9-key',decode(repeat('09',32),'hex'),clock_timestamp()-interval '1 hour',clock_timestamp()+interval '1 hour');
 create temporary table q9(name text primary key, res jsonb);
 
--- First claim: durable IDs and a 120 second lease at version 1.
+-- Claim đầu tiên: ID lưu bền vững và lease 120 giây tại version 1.
 insert into q9 values ('c1',pg_temp.q9_claim());
 select ok(res->>'outcome'='COMMITTED' and res#>>'{data,lease_version}'='1' and res#>>'{data,state}'='IN_PROGRESS'
  and res#>>'{data,message_id}' is not null and res#>>'{data,action_id}' is not null,'claim allocates IDs, version 1, IN_PROGRESS')
  from q9 where name='c1';
 select ok((select r.lease_until-r.created_at between interval '119 seconds' and interval '121 seconds'
  from app_private.api_request_receipts r where idempotency_key='q9-origin-key-00001'),'initial lease is 120 seconds');
--- A live lease is busy and retryable; a different body under the key conflicts. Neither changes state.
+-- Lease còn hiệu lực báo bận và cho thử lại; đổi body cùng khóa gây xung đột. Cả hai không sửa trạng thái.
 create temporary table q9_state as select pg_temp.q9_receipt() r;
 select ok(pg_temp.q9_is(pg_temp.q9_claim(),'SERVICE_UNAVAILABLE')
  and (select (res#>>'{error,retryable}')::boolean from (select pg_temp.q9_claim() res) x),
@@ -72,7 +72,7 @@ select ok(pg_temp.q9_is(pg_temp.q9_claim(),'SERVICE_UNAVAILABLE')
 select ok(pg_temp.q9_is(pg_temp.q9_claim(fp=>repeat('b',64)),'IDEMPOTENCY_CONFLICT'),'different fingerprint conflicts');
 select is(pg_temp.q9_receipt(),r,'busy and conflicting claims leave the receipt unchanged') from q9_state;
 
--- Administratively expire the lease; worker B reclaims at version 2 with the same stable IDs.
+-- Dùng quyền quản trị cho lease hết hạn; worker B nhận lại version 2 với cùng ID ổn định.
 update app_private.api_request_receipts set lease_until=clock_timestamp()-interval '1 second'
  where idempotency_key='q9-origin-key-00001';
 insert into q9 values ('c2',pg_temp.q9_claim());
@@ -80,7 +80,7 @@ select ok(res#>>'{data,lease_version}'='2' and res#>>'{data,message_id}'=(select
  and res#>>'{data,action_id}'=(select res#>>'{data,action_id}' from q9 where name='c1'),
  'reclaim bumps lease_version and reuses message/action IDs') from q9 where name='c2';
 
--- Worker A (version 1) is fenced out of every lease operation.
+-- Worker A ở version 1 bị chặn khỏi mọi thao tác lease.
 truncate q9_state; insert into q9_state select pg_temp.q9_receipt();
 select ok(pg_temp.q9_is(pg_temp.q9_call('renew_api_receipt',pg_temp.q9_lease_args(1)),'STALE_ENTITY_VERSION'),'old worker cannot renew');
 select ok(pg_temp.q9_is(pg_temp.q9_call('release_api_receipt',pg_temp.q9_lease_args(1)),'STALE_ENTITY_VERSION'),'old worker cannot release');
@@ -89,7 +89,7 @@ select ok(pg_temp.q9_is(pg_temp.q9_call('complete_api_receipt',pg_temp.q9_lease_
 select is(pg_temp.q9_receipt(),r,'fenced attempts leave worker B receipt unchanged') from q9_state;
 select ok(pg_temp.q9_call('renew_api_receipt',pg_temp.q9_lease_args(2))->>'outcome'='COMMITTED','current worker can renew');
 
--- Transient 503 results are never terminal; a proper response completes once and replays.
+-- Kết quả tạm thời 503 không phải kết quả cuối; phản hồi hợp lệ hoàn tất một lần rồi phát lại.
 select ok(pg_temp.q9_is(pg_temp.q9_call('complete_api_receipt',pg_temp.q9_lease_args(2,jsonb_build_object('http_status',503,
  'response',pg_temp.q9_reply('SERVICE_UNAVAILABLE',true)))),'INVALID_PARAMETER'),
  '503 cannot be completed as a terminal result');
@@ -100,14 +100,14 @@ select ok(res#>>'{data,state}'='COMPLETED' and res#>>'{data,http_status}'='200' 
 select is(pg_temp.q9_claim()#>'{data,response}',(select res#>'{data,response}' from q9 where name='done'),
  'claim after completion replays the stored response');
 
--- Release: a retryable failure hands the lease back so the next claim reclaims it.
+-- Release: lỗi có thể thử lại trả lease để lần claim sau nhận quyền xử lý.
 insert into q9 values ('r1',pg_temp.q9_claim('q9-release-key-0001'));
 select ok(pg_temp.q9_call('release_api_receipt',jsonb_build_object('http_operation','send_message',
  'idempotency_key','q9-release-key-0001','request_fingerprint',repeat('a',64),'expected_lease_version',1))->>'outcome'='COMMITTED',
  'holder releases its lease');
 select ok(pg_temp.q9_claim('q9-release-key-0001')#>>'{data,lease_version}'='2','claim after release reclaims at version 2');
 
--- Source messages: bound to the trusted message, conversation and owner; recorded once.
+-- Tin nhắn nguồn gắn với tin nhắn đáng tin cậy, hội thoại và chủ sở hữu; chỉ lưu một lần.
 create function pg_temp.q9_msg(text_value text default 'Xin chào') returns jsonb language sql as $$
  select jsonb_build_object('message',jsonb_build_object('message_id','d0910000-0000-4000-8000-000000000004',
  'user_id','d0910000-0000-4000-8000-000000000001','conversation_id','d0910000-0000-4000-8000-000000000003',
@@ -124,7 +124,7 @@ select ok(pg_temp.q9_is(pg_temp.q9_call('record_source_message',
  jsonb_set(pg_temp.q9_msg(),'{message,conversation_id}','"d0910000-0000-4000-8000-000000000099"')),'INVALID_PARAMETER'),
  'message in a different conversation than the request is rejected');
 
--- Bootstrap never overwrites an existing profile.
+-- Khởi tạo không ghi đè hồ sơ đã có.
 create temporary table q9_profile as select to_jsonb(u) p from app_private.user_profiles u;
 select ok(pg_temp.q9_call('ensure_user_context','{}')#>>'{data,timezone}'='Asia/Ho_Chi_Minh'
  and (select to_jsonb(u) from app_private.user_profiles u)=(select p from q9_profile),

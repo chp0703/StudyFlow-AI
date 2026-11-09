@@ -255,7 +255,7 @@ def normalize_time_windows(
     start_at: datetime,
     end_at: datetime,
 ) -> tuple[Interval, ...]:
-    """Expand and validate contract TimeWindow JSON dictionaries over a finite horizon."""
+    """Mở rộng và kiểm tra các đối tượng JSON TimeWindow theo contract trong phạm vi thời gian hữu hạn."""
     if not _is_aware_datetime(start_at) or not _is_aware_datetime(end_at):
         raise ValueError("Horizon start_at and end_at must be timezone-aware datetimes")
     if not _is_minute_aligned(start_at) or not _is_minute_aligned(end_at):

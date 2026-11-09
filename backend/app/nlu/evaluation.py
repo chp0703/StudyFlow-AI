@@ -1,11 +1,11 @@
-"""Scoring of an extractor against the Vietnamese evaluation set (backend/tests/fixtures/nlu_eval_vi.json).
+"""Chấm bộ trích xuất bằng tập đánh giá tiếng Việt (backend/tests/fixtures/nlu_eval_vi.json).
 
-A case passes only when the intent sequence matches exactly and every listed slot check holds. Checks:
-  "path": value            equality (dotted path, e.g. "window.weekday")
-  "contains:path": text    case-insensitive substring
-  "instant:path": iso      same instant, whatever the offset
-  "absent:path": true      slot missing or null
-  "set:path": [..]         same elements, any order
+Một ca chỉ đạt khi thứ tự ý định khớp hoàn toàn và mọi điều kiện slot đều đúng. Các kiểu kiểm tra:
+  "path": value            bằng nhau (đường dẫn có dấu chấm, ví dụ "window.weekday")
+  "contains:path": text    chứa chuỗi con, không phân biệt hoa thường
+  "instant:path": iso      cùng thời điểm, bất kể offset
+  "absent:path": true      slot thiếu hoặc null
+  "set:path": [..]         cùng phần tử, không xét thứ tự
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from datetime import datetime
 from pathlib import Path
 
 DATASET = Path(__file__).resolve().parents[2] / "tests/fixtures/nlu_eval_vi.json"
-THRESHOLD = 38  # of 40 (>= 95%)
+THRESHOLD = 38  # trên tổng 40 ca (>= 95%)
 
 
 def load() -> dict:
@@ -56,7 +56,7 @@ def check_slot(slots: dict, check: str, expected) -> str | None:
 
 
 def score_case(case: dict, extraction: dict) -> list[str]:
-    """Returns the reasons a case failed; empty means it passed."""
+    """Trả lý do ca đánh giá thất bại; danh sách rỗng nghĩa là đạt."""
     got, wanted = extraction["intents"], case["intents"]
     names = [i["intent"] for i in got]
     if len(got) != len(wanted) or any(g not in w["intent"].split("|") for g, w in zip(names, wanted)):
@@ -77,7 +77,7 @@ def evaluate(extractor, dataset: dict | None = None) -> tuple[int, list[tuple[st
     for case in dataset["cases"]:
         try:
             reasons = score_case(case, extractor.extract(case["text"], now=now, timezone=dataset["timezone"], active=None))
-        except Exception as exc:  # noqa: BLE001 - a crashing extractor fails the case, not the run
+        except Exception as exc:  # noqa: BLE001 - bộ trích xuất bị lỗi chỉ làm trượt ca đó, không dừng cả lượt đánh giá
             reasons = [f"error: {type(exc).__name__}"]
         if reasons:
             failures.append((case["text"], reasons))

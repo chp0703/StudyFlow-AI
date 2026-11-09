@@ -1,4 +1,4 @@
-"""Internal policy merge for application services; no persistence or defaults."""
+"""Hợp nhất policy nội bộ cho các service; không lưu dữ liệu hay áp dụng mặc định."""
 
 import json
 from pathlib import Path

@@ -1,4 +1,4 @@
-/* Week calendar. */
+/* Lịch tuần. */
 .dashboard-calendar-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .dashboard-calendar-controls>span { font-size: 14px; color: var(--color-muted); margin-right: 12px; }
 .dashboard-calendar-controls select { width: auto; min-width: 90px; }
@@ -21,7 +21,7 @@
 .schedule-event:hover:not(:disabled) { background: #e0eaff; }
 .schedule-event.deadline:hover:not(:disabled) { background: #ffe4e6; }
 
-/* Planner fits the viewport: chat on top, calendar fills the rest and its hour rows shrink, so the page never scrolls. */
+/* Planner vừa vùng hiển thị: chat ở trên, lịch lấp phần còn lại, hàng giờ co lại để trang không cuộn. */
 .main-content:has(.planner-page) {
   height: calc(100dvh - 58px);
   display: flex;
@@ -70,7 +70,7 @@
   pointer-events: none;
 }
 
-/* Request box sits on the calendar heading row, between the title and the week controls */
+/* Ô yêu cầu nằm trên hàng tiêu đề lịch, giữa tiêu đề và nút điều hướng tuần */
 .planner-heading-action {
   flex: 1;
   min-width: 0;
@@ -121,7 +121,7 @@
   outline: 3px solid #dcdffb;
   border-color: var(--color-primary);
 }
-/* Calendar Card styled with glassmorphism matching Assistant chat */
+/* Thẻ lịch có hiệu ứng kính mờ đồng bộ với khung chat trợ lý */
 .planner-calendar {
   position: relative;
   flex: 1;
@@ -237,7 +237,7 @@
   background: rgba(89, 108, 240, 0.04);
 }
 
-/* Event badges styled as sleek rounded chat-like cards */
+/* Nhãn sự kiện dạng thẻ bo góc gọn như tin nhắn */
 .planner-calendar .schedule-event {
   position: relative;
   min-height: 38px;
@@ -336,7 +336,7 @@
   background: var(--pink);
 }
 
-/* Calendar controls styled like chat buttons */
+/* Nút điều khiển lịch có kiểu dáng như nút chat */
 .planner-calendar .dashboard-calendar-controls {
   display: flex;
   align-items: center;
@@ -428,7 +428,7 @@
   color: var(--color-primary);
 }
 
-/* Pending proposal: preview blocks, status line and approve/reject bar */
+/* Đề xuất chờ duyệt: block xem trước, dòng trạng thái và thanh duyệt/từ chối */
 .planner-status:empty {
   display: none;
 }
@@ -488,7 +488,7 @@
   text-decoration: line-through;
 }
 
-/* Floating notice after approving schedule changes */
+/* Thông báo nổi sau khi duyệt thay đổi lịch */
 .planner-notice-wrap {
   position: absolute;
   left: 0;
@@ -538,7 +538,7 @@
   color: var(--color-ink);
 }
 
-/* Availability windows on the calendar: label + pattern, never colour alone. */
+/* Khung rảnh/bận trên lịch: dùng nhãn và họa tiết, không chỉ dùng màu. */
 .schedule-cell.is-free { background: rgba(34, 160, 107, 0.1); }
 .schedule-cell.is-busy {
   background: repeating-linear-gradient(135deg, rgba(120, 130, 160, 0.16) 0 6px, transparent 6px 12px);
@@ -578,7 +578,7 @@
 .legend-busy::before { background: repeating-linear-gradient(135deg, rgba(120, 130, 160, 0.4) 0 3px, transparent 3px 6px); }
 .legend-proposed::before { border: 2px dashed var(--color-primary, #596cf0); box-sizing: border-box; }
 
-/* Task list panel, right of the calendar */
+/* Khung danh sách công việc bên phải lịch */
 .task-panel {
   min-height: 0;
   display: flex;

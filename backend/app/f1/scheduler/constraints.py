@@ -258,7 +258,7 @@ def _validate_retained_block_constraints(context: SchedulingContext) -> list[Iss
 
 
 def validate_retained_constraints(context: SchedulingContext) -> list[Issue]:
-    """Validate future retained blocks against current hard constraints."""
+    """Kiểm tra các block tương lai được giữ lại theo các ràng buộc cứng hiện tại."""
     structural = _validate_context_structure(context)
     if structural:
         return structural

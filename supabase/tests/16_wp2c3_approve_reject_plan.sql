@@ -1,4 +1,4 @@
--- WP2c-3: approve_study_plan and reject_study_plan (local pgTAP, rolled back).
+-- WP2c-3: approve_study_plan và reject_study_plan; pgTAP local, có rollback.
 begin;
 select no_plan();
 set local search_path = public, extensions;
@@ -36,7 +36,7 @@ create function pg_temp.cid(n int) returns uuid language sql as $$ select ('d161
 create function pg_temp.uid() returns uuid language sql as $$ select 'd1610000-0000-4000-8000-000000000001'::uuid $$;
 create function pg_temp.tid() returns uuid language sql as $$ select 'd1610000-0000-4000-8000-0000000000a1'::uuid $$;
 
--- A decision request for proposal n. wrong_ver lets tests send a mismatched approval.
+-- Yêu cầu quyết định cho proposal n; wrong_ver cho phép test gửi phê duyệt sai version.
 create function pg_temp.q_decide(op text, n int, idem text, expected_plan bigint default null, approval_ver bigint default 1,
  with_approval boolean default true) returns jsonb language sql as $$
  select pg_temp.q_run(jsonb_build_object('contract_version','1.0.1','schema_version','1.1','request_id','q16-request',
@@ -63,7 +63,7 @@ insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,deadli
  deadline_timezone,estimated_minutes,remaining_minutes)
  values (pg_temp.tid(),pg_temp.uid(),extensions.gen_random_uuid(),'Bài tập','2026-11-20T00:00:00Z','DATETIME',null,'UTC',600,600);
 
--- Proposal n: one action per proposal in its own conversation; blocks start on day 9+n.
+-- Proposal n: mỗi đề xuất có một action trong hội thoại riêng; block bắt đầu ngày 9+n.
 create function pg_temp.q_seed(n int, rev bigint, base uuid, base_ver bigint, overlap boolean default false) returns void language plpgsql as $$
 declare blocks jsonb; scope jsonb := '{"start_at":"2026-11-06T00:00:00.000000Z","end_at":"2026-11-19T00:00:00.000000Z","selection_mode":"ALL_ELIGIBLE","task_ids":[]}';
  act app_private.pending_actions; pres jsonb := '{"proposal":null,"normalized_command":null,"effective_policy":null}';
@@ -114,18 +114,18 @@ select is((select schedule_revision from app_private.user_profiles where user_id
 select ok(pg_temp.q_is(pg_temp.q_decide('approve_study_plan',1,'q16-approve-key-002'),'STALE_PROPOSAL'),'another key cannot approve the same proposal twice');
 select is((select count(*) from app_private.study_plans),1::bigint,'no second plan was created');
 
--- A proposal built before the approval is stale, and stays stale.
+-- Đề xuất tạo trước lần phê duyệt đã thành STALE và giữ nguyên trạng thái đó.
 select ok(pg_temp.q_is(pg_temp.q_decide('approve_study_plan',2,'q16-approve-key-003'),'STALE_PROPOSAL'),'a proposal based on an older revision is stale');
 select is((select status from app_private.plan_proposals where proposal_id=pg_temp.pid(2)),'STALE','the stale status is durable');
 
--- Atomicity: overlapping blocks (not caught at persist time) fail the whole commit.
+-- Tính nguyên tử: block chồng lấn chưa bị phát hiện khi lưu đề xuất làm toàn bộ commit thất bại.
 select pg_temp.q_seed(3,1,(select current_plan_id from app_private.user_profiles where user_id=pg_temp.uid()),1,true);
 truncate q16_before; insert into q16_before select pg_temp.q_state();
 select ok(pg_temp.q_is(pg_temp.q_decide('approve_study_plan',3,'q16-approve-key-004',1),'TIME_CONFLICT'),'overlapping blocks fail the commit');
 select is(pg_temp.q_state(),(select s from q16_before),'a failed commit changed nothing');
 select is((select status from app_private.plan_proposals where proposal_id=pg_temp.pid(3)),'PROPOSED','the proposal stays pending after a failed commit');
 
--- Reject.
+-- Từ chối.
 select pg_temp.q_seed(4,1,(select current_plan_id from app_private.user_profiles where user_id=pg_temp.uid()),1);
 insert into q16 values ('r1',pg_temp.q_decide('reject_study_plan',4,'q16-reject-key-0001'));
 select ok(app_private.matches_contract('reject_study_planResult',res) and res->>'outcome'='REJECTED' and res#>>'{data,status}'='REJECTED',
@@ -135,7 +135,7 @@ select ok((select state from app_private.pending_actions where action_id=pg_temp
 select is(pg_temp.q_decide('reject_study_plan',4,'q16-reject-key-0001')->'data',(select res->'data' from q16 where name='r1'),'a rejection retry replays');
 select ok(pg_temp.q_is(pg_temp.q_decide('reject_study_plan',4,'q16-reject-key-0002'),'STALE_PROPOSAL'),'a settled proposal cannot be rejected again');
 
--- Second approval: plan version guard, task revalidation, then plan version 2.
+-- Phê duyệt thứ hai: bảo vệ version lịch, kiểm tra lại task rồi tạo version lịch 2.
 select pg_temp.q_seed(5,1,(select current_plan_id from app_private.user_profiles where user_id=pg_temp.uid()),1);
 select ok(pg_temp.q_is(pg_temp.q_decide('approve_study_plan',5,'q16-approve-key-005',9),'STALE_PLAN_VERSION'),'a wrong expected plan version is refused');
 select is((select status from app_private.plan_proposals where proposal_id=pg_temp.pid(5)),'PROPOSED','the proposal stays pending after a version mismatch');

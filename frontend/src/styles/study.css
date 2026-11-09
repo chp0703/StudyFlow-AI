@@ -1,9 +1,9 @@
 /* ==========================================================================
-   Study Page Styles — 2-Column Layout (Quiz | Tài liệu & Hỏi đáp AI)
-   No page scroll, viewport-fitted, right column split evenly (50/50)
+   Giao diện trang học tập — hai cột (Trắc nghiệm | Tài liệu và hỏi đáp AI)
+   Vừa vùng hiển thị, không cuộn trang, cột phải chia đều 50/50
    ========================================================================== */
 
-/* Main content fits the viewport: exactly like Planner, page never scrolls */
+/* Nội dung chính vừa vùng hiển thị như Planner, trang không cuộn */
 .main-content:has(.study-container) {
   height: calc(100dvh - 58px);
   display: flex;
@@ -26,7 +26,7 @@
   flex-direction: column;
 }
 
-/* 2-Column Grid fills 100% of remaining height */
+/* Lưới hai cột lấp đầy chiều cao còn lại */
 .study-container {
   flex: 1;
   min-height: 0;
@@ -53,7 +53,7 @@
   gap: 16px;
 }
 
-/* Base study card styling */
+/* Kiểu thẻ học tập cơ bản */
 .study-card {
   background: var(--bg-card);
   backdrop-filter: blur(16px);
@@ -67,7 +67,7 @@
   position: relative;
 }
 
-/* Card header matched exactly to Planner's calendar card header */
+/* Đầu thẻ khớp kiểu đầu thẻ lịch của Planner */
 .study-card .card-heading {
   padding: 12px 20px;
   min-height: 56px;
@@ -90,7 +90,7 @@
 }
 
 /* ==========================================================================
-   Card 1: Quiz (Cột bên trái — Full Height)
+   Thẻ 1: Trắc nghiệm (cột trái — toàn bộ chiều cao)
    ========================================================================== */
 .study-quiz-card {
   height: 100%;
@@ -173,7 +173,7 @@
   flex-shrink: 0;
 }
 
-/* 4 Options radio group */
+/* Nhóm bốn lựa chọn trả lời dạng radio */
 .quiz-options-group {
   display: flex;
   flex-direction: column;
@@ -280,7 +280,7 @@
   color: var(--pink);
 }
 
-/* Popup giải thích đúng/sai bên trong Quiz card */
+/* Hộp giải thích đúng/sai bên trong thẻ trắc nghiệm */
 .quiz-popup-backdrop {
   position: absolute;
   inset: 0;
@@ -435,7 +435,7 @@
   padding: 0 12px;
 }
 
-/* Bottom actions */
+/* Các thao tác phía dưới */
 .quiz-bottom-actions {
   margin-top: auto;
   padding-top: 12px;
@@ -449,7 +449,7 @@
   gap: 8px;
 }
 
-/* Quiz completion screen */
+/* Màn hình hoàn thành trắc nghiệm */
 .quiz-results-screen {
   padding: 24px 20px;
   display: flex;
@@ -501,7 +501,7 @@
 }
 
 /* ==========================================================================
-   Card 2: Tài liệu (Cột phải, Trên — Chia đều 50%)
+   Thẻ 2: Tài liệu (cột phải, phía trên — chia đều 50%)
    ========================================================================== */
 .study-materials-card {
   position: relative;
@@ -624,7 +624,7 @@
 }
 
 /* ==========================================================================
-   Card 3: Hỏi đáp trực tiếp AI (Cột phải, Dưới — Chia đều 50%)
+   Thẻ 3: Hỏi đáp trực tiếp AI (cột phải, phía dưới — chia đều 50%)
    ========================================================================== */
 .study-qa-card {
   flex: 1 1 0;
@@ -717,7 +717,7 @@
   margin: 0;
 }
 
-/* Chat input form fixed at bottom of Card 3 */
+/* Biểu mẫu nhập tin nhắn cố định ở đáy thẻ 3 */
 .qa-composer-form {
   display: flex;
   align-items: center;
@@ -760,7 +760,7 @@
   color: var(--color-muted);
 }
 
-/* Internal clean scrollbars */
+/* Thanh cuộn gọn bên trong */
 .materials-scroll-list::-webkit-scrollbar,
 .qa-transcript::-webkit-scrollbar,
 .quiz-body::-webkit-scrollbar {
@@ -775,7 +775,7 @@
 }
 
 /* ==========================================================================
-   Responsive Breakpoints
+   Điểm ngắt bố cục responsive
    ========================================================================== */
 @media (max-width: 1024px) {
   .main-content:has(.study-container) {
@@ -810,7 +810,7 @@
   }
 }
 
-/* In-card notice for upload/delete feedback */
+/* Thông báo tải lên/xóa trong thẻ */
 .doc-notice {
   position: absolute;
   left: 16px;

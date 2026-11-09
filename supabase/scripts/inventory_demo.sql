@@ -1,6 +1,6 @@
--- Read-only preflight for an existing/shared project. Never reset cloud data.
--- Run as an authorized database administrator, before considering deployment.
--- This reports metadata only: no auth users, message text, keys or business rows.
+-- Kiểm tra trước triển khai, chỉ đọc trên dự án đã có/dùng chung. Không reset dữ liệu cloud.
+-- Chạy bằng quản trị viên database được cấp quyền trước khi cân nhắc triển khai.
+-- Chỉ báo metadata: không đọc người dùng auth, tin nhắn, khóa hay dòng dữ liệu nghiệp vụ.
 
 select current_database() as database_name,
        current_user as database_role,
@@ -35,5 +35,5 @@ where rolname = 'sf_rpc_owner';
 select pg_catalog.to_regclass('supabase_migrations.schema_migrations')
        as migration_history_table;
 
--- Only if the previous result is non-null, run separately:
+-- Chỉ khi kết quả trước khác null, chạy riêng câu lệnh sau:
 -- select version, name from supabase_migrations.schema_migrations order by version;

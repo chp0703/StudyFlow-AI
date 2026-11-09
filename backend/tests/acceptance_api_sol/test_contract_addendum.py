@@ -1,8 +1,8 @@
-"""Independent acceptance for the user-approved A/B/C/D contract 1.0.1.
+"""Nghiệm thu độc lập cho contract 1.0.1 với các phần A/B/C/D đã được người dùng duyệt.
 
-These are static contract tests, not database/authentication evidence. They use
-the real shared JSON Schema and the existing approved pure semantic checker.
-No substitute schema, queue implementation or test-local semantic oracle exists.
+Đây là test contract tĩnh, không phải bằng chứng về database/xác thực. Test dùng
+JSON Schema dùng chung và bộ kiểm tra ngữ nghĩa thuần đã duyệt hiện có.
+Không dùng schema thay thế, bộ hàng đợi riêng hay bộ suy luận ngữ nghĩa chỉ dành cho test.
 """
 
 import copy
@@ -108,7 +108,7 @@ class ApprovedAddendumAcceptance(unittest.TestCase):
             request["execution_context"]["conversation_id"] = CONVERSATION
             request["execution_context"]["idempotency_key"] = "sol-addendum-0001"
         if NEW_HELPERS[name][1]:
-            # Deliberately shape-only signature, never sent to a live service.
+            # Chữ ký chỉ phục vụ kiểm tra cấu trúc, không bao giờ gửi tới dịch vụ thật.
             request["attestation"] = {"key_id": "sol-shape-only", "payload": "shape-only", "signature": "0" * 64}
         return request
 
@@ -293,7 +293,7 @@ class ApprovedAddendumAcceptance(unittest.TestCase):
                     bad = copy.deepcopy(envelope)
                     bad["execution_context"]["idempotency_key"] = "sol-addendum-0001"
                     self.invalid("RpcRequest", bad, semantic=False)
-        # First GET bootstrap is a signed helper with no invented domain key.
+        # Lần GET khởi tạo đầu tiên dùng hàm hỗ trợ có chữ ký, không tự tạo khóa nghiệp vụ.
         self.assertIsNone(self.rpc("ensure_user_context")["execution_context"]["idempotency_key"])
 
     def test_shared_bundle_is_valid_json_schema(self):

@@ -246,7 +246,7 @@ export default function Assistant({
   useEffect(() => {
     let cancelled = false
 
-    // Development-only failure switch for the storage fallback browser check.
+    // Công tắc giả lập lỗi chỉ dành cho phát triển, dùng kiểm tra nhánh lưu trữ dự phòng trên trình duyệt.
 
     const opening =
       import.meta.env.DEV &&
@@ -390,7 +390,7 @@ export default function Assistant({
       })
   }, [activeId, messages])
 
-  // The welcome heading wipes in from the left, then its gradient drifts slowly.
+  // Tiêu đề chào hiện dần từ trái, sau đó dải màu chuyển động chậm.
 
   useGSAP(
     () => {
@@ -442,7 +442,7 @@ export default function Assistant({
     { dependencies: [messages.length === 0], revertOnUpdate: true },
   )
 
-  // A new message slides up; switching conversations does not animate the whole transcript.
+  // Tin nhắn mới trượt lên; đổi hội thoại không chạy hiệu ứng cho toàn bộ lịch sử tin nhắn.
 
   useGSAP(
     () => {
@@ -481,7 +481,7 @@ export default function Assistant({
     { scope: transcriptRef, dependencies: [messages] },
   )
 
-  // The desktop history panel grows in from the right edge and shrinks back, so the chat widens smoothly.
+  // Khung lịch sử desktop mở rộng từ mép phải và thu lại để vùng chat đổi chiều rộng mượt hơn.
 
   useGSAP(
     () => {
@@ -491,7 +491,7 @@ export default function Assistant({
 
       if (!historyOpen && !panelShown) return
 
-      // Keep the contents at full width while the panel itself animates its width.
+      // Giữ nội dung đủ chiều rộng trong lúc khung chứa đang thay đổi chiều rộng bằng hiệu ứng.
 
       const fixed = () => gsap.set(panel?.children ?? [], { minWidth: 304 })
 
@@ -549,7 +549,7 @@ export default function Assistant({
     { dependencies: [historyOpen, mobile] },
   )
 
-  // Opening another conversation fades its transcript in instead of swapping it instantly.
+  // Khi mở hội thoại khác, cho tin nhắn hiện dần thay vì đổi tức thì.
 
   const prevActiveId = useRef(activeId)
 

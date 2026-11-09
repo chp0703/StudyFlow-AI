@@ -15,7 +15,7 @@ export type Task = {
 
   deadline: string
 
-  // Calendar slot, set when the planner agent schedules the task.
+  // Khung giờ trên lịch, được gán khi planner agent xếp lịch cho công việc.
 
   date?: string
 

@@ -1,4 +1,4 @@
-"""Approved contract schemas, used to validate HTTP input and canonical forms."""
+"""Schema contract đã duyệt, dùng kiểm tra đầu vào HTTP và dạng dữ liệu chuẩn hóa."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def is_valid(name: str, value) -> bool:
 
 
 def canonical(value) -> bytes:
-    """Canonical JSON shared with the database: sorted keys, no spaces, raw UTF-8."""
+    """JSON chuẩn hóa dùng chung với database: sắp xếp khóa, bỏ khoảng trắng, giữ UTF-8 nguyên bản."""
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
 
 

@@ -1,4 +1,4 @@
-"""Pure deterministic planner for StudyFlow AI F1 schema 1.1."""
+"""Bộ lập lịch thuần, cho kết quả xác định, theo schema F1 1.1 của StudyFlow AI."""
 
 from .engine import ALGORITHM_VERSION, generate_schedule
 from .models import (

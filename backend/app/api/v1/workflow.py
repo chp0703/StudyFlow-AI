@@ -1,8 +1,8 @@
-"""POST processing behind an API receipt: claim -> replay or process -> complete.
+"""Xử lý POST qua API receipt: nhận quyền xử lý -> phát lại hoặc thực thi -> hoàn tất.
 
-Every database step uses a key derived from the client's Idempotency-Key, so a retry after a crash
-repeats the same steps with the same keys and the database replays whatever already committed.
-Transient failures release the receipt lease; terminal domain errors are stored so they replay.
+Mỗi bước database dùng khóa suy ra từ Idempotency-Key của client, nên khi gửi lại sau sự cố,
+các bước dùng cùng khóa và database phát lại kết quả đã commit.
+Lỗi tạm thời giải phóng lease của receipt; lỗi nghiệp vụ cuối cùng được lưu để phát lại.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ AWAITING = ("AWAITING_CLARIFICATION", "AWAITING_CONFIRMATION", "AWAITING_APPROVA
 
 
 class Terminal(Exception):
-    """A final domain answer (stored on the receipt, so retries replay it)."""
+    """Kết quả lỗi nghiệp vụ cuối cùng, được lưu trong receipt để phát lại khi gửi lại yêu cầu."""
 
     def __init__(self, code: str, message: str, field: str | None = None):
         super().__init__(code)
@@ -48,7 +48,7 @@ def reply(request_id: str, state: str, message: str, *, reference=None, question
 
 
 def deadline_instant(slots: dict) -> str | None:
-    """A date-only deadline ends at the start of the next local day (contract section 2)."""
+    """Deadline chỉ có ngày kết thúc ở đầu ngày kế tiếp theo giờ địa phương (contract mục 2)."""
     try:
         zone = ZoneInfo(slots["deadline_timezone"])
         local = datetime.combine(date.fromisoformat(slots["deadline_date"]) + timedelta(days=1), time.min, zone)
@@ -59,12 +59,12 @@ def deadline_instant(slots: dict) -> str | None:
 
 class ActionProcessor:
     def __init__(self, api):
-        from .chat import ChatProcessor  # chat builds on this module, so import it late
+        from .chat import ChatProcessor  # chat phụ thuộc mô-đun này nên chỉ import khi khởi tạo
 
         self.api = api
         self.chat = ChatProcessor(api, self, api.extractor)
 
-    # ------------------------------------------------------------ receipt lifecycle
+    # ------------------------------------------------------------ vòng đời receipt
     def run(self, ctx, http_operation: str, key: str, fingerprint: str, body: dict, path: dict):
         conversation = body["conversation_id"]
         claim = self.api.rpc(ctx, "claim_api_receipt", {
@@ -84,12 +84,12 @@ class ActionProcessor:
         except Terminal as exc:
             status, answer = exc.status, error_body(exc.error, ctx.request_id, post=True)
         except Exception:
-            self._release(ctx, binding, key, conversation)  # transient or unexpected: let a retry reclaim the lease
+            self._release(ctx, binding, key, conversation)  # lỗi tạm thời hoặc ngoài dự kiến: cho phép lần gửi lại nhận lại lease
             raise
         done = self.api.rpc(ctx, "complete_api_receipt", {**binding, "http_status": status, "response": answer},
                             conversation_id=conversation, idempotency_key=child_key(key, "complete"))
         if done.get("outcome") == "ERROR":
-            # The lease was lost; domain work is replay-safe, so the client simply retries.
+            # Đã mất lease; thao tác nghiệp vụ hỗ trợ phát lại an toàn nên client chỉ cần thử lại.
             raise ApiError("SERVICE_UNAVAILABLE", "The request is being completed; retry shortly.", retryable=True, retry_after=2)
         return respond(answer, status, ctx.request_id, post=True)
 
@@ -98,20 +98,20 @@ class ActionProcessor:
             self.api.rpc(ctx, "release_api_receipt", binding, conversation_id=conversation,
                          idempotency_key=child_key(key, "release"))
         except ApiError:
-            pass  # the lease expires by itself after 120 seconds
+            pass  # lease tự hết hạn sau 120 giây
 
     @staticmethod
     def replay(ctx, receipt: dict):
-        """The stored reply is the only source: nothing is re-extracted or re-executed."""
+        """Phản hồi đã lưu là nguồn duy nhất; không trích xuất hay thực thi lại."""
         stored = copy.deepcopy(receipt["response"])
         stored["request_id"] = ctx.request_id
         if stored.get("result") is not None:
             stored["result"]["request_id"] = ctx.request_id
         return respond(stored, receipt["http_status"], ctx.request_id, post=True, replayed=True)
 
-    # ------------------------------------------------------------ helpers
+    # ------------------------------------------------------------ hàm hỗ trợ
     def step(self, ctx, operation: str, arguments: dict, **kwargs) -> dict:
-        """One database step. Domain errors become Terminal; transient ones propagate for a retry."""
+        """Một bước database. Lỗi nghiệp vụ chuyển thành Terminal; lỗi tạm thời truyền lên để thử lại."""
         result = self.api.rpc(ctx, operation, arguments, **kwargs)
         if result.get("outcome") == "ERROR":
             error = result["error"]
@@ -146,7 +146,7 @@ class ActionProcessor:
                 "proposal_id": None, "draft_arguments": draft, "missing_fields": missing, "ambiguities": [],
                 "depends_on_action_id": None, "created_at": now, "updated_at": now}
 
-    # ------------------------------------------------------------ prepare (POST /v1/actions)
+    # ------------------------------------------------------------ chuẩn bị (POST /v1/actions)
     def prepare(self, ctx, receipt, key, body):
         operation, arguments, conversation = body["operation"], body["arguments"], body["conversation_id"]
         slots = None
@@ -183,10 +183,10 @@ class ActionProcessor:
 
     def build_action(self, ctx, *, action_id, message_id, key, tag, conversation, operation, arguments, slots=None,
                      missing=None) -> dict:
-        """Creates the draft/proposal and the server-issued presentation for one action.
+        """Tạo bản nháp/đề xuất và nội dung hiển thị để duyệt do server cấp cho một thao tác.
 
-        Returns {"presentation", "target"} or, when the engine has nothing to propose, {"report"}.
-        `tag` keeps the database idempotency keys of several actions from one request apart."""
+        Trả {"presentation", "target"}, hoặc {"report"} khi engine không có thay đổi để đề xuất.
+        `tag` phân biệt khóa chống ghi trùng của nhiều thao tác trong cùng một yêu cầu."""
         if operation == "generate_study_plan":
             return self.build_plan(ctx, action_id, message_id, key, tag, conversation, arguments)
         if operation == "create_task_candidate":
@@ -214,13 +214,13 @@ class ActionProcessor:
         return {"presentation": stored, "target": target}
 
     def build_plan(self, ctx, action_id, message_id, key, tag, conversation, arguments) -> dict:
-        """Engine -> persisted proposal -> pending action. Nothing becomes the current plan until approved."""
+        """Engine -> lưu đề xuất -> thao tác chờ duyệt. Chỉ trở thành lịch hiện hành sau khi được duyệt."""
         self.step(ctx, "ensure_user_context", {})
         snapshot = self.step(ctx, "get_scheduling_context", {"generation_scope": arguments["generation_scope"]},
                              conversation_id=conversation)["data"]
         try:
             generated = generate(snapshot, arguments, now=self.api.clock())
-        except ValueError as exc:  # malformed window data in the snapshot
+        except ValueError as exc:  # dữ liệu khung giờ trong snapshot không hợp lệ
             raise Terminal("INVALID_PARAMETER", f"Dữ liệu giờ rảnh/bận không hợp lệ: {exc}") from None
         if generated.conflicts:
             first = generated.conflicts[0]
@@ -270,7 +270,7 @@ class ActionProcessor:
         profile = self.step(ctx, "ensure_user_context", {})["data"]
         return {**POLICY_DEFAULT, **profile["scheduling_policy"], **arguments["policy_patch"]}
 
-    # ------------------------------------------------------------ review (POST /v1/actions/{id}/review)
+    # ------------------------------------------------------------ xem lại (POST /v1/actions/{id}/review)
     def review(self, ctx, receipt, key, body, action_id):
         conversation = body["conversation_id"]
         data = self.workflow_context(ctx, conversation, action_id, key, False)
@@ -294,14 +294,14 @@ class ActionProcessor:
             target = ("PENDING_ACTION", new["action_id"], new["version"])
         return 200, self.awaiting_reply(ctx, stored, target)
 
-    # ------------------------------------------------------------ decide (POST /v1/decisions)
+    # ------------------------------------------------------------ quyết định (POST /v1/decisions)
     def decide(self, ctx, receipt, key, body):
         conversation, ref, decision = body["conversation_id"], body["action_reference"], body["decision"]
         data = self.workflow_context(ctx, conversation, ref["action_id"], key, False)
         action = data["selected_action"]
         pending = action["pending_action"]
-        # A finished action is passed on as is: the database replays the same decision for the same key and
-        # refuses any other key, which is what makes a retry after a crash safe.
+        # Chuyển tiếp nguyên trạng thao tác đã xong: database phát lại quyết định khi dùng cùng khóa và
+        # từ chối khóa khác, nhờ đó việc gửi lại sau sự cố không gây ghi trùng.
         if pending["state"] in AWAITING:
             if pending["requires_review"]:
                 raise Terminal("ACTION_REVIEW_REQUIRED", "Hãy xem lại thao tác hiện tại trước khi quyết định.")
@@ -342,7 +342,7 @@ class ActionProcessor:
         cancelled = self.step(ctx, "cancel_pending_action", {"action_reference": ref, "candidate_id": candidate_id},
                               conversation_id=conversation, idempotency_key=child_key(key, "cancel"),
                               message_id=receipt["message_id"])["data"]
-        # The contract has no "cancelled" tool result, so the cancelled action is shown as its own presentation.
+        # Contract không có tool result "cancelled", nên hiển thị thao tác đã hủy bằng presentation riêng.
         presentation = {"kind": "ACTION_PRESENTATION", "pending_action": cancelled, "candidate": None, "proposal": None,
                         "normalized_command": None, "effective_policy": None}
         done = reply(ctx.request_id, "SUCCEEDED", "Đã hủy thao tác. Không có dữ liệu nào được lưu.",

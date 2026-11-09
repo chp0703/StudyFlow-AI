@@ -1,4 +1,4 @@
-"""Read-only plan views. Store and warning callback are PROPOSED integration seams."""
+"""Các chế độ xem lịch chỉ đọc. Store và hàm cảnh báo là giao diện tích hợp đang được đề xuất."""
 
 import copy
 from datetime import datetime
