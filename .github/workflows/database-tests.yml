@@ -10,7 +10,6 @@ on:
       - main
       - feat/f1-mvp-intergration
   workflow_dispatch:
-  workflow_dispatch:
 
 permissions:
   contents: read
