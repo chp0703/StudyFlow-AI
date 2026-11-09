@@ -11,12 +11,12 @@ export type TaskChange = {
 
   task: Task
 
-  // Previous slot, only for "moved" (a "scheduled" task had none).
+  // Khung giờ trước đó, chỉ dành cho "moved"; công việc "scheduled" trước đó chưa có khung giờ.
 
   from?: TaskSlot
 }
 
-// Codes follow SRS §12; only the ones the planner can raise today.
+// Mã theo SRS §12; chỉ gồm các mã planner hiện có thể phát sinh.
 
 export type PlannerIssue = {
   code: "INSUFFICIENT_AVAILABILITY"
@@ -26,7 +26,7 @@ export type PlannerIssue = {
   taskId: number
 }
 
-// An hour the user declared free or busy; id is "<date>-<hour>" so one hour has one window.
+// Một giờ người dùng khai báo rảnh/bận; id là "<date>-<hour>" để mỗi giờ chỉ có một khung.
 
 export type TimeWindow = {
   id: string
@@ -50,14 +50,14 @@ export type PlannerState = {
   availability: TimeWindow[]
 }
 
-// A pending schedule change. Nothing is committed until the user approves it.
+// Thay đổi lịch đang chờ. Chỉ ghi nhận khi người dùng phê duyệt.
 
 export type Proposal = {
   id: string
 
   createdAt: number
 
-  // Schedule revision the proposal was built on; approval is rejected if it moved on.
+  // Phiên bản sửa đổi của lịch lúc tạo đề xuất; từ chối duyệt nếu lịch đã thay đổi.
 
   baseRevision: number
 

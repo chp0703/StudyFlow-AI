@@ -1,14 +1,19 @@
 node_modules/
+/.tools/
+supabase/.temp/
 dist/
 build/
 .cache/
 .env*
+!.env.example
 .vite/
 vite.config.*.timestamp-*
 *.tsbuildinfo
 *-debug.log*
 logs/
 *.log
+__pycache__/
+*.py[cod]
 .claude-replay.*
 .tmp-*
 /.figma/design-context/
@@ -20,4 +25,5 @@ logs/
 /.plugins/
 /.opencode-skills/
 CLAUDE.md
+history
 .claude

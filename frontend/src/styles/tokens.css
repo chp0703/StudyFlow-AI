@@ -1,7 +1,7 @@
-/* Design tokens: brand palette (:root) and Tailwind @theme aliases. */
-/* StudyFlow AI — Color Palette & Design Tokens */
+/* Biến thiết kế: bảng màu thương hiệu (:root) và bí danh Tailwind @theme. */
+/* StudyFlow AI — Bảng màu và biến thiết kế */
 :root {
-  /* Requested Color Palette */
+  /* Bảng màu yêu cầu */
   --primary: #596cf0;
   --indigo: #5064e9;
   --purple: #8b5cf6;
@@ -15,14 +15,14 @@
   --background: #f7f8ff;
   --border: #e5e8f4;
 
-  /* Ambient Background Palette */
+  /* Bảng màu nền không gian */
   --bg-gradient-start: #fbfbff;
   --bg-gradient-mid: #f5f7ff;
   --bg-gradient-end: #fff8fc;
   --bg-card: rgba(255, 255, 255, 0.94);
   --bg-card-solid: #ffffff;
 
-  /* Ambient Multi-Layer Background */
+  /* Nền không gian nhiều lớp */
   --bg-ambient:
     radial-gradient(
       circle at 85% 6%,
@@ -41,7 +41,7 @@
       #fff8fc 100%
     );
 
-  /* Brand Gradient */
+  /* Dải màu thương hiệu */
   --gradient-brand: linear-gradient(
     115deg,
     #596cf0,
@@ -49,7 +49,7 @@
     #d657c7
   );
 
-  /* StudyFlow Design Tokens mapped to Palette */
+  /* Biến thiết kế StudyFlow ánh xạ theo bảng màu */
   --sf-primary-blue: var(--primary);
   --sf-sky-blue: #7c8df7;
   --sf-deep-navy: var(--text-primary);

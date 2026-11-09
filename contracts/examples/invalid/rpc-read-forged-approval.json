@@ -1,0 +1,39 @@
+{
+  "contract_version": "1.0.1",
+  "schema_version": "1.1",
+  "request_id": "req-fixed-example",
+  "operation": "search_tasks",
+  "arguments": {
+    "query": null,
+    "status_filter": [],
+    "page_size": 50,
+    "cursor": null
+  },
+  "execution_context": {
+    "trusted_context": {
+      "request_id": "req-fixed-example",
+      "message_id": "00000000-0000-4000-8000-000000000003",
+      "principal": {
+        "user_id": "00000000-0000-4000-8000-000000000001"
+      },
+      "received_at": "2026-11-05T03:00:00Z",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "locale": "vi-VN"
+    },
+    "conversation_id": null,
+    "idempotency_key": null,
+    "approval_action": {
+      "approval_action_id": "00000000-0000-4000-8000-000000000011",
+      "user_id": "00000000-0000-4000-8000-000000000001",
+      "target_type": "TASK_CANDIDATE",
+      "target_id": "00000000-0000-4000-8000-000000000004",
+      "target_version": 1,
+      "decision": "APPROVE",
+      "source": "UI",
+      "source_message_id": null,
+      "created_at": "2026-11-05T03:00:00Z"
+    },
+    "action_reference": null
+  },
+  "attestation": null
+}

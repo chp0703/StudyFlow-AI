@@ -1,5 +1,9 @@
 # StudyFlow AI — Repository Structure
 
+> **Tài liệu cấu trúc lịch sử — không phải inventory implementation.** Hiện trạng checkout và phương án tổ chức file, cập nhật theo góp ý team ngày **09/11/2026**, nằm tại [Bản đồ code F1 và đề xuất tổ chức file](F1_File_Organization_Proposal.md). Các tên file trong cây bên dưới là mục tiêu thiết kế, không xác nhận file đã tồn tại, đã được runtime sử dụng hay đã qua nghiệm thu. Thư mục có sẵn nhưng chỉ chứa `.gitkeep`/`__init__.py` cũng chưa chứng minh đã có chức năng.
+
+> Bộ contract chính thức hiện áp dụng là **package 1.0.1 — APPROVED**, logical schema **F1 v1.1**, `schema_version="1.1"`, hiệu lực 05/11/2026: [contracts/README.md](../../contracts/README.md), [APPROVAL.md](../../contracts/APPROVAL.md), [CHANGELOG.md](../../contracts/CHANGELOG.md). Package 1.0.1 bổ sung RPC nội bộ/workflow continuation trên nền 1.0.0; giữ 8 endpoint HTTP công khai, 10 operation nghiệp vụ và schema logic 1.1. Các artifact chính thức gồm OpenAPI, schema bundle, service/data registry và fixtures; tên file minh họa trong cây lịch sử không thay thế chúng.
+
 > Bản chuyển đổi Markdown từ PDF nguồn `repo structure.pdf` (3 trang). Cấu trúc cây được giữ trong một khối code để bảo toàn quan hệ thư mục và chú thích gốc.
 
 ```text

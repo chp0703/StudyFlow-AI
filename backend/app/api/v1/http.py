@@ -1,0 +1,48 @@
+"""Xử lý HTTP dùng chung: ID yêu cầu, cấu trúc lỗi theo danh mục và ánh xạ mã trạng thái."""
+
+from __future__ import annotations
+
+from fastapi.responses import JSONResponse
+
+from ...orchestrator.workflow_ports import WorkflowError
+
+# Mã lỗi nghiệp vụ/transport -> trạng thái HTTP (contracts/README.md mục 3.1).
+STATUS = {
+    "INVALID_PARAMETER": 422, "MISSING_REQUIRED_FIELD": 422, "UNSUPPORTED_OPERATION": 422,
+    "UNAUTHENTICATED": 401, "FORBIDDEN": 403, "ENTITY_NOT_FOUND": 404,
+    "APPROVAL_REQUIRED": 409, "ACTION_REVIEW_REQUIRED": 409, "AMBIGUOUS_REFERENCE": 409,
+    "STALE_ENTITY_VERSION": 409, "STALE_PROPOSAL": 409, "STALE_PLAN_VERSION": 409,
+    "IDEMPOTENCY_CONFLICT": 409, "TIME_CONFLICT": 409, "ACTIVE_BLOCK_REQUIRES_REVIEW": 409,
+    "PAYLOAD_TOO_LARGE": 413, "RATE_LIMITED": 429, "INTERNAL_ERROR": 500, "SERVICE_UNAVAILABLE": 503,
+}
+
+
+class ApiError(WorkflowError):
+    def __init__(self, code: str, message: str, *, status: int | None = None, field: str | None = None,
+                 retryable: bool = False, retry_after: int | None = None):
+        super().__init__(code, message, field=field, retryable=retryable, retry_after=retry_after)
+        self.status = status or STATUS[code]
+
+
+def error_body(error: dict, request_id: str, *, post: bool) -> dict:
+    if post:
+        return {"schema_version": "1.1", "request_id": request_id, "state": "ERROR", "message": error["message"],
+                "action_reference": None, "questions": [], "result": None, "error": error}
+    return {"schema_version": "1.1", "request_id": request_id, "outcome": "ERROR", "data": None,
+            "error": error, "warnings": []}
+
+
+def respond(body: dict, status: int, request_id: str, *, post: bool, replayed: bool = False,
+            retry_after: int | None = None) -> JSONResponse:
+    headers = {"X-Request-ID": request_id}
+    if post:
+        headers["Idempotency-Replayed"] = "true" if replayed else "false"
+    if retry_after is not None:
+        headers["Retry-After"] = str(retry_after)
+    return JSONResponse(body, status_code=status, headers=headers)
+
+
+def error_response(exc: WorkflowError, request_id: str, *, post: bool) -> JSONResponse:
+    status = getattr(exc, "status", STATUS.get(exc.code, 500))
+    return respond(error_body(exc.error(), request_id, post=post), status, request_id, post=post,
+                   retry_after=exc.retry_after if exc.retry_after is not None else (1 if status == 503 else None))

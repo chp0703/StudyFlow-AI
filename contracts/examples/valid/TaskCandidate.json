@@ -1,0 +1,32 @@
+{
+  "candidate_id": "00000000-0000-4000-8000-000000000004",
+  "user_id": "00000000-0000-4000-8000-000000000001",
+  "conversation_id": "00000000-0000-4000-8000-000000000002",
+  "version": 1,
+  "status": "DRAFT",
+  "slots": {
+    "title": "Ôn tích phân",
+    "description": null,
+    "course_label": "Giải tích",
+    "available_from_at": null,
+    "deadline_at": "2026-11-06T17:00:00Z",
+    "deadline_precision": "DATE",
+    "deadline_date": "2026-11-06",
+    "deadline_timezone": "Asia/Ho_Chi_Minh",
+    "estimated_minutes": 60,
+    "priority": "NORMAL"
+  },
+  "raw_expressions": {
+    "deadline": "hết ngày 06/11"
+  },
+  "field_sources": {
+    "title": {
+      "source": "USER_MESSAGE",
+      "reference": "00000000-0000-4000-8000-000000000003"
+    }
+  },
+  "source_message_id": "00000000-0000-4000-8000-000000000003",
+  "confirmed_task_id": null,
+  "created_at": "2026-11-05T03:00:00Z",
+  "updated_at": "2026-11-05T03:00:00Z"
+}

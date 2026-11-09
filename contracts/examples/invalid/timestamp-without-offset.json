@@ -1,0 +1,21 @@
+{
+  "task_id": "00000000-0000-4000-8000-000000000005",
+  "user_id": "00000000-0000-4000-8000-000000000001",
+  "candidate_id": "00000000-0000-4000-8000-000000000004",
+  "version": 1,
+  "title": "Ôn tích phân",
+  "description": null,
+  "course_label": "Giải tích",
+  "available_from_at": null,
+  "deadline_at": "2026-11-06T17:00:00",
+  "deadline_precision": "DATE",
+  "deadline_date": "2026-11-06",
+  "deadline_timezone": "Asia/Ho_Chi_Minh",
+  "estimated_minutes": 60,
+  "priority": "NORMAL",
+  "remaining_minutes": 60,
+  "status": "TODO",
+  "confirmed_at": "2026-11-05T03:00:00Z",
+  "created_at": "2026-11-05T03:00:00Z",
+  "updated_at": "2026-11-05T03:00:00Z"
+}

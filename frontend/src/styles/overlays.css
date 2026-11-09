@@ -1,4 +1,4 @@
-/* Modal and toast. */
+/* Hộp thoại và thông báo nổi. */
 .modal-frame { padding: 0; border: 0; background: transparent; color: var(--color-ink); width: min(600px,calc(100vw - 32px)); max-height: calc(100dvh - 40px); margin: auto; overflow: visible; }
 .modal-frame::backdrop { background: #0f172a80; }
 .modal { background: white; border: 1px solid var(--color-line); border-radius: 14px; padding: 28px; max-height: calc(100dvh - 40px); overflow-y: auto; box-shadow: 0 20px 60px #0f172a24; }

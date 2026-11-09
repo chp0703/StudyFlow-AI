@@ -1,0 +1,8 @@
+# Bộ nghiệm thu HTTP độc lập; phụ thuộc môi trường thật thuộc pyproject.toml.
+-r ../contracts/requirements-check.txt
+fastapi==0.162.0
+httpx==0.28.1
+PyJWT==2.15.1
+cryptography==50.0.2
+pydantic-settings==2.16.2
+tzdata==2026.6
