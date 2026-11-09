@@ -103,7 +103,7 @@ export default function App() {
 
   const [demoAvailability, setAvailability] = useState<TimeWindow[]>([])
 
-  // Pending schedule change awaiting the user's approval, and the committed schedule revision.
+  // Thay đổi lịch đang chờ người dùng duyệt và số phiên bản sửa đổi của lịch đã xác nhận.
 
   const [proposal, setProposal] = useState<Proposal | null>(null)
 
@@ -163,7 +163,7 @@ export default function App() {
 
   const firstPage = useRef(true)
 
-  // Crossing a responsive breakpoint (window resize) re-flows the layout; ease the cards into place.
+  // Khi đổi kích thước qua điểm ngắt responsive, bố cục sắp lại; cho các thẻ chuyển vị trí nhẹ nhàng.
 
   useEffect(() => {
     const queries = [1250, 800, 480].map((w) =>
@@ -202,7 +202,7 @@ export default function App() {
 
   const firstSidebar = useRef(true)
 
-  // Menu open/close: items cascade in when it opens; the reveal button and logo ease in when it closes.
+  // Mở menu: các mục lần lượt hiện ra; đóng menu: nút mở và logo hiện lại nhẹ nhàng.
 
   useGSAP(
     () => {
@@ -212,7 +212,7 @@ export default function App() {
         return
       }
 
-      // GSAP drives the slide itself so it also runs when OS animations are off (CSS transitions are disabled then).
+      // GSAP điều khiển hiệu ứng trượt cả khi hệ điều hành tắt chuyển động và CSS transition bị vô hiệu hóa.
 
       gsap.fromTo(
         ".app-shell",
@@ -296,7 +296,7 @@ export default function App() {
     { dependencies: [sidebarOpen] },
   )
 
-  // Cards slide up each time a page opens.
+  // Các thẻ trượt lên mỗi lần mở trang.
 
   useGSAP(
     () => {

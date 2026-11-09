@@ -1,3 +1,7 @@
+import ChatComposer from "./ChatComposer"
+import ChatTranscript from "./ChatTranscript"
+import ConversationSidebar, { type ConfirmAction } from "./ConversationSidebar"
+import { useConversationHistory } from "./useConversationHistory"
 import {
   useEffect,
   useRef,
@@ -13,20 +17,7 @@ import gsap from "gsap"
 
 import { useGSAP } from "@gsap/react"
 
-import {
-  ArrowRight,
-  Check,
-  FileText,
-  History,
-  MoreHorizontal,
-  ArrowLeft,
-  Plus,
-  Search,
-  Send,
-  Sparkles,
-  Trash2,
-  X,
-} from "lucide-react"
+import { ArrowRight, History, ArrowLeft, Plus, X } from "lucide-react"
 
 import { getAssistantReply } from "./assistantService"
 
@@ -45,32 +36,12 @@ import type {
 
 import {
   appendMessages,
-  clearConversations,
   createConversation,
   emptyDraft,
-  historyGroup,
-  loadHistory,
-  openHistoryDatabase,
-  putActiveId,
-  putConversation,
-  removeConversation,
   setProposal as replaceProposal,
   setProposalStatus,
-  type Conversation,
   type Draft,
 } from "./conversationHistory"
-
-type ConfirmAction = {
-  kind: "delete"
-
-  id: string
-
-  title: string
-} | {
-  kind: "clear"
-}
-
-const groupNames = ["Hôm nay", "Hôm qua", "7 ngày gần đây", "Cũ hơn"] as const
 
 const nowIso = () => new Date().toISOString()
 
@@ -86,26 +57,27 @@ export default function Assistant({
   onOpenPlanner,
 
   onServerChange,
-}: {
-  onOpenPlanner: () => void
 
   // Called after the server may have changed tasks or the schedule (API mode).
+}: {
+  onOpenPlanner: () => void
 
   onServerChange?: () => void
 }) {
   const [thinking, setThinking] = useState(false)
-  const [conversations, setConversations] = useState<Conversation[]>([])
-
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const {
+    conversations,
+    setConversations,
+    activeId,
+    setActiveId,
+    hydrated,
+    storageMode,
+    storageError,
+    clearHistory,
+    patchActive,
+  } = useConversationHistory()
 
   const [emptyInput, setEmptyInput] = useState("")
-
-  const [hydrated, setHydrated] = useState(false)
-
-  const [storageMode, setStorageMode] =
-    useState<"loading" | "persistent" | "memory">("loading")
-
-  const [storageError, setStorageError] = useState("")
 
   const [historyOpen, setHistoryOpen] = useState(false)
 
@@ -124,16 +96,6 @@ export default function Assistant({
   const [mobile, setMobile] = useState(
     () => window.matchMedia("(max-width: 800px)").matches,
   )
-
-  const dbRef = useRef<IDBDatabase | null>(null)
-
-  const writeQueue = useRef<Promise<void>>(Promise.resolve())
-
-  const storageEnabled = useRef(false)
-
-  const savedSnapshot = useRef(new Map<string, Conversation>())
-
-  const savedActiveId = useRef<string | null>(null)
 
   const composerRef = useRef<HTMLTextAreaElement>(null)
 
@@ -258,134 +220,6 @@ export default function Assistant({
   }, [])
 
   useEffect(() => {
-    let cancelled = false
-
-    // Development-only failure switch for the storage fallback browser check.
-
-    const opening =
-      import.meta.env.DEV &&
-      new URLSearchParams(window.location.search).get("historyStorage") ===
-        "unavailable"
-        ? Promise.reject(new Error("Simulated IndexedDB unavailable"))
-        : openHistoryDatabase()
-
-    opening
-
-      .then(async (db) => {
-        const loaded = await loadHistory(db)
-
-        if (cancelled) {
-          db.close()
-
-          return
-        }
-
-        dbRef.current = db
-
-        savedSnapshot.current = new Map(
-          loaded.conversations.map((item) => [item.id, item]),
-        )
-
-        const selected = loaded.conversations.some(
-          (item) => item.id === loaded.activeId,
-        )
-          ? loaded.activeId
-          : null
-
-        savedActiveId.current = selected
-
-        setConversations(loaded.conversations)
-
-        setActiveId(selected)
-
-        storageEnabled.current = true
-
-        setStorageMode("persistent")
-
-        if (loaded.skipped)
-          setStorageError(
-            `Đã bỏ qua ${loaded.skipped} cuộc trò chuyện không đọc được. Các cuộc trò chuyện khác vẫn an toàn.`,
-          )
-
-        setHydrated(true)
-      })
-
-      .catch(() => {
-        if (cancelled) return
-
-        storageEnabled.current = false
-
-        setStorageMode("memory")
-
-        setStorageError(
-          "Không thể mở IndexedDB. Cuộc trò chuyện chỉ được giữ trong phiên này và sẽ mất khi tải lại trang.",
-        )
-
-        setHydrated(true)
-      })
-
-    return () => {
-      cancelled = true
-
-      dbRef.current?.close()
-    }
-  }, [])
-
-  function reportWriteFailure(error: unknown) {
-    storageEnabled.current = false
-
-    setStorageMode("memory")
-
-    const quota =
-      error instanceof DOMException && error.name === "QuotaExceededError"
-
-    setStorageError(
-      quota
-        ? "Bộ nhớ trình duyệt đã đầy. Thay đổi mới chỉ còn trong phiên này. Bạn có thể xuất lịch sử hoặc xóa bớt cuộc trò chuyện."
-        : "Không thể lưu lịch sử vào trình duyệt. Thay đổi mới chỉ còn trong phiên này; hãy xuất lịch sử trước khi tải lại trang.",
-    )
-  }
-
-  function enqueue(
-    operation: (db: IDBDatabase) => Promise<void>,
-
-    force = false,
-  ) {
-    const db = dbRef.current
-
-    if (!db || (!storageEnabled.current && !force)) return
-
-    writeQueue.current = writeQueue.current
-
-      .then(() => operation(db))
-
-      .catch(reportWriteFailure)
-  }
-
-  useEffect(() => {
-    if (!hydrated) return
-
-    const next = new Map(conversations.map((item) => [item.id, item]))
-
-    for (const [id, item] of next)
-      if (savedSnapshot.current.get(id) !== item)
-        enqueue((db) => putConversation(db, item))
-
-    for (const id of savedSnapshot.current.keys())
-      if (!next.has(id)) enqueue((db) => removeConversation(db, id))
-
-    savedSnapshot.current = next
-  }, [conversations, hydrated])
-
-  useEffect(() => {
-    if (!hydrated || savedActiveId.current === activeId) return
-
-    savedActiveId.current = activeId
-
-    enqueue((db) => putActiveId(db, activeId))
-  }, [activeId, hydrated])
-
-  useEffect(() => {
     const composer = composerRef.current
 
     if (!composer) return
@@ -404,7 +238,7 @@ export default function Assistant({
       })
   }, [activeId, messages])
 
-  // The welcome heading wipes in from the left, then its gradient drifts slowly.
+  // Tiêu đề chào hiện dần từ trái, sau đó dải màu chuyển động chậm.
 
   useGSAP(
     () => {
@@ -456,7 +290,7 @@ export default function Assistant({
     { dependencies: [messages.length === 0], revertOnUpdate: true },
   )
 
-  // A new message slides up; switching conversations does not animate the whole transcript.
+  // Tin nhắn mới trượt lên; đổi hội thoại không chạy hiệu ứng cho toàn bộ lịch sử tin nhắn.
 
   useGSAP(
     () => {
@@ -495,7 +329,7 @@ export default function Assistant({
     { scope: transcriptRef, dependencies: [messages] },
   )
 
-  // The desktop history panel grows in from the right edge and shrinks back, so the chat widens smoothly.
+  // Khung lịch sử desktop mở rộng từ mép phải và thu lại để vùng chat đổi chiều rộng mượt hơn.
 
   useGSAP(
     () => {
@@ -505,7 +339,7 @@ export default function Assistant({
 
       if (!historyOpen && !panelShown) return
 
-      // Keep the contents at full width while the panel itself animates its width.
+      // Giữ nội dung đủ chiều rộng trong lúc khung chứa đang thay đổi chiều rộng bằng hiệu ứng.
 
       const fixed = () => gsap.set(panel?.children ?? [], { minWidth: 304 })
 
@@ -563,7 +397,7 @@ export default function Assistant({
     { dependencies: [historyOpen, mobile] },
   )
 
-  // Opening another conversation fades its transcript in instead of swapping it instantly.
+  // Khi mở hội thoại khác, cho tin nhắn hiện dần thay vì đổi tức thì.
 
   const prevActiveId = useRef(activeId)
 
@@ -626,16 +460,6 @@ export default function Assistant({
       else historySearchRef.current?.focus()
     }
   }, [confirm])
-
-  function patchActive(update: (conversation: Conversation) => Conversation) {
-    if (!activeId) return
-
-    setConversations((current) =>
-      current.map((conversation) =>
-        conversation.id === activeId ? update(conversation) : conversation,
-      ),
-    )
-  }
 
   function setComposer(value: string) {
     if (activeId)
@@ -847,12 +671,18 @@ export default function Assistant({
     patchActive((conversation) => appendMessages(conversation, [proposed]))
   }
 
-
   // API mode: the message goes to the server; its reply (question, approval card, result or error) is the answer.
 
-  const attempt = useRef<{ key: string; text: string; id: string } | null>(null)
+  const attempt = useRef<{
+ key: string
+ text: string
+ id: string
+} | null>(null)
 
-  function appendAssistant(conversationId: string, item: ReturnType<typeof message>) {
+  function appendAssistant(
+    conversationId: string,
+    item: ReturnType<typeof message>,
+  ) {
     setConversations((current) =>
       current.map((conversation) =>
         conversation.id === conversationId
@@ -887,7 +717,8 @@ export default function Assistant({
 
     // Sending the same text again after a failure reuses the key, so a lost response never runs twice.
 
-    const same = attempt.current?.id === starting.id && attempt.current.text === text
+    const same =
+      attempt.current?.id === starting.id && attempt.current.text === text
 
     const key = same ? attempt.current!.key : crypto.randomUUID()
 
@@ -908,7 +739,10 @@ export default function Assistant({
     }
   }
 
-  async function decideApi(entry: ChatMessage, status: ActionProposal["status"]) {
+  async function decideApi(
+    entry: ChatMessage,
+    status: ActionProposal["status"],
+  ) {
     const reference = entry.proposal?.reference
 
     if (!reference || !active || thinking) return
@@ -920,7 +754,11 @@ export default function Assistant({
     try {
       if (status === "awaiting_approval") {
         // After a reload the stored card is only a reference; the server rebuilds what it would do.
-        const reply = await api.reviewAction(conversationId, reference.action_id, reference.action_version)
+        const reply = await api.reviewAction(
+          conversationId,
+          reference.action_id,
+          reference.action_version,
+        )
 
         const fresh = replyToMessage(reply).proposal
 
@@ -945,7 +783,11 @@ export default function Assistant({
       setConversations((current) =>
         current.map((conversation) =>
           conversation.id === conversationId
-            ? setProposalStatus(conversation, entry.id, status === "cancelled" ? "cancelled" : "approved")
+            ? setProposalStatus(
+                conversation,
+                entry.id,
+                status === "cancelled" ? "cancelled" : "approved",
+              )
             : conversation,
         ),
       )
@@ -963,7 +805,8 @@ export default function Assistant({
   function decide(id: string, status: ActionProposal["status"]) {
     const entry = messages.find((item) => item.id === id)
 
-    if (apiEnabled && entry?.proposal?.reference) return void decideApi(entry, status)
+    if (apiEnabled && entry?.proposal?.reference)
+      return void decideApi(entry, status)
 
     patchActive((conversation) => setProposalStatus(conversation, id, status))
   }
@@ -1038,15 +881,7 @@ export default function Assistant({
     if (!confirm) return
 
     if (confirm.kind === "clear") {
-      savedSnapshot.current = new Map()
-
-      savedActiveId.current = null
-
-      enqueue(clearConversations, true)
-
-      setConversations([])
-
-      setActiveId(null)
+      clearHistory()
 
       setEmptyInput("")
 
@@ -1191,209 +1026,28 @@ export default function Assistant({
     )
   }
 
-  const sorted = [...conversations].sort((a, b) =>
-    b.updatedAt.localeCompare(a.updatedAt),
-  )
-
-  const searched = sorted.filter((item) =>
-    `${item.title} ${item.messages.map((entry) => entry.text).join(" ")}`
-
-      .toLocaleLowerCase("vi")
-
-      .includes(historySearch.trim().toLocaleLowerCase("vi")),
-  )
-
   const historyContent = (
-    <>
-      <div className="history-header">
-        <h2>Lịch sử hội thoại</h2>
-        <button
-          className="button icon-button"
-          type="button"
-          aria-label="Đóng lịch sử"
-          onClick={closeHistory}
-        >
-          <X size={18} aria-hidden="true" />
-        </button>
-      </div>
-      <label className="history-search">
-        <Search size={16} aria-hidden="true" />
-        <input
-          ref={historySearchRef}
-          value={historySearch}
-          onChange={(event) => setHistorySearch(event.target.value)}
-          placeholder="Tìm cuộc trò chuyện..."
-          aria-label="Tìm cuộc trò chuyện"
-        />
-      </label>
-      <div className="history-list">
-        {conversations.length === 0 ? (
-          <p className="history-empty">
-            Chưa có cuộc trò chuyện nào. Hãy bắt đầu bằng cách đặt câu hỏi cho
-            StudyFlow AI.
-          </p>
-        ) : searched.length === 0 ? (
-          <p className="history-empty">
-            Không tìm thấy cuộc trò chuyện phù hợp.
-          </p>
-        ) : (
-          groupNames.map((group) => {
-            const items = searched.filter(
-              (item) => historyGroup(item.updatedAt) === group,
-            )
-
-            return items.length ? (
-              <section className="history-group" key={group} aria-label={group}>
-                <h3>{group}</h3>
-                {items.map((item) => (
-                  <div
-                    className={`history-item ${
-                      item.id === activeId ? "selected" : ""
-                    }`}
-                    key={item.id}
-                  >
-                    {editingId === item.id ? (
-                      <form
-                        className="history-rename"
-                        onSubmit={(event) => {
-                          event.preventDefault()
-
-                          rename(item.id)
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key === "Escape") {
-                            event.preventDefault()
-
-                            setEditingId(null)
-
-                            setRenameError("")
-                          }
-                        }}
-                      >
-                        <input
-                          autoFocus
-                          aria-label="Tên cuộc trò chuyện"
-                          value={renameValue}
-                          maxLength={61}
-                          onChange={(event) =>
-                            setRenameValue(event.target.value)
-                          }
-                        />
-                        <button
-                          className="button icon-button"
-                          type="submit"
-                          aria-label="Lưu tên"
-                        >
-                          <Check size={16} />
-                        </button>
-                        {renameError && (
-                          <small role="alert">{renameError}</small>
-                        )}
-                      </form>
-                    ) : (
-                      <button
-                        className="history-select"
-                        type="button"
-                        aria-current={item.id === activeId ? "true" : undefined}
-                        onClick={() => selectConversation(item.id)}
-                      >
-                        <strong>{item.title}</strong>
-                        <span>{item.messages.at(-1)?.text ?? ""}</span>
-                        <time dateTime={item.updatedAt}>
-                          {new Date(item.updatedAt).toLocaleDateString(
-                            "vi-VN",
-
-                            { day: "numeric", month: "short" },
-                          )}
-                        </time>
-                      </button>
-                    )}
-                    <div className="history-actions">
-                      <button
-                        className="button icon-button"
-                        type="button"
-                        aria-label={`Tùy chọn cho ${item.title}`}
-                        aria-expanded={menuId === item.id}
-                        onClick={() =>
-                          setMenuId(menuId === item.id ? null : item.id)
-                        }
-                      >
-                        <MoreHorizontal size={18} aria-hidden="true" />
-                      </button>
-                      {menuId === item.id && (
-                        <div className="history-menu">
-                          <button
-                            className="button"
-                            type="button"
-                            onClick={() => {
-                              setEditingId(item.id)
-
-                              setRenameValue(item.title)
-
-                              setRenameError("")
-
-                              setMenuId(null)
-                            }}
-                          >
-                            Đổi tên
-                          </button>
-                          <button
-                            className="button history-danger"
-                            type="button"
-                            onClick={(event) => {
-                              actionFocusRef.current = event.currentTarget
-
-                              setConfirm({
-                                kind: "delete",
-
-                                id: item.id,
-
-                                title: item.title,
-                              })
-
-                              setMenuId(null)
-                            }}
-                          >
-                            Xóa
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </section>
-            ) : null
-          })
-        )}
-      </div>
-      <div className="history-footer">
-        <p>
-          Lịch sử được lưu trên trình duyệt này, chưa đồng bộ với tài khoản.
-        </p>
-        {conversations.length > 0 && (
-          <div>
-            <button
-              className="button text-button"
-              type="button"
-              onClick={exportHistory}
-            >
-              Xuất JSON
-            </button>
-            <button
-              className="button history-danger"
-              type="button"
-              onClick={(event) => {
-                actionFocusRef.current = event.currentTarget
-
-                setConfirm({ kind: "clear" })
-              }}
-            >
-              <Trash2 size={15} aria-hidden="true" /> Xóa toàn bộ lịch sử
-            </button>
-          </div>
-        )}
-      </div>
-    </>
+    <ConversationSidebar
+      conversations={conversations}
+      historySearch={historySearch}
+      setHistorySearch={setHistorySearch}
+      closeHistory={closeHistory}
+      historySearchRef={historySearchRef}
+      activeId={activeId}
+      editingId={editingId}
+      rename={rename}
+      setEditingId={setEditingId}
+      renameValue={renameValue}
+      setRenameValue={setRenameValue}
+      renameError={renameError}
+      setRenameError={setRenameError}
+      menuId={menuId}
+      setMenuId={setMenuId}
+      selectConversation={selectConversation}
+      actionFocusRef={actionFocusRef}
+      setConfirm={setConfirm}
+      exportHistory={exportHistory}
+    />
   )
 
   return (
@@ -1459,317 +1113,41 @@ export default function Assistant({
             </h1>
           </div>
         ) : (
-          <div
-            className="assistant-transcript"
-            ref={transcriptRef}
-            onScroll={(event) => {
-              const element = event.currentTarget
-
-              shouldScroll.current =
-                element.scrollHeight -
-                  element.scrollTop -
-                  element.clientHeight <
-                96
-            }}
-            role="log"
-            aria-label="Cuộc trò chuyện"
-            aria-live="polite"
-          >
-            <div className="assistant-thread">
-              {messages.map((entry) => (
-                <article
-                  key={entry.id}
-                  className={`assistant-message ${
-                    entry.role === "user" ? "from-user" : "from-assistant"
-                  }`}
-                >
-                  {entry.role === "assistant" && (
-                    <div className="assistant-avatar" aria-hidden="true">
-                      <Sparkles size={16} />
-                    </div>
-                  )}
-                  <div className="assistant-message-body">
-                    <span className="assistant-sender">
-                      {entry.role === "user"
-                        ? "Bạn"
-                        : apiEnabled
-                          ? "StudyFlow"
-                          : "StudyFlow · Bản mẫu"}
-                    </span>
-                    <div className="assistant-bubble">
-                      {entry.category !== "MESSAGE" && (
-                        <span
-                          className={`assistant-state assistant-state-${entry.category.toLowerCase()}`}
-                        >
-                          {entry.category === "CLARIFICATION"
-                            ? "Cần thêm thông tin"
-                            : entry.category === "PROPOSAL"
-                              ? entry.proposal?.reference
-                                ? "Chờ xác nhận"
-                                : "Bản nháp cần xem lại"
-                              : entry.category === "UNSUPPORTED"
-                                ? "Chưa hỗ trợ"
-                                : "Có lỗi"}
-                        </span>
-                      )}
-                      {entry.attachments && entry.attachments.length > 0 && (
-                        <div className="assistant-message-attachments">
-                          {entry.attachments.map((att) => (
-                            <div
-                              key={att.id}
-                              className="assistant-attachment-card"
-                            >
-                              {att.type === "image" && att.dataUrl ? (
-                                <img
-                                  src={att.dataUrl}
-                                  alt={att.name}
-                                  className="assistant-attachment-img-preview"
-                                />
-                              ) : (
-                                <>
-                                  <FileText size={16} aria-hidden="true" />
-                                  <span
-                                    className="assistant-attachment-name"
-                                    title={att.name}
-                                  >
-                                    {att.name}
-                                  </span>
-                                  <span className="assistant-attachment-size">
-                                    {att.size}
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <p>{entry.text}</p>
-                      {entry.category === "CLARIFICATION" &&
-                        entry.scenario &&
-                        entry.id === activeClarification &&
-                        clarificationForm(entry.scenario)}
-                      {entry.scenario === "view" && (
-                        <button
-                          className="button secondary assistant-inline-action"
-                          type="button"
-                          onClick={onOpenPlanner}
-                        >
-                          Mở trang Lập kế hoạch{" "}
-                          <ArrowRight size={16} aria-hidden="true" />
-                        </button>
-                      )}
-                      {entry.proposal && (
-                        <div className="assistant-proposal">
-                          <h3>{entry.proposal.title}</h3>
-                          <dl>
-                            {entry.proposal.details.map((detail) => (
-                              <div key={detail.label}>
-                                <dt>{detail.label}</dt>
-                                <dd>{detail.value}</dd>
-                              </div>
-                            ))}
-                          </dl>
-                          {entry.proposal.caveat && (
-                            <p className="assistant-caveat">
-                              {entry.proposal.caveat}
-                            </p>
-                          )}
-                          {entry.proposal.status === "awaiting_approval" ? (
-                            <div className="assistant-proposal-actions">
-                              <button
-                                className="button primary"
-                                type="button"
-                                onClick={() =>
-                                  decide(entry.id, "demo_acknowledged")
-                                }
-                              >
-                                <Check size={16} aria-hidden="true" />{" "}
-                                {entry.proposal.reference
-                                  ? "Xác nhận"
-                                  : "Xác nhận bản mẫu"}
-                              </button>
-                              <button
-                                className="button secondary"
-                                type="button"
-                                onClick={() => decide(entry.id, "cancelled")}
-                              >
-                                <X size={16} aria-hidden="true" /> Hủy
-                              </button>
-                            </div>
-                          ) : entry.proposal.status === "review_required" ? (
-                            <div className="assistant-review">
-                              <p role="status">
-                                Bản nháp được khôi phục sau khi tải lại. Hãy xem
-                                lại trước khi xác nhận
-                                {entry.proposal.reference ? "" : " trong bản mẫu"}
-                                ; chưa có thao tác nào được thực hiện.
-                              </p>
-                              <button
-                                className="button secondary"
-                                type="button"
-                                onClick={() =>
-                                  decide(entry.id, "awaiting_approval")
-                                }
-                              >
-                                Xem lại bản nháp
-                              </button>
-                            </div>
-                          ) : (
-                            <p className="assistant-result" role="status">
-                              {entry.proposal.status === "cancelled"
-                                ? "Đã hủy bản nháp. Không có thay đổi nào được lưu."
-                                : entry.proposal.status === "approved"
-                                  ? "Đã xác nhận và lưu vào tài khoản."
-                                  : "Đã ghi nhận xác nhận trong bản mẫu. Chưa gửi đến backend và chưa lưu thay đổi."}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
+          <ChatTranscript
+            messages={messages}
+            transcriptRef={transcriptRef}
+            shouldScroll={shouldScroll}
+            activeClarification={activeClarification}
+            clarificationForm={clarificationForm}
+            onOpenPlanner={onOpenPlanner}
+            decide={decide}
+            apiEnabled={apiEnabled}
+            thinking={thinking}
+          />
         )}
-        <div className="assistant-composer-wrap">
-          <form
-            className={`assistant-composer ${isDragging ? "is-dragging" : ""}`}
-            onDragOver={(e) => {
-              e.preventDefault()
-              setIsDragging(true)
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-            onSubmit={(event) => {
-              event.preventDefault()
-
-              send()
-            }}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="sr-only"
-              aria-label="Đính kèm ảnh hoặc tệp"
-              accept="image/*,.pdf,.doc,.docx,.txt"
-              multiple
-              onChange={handleFileAttach}
-            />
-            <div className="assistant-composer-left">
-              <button
-                type="button"
-                className="assistant-attach-btn"
-                aria-label="Đính kèm ảnh hoặc tệp"
-                title="Đính kèm ảnh, tệp..."
-                onClick={() => fileInputRef.current?.click()}
-                disabled={!hydrated || apiEnabled}
-              >
-                <Plus size={20} aria-hidden="true" />
-              </button>
-            </div>
-            <div className="assistant-composer-body">
-              {attachedFiles.length > 0 && (
-                <div className="assistant-attached-list">
-                  {attachedFiles.map((att) => (
-                    <div key={att.id} className="assistant-attached-chip">
-                      {att.type === "image" && att.dataUrl ? (
-                        <img
-                          src={att.dataUrl}
-                          alt={att.name}
-                          className="attached-chip-thumb"
-                        />
-                      ) : (
-                        <FileText
-                          size={14}
-                          className="attached-chip-icon"
-                          aria-hidden="true"
-                        />
-                      )}
-                      <span className="attached-chip-name" title={att.name}>
-                        {att.name}
-                      </span>
-                      <span className="attached-chip-size">{att.size}</span>
-                      <button
-                        type="button"
-                        className="attached-chip-remove"
-                        aria-label={`Xóa tệp ${att.name}`}
-                        onClick={() => removeAttachment(att.id)}
-                      >
-                        <X size={12} aria-hidden="true" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <label className="sr-only" htmlFor="assistant-input">
-                Tin nhắn cho StudyFlow
-              </label>
-              <textarea
-                id="assistant-input"
-                ref={composerRef}
-                value={input}
-                onChange={(event) => setComposer(event.target.value)}
-                onPaste={handlePaste}
-                onCompositionStart={() => {
-                  composition.current = true
-                }}
-                onCompositionEnd={() => {
-                  composition.current = false
-                }}
-                onKeyDown={onComposerKeyDown}
-                rows={1}
-                placeholder={
-                  attachedFiles.length > 0
-                    ? "Thêm câu hỏi hoặc ghi chú về tệp đã chọn..."
-                    : "Hỏi StudyFlow AI..."
-                }
-                disabled={!hydrated}
-              />
-              {thinking && (
-                <p className="assistant-thinking" role="status">
-                  Đang xử lý...
-                </p>
-              )}
-            </div>
-            <div className="assistant-composer-bottom">
-              <button
-                type="submit"
-                aria-label="Gửi tin nhắn"
-                disabled={
-                  !hydrated ||
-                  thinking ||
-                  (!input.trim() && attachedFiles.length === 0)
-                }
-              >
-                <Send size={18} aria-hidden="true" />
-              </button>
-            </div>
-          </form>
-          <p className="assistant-disclaimer">
-            {apiEnabled
-              ? "Lịch sử hội thoại chỉ lưu trên trình duyệt này. Công việc và lịch chỉ được lưu khi bạn xác nhận. Chưa hỗ trợ đính kèm tệp."
-              : storageMode === "persistent"
-              ? "Lịch sử lưu trên trình duyệt này, chưa đồng bộ với tài khoản. Trợ lý vẫn là bản mẫu, không ghi dữ liệu học tập lên máy chủ."
-              : storageMode === "memory"
-                ? "Chỉ lưu tạm trong phiên này. Trợ lý vẫn là bản mẫu, chưa kết nối AI."
-                : "Đang tải lịch sử hội thoại..."}
-          </p>
-          {storageError && (
-            <div className="history-storage-error" role="alert">
-              <p>{storageError}</p>
-              {conversations.length > 0 && (
-                <button
-                  className="button text-button"
-                  type="button"
-                  onClick={exportHistory}
-                >
-                  Xuất lịch sử JSON
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+        <ChatComposer
+          apiEnabled={apiEnabled}
+          thinking={thinking}
+          isDragging={isDragging}
+          setIsDragging={setIsDragging}
+          handleDrop={handleDrop}
+          send={send}
+          fileInputRef={fileInputRef}
+          handleFileAttach={handleFileAttach}
+          hydrated={hydrated}
+          attachedFiles={attachedFiles}
+          removeAttachment={removeAttachment}
+          composerRef={composerRef}
+          input={input}
+          setComposer={setComposer}
+          handlePaste={handlePaste}
+          composition={composition}
+          onComposerKeyDown={onComposerKeyDown}
+          storageMode={storageMode}
+          storageError={storageError}
+          conversationCount={conversations.length}
+          exportHistory={exportHistory}
+        />
       </div>
       {(historyOpen || panelShown) && !mobile && (
         <aside

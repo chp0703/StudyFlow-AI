@@ -1,8 +1,7 @@
-"""Independent follow-up regressions from the read-only WP1 review.
+"""Các test hồi quy bổ sung độc lập từ lượt review WP1 chỉ đọc.
 
-These cases were added after the initial 29 acceptance methods passed, before
-the implementation owner received this round's fixes. Earlier assertions remain
-unchanged.
+Các ca này được thêm sau khi 29 phương thức nghiệm thu ban đầu đạt, trước khi
+bên triển khai nhận bản sửa của lượt này. Các khẳng định trước đó được giữ nguyên.
 """
 
 import unittest
@@ -61,8 +60,8 @@ class SchedulerReviewRegressionAcceptance(unittest.TestCase):
         self.assertTrue(issues, "Malformed generated task ID must be rejected before lookup")
 
     def test_dst_fold_clock_rounding_preserves_actual_instant_and_elapsed_workload(self):
-        # The second 01:30 in New York is already 06:30Z. Adding a wall-clock
-        # minute must not silently select the first fold and schedule in the past.
+        # Lần 01:30 thứ hai ở New York đã là 06:30Z. Cộng một phút theo giờ địa phương
+        # không được âm thầm chọn fold đầu tiên rồi xếp lịch vào quá khứ.
         actual_now = datetime(
             2026, 11, 1, 1, 30, 30,
             tzinfo=ZoneInfo("America/New_York"), fold=1,

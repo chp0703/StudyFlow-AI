@@ -251,7 +251,7 @@ def _summaries_without_generation(
 
 
 def generate_schedule(context: SchedulingContext) -> SchedulingResult:
-    """Create a deterministic proposal result without persistence or implicit time reads."""
+    """Tạo kết quả đề xuất xác định, không lưu dữ liệu hay tự đọc thời gian hiện tại."""
     context_issues = validate_context(context)
     if context_issues:
         summaries = _summaries_without_generation(context)

@@ -1,4 +1,4 @@
-"""Client for the app_api.* database routines (PostgREST RPC), with backend attestation signing."""
+"""Client gọi các hàm database app_api.* qua PostgREST RPC, có ký chứng thực từ backend."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from ..core.contract import canonical
 
 CONTRACT_VERSION = "1.0.1"
 SCHEMA_VERSION = "1.1"
-# Operations that are pure reads: they carry no attestation (the database treats them as reads).
+# Thao tác chỉ đọc không mang chứng thực; database cũng phân loại chúng là thao tác đọc.
 READ_OPERATIONS = frozenset({
     "search_tasks", "get_study_plan", "list_time_windows", "get_scheduling_context", "lookup_operation_result",
     "get_workflow_context", "get_workflow_continuation",
@@ -23,7 +23,7 @@ READ_OPERATIONS = frozenset({
 
 
 class RpcUnavailable(Exception):
-    """The database could not be reached or answered with a non-contract response."""
+    """Không kết nối được database hoặc nhận phản hồi không đúng contract."""
 
     def __init__(self, retryable: bool, unauthenticated: bool = False):
         super().__init__("rpc unavailable")
@@ -36,7 +36,7 @@ def iso(moment: datetime) -> str:
 
 
 def child_key(origin_key: str, step: str) -> str:
-    """Deterministic key for an internal step, so retries of one HTTP request reuse the same keys."""
+    """Khóa xác định cho bước nội bộ, giúp các lần gửi lại cùng yêu cầu HTTP dùng lại cùng khóa."""
     return hashlib.sha256(f"{origin_key}|{step}".encode()).hexdigest()[:48]
 
 
@@ -62,7 +62,7 @@ class RpcClient:
              conversation_id: str | None = None, idempotency_key: str | None = None,
              approval_action: dict | None = None, action_reference: dict | None = None,
              message_id: str | None = None) -> dict:
-        """One RPC with the caller's own JWT. Returns the contract result (ErrorResult included)."""
+        """Gọi một RPC bằng JWT của chính người gọi. Trả kết quả theo contract, bao gồm ErrorResult."""
         envelope = {
             "contract_version": CONTRACT_VERSION, "schema_version": SCHEMA_VERSION, "request_id": request_id,
             "operation": operation, "arguments": arguments, "attestation": None,

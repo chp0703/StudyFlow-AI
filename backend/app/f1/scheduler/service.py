@@ -15,7 +15,7 @@ from .replanning import materialize_snapshot
 
 
 class PlanningService:
-    """Application boundary that builds proposal payloads but never commits a plan."""
+    """Lớp dịch vụ tạo payload đề xuất nhưng không commit lịch."""
 
     def __init__(self, block_id_factory: BlockIdFactory = uuid4) -> None:
         self._block_id_factory = block_id_factory

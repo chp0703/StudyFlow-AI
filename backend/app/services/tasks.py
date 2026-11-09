@@ -1,4 +1,4 @@
-"""A2 task use cases. Storage/evidence seam is PROPOSED pending TV1/TV3 review."""
+"""Các ca sử dụng task A2. Giao diện lưu trữ/bằng chứng đang ĐỀ XUẤT, chờ TV1/TV3 xem xét."""
 
 import copy
 import hashlib

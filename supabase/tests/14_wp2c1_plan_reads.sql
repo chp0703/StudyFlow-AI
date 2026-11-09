@@ -1,4 +1,4 @@
--- WP2c-1: get_scheduling_context and get_study_plan (local pgTAP, rolled back).
+-- WP2c-1: get_scheduling_context và get_study_plan; pgTAP local, có rollback.
 begin;
 select no_plan();
 set local search_path = public, extensions;
@@ -44,7 +44,7 @@ create function pg_temp.q_scope(mode text, ids jsonb default '[]') returns jsonb
  select jsonb_build_object('generation_scope',jsonb_build_object('start_at','2026-11-06T00:00:00.000000Z',
   'end_at','2026-11-13T00:00:00.000000Z','selection_mode',mode,'task_ids',ids)) $$;
 
--- Before bootstrap there is no profile to read.
+-- Trước khởi tạo chưa có hồ sơ để đọc.
 select ok(pg_temp.q_is(pg_temp.q_call('get_scheduling_context',pg_temp.q_scope('ALL_ELIGIBLE')),'ENTITY_NOT_FOUND'),
  'scheduling context needs an initialized user');
 select ok(pg_temp.q_call('ensure_user_context','{}')->>'outcome'='COMMITTED','bootstrap the profile');
@@ -61,7 +61,7 @@ select ok(pg_temp.q_is(pg_temp.q_call('get_scheduling_context',jsonb_build_objec
 
 insert into app_private.user_profiles(user_id,timezone,locale,scheduling_policy)
  values ('d1410000-0000-4000-8000-000000000002','Asia/Ho_Chi_Minh','vi',app_private.default_policy());
--- Seed a task, an active and an archived window, and an approved plan with two blocks.
+-- Nạp task, khung giờ còn hiệu lực/đã lưu trữ và lịch đã duyệt có hai block.
 insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,deadline_at,deadline_precision,deadline_date,
  deadline_timezone,estimated_minutes,remaining_minutes) values
  ('d1410000-0000-4000-8000-0000000000a1','d1410000-0000-4000-8000-000000000001',extensions.gen_random_uuid(),'Bài tập',

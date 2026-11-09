@@ -1,4 +1,4 @@
--- WP2a contract-schema validation helper (generated bundle). Local pgTAP only.
+-- Hàm kiểm tra schema contract WP2a từ gói được sinh tự động; chỉ dùng pgTAP local.
 begin;
 select plan(8);
 set local search_path = public, extensions;

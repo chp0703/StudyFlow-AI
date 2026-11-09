@@ -80,7 +80,7 @@ function parseWhen(text: string): Parsed {
   const explicit = DATE_RE.exec(rest)
 
   if (explicit) {
-    // dd/mm: this year, or next year if that day has already passed.
+    // dd/mm: dùng năm nay; chuyển sang năm sau nếu ngày đó đã qua.
 
     const d = new Date(
       today.getFullYear(),
@@ -141,7 +141,7 @@ type Slot = {
 
 const windowId = (date: string, hour: number) => `${date}-${hour}`
 
-// "9h" -> [9]; "từ 9h đến 12h" -> [9, 10, 11] (end hour is exclusive).
+// "9h" -> [9]; "từ 9h đến 12h" -> [9, 10, 11], không bao gồm giờ kết thúc.
 
 function parseHours(text: string): number[] {
   const found = [...text.matchAll(/(\d{1,2})\s*(?:h|giờ)/gu)].map((x) =>
@@ -156,7 +156,7 @@ function parseHours(text: string): number[] {
   return []
 }
 
-// shortcut: rule-based Vietnamese commands only, no NLP; replace with a real agent API later.
+// đơn giản hóa: chỉ dùng quy tắc cho lệnh tiếng Việt, chưa có NLP; thay bằng API agent thật sau.
 
 export function runPlannerCommand(
   input: string,
@@ -194,9 +194,9 @@ export function runPlannerCommand(
       ? `Lịch chỉ xếp từ ${label(FIRST_HOUR)} đến ${label(LAST_HOUR)}.`
       : ""
 
-  // Availability: "rảnh thứ 6 từ 9h đến 12h", "bận ngày mai lúc 14h", "xóa rảnh/bận thứ 6".
+  // Khung giờ: "rảnh thứ 6 từ 9h đến 12h", "bận ngày mai lúc 14h", "xóa rảnh/bận thứ 6".
 
-  // Soft warning only: a day with declared free hours prefers them, but other hours are allowed.
+  // Chỉ cảnh báo mềm: ưu tiên giờ rảnh đã khai báo trong ngày nhưng vẫn cho phép các giờ khác.
 
   const outsideFree = (date: string, hour: number) => {
     const free = availability.filter(
@@ -260,9 +260,9 @@ export function runPlannerCommand(
     }
   }
 
-  // "tạo công việc Báo cáo hạn 20/11 3 giờ": an unscheduled task, placed later.
+  // "tạo công việc Báo cáo hạn 20/11 3 giờ": tạo việc chưa có lịch để xếp sau.
 
-  // Deterministic plan: unscheduled tasks by deadline then priority, one 60-minute block each.
+  // Lập lịch xác định: xếp việc chưa có lịch theo deadline rồi độ ưu tiên, mỗi việc một block 60 phút.
 
   if (/^(?:lập kế hoạch|xếp lịch|tự xếp)/u.test(text)) {
     const rank = (p: string) => ({ Cao: 0, Thấp: 2 })[p] ?? 1

@@ -1,4 +1,4 @@
--- WP2c-2: persist_plan_proposal (local pgTAP, rolled back).
+-- WP2c-2: persist_plan_proposal; pgTAP local, có rollback.
 begin;
 select no_plan();
 set local search_path = public, extensions;
@@ -52,7 +52,7 @@ insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,deadli
 create function pg_temp.q_cmd(over jsonb default '{}') returns jsonb language sql as $$
  select jsonb_build_object('generation_scope',jsonb_build_object('start_at','2026-11-06T00:00:00.000000Z',
   'end_at','2026-11-13T00:00:00.000000Z','selection_mode','ALL_ELIGIBLE','task_ids','[]'::jsonb),'policy_overrides',over) $$;
--- Two disjoint one-hour blocks for task a1 unless overridden.
+-- Mặc định có hai block một giờ không giao nhau cho task a1, trừ khi ghi đè.
 create function pg_temp.q_prop(pid text, blocks jsonb default null, rev int default 0, cmd jsonb default null,
  policy jsonb default null) returns jsonb language sql as $$
  select jsonb_build_object('proposal_id',pid,'user_id','d1510000-0000-4000-8000-000000000001','version',1,'status','PROPOSED',
@@ -73,7 +73,7 @@ create function pg_temp.q_persist(prop jsonb, cmd jsonb default null, idem text 
 create temporary table q15(name text primary key, res jsonb);
 create temporary table q15_before as select (select count(*) from app_private.plan_proposals) p,(select count(*) from app_private.idempotency_records) i;
 
--- Rejections leave nothing behind.
+-- Từ chối không được để lại dữ liệu.
 select ok(pg_temp.q_is(pg_temp.q_persist(pg_temp.q_prop('d1510000-0000-4000-8000-0000000000c1'),pg_temp.q_cmd('{"max_block_minutes":60}')),'INVALID_PARAMETER'),
  'a proposal whose policy does not match the command overrides is rejected');
 select ok(pg_temp.q_is(pg_temp.q_persist(pg_temp.q_prop('d1510000-0000-4000-8000-0000000000c1',null,0,null,'{"min_block_minutes":25,"max_block_minutes":45,"allow_short_final_block":true,"max_daily_minutes":240,"break_minutes":10}')),'INVALID_PARAMETER'),
@@ -93,7 +93,7 @@ select ok(pg_temp.q_is(pg_temp.q_call('persist_plan_proposal',jsonb_build_object
 select ok((select count(*) from app_private.plan_proposals)=(select p from q15_before)
  and (select count(*) from app_private.idempotency_records)=(select i from q15_before),'rejected proposals wrote no proposal or idempotency record');
 
--- Accepted, replayed and conflicting.
+-- Chấp nhận, phát lại và xung đột.
 insert into q15 values ('p1',pg_temp.q_persist(pg_temp.q_prop('d1510000-0000-4000-8000-0000000000c1')));
 select ok(app_private.matches_contract('generate_study_planResult',res) and res->>'outcome'='PROPOSED'
  and res#>>'{data,proposal_id}'='d1510000-0000-4000-8000-0000000000c1' and res#>>'{data,base_schedule_revision}'='0',

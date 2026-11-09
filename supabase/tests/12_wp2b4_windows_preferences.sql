@@ -1,4 +1,4 @@
--- WP2b-4: availability/busy windows, scheduling preferences and window listing (local pgTAP, rolled back).
+-- WP2b-4: khung rảnh/bận, tùy chọn lập lịch và danh sách khung giờ; pgTAP local, có rollback.
 begin;
 select no_plan();
 set local search_path = public, extensions;
@@ -40,8 +40,8 @@ end $$;
 create function pg_temp.q_is(res jsonb, code text) returns boolean language sql as $$
  select coalesce(res->>'outcome'='ERROR' and res#>>'{error,code}'=code and res->'data'='null'::jsonb,false) $$;
 
--- Presents a command through prepare_pending_action in a fresh conversation, then executes it
--- (optionally with different arguments than were presented) with a matching UI approval.
+-- Hiển thị command để duyệt qua prepare_pending_action trong hội thoại mới rồi thực thi
+-- với phê duyệt UI tương ứng; có thể truyền arguments khác nội dung đã hiển thị để duyệt.
 create function pg_temp.q_set(op text, intent text, args jsonb, idem text, run_args jsonb default null,
  approve boolean default true) returns jsonb language plpgsql as $$
 declare conv uuid := extensions.gen_random_uuid(); act uuid := extensions.gen_random_uuid();
@@ -76,7 +76,7 @@ insert into app_private.rpc_attestation_keys(key_id,key_material,not_before,not_
 create temporary table q12(name text primary key, res jsonb);
 create temporary table q12_base as select (select count(*) from app_private.approval_actions) a;
 
--- ADD a weekly availability window.
+-- ADD khung giờ rảnh lặp hằng tuần.
 insert into q12 values ('w1',pg_temp.q_set('set_availability','SET_AVAILABILITY',pg_temp.q_add(pg_temp.q_weekly()),'q12-avail-add-00001'));
 select ok(res->>'outcome'='COMMITTED' and res#>>'{data,kind}'='AVAILABILITY' and res#>>'{data,version}'='1'
  and res#>>'{data,start_time}'='09:00' and res#>>'{data,end_time}'='24:00' and res#>>'{data,recurrence}'='WEEKLY'
@@ -86,7 +86,7 @@ select ok((select schedule_revision from app_private.user_profiles where user_id
  and (select state='COMPLETED' from app_private.pending_actions where action_id=(select action_id from q12_last)),
  'one approval, a completed action and revision 1');
 select is((select target_type from app_private.approval_actions order by created_at desc limit 1),'PENDING_ACTION','the approval targets the pending action');
--- Replay: same key and arguments return the same window without another write.
+-- Phát lại: cùng khóa và arguments trả cùng khung giờ, không ghi thêm.
 create temporary table q12_snap as select (select count(*) from app_private.time_windows) w,
  (select count(*) from app_private.approval_actions) a;
 select is(pg_temp.q_call('set_availability',pg_temp.q_add(pg_temp.q_weekly()),'q12-avail-add-00001',(select conv from q12_last),
@@ -99,7 +99,7 @@ select is(pg_temp.q_call('set_availability',pg_temp.q_add(pg_temp.q_weekly()),'q
 select ok((select count(*) from app_private.time_windows)=(select w from q12_snap)
  and (select count(*) from app_private.approval_actions)=(select a from q12_snap),'the retry wrote nothing');
 
--- Approval and presentation guards.
+-- Bảo vệ phê duyệt và nội dung hiển thị để duyệt.
 truncate q12_snap; insert into q12_snap select (select count(*) from app_private.time_windows),(select count(*) from app_private.approval_actions);
 select ok(pg_temp.q_is(pg_temp.q_call('set_availability',pg_temp.q_add(pg_temp.q_weekly('Khác')),'q12-avail-add-00002'),'APPROVAL_REQUIRED'),
  'no approval context is refused');
@@ -110,7 +110,7 @@ select ok(pg_temp.q_set('set_busy_interval','SET_BUSY_INTERVAL',pg_temp.q_add(pg
 select ok((select count(*) from app_private.time_windows)=(select w from q12_snap)
  and (select count(*) from app_private.approval_actions)=(select a from q12_snap),'refused commands wrote nothing');
 
--- Semantic validation happens before the approval is consumed.
+-- Kiểm tra ngữ nghĩa trước khi sử dụng phê duyệt.
 select ok((select e->'error'->>'code'='INVALID_PARAMETER' and e#>>'{error,field}'='window.end_at' from (select pg_temp.q_set('set_busy_interval','SET_BUSY_INTERVAL',
  pg_temp.q_add(jsonb_build_object('kind','BUSY','label',null,'recurrence','NONE','timezone','Asia/Ho_Chi_Minh',
  'start_at','2026-11-06T09:00:00Z','end_at','2026-11-06T08:00:00Z','weekday',null,'start_time',null,'end_time',null,
@@ -130,7 +130,7 @@ select ok((select e->'error'->>'code'='INVALID_PARAMETER' from (select pg_temp.q
  'start_at','2026-11-06T09:00:30Z','end_at','2026-11-06T10:00:00Z','weekday',null,'start_time',null,'end_time',null,
  'valid_from',null,'valid_until',null)),'q12-busy-bad-00004') e) x),'windows use whole minutes');
 
--- A busy interval, then UPDATE with optimistic versions and ARCHIVE.
+-- Tạo khoảng bận, sau đó UPDATE có kiểm soát version lạc quan rồi ARCHIVE.
 insert into q12 values ('b1',pg_temp.q_set('set_busy_interval','SET_BUSY_INTERVAL',
  pg_temp.q_add(jsonb_build_object('kind','BUSY','label','Lớp thực hành','recurrence','NONE','timezone','Asia/Ho_Chi_Minh',
  'start_at','2026-11-06T09:00:00Z','end_at','2026-11-06T10:30:00Z','weekday',null,'start_time',null,'end_time',null,
@@ -153,7 +153,7 @@ insert into q12 select 'a1',pg_temp.q_set('set_availability','SET_AVAILABILITY',
 select ok(res->>'outcome'='COMMITTED' and res#>>'{data,archived_at}' is not null and res#>>'{data,version}'='3','archive soft-deletes with archived_at') from q12 where name='a1';
 select ok((select count(*) from app_private.time_windows)=2,'archiving removes no row');
 
--- Listing: kind filter, archive visibility, pagination and signed cursors.
+-- Danh sách: lọc kind, hiển thị bản lưu trữ, phân trang và cursor có chữ ký.
 create function pg_temp.q_list(kind text, arch boolean, size int, cur text, uid uuid default 'd1210000-0000-4000-8000-000000000001')
  returns jsonb language sql as $$ select pg_temp.q_call('list_time_windows',jsonb_build_object('kind',kind,'include_archived',arch,
  'page_size',size,'cursor',cur),null,null,null,null,uid) $$;
@@ -169,7 +169,7 @@ select ok(pg_temp.q_is(pg_temp.q_list(null,false,1,(select res#>>'{data,next_cur
 select is(jsonb_array_length(pg_temp.q_list(null,true,50,null,'d1210000-0000-4000-8000-000000000002')#>'{data,items}'),0,
  'another owner sees none of these windows');
 
--- Atomicity: a failure while writing rolls back the approval, the action and the revision.
+-- Tính nguyên tử: lỗi khi ghi phải rollback phê duyệt, action và revision.
 create function pg_temp.q_fail() returns trigger language plpgsql as $$
 begin raise exception using errcode='XX000',message='Q12_INJECTED'; end $$;
 create trigger q12_fail after insert on app_private.time_windows for each row execute function pg_temp.q_fail();
@@ -183,7 +183,7 @@ select ok(pg_temp.q_is(res,'INTERNAL_ERROR')
  'an injected failure rolls back approval, action and revision') from q12 where name='fail';
 drop trigger q12_fail on app_private.time_windows;
 
--- Scheduling preferences: merge, revision guard, validation, replay.
+-- Tùy chọn lập lịch: hợp nhất, bảo vệ revision, kiểm tra hợp lệ và phát lại.
 create function pg_temp.q_prefs(patch jsonb, rev bigint) returns jsonb language sql as $$
  select jsonb_build_object('policy_patch',patch,'expected_schedule_revision',rev) $$;
 create function pg_temp.q_rev() returns bigint language sql as $$
@@ -201,7 +201,7 @@ select ok(pg_temp.q_is(pg_temp.q_set('set_scheduling_preferences','SET_SCHEDULIN
  pg_temp.q_prefs('{"max_block_minutes":60}',pg_temp.q_rev()),'q12-prefs-00000003'),'INVALID_PARAMETER'),'a merged policy with max below min is rejected');
 select is(pg_temp.q_rev(),(select (res#>>'{data,schedule_revision}')::bigint from q12 where name='p1'),'rejected preferences do not change the revision');
 
--- WP2c-4: warnings when approved future blocks may be affected (none while there is no plan).
+-- WP2c-4: cảnh báo khi block tương lai đã duyệt có thể bị ảnh hưởng; không có cảnh báo nếu chưa có lịch.
 select ok(res->'warnings'='[]'::jsonb,'no warning while no plan exists') from q12 where name='p1';
 insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,deadline_at,deadline_precision,deadline_date,
  deadline_timezone,estimated_minutes,remaining_minutes) values ('d1210000-0000-4000-8000-0000000000a1','d1210000-0000-4000-8000-000000000001',

@@ -25,7 +25,7 @@ import Card from "../components/ui/Card"
 
 import type { StudyFile } from "../types/task"
 
-// Question structure for Quiz
+// Cấu trúc câu hỏi trắc nghiệm
 
 type QuizQuestion = {
   id: number
@@ -196,7 +196,7 @@ const defaultFiles: StudyFile[] = [
 ]
 
 export default function Study() {
-  // === Card 1: Quiz State ===
+  // === Thẻ 1: Trạng thái trắc nghiệm ===
 
   const [quizIndex, setQuizIndex] = useState(0)
 
@@ -236,7 +236,7 @@ export default function Study() {
 
   const prevQuizIndex = useRef(0)
 
-  // The popup scales in from the card centre; closing plays the reverse before it unmounts.
+  // Hộp giải thích phóng ra từ tâm thẻ; khi đóng chạy ngược hiệu ứng rồi mới gỡ khỏi giao diện.
 
   const popupOpen = isAnswerChecked && showExplanationPopup
 
@@ -304,7 +304,7 @@ export default function Study() {
     })
   }
 
-  // The next question slides in: header first, then the options one by one.
+  // Câu tiếp theo trượt vào: tiêu đề trước, rồi lần lượt từng đáp án.
 
   useGSAP(
     () => {
@@ -342,7 +342,7 @@ export default function Study() {
     { scope: quizRef, dependencies: [quizIndex] },
   )
 
-  // The results screen eases in after the last question.
+  // Màn hình kết quả hiện nhẹ nhàng sau câu cuối.
 
   useGSAP(
     () => {
@@ -393,9 +393,9 @@ export default function Study() {
     setQuizCompleted(false)
   }
 
-  // === Card 2: Documents (Tài liệu) State ===
+  // === Thẻ 2: Trạng thái tài liệu ===
 
-  // Upload/delete feedback shows inside the documents card instead of a page-wide toast.
+  // Phản hồi tải lên/xóa hiển thị trong thẻ tài liệu thay vì thông báo nổi toàn trang.
 
   const [docNotice, setDocNotice] = useState("")
 
@@ -483,7 +483,7 @@ export default function Study() {
     showDocNotice(`Đã xóa tài liệu: ${fileName}`)
   }
 
-  // === Card 3: AI Q&A (Hỏi đáp) State ===
+  // === Thẻ 3: Trạng thái hỏi đáp AI ===
 
   const [chatMessages, setChatMessages] = useState<StudyChatMessage[]>([])
 
@@ -563,7 +563,7 @@ export default function Study() {
 
   return (
     <div className="study-container">
-      {/* Hidden file input for document uploading */}
+      {/* Ô chọn tệp ẩn để tải tài liệu lên */}
       <input
         ref={uploadRef}
         type="file"
@@ -574,7 +574,7 @@ export default function Study() {
       />
 
       {/* ========================================================
-          CỘT TRÁI: QUIZ (Mỗi lần hiển thị 1 câu với 4 đáp án)
+          CỘT TRÁI: TRẮC NGHIỆM (mỗi lần hiển thị một câu với bốn đáp án)
          ======================================================== */}
       <div className="study-left-col" ref={quizRef}>
         <Card
@@ -589,7 +589,7 @@ export default function Study() {
             </div>
           }
         >
-          {/* Popup giải thích đúng/sai hiện ngay trong card */}
+          {/* Hộp giải thích đúng/sai hiện ngay trong thẻ */}
           {isAnswerChecked && showExplanationPopup && (
             <div
               ref={popupRef}
@@ -657,7 +657,7 @@ export default function Study() {
 
           {!quizCompleted ? (
             <div className="quiz-body">
-              {/* Subject Tag */}
+              {/* Nhãn môn học */}
               <div className="quiz-meta">
                 <span className="quiz-subject-tag">
                   <BookOpen size={13} aria-hidden="true" />
@@ -671,10 +671,10 @@ export default function Study() {
                 )}
               </div>
 
-              {/* Question Title */}
+              {/* Tiêu đề câu hỏi */}
               <h3 className="quiz-question-title">{currentQ.question}</h3>
 
-              {/* 4 Answer Options */}
+              {/* Bốn lựa chọn trả lời */}
               <div
                 className="quiz-options-group"
                 role="radiogroup"
@@ -729,7 +729,7 @@ export default function Study() {
                 })}
               </div>
 
-              {/* Bottom Action Button */}
+              {/* Nút thao tác phía dưới */}
               <div className="quiz-bottom-actions">
                 {!isAnswerChecked ? (
                   <Button
@@ -768,7 +768,7 @@ export default function Study() {
               </div>
             </div>
           ) : (
-            /* Quiz Completed Results Screen */
+            /* Màn hình kết quả sau khi hoàn thành trắc nghiệm */
 
             <div className="quiz-results-screen">
               <div className="results-icon-wrap">
@@ -797,11 +797,11 @@ export default function Study() {
 
       {/* ========================================================
           CỘT PHẢI:
-          - TRÊN: TÀI LIỆU (Tổng hợp tệp + 1 nút cho phép up tài liệu)
-          - DƯỚI: HỎI ĐÁP (Khung chat hỏi đáp trực tiếp với AI)
+          - TRÊN: TÀI LIỆU (tổng hợp tệp và một nút tải tài liệu lên)
+          - DƯỚI: HỎI ĐÁP (khung chat hỏi đáp trực tiếp với AI)
          ======================================================== */}
       <div className="study-right-col">
-        {/* Card 2: Tài liệu (Phải trên) */}
+        {/* Thẻ 2: Tài liệu (phía trên bên phải) */}
         <Card
           className="study-card study-materials-card"
           title="Tài liệu"
@@ -870,10 +870,10 @@ export default function Study() {
           )}
         </Card>
 
-        {/* Card 3: Hỏi đáp (Phải dưới) */}
+        {/* Thẻ 3: Hỏi đáp (phía dưới bên phải) */}
         <Card className="study-card study-qa-card" title="Hỏi đáp AI">
           <div className="qa-chat-container">
-            {/* Transcript messages */}
+            {/* Lịch sử tin nhắn */}
             <div
               className="qa-transcript"
               role="log"
@@ -908,7 +908,7 @@ export default function Study() {
               <div ref={chatBottomRef} />
             </div>
 
-            {/* Chat Input Form */}
+            {/* Biểu mẫu nhập tin nhắn */}
             <form className="qa-composer-form" onSubmit={handleChatSubmit}>
               <input
                 type="text"

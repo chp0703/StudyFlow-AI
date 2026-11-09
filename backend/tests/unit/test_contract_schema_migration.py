@@ -1,4 +1,4 @@
-"""The SQL contract-schema bundle must match contracts/schemas/f1.schema.json exactly."""
+"""Gói schema contract trong SQL phải khớp chính xác contracts/schemas/f1.schema.json."""
 import importlib.util
 import unittest
 from pathlib import Path

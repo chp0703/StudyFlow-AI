@@ -1,5 +1,5 @@
-"""The eight F1 endpoints. The user id comes only from the verified JWT; every database call
-carries that same JWT, so RLS and the attested RPC boundary both see the real caller."""
+"""Tám endpoint F1. ID người dùng chỉ lấy từ JWT đã xác minh; mỗi lần gọi database đều
+mang cùng JWT đó, để RLS và ranh giới RPC có chứng thực cùng nhận đúng người gọi."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from ...core.config import Settings
 from ...core.security import AuthError, AuthUnavailable, JwtVerifier
 from .http import STATUS, ApiError, error_body, error_response, respond
 from .workflow import ActionProcessor
+from ...orchestrator.workflow_ports import WorkflowError
 
 log = logging.getLogger("studyflow.api")
 _KEY = re.compile(r"^[A-Za-z0-9._:-]{16,128}$")
@@ -34,7 +35,7 @@ class Ctx:
 
 
 def _int(value: str, name: str) -> int:
-    if not _INT.match(value):  # unparseable input is a 400; out-of-range values fail schema validation (422)
+    if not _INT.match(value):  # đầu vào không phân tích được trả 400; giá trị ngoài giới hạn bị schema từ chối (422)
         raise ApiError("INVALID_PARAMETER", f"{name} must be an integer.", status=400, field=name)
     return int(value)
 
@@ -45,7 +46,7 @@ class Api:
         self.extractor = extractor
         self.processor = ActionProcessor(self)
 
-    # ----------------------------------------------------------------- plumbing
+    # ----------------------------------------------------------------- xử lý chung
     async def authenticate(self, request: Request, request_id: str) -> Ctx:
         header = request.headers.get("authorization")
         try:
@@ -84,7 +85,7 @@ class Api:
             raise ApiError("INVALID_PARAMETER", "The request does not match the approved contract.", field=field)
         return value
 
-    # ----------------------------------------------------------------- GET endpoints
+    # ----------------------------------------------------------------- các endpoint GET
     @staticmethod
     def _query(request: Request, allowed: set[str], repeated: frozenset = frozenset()) -> dict:
         values: dict = {}
@@ -136,7 +137,7 @@ class Api:
         self.validated("get_study_planArguments", args)
         return self.result_response(await run_in_threadpool(self.rpc, ctx, "get_study_plan", args), ctx)
 
-    # ----------------------------------------------------------------- POST pipeline
+    # ----------------------------------------------------------------- quy trình POST
     async def read_json(self, request: Request) -> dict:
         key = request.headers.get("idempotency-key")
         if key is None or not _KEY.match(key):
@@ -147,7 +148,7 @@ class Api:
         if declared is not None and declared.isdigit() and int(declared) > limit:
             raise ApiError("PAYLOAD_TOO_LARGE", "The request body is too large.")
         body = b""
-        async for chunk in request.stream():  # stop reading as soon as the byte limit is crossed
+        async for chunk in request.stream():  # dừng đọc ngay khi vượt giới hạn số byte
             body += chunk
             if len(body) > limit:
                 raise ApiError("PAYLOAD_TOO_LARGE", "The request body is too large.")
@@ -188,7 +189,7 @@ class Api:
     async def post_decisions(self, request: Request, ctx: Ctx):
         return await self.post_pipeline(request, ctx, "submit_decision", "UserDecision")
 
-    # ----------------------------------------------------------------- registration
+    # ----------------------------------------------------------------- đăng ký endpoint
     def register(self, app: FastAPI) -> None:
         routes = [
             ("GET", "/v1/tasks", self.get_tasks), ("GET", "/v1/time-windows", self.get_time_windows),
@@ -202,20 +203,20 @@ class Api:
 
     def _wrap(self, handler, *, post: bool):
         async def endpoint(request: Request):
-            request_id = str(uuid4())  # never taken from the client
+            request_id = str(uuid4())  # không bao giờ lấy từ client
             try:
                 ctx = await self.authenticate(request, request_id)
                 return await handler(request, ctx)
-            except ApiError as exc:
+            except WorkflowError as exc:
                 return error_response(exc, request_id, post=post)
-            except Exception:  # noqa: BLE001 - last line of defence; details stay in the log, never in the reply
+            except Exception:  # noqa: BLE001 - lớp bảo vệ cuối; chi tiết chỉ nằm trong log, không trả về client
                 log.exception("unhandled error request_id=%s", request_id)
                 return error_response(ApiError("INTERNAL_ERROR", "The request could not be completed."), request_id, post=post)
         return endpoint
 
 
 def fallback_response(request: Request, status: int):
-    """404/405 from the router, in the catalog envelope."""
+    """Lỗi 404/405 từ router, được bọc theo cấu trúc lỗi trong danh mục."""
     code = "ENTITY_NOT_FOUND" if status == 404 else "INVALID_PARAMETER"
     request_id = str(uuid4())
     error = {"code": code, "message": "The requested resource was not found." if status == 404 else "Method not allowed.",

@@ -1,4 +1,4 @@
--- WP2b-3: pending actions, presentations, task confirmation and search (local pgTAP, rolled back).
+-- WP2b-3: action đang chờ, presentation, xác nhận task và tìm kiếm; pgTAP local, có rollback.
 begin;
 select no_plan();
 set local search_path = public, extensions;
@@ -68,7 +68,7 @@ select ok(pg_temp.q_call('record_source_message',jsonb_build_object('message',js
  'received_at','2026-11-05T01:02:03.000004Z')))->>'outcome'='COMMITTED','record the source message');
 create temporary table q11(name text primary key, res jsonb);
 
--- Candidate A (complete) and its presented action.
+-- Candidate A đầy đủ thông tin và action đã được hiển thị để duyệt.
 insert into q11 values ('candA',pg_temp.q_call('create_task_candidate',pg_temp.q_slots('Ôn giải tích'),'q11-cand-a-0000001'));
 create temporary table q11_ids as select 'd1110000-0000-4000-8000-0000000000a1'::uuid action_a,
  'd1110000-0000-4000-8000-0000000000b1'::uuid action_b;
@@ -88,7 +88,7 @@ insert into q11 select 'prepA2',pg_temp.q_call('prepare_pending_action',jsonb_bu
 select is(res->'data',(select res->'data' from q11 where name='prepA'),'a lost-response retry returns the stored presentation') from q11 where name='prepA2';
 select is((select count(*) from app_private.action_presentations),1::bigint,'the retry added no presentation');
 
--- One awaiting action per conversation.
+-- Mỗi hội thoại có một action đang chờ.
 insert into q11 values ('candB',pg_temp.q_call('create_task_candidate',pg_temp.q_slots('Làm bài tập',false),'q11-cand-b-0000001'));
 select ok(pg_temp.q_is(pg_temp.q_call('prepare_pending_action',jsonb_build_object(
  'presentation',pg_temp.q_pres((select res->'data' from q11 where name='candB'),(select action_b from q11_ids)),
@@ -96,7 +96,7 @@ select ok(pg_temp.q_is(pg_temp.q_call('prepare_pending_action',jsonb_build_objec
  'a second awaiting action in the conversation is refused');
 select is((select count(*) from app_private.pending_actions),1::bigint,'the refused action left no row');
 
--- Reload marks the action as needing review; review bumps the version once and is retry-safe.
+-- Tải lại đánh dấu cần xem lại; xem lại tăng version một lần và an toàn khi gửi lại.
 update app_private.pending_actions set requires_review=true;
 select ok(pg_temp.q_is(pg_temp.q_call('confirm_task',jsonb_build_object('candidate_id',(select res#>>'{data,candidate_id}' from q11 where name='candA'),
  'expected_candidate_version',1),'q11-confirm-0000001','d1110000-0000-4000-8000-000000000001','d1110000-0000-4000-8000-000000000004',
@@ -118,7 +118,7 @@ select ok(pg_temp.q_is(pg_temp.q_call('review_pending_action',jsonb_build_object
  or (select version from app_private.pending_actions)=2,'a review with edited candidate content is not applied');
 select is((select count(*) from app_private.action_presentations),2::bigint,'each action version has one presentation');
 
--- confirm_task guards. Every refusal must leave all business state untouched.
+-- Bảo vệ confirm_task: mọi lần từ chối phải giữ nguyên toàn bộ trạng thái nghiệp vụ.
 create temporary table q11_before as select (select count(*) from app_private.academic_tasks) t,
  (select count(*) from app_private.approval_actions) a, (select schedule_revision from app_private.user_profiles
   where user_id='d1110000-0000-4000-8000-000000000001') r;
@@ -145,7 +145,7 @@ select ok(pg_temp.q_is(pg_temp.q_call('confirm_task',jsonb_build_object('candida
 select ok((select count(*) from app_private.academic_tasks)=(select t from q11_before)
  and (select count(*) from app_private.approval_actions)=(select a from q11_before),'refused confirmations wrote nothing');
 
--- Atomicity: a failure after the approval insert rolls the whole confirmation back.
+-- Tính nguyên tử: lỗi sau INSERT phê duyệt phải rollback toàn bộ lần xác nhận.
 create function pg_temp.q_fail() returns trigger language plpgsql as $$
 begin raise exception using errcode='XX000',message='Q11_INJECTED'; end $$;
 create trigger q11_fail after insert on app_private.academic_tasks for each row execute function pg_temp.q_fail();
@@ -160,7 +160,7 @@ select ok((select count(*) from app_private.approval_actions)=(select a from q11
  'the failed confirmation rolled back approval, candidate, action, revision and idempotency');
 drop trigger q11_fail on app_private.academic_tasks;
 
--- Successful chat confirmation: one atomic commit with the DATE deadline cutoff.
+-- Xác nhận chat thành công: commit nguyên tử cùng mốc chặn deadline DATE.
 insert into q11 select 'confirm',pg_temp.q_confirm('q11-confirm-0000008',
  pg_temp.q_appr(res->'data','CHAT','d1110000-0000-4000-8000-000000000004'),
  pg_temp.q_ref((select action_a from q11_ids),2,res->'data')) from q11 where name='candA';
@@ -177,7 +177,7 @@ select ok((select status='CONFIRMED' and confirmed_task_id is not null and versi
  'candidate is CONFIRMED with a backlink and the action is COMPLETED');
 select is((select schedule_revision from app_private.user_profiles where user_id='d1110000-0000-4000-8000-000000000001'),
  (select r from q11_before)+1,'creating a task increments the schedule revision once');
--- Replay and later keys.
+-- Phát lại và các khóa đến sau.
 select is(pg_temp.q_confirm('q11-confirm-0000008',pg_temp.q_appr((select res->'data' from q11 where name='candA'),'CHAT',
  'd1110000-0000-4000-8000-000000000004'),pg_temp.q_ref((select action_a from q11_ids),2,(select res->'data' from q11 where name='candA')))->'data',
  (select res->'data' from q11 where name='confirm'),'retry with the same key returns the original task');
@@ -187,7 +187,7 @@ select ok(pg_temp.q_is(pg_temp.q_confirm('q11-confirm-0000009',pg_temp.q_appr((s
  pg_temp.q_ref((select action_a from q11_ids),2,(select res->'data' from q11 where name='candA'))),'STALE_ENTITY_VERSION'),
  'a new key after confirmation is stale, not a second task');
 
--- An incomplete candidate cannot be confirmed (no deadline).
+-- Không xác nhận candidate thiếu thông tin, ở đây là thiếu deadline.
 insert into q11 select 'actB',pg_temp.q_call('prepare_pending_action',jsonb_build_object(
  'presentation',pg_temp.q_pres(res->'data',(select action_b from q11_ids)),'expected_action_version',null),'q11-prep-b-00000002')
  from q11 where name='candB';
@@ -198,7 +198,7 @@ select ok((select e->'error'->>'code'='MISSING_REQUIRED_FIELD' and e#>>'{error,f
  pg_temp.q_appr((select res->'data' from q11 where name='candB')),
  pg_temp.q_ref((select action_b from q11_ids),1,(select res->'data' from q11 where name='candB'))) e) x),
  'an incomplete candidate names the missing field');
--- Cancel rejects the draft without writing official data.
+-- Hủy từ chối bản nháp mà không ghi dữ liệu chính thức.
 insert into q11 select 'cancel',pg_temp.q_call('cancel_pending_action',jsonb_build_object(
  'action_reference',pg_temp.q_ref((select action_b from q11_ids),1,res->'data'),'candidate_id',res#>>'{data,candidate_id}'),
  'q11-cancel-000000001') from q11 where name='candB';
@@ -210,7 +210,7 @@ select is(pg_temp.q_call('cancel_pending_action',jsonb_build_object('action_refe
  'candidate_id',(select res#>>'{data,candidate_id}' from q11 where name='candB')),'q11-cancel-000000001')->'data',
  (select res->'data' from q11 where name='cancel'),'retrying the cancel returns the cancelled action');
 
--- search_tasks: filters, keyset pagination and tamper-proof cursors.
+-- search_tasks: bộ lọc, phân trang keyset và cursor chống sửa đổi.
 insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,course_label,deadline_at,deadline_precision,
  deadline_date,deadline_timezone,estimated_minutes,remaining_minutes,priority,status)
  select extensions.gen_random_uuid(),'d1110000-0000-4000-8000-000000000001',extensions.gen_random_uuid(),'Bài '||n,

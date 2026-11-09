@@ -1,10 +1,10 @@
--- Independent approved-contract acceptance suite (Sol).
--- Run: supabase test db supabase/tests/06_sol_rpc_boundary.sql
--- Requires a disposable local Supabase PostgreSQL 15 database with all migrations.
--- Every fixture, synthetic signing key, trigger and mutation is rolled back.
--- This file intentionally FAILS against the pre-contract eight-migration baseline.
--- It does not certify HTTP JWT validation, duplicate raw envelope keys, timing-safe
--- comparison, two-session locking, or production key provisioning.
+-- Bộ nghiệm thu độc lập cho contract đã duyệt của Sol.
+-- Chạy: supabase test db supabase/tests/06_sol_rpc_boundary.sql
+-- Cần Supabase PostgreSQL 15 local có thể xóa sau test và đã áp dụng đủ migration.
+-- Mọi fixture, khóa ký giả lập, trigger và thay đổi dữ liệu đều được rollback.
+-- File này chủ động THẤT BẠI trên baseline tám migration trước khi tích hợp contract.
+-- Không chứng nhận xác minh JWT HTTP, khóa trùng trong envelope gốc, so sánh chống lộ thời gian,
+-- khóa hai phiên hay cấp khóa cho môi trường thật.
 begin;
 select no_plan();
 set local search_path = public, extensions;
@@ -69,8 +69,8 @@ select ok(exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronames
  from sol_expected_rpc e order by e.name;
 select ok(not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
  where n.nspname='app_api' and
- -- Package 1.0.1 adds these six names; test 07 requires their full behavior.
- -- The original 21 required signatures above remain unchanged.
+ -- Gói 1.0.1 bổ sung sáu tên này; test 07 yêu cầu đầy đủ hành vi của chúng.
+ -- Giữ nguyên 21 chữ ký hàm bắt buộc ban đầu ở trên.
  ((not exists(select 1 from sol_expected_rpc e where e.name=p.proname)
  and p.proname not in ('ensure_user_context','list_time_windows','get_workflow_context',
  'get_workflow_continuation','initialize_workflow_continuation','checkpoint_workflow_continuation'))
@@ -96,8 +96,8 @@ select ok(to_regprocedure('app_private.verify_rpc_request(jsonb,text)') is not n
 select ok(to_regclass('app_private.rpc_attestation_keys') is not null,
  'approved global private key store exists');
 
--- Capture failures as data so missing implementations are failed TAP assertions,
--- rather than aborted scripts or false-positive security rejections.
+-- Ghi lỗi thành dữ liệu để phần chưa triển khai trở thành khẳng định TAP thất bại,
+-- tránh dừng script hoặc nhầm lỗi thiếu hàm thành từ chối bảo mật hợp lệ.
 create function pg_temp.sol_canonical(value jsonb) returns text
 language plpgsql as $$
 declare result text;
@@ -107,8 +107,8 @@ begin
 exception when others then return 'SQL_ERROR:' || sqlstate || ':' || sqlerrm;
 end $$;
 
--- Golden bytes produced independently with UTF-8 + .NET SHA256/HMACSHA256.
--- U+E000 must sort BEFORE U+1F600 (UTF-16/locale sorting is incorrect).
+-- Dãy byte chuẩn được tạo độc lập bằng UTF-8 và .NET SHA256/HMACSHA256.
+-- U+E000 phải đứng TRƯỚC U+1F600; sắp theo UTF-16/locale là sai.
 create temporary table sol_golden(input jsonb, canonical text, digest text,
  payload text, signature text);
 insert into sol_golden values (
@@ -133,8 +133,8 @@ select ok(pg_temp.sol_canonical(value) like 'SQL_ERROR:22023:%', label)
  ('-9007199254740992'::jsonb,'integer below safe minimum is rejected'),
  ('{"nested":[{"bad":0.5}]}'::jsonb,'numeric restrictions apply recursively')) v(value,label);
 
--- Test-only setup uses migration privileges, never production signing material.
--- Dynamic insert permits informative TAP failures on the old baseline.
+-- Chuẩn bị riêng cho test dùng quyền migration, không dùng khóa ký môi trường thật.
+-- INSERT động giúp TAP báo lỗi có thông tin trên baseline cũ.
 create function pg_temp.sol_seed() returns text language plpgsql as $$
 begin
  insert into auth.users(id) values
@@ -201,7 +201,7 @@ begin
  '{"sub":"d0610000-0000-4000-8000-000000000001","role":"authenticated"}',true);
  perform set_config('request.jwt.claim.sub','d0610000-0000-4000-8000-000000000001',true);
  if verifier then
-   -- Invoke as migration owner: private verifier must not be exposed to clients.
+   -- Gọi bằng chủ sở hữu migration: bộ xác minh riêng không được công khai cho client.
    begin
      execute 'select app_private.verify_rpc_request($1,$2)' into owner_id using request,routine;
      return jsonb_build_object('verified_user',owner_id);
@@ -227,7 +227,7 @@ create function pg_temp.sol_private_rejected(response jsonb) returns boolean lan
  and response->>'message' in ('FORBIDDEN','UNAUTHENTICATED'),false)
 $$;
 
--- Full logical snapshot detects changes to existing rows as well as inserts.
+-- Snapshot logic đầy đủ phát hiện cả sửa dòng đã có lẫn thêm dòng mới.
 create function pg_temp.sol_snapshot() returns jsonb language plpgsql as $$
 declare item record; rows jsonb; result jsonb := '{}';
 begin
@@ -251,7 +251,7 @@ insert into sol_requests select 'wrong-rpc',pg_temp.sol_sign(request,jsonb_build
 insert into sol_requests select 'wrong-request-id',pg_temp.sol_sign(request,'{"request_id":"another-request"}') from sol_requests where name='valid';
 insert into sol_requests select 'unknown-payload-field',pg_temp.sol_sign(request,'{"unexpected":true}') from sol_requests where name='valid';
 insert into sol_requests select 'wrong-key-id',jsonb_set(request,'{attestation,key_id}','"unknown-key"') from sol_requests where name='valid';
--- Raw duplicate keys must be checked BEFORE payload JSON is coerced to jsonb.
+-- Phải kiểm tra khóa trùng trong JSON gốc TRƯỚC khi ép payload sang jsonb.
 insert into sol_requests select 'duplicate-payload-key',pg_temp.sol_raw_attestation(request,
  '{"v":1,' || substring(convert_from(decode(translate(request#>>'{attestation,payload}','-_','+/') ||
  repeat('=',(4-length(request#>>'{attestation,payload}')%4)%4),'base64'),'UTF8') from 2))
@@ -276,8 +276,8 @@ select ok(pg_temp.sol_rejected(pg_temp.sol_call('create_task_candidate',request)
  from sol_requests where name in ('missing','forged','tampered','cross-owner') order by name;
 select is(pg_temp.sol_snapshot(),snapshot,'invalid security requests leave all private business state unchanged') from sol_before;
 
--- Seed infrastructure through the actual attested RPC, rather than bypassing the
--- required source-message ownership link with a fabricated UUID.
+-- Nạp hạ tầng qua RPC có chứng thực thật, không bỏ qua liên kết chủ sở hữu
+-- của tin nhắn nguồn bằng UUID tự tạo.
 create temporary table sol_results(name text primary key, response jsonb);
 insert into sol_results select 'source',pg_temp.sol_call('record_source_message',
  pg_temp.sol_sign(pg_temp.sol_request('record_source_message',jsonb_build_object('message',
@@ -328,11 +328,11 @@ select is(response#>>'{error,code}','IDEMPOTENCY_CONFLICT',
 select is(pg_temp.sol_snapshot(),snapshot,
  'idempotency conflict leaves original result and all business state unchanged') from sol_before;
 
--- Inject failure after candidate insertion. A broken wrapper which catches SQL
--- errors outside the write subtransaction must not retain candidate/idempotency.
+-- Gây lỗi sau khi thêm candidate. Wrapper lỗi bắt ngoại lệ SQL ngoài
+-- giao dịch con ghi dữ liệu không được giữ lại candidate/bản ghi chống ghi trùng.
 create function pg_temp.sol_fail_candidate() returns trigger language plpgsql as $$
--- Use an internal-error SQLSTATE: 23514 would legitimately be interpreted as
--- input constraint validation, making an INTERNAL_ERROR expectation ambiguous.
+-- Dùng SQLSTATE lỗi nội bộ: 23514 có thể được hiểu hợp lệ là lỗi ràng buộc
+-- đầu vào, làm kỳ vọng INTERNAL_ERROR trở nên mơ hồ.
 begin raise exception using errcode='XX000',message='SOL_TEST_INJECTED_FAILURE'; end $$;
 create trigger sol_injected_failure after insert on app_private.task_candidates
  for each row execute function pg_temp.sol_fail_candidate();

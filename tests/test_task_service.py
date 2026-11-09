@@ -22,7 +22,7 @@ SLOTS = {'title': 'OOP', 'deadline_at': '2026-11-06T17:00:00+07:00',
 
 
 class MemoryStore:
-    """Test-only fake of the proposed TV1 seam; no real concurrency guarantees."""
+    """Bản giả chỉ dùng trong test của giao diện TV1 đang đề xuất; không bảo đảm xử lý đồng thời thật."""
     def __init__(self):
         self.data = {'candidates': {}, 'tasks': {}, 'idempotency': {}, 'revision': 0,
                      'messages': {MSG: {'message_id': MSG, 'user_id': USER, 'conversation_id': CONV}},

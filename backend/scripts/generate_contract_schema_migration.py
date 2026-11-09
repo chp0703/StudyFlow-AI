@@ -1,7 +1,7 @@
-"""Deterministically bundle contracts/schemas/f1.schema.json into a SQL migration.
+"""Đóng gói contracts/schemas/f1.schema.json thành SQL migration theo cách xác định.
 
-Usage: python backend/scripts/generate_contract_schema_migration.py [--check]
---check exits non-zero if the committed migration is out of date.
+Cách dùng: python backend/scripts/generate_contract_schema_migration.py [--check]
+--check trả mã thoát khác 0 nếu migration đã lưu không còn đồng bộ.
 """
 from __future__ import annotations
 

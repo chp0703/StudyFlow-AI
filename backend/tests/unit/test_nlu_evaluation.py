@@ -15,7 +15,7 @@ def put(slots, path, value):
 
 
 def perfect(case):
-    """An extraction built from the case's own expectations - the scorer must accept it."""
+    """Kết quả trích xuất dựng từ kỳ vọng của chính ca đánh giá; bộ chấm phải chấp nhận."""
     intents = []
     for want in case["intents"]:
         slots = {}

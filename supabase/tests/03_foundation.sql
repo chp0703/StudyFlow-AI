@@ -1,5 +1,5 @@
--- Approved F1 contract foundation (local pgTAP).
--- Run only with `supabase test db` against a local database. No remote target.
+-- Nền tảng contract F1 đã duyệt, dùng pgTAP local.
+-- Chỉ chạy `supabase test db` với database local, không dùng đích từ xa.
 
 begin;
 select plan(19);

@@ -1,4 +1,4 @@
-"""A3 use cases; storage and TV4 validation/warning callbacks are proposed seams."""
+"""Các ca sử dụng A3; giao diện lưu trữ và hàm kiểm tra/cảnh báo TV4 đang được đề xuất."""
 
 import copy
 from datetime import datetime, timezone

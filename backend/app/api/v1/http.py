@@ -1,10 +1,12 @@
-"""HTTP plumbing shared by every endpoint: request IDs, catalog error envelopes, status mapping."""
+"""Xử lý HTTP dùng chung: ID yêu cầu, cấu trúc lỗi theo danh mục và ánh xạ mã trạng thái."""
 
 from __future__ import annotations
 
 from fastapi.responses import JSONResponse
 
-# Domain/transport error code -> HTTP status (contracts/README.md section 3.1).
+from ...orchestrator.workflow_ports import WorkflowError
+
+# Mã lỗi nghiệp vụ/transport -> trạng thái HTTP (contracts/README.md mục 3.1).
 STATUS = {
     "INVALID_PARAMETER": 422, "MISSING_REQUIRED_FIELD": 422, "UNSUPPORTED_OPERATION": 422,
     "UNAUTHENTICATED": 401, "FORBIDDEN": 403, "ENTITY_NOT_FOUND": 404,
@@ -15,16 +17,11 @@ STATUS = {
 }
 
 
-class ApiError(Exception):
+class ApiError(WorkflowError):
     def __init__(self, code: str, message: str, *, status: int | None = None, field: str | None = None,
                  retryable: bool = False, retry_after: int | None = None):
-        super().__init__(code)
-        self.code, self.message, self.field = code, message, field
+        super().__init__(code, message, field=field, retryable=retryable, retry_after=retry_after)
         self.status = status or STATUS[code]
-        self.retryable, self.retry_after = retryable, retry_after
-
-    def error(self) -> dict:
-        return {"code": self.code, "message": self.message, "field": self.field, "details": {}, "retryable": self.retryable}
 
 
 def error_body(error: dict, request_id: str, *, post: bool) -> dict:
@@ -45,6 +42,7 @@ def respond(body: dict, status: int, request_id: str, *, post: bool, replayed: b
     return JSONResponse(body, status_code=status, headers=headers)
 
 
-def error_response(exc: ApiError, request_id: str, *, post: bool) -> JSONResponse:
-    return respond(error_body(exc.error(), request_id, post=post), exc.status, request_id, post=post,
-                   retry_after=exc.retry_after if exc.retry_after is not None else (1 if exc.status == 503 else None))
+def error_response(exc: WorkflowError, request_id: str, *, post: bool) -> JSONResponse:
+    status = getattr(exc, "status", STATUS.get(exc.code, 500))
+    return respond(error_body(exc.error(), request_id, post=post), status, request_id, post=post,
+                   retry_after=exc.retry_after if exc.retry_after is not None else (1 if status == 503 else None))

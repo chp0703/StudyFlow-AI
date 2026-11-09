@@ -1,10 +1,10 @@
-"""Independent TimeWindow normalization acceptance cases.
+"""Các ca nghiệm thu độc lập cho việc chuẩn hóa TimeWindow.
 
-Boundary agreed for integration:
+Giao diện đã thống nhất để tích hợp:
 normalize_time_windows(windows, *, start_at, end_at) -> tuple[Interval, ...].
-Inputs are contract TimeWindow JSON dictionaries. Output is sorted, merged,
-UTC-aware intervals clipped to the requested half-open horizon. Invalid input,
-including ambiguous/nonexistent local DST times, raises ValueError.
+Đầu vào là các đối tượng JSON TimeWindow theo contract. Đầu ra là các khoảng có múi giờ UTC,
+được sắp xếp, gộp và cắt theo phạm vi nửa mở yêu cầu. Đầu vào không hợp lệ,
+bao gồm giờ DST địa phương mơ hồ/không tồn tại, sẽ gây ValueError.
 """
 
 import importlib
@@ -112,7 +112,7 @@ class TimeWindowNormalizationAcceptance(unittest.TestCase):
         ))
 
     def test_iana_timezone_changes_utc_offset_across_dst(self):
-        # New York 09:00 is 13:00Z on Oct 25, 14:00Z after the Nov 1 fallback.
+        # 09:00 New York là 13:00Z ngày 25/10, thành 14:00Z sau khi lùi đồng hồ ngày 1/11.
         self.assertEqual(self.normalize(
             [weekly(timezone="America/New_York", weekday=7, start_time="09:00",
                     end_time="10:00", valid_from="2026-10-25", valid_until="2026-11-02")],
@@ -123,7 +123,7 @@ class TimeWindowNormalizationAcceptance(unittest.TestCase):
         ))
 
     def test_ambiguous_fall_back_local_time_requires_clarification(self):
-        # Both folds exist; choosing fold=0 silently would invent user intent.
+        # Cả hai fold đều tồn tại; tự chọn fold=0 sẽ tự suy diễn ý định người dùng.
         self.assertNotEqual(
             datetime(2026, 11, 1, 1, 30, tzinfo=ZoneInfo("America/New_York"), fold=0).utcoffset(),
             datetime(2026, 11, 1, 1, 30, tzinfo=ZoneInfo("America/New_York"), fold=1).utcoffset(),

@@ -30,7 +30,7 @@ def partition_blocks_for_replan(
     generation_scope: GenerationScope,
     selected_task_ids: tuple[object, ...],
 ) -> BlockPartition:
-    """Apply schema 1.1 replan scope rules to a current-plan snapshot."""
+    """Áp dụng quy tắc phạm vi lập lại lịch của schema 1.1 vào snapshot lịch hiện hành."""
     retained: list[StudyBlock] = []
     replaceable: list[StudyBlock] = []
     issues: list[Issue] = []
@@ -67,7 +67,7 @@ def materialize_snapshot(
     user_id,
     block_id_factory: BlockIdFactory,
 ) -> tuple[tuple[ProposedStudyBlock, ...], PlanDiff]:
-    """Assign IDs, preserve logical IDs across snapshots, and compute a stable plan diff."""
+    """Gán ID, giữ ID logic giữa các snapshot và tính phần chênh lệch lịch ổn định."""
     snapshot: list[ProposedStudyBlock] = []
     added: list[object] = []
     moved: list[object] = []

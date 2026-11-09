@@ -7,7 +7,7 @@ from .models import Interval
 
 
 def to_utc(value: datetime) -> datetime:
-    """Convert an aware datetime to its exact UTC instant (respecting PEP 495 fold)."""
+    """Đổi datetime có múi giờ thành thời điểm UTC chính xác, có xét fold theo PEP 495."""
     return value.astimezone(dt_timezone.utc)
 
 
@@ -18,13 +18,13 @@ def _preserve_tz(utc_value: datetime, reference: datetime) -> datetime:
 
 
 def add_minutes(value: datetime, minutes: int) -> datetime:
-    """Add elapsed UTC minutes to an aware datetime while preserving its timezone."""
+    """Cộng số phút thực trôi qua theo UTC vào datetime có múi giờ và giữ múi giờ ban đầu."""
     utc_result = to_utc(value) + timedelta(minutes=minutes)
     return _preserve_tz(utc_result, value)
 
 
 def ceil_to_minute(value: datetime) -> datetime:
-    """Round an aware datetime upward to the next UTC minute boundary."""
+    """Làm tròn lên datetime có múi giờ tới ranh giới phút UTC kế tiếp."""
     utc_value = to_utc(value)
     if utc_value.second == 0 and utc_value.microsecond == 0:
         return _preserve_tz(utc_value, value)
@@ -45,7 +45,7 @@ def duration_minutes(interval: Interval) -> int:
 
 
 def overlaps(left: Interval, right: Interval) -> bool:
-    """Half-open interval overlap: touching endpoints are not overlapping."""
+    """Giao nhau của khoảng nửa mở: hai đầu mút chạm nhau không tính là chồng lấn."""
     return to_utc(left.start_at) < to_utc(right.end_at) and to_utc(right.start_at) < to_utc(left.end_at)
 
 
@@ -110,7 +110,7 @@ def pad(interval: Interval, minutes: int) -> Interval:
 
 
 def split_by_local_day(interval: Interval, timezone: str) -> list[Interval]:
-    """Split an absolute interval at local-midnight boundaries."""
+    """Chia khoảng thời gian tuyệt đối tại các mốc nửa đêm địa phương."""
     tz = ZoneInfo(timezone)
     result: list[Interval] = []
     cursor = interval.start_at
