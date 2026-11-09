@@ -1,45 +1,21 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react"
+import WeekCalendar from "../features/planner/WeekCalendar"
+import ProposalReview from "../features/planner/ProposalReview"
+import { usePlanner, type PlannerProps } from "../features/planner/usePlanner"
+import { useEffect, useRef, useState } from "react"
 
 import gsap from "gsap"
 
 import { useGSAP } from "@gsap/react"
 
-import {
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  ListTodo,
-  Send,
-  Sparkles,
-  X,
-} from "lucide-react"
+import { ChevronLeft, ChevronRight, ListTodo, Send, X } from "lucide-react"
 
 import Button from "../components/ui/Button"
 
 import Card from "../components/ui/Card"
 
-import {
-  FIRST_HOUR,
-  LAST_HOUR,
-  runPlannerCommand,
-} from "../features/planner/plannerAgent"
-
-import {
-  describeChanges,
-  diffTasks,
-  diffWindows,
-  isStale,
-} from "../features/planner/proposal"
+import { FIRST_HOUR, LAST_HOUR } from "../features/planner/plannerAgent"
 
 import TaskPanel from "../features/planner/TaskPanel"
-
-import type { Proposal, TimeWindow } from "../types/planner"
 
 import type { Task } from "../types/task"
 
@@ -75,29 +51,7 @@ export default function Planner({
   setRevision,
 
   notify,
-}: {
-  tasks: Task[]
-
-  setTasks: Dispatch<SetStateAction<Task[]>>
-
-  availability: TimeWindow[]
-
-  setAvailability: Dispatch<SetStateAction<TimeWindow[]>>
-
-  proposal: Proposal | null
-
-  setProposal: Dispatch<SetStateAction<Proposal | null>>
-
-  revision: number
-
-  setRevision: Dispatch<SetStateAction<number>>
-
-  notify?: (message: string) => void
-}) {
-  const [input, setInput] = useState("")
-
-  const [reply, setReply] = useState("")
-
+}: PlannerProps) {
   const [plannerNotice, setPlannerNotice] = useState("")
 
   const noticeRef = useRef<HTMLDivElement>(null)
@@ -129,6 +83,31 @@ export default function Planner({
       onComplete: () => setPlannerNotice(""),
     })
   }
+
+  const {
+    input,
+    setInput,
+    reply,
+    setReply,
+    shown,
+    shownWindows,
+    stale,
+    send,
+    approve,
+    reject,
+  } = usePlanner(
+    {
+      tasks,
+      setTasks,
+      availability,
+      setAvailability,
+      proposal,
+      setProposal,
+      revision,
+      setRevision,
+    },
+    showPlannerNotice,
+  )
 
   useEffect(() => () => window.clearTimeout(noticeTimer.current), [])
 
@@ -345,12 +324,6 @@ export default function Planner({
       new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i),
   )
 
-  // Khi có đề xuất chờ duyệt, lịch hiển thị bản xem trước; nếu không thì hiển thị công việc đã xác nhận.
-
-  const shown = proposal ? proposal.next.tasks : tasks
-
-  const shownWindows = proposal ? proposal.next.availability : availability
-
   const windowAt = (date: Date, hour: number) =>
     shownWindows.find((w) => w.id === `${toIsoDate(date)}-${hour}`)
 
@@ -394,68 +367,6 @@ export default function Planner({
       (t) => t.date && weekDays.some((d) => toIsoDate(d) === t.date),
     ) &&
     !shownWindows.some((w) => weekDays.some((d) => toIsoDate(d) === w.date))
-
-  const stale = proposal ? isStale(proposal, revision) : false
-
-  const send = () => {
-    const text = input.trim()
-
-    if (!text) return
-
-    // Các lệnh tiếp tục sửa đề xuất đang chờ nhưng luôn so sánh với lịch đã xác nhận.
-
-    const result = runPlannerCommand(text, shown, shownWindows)
-
-    const changes = diffTasks(tasks, result.tasks)
-
-    const windowChanges = diffWindows(availability, result.availability)
-
-    setReply(result.reply)
-
-    setInput("")
-
-    if (!changes.length && !windowChanges.length) return setProposal(null)
-
-    setProposal({
-      id: proposal?.id ?? crypto.randomUUID(),
-
-      createdAt: proposal?.createdAt ?? Date.now(),
-
-      baseRevision: proposal?.baseRevision ?? revision,
-
-      next: { tasks: result.tasks, availability: result.availability },
-
-      changes,
-
-      windowChanges,
-
-      issues: result.issues ?? proposal?.issues ?? [],
-
-      reply: result.reply,
-    })
-  }
-
-  const approve = () => {
-    if (!proposal || stale) return
-
-    setTasks(proposal.next.tasks)
-
-    setAvailability(proposal.next.availability)
-
-    setRevision((r) => r + 1)
-
-    setProposal(null)
-
-    setReply("")
-
-    showPlannerNotice("Đã lưu thay đổi vào lịch.")
-  }
-
-  const reject = () => {
-    setProposal(null)
-
-    setReply("")
-  }
 
   return (
     <div
@@ -544,49 +455,13 @@ export default function Planner({
           </div>
         }
       >
-        <div className="planner-status" role="status" aria-live="polite">
-          {proposal ? (
-            <div className={`proposal-bar ${stale ? "is-stale" : ""}`}>
-              <Sparkles aria-hidden="true" size={16} />
-              <span className="proposal-text">
-                <strong>
-                  Đề xuất:{" "}
-                  {describeChanges(proposal.changes, proposal.windowChanges) ||
-                    "không đổi"}
-                </strong>
-                <span>
-                  {stale
-                    ? "Lịch đã thay đổi từ lúc tạo đề xuất (STALE). Hãy từ chối và tạo lại."
-                    : reply || proposal.reply}
-                </span>
-                {proposal.issues.length > 0 && (
-                  <details className="proposal-issues">
-                    <summary>Chưa xếp được ({proposal.issues.length})</summary>
-                    <ul>
-                      {proposal.issues.map((i) => (
-                        <li key={i.taskId}>
-                          {i.code}: {i.message}
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
-              </span>
-              <Button className="secondary proposal-reject" onClick={reject}>
-                <X aria-hidden="true" size={14} /> Từ chối
-              </Button>
-              <Button
-                className="primary proposal-approve"
-                onClick={approve}
-                disabled={stale}
-              >
-                <Check aria-hidden="true" size={14} /> Duyệt
-              </Button>
-            </div>
-          ) : (
-            reply && <p className="planner-reply">{reply}</p>
-          )}
-        </div>
+        <ProposalReview
+          proposal={proposal}
+          stale={stale}
+          reply={reply}
+          approve={approve}
+          reject={reject}
+        />
         <p className="planner-legend" aria-label="Chú thích">
           <span className="legend-confirmed">Đã xác nhận</span>
 
@@ -597,93 +472,20 @@ export default function Planner({
             {weekEmpty ? "Tuần này chưa có việc." : "Bấm ô trống để thêm việc"}
           </span>
         </p>
-        <div
-          ref={calendarRef}
-          className="dashboard-calendar-scroll"
-          role="region"
-          aria-label="Lịch trong tuần"
-          tabIndex={0}
-        >
-          <div className="dashboard-schedule">
-            <div className="schedule-header">
-              <span className="schedule-header-time" aria-hidden="true" />
-              {weekDays.map((_, i) => (
-                <span
-                  key={i}
-                  className={`schedule-day ${
-                    week === 0 && i === todayIndex ? "is-today" : ""
-                  }`}
-                >
-                  <strong>
-                    {["T2", "T3", "T4", "T5", "T6", "T7", "CN"][i]}
-                  </strong>
-                </span>
-              ))}
-            </div>
-            {hours.map((hour) => (
-              <div className="schedule-row" key={hour}>
-                <span className="schedule-hour" aria-hidden="true">
-                  {`${String(hour).padStart(2, "0")}:00`}
-                </span>
-                {weekDays.map((d, day) => {
-                  const event = eventAt(d, hour)
-
-                  const win = windowAt(d, hour)
-
-                  return (
-                    <div
-                      className={`schedule-cell ${
-                        week === 0 && day === todayIndex ? "today-column" : ""
-                      } ${win ? `is-${win.kind}` : ""} ${
-                        win && proposedWindows.has(win.id) ? "is-proposed" : ""
-                      }`}
-                      key={day}
-                      onClick={event ? undefined : () => prefill(d, hour)}
-                    >
-                      {win && (
-                        <span className="window-tag">
-                          {win.kind === "free" ? "Rảnh" : "Bận"}
-                        </span>
-                      )}
-                      {event && (
-                        <div
-                          className={`schedule-event study priority-${
-                            { Cao: "high", Thấp: "low" }[event.priority] ??
-                            "mid"
-                          } ${event.done ? "is-done" : ""} ${
-                            changeOf.get(event.id) === "removed"
-                              ? "is-removed"
-                              : changeOf.has(event.id)
-                                ? "is-proposed"
-                                : ""
-                          }`}
-                          data-task-id={event.id}
-                          title={`${event.title} · ${event.time}`}
-                        >
-                          <strong>{event.title}</strong>
-                          <small>
-                            {event.time}
-                            {changeOf.get(event.id) === "removed"
-                              ? " · Sẽ xóa"
-                              : changeOf.has(event.id)
-                                ? " · Đề xuất"
-                                : ""}
-                          </small>
-                        </div>
-                      )}
-                      {week === 0 && day === todayIndex && hour === nowHour && (
-                        <i
-                          className="now-line"
-                          style={{ top: `${(nowMinutes / 60) * 100}%` }}
-                        />
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
+        <WeekCalendar
+          calendarRef={calendarRef}
+          weekDays={weekDays}
+          week={week}
+          todayIndex={todayIndex}
+          hours={hours}
+          eventAt={eventAt}
+          windowAt={windowAt}
+          proposedWindows={proposedWindows}
+          prefill={prefill}
+          changeOf={changeOf}
+          nowHour={nowHour}
+          nowMinutes={nowMinutes}
+        />
         {plannerNotice && (
           <div className="planner-notice-wrap">
             <div className="planner-notice" ref={noticeRef}>
