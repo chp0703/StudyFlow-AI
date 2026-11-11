@@ -25,5 +25,6 @@ __pycache__/
 /.plugins/
 /.opencode-skills/
 CLAUDE.md
+!/CLAUDE.md
 history
 .claude
