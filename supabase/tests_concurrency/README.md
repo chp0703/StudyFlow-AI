@@ -65,8 +65,8 @@ Not yet executed/covered here: real wall-clock 120-second expiry, live JWT/HTTP,
 full retained/protected snapshot variants, halfway-plan-insert fault, existing-plan
 revision-only stale variant, snapshot tearing stress, continuation WAIT/domain
 recovery or migrations of an existing populated deployment. See
-[the full handoff](../../backend/tests/acceptance_db_sol/README.md). No claim of
-passing concurrency or production readiness follows from syntax/fixture checks.
+the repository test suites for the current executable evidence. No claim of passing
+concurrency or production readiness follows from syntax/fixture checks.
 
 Local dependency metadata used for author checks: psycopg and psycopg-binary
 **3.3.8**, jsonschema **4.26.0**. Requirements pin psycopg 3.3.8; shared checker

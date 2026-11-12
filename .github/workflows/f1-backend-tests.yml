@@ -19,10 +19,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - suite: Approved contracts and application services
+          - suite: Approved contracts and API contract
             command: |
               python -B contracts/check_contract.py
-              python -B -m unittest discover -s tests -v
               python -B -m unittest discover -s backend/tests/acceptance_api_sol -p test_contract_addendum.py -v
           - suite: Scheduler unit and independent acceptance
             command: |

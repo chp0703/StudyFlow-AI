@@ -3,10 +3,9 @@
   "info": {
     "title": "StudyFlow F1 Unified Integration API",
     "version": "1.0.1",
-    "description": "APPROVED official integration contract 1.0.1, effective 2026-11-05; team approval and A/B/C/D addendum confirmed by the user and recorded in APPROVAL.md. Logical schema_version stays 1.1. All JSON schemas resolve to schemas/f1.schema.json; no implementation is claimed."
+    "description": "APPROVED official integration contract 1.0.1, effective 2026-11-05. Logical schema_version stays 1.1. All JSON schemas resolve to schemas/f1.schema.json; no implementation is claimed."
   },
   "x-contract-status": "APPROVED",
-  "x-approval-record": "./APPROVAL.md",
   "x-approved-on": "2026-11-05",
   "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
   "servers": [

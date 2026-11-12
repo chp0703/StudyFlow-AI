@@ -1,13 +1,15 @@
-# StudyFlow AI
+# StudyFlow AI frontend
 
-React prototype of a student study workspace (assistant, dashboard, planner, study). Prototype only: no backend, auth, persistence, file parsing or live AI.
+React 19 and Vite interface for the assistant, planner and study workspace.
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173 (or $PORT)
+npm run dev
 npm run build
 npm run preview
 npm run format
 ```
 
-Team conventions and architecture: see [DESIGN.md](DESIGN.md).
+Copy `.env.example` to a local environment file to connect to the FastAPI and Supabase services. Supported demo flows fall back to local data when API variables are absent.
+
+Architecture, UI conventions and focused test commands are documented in [DESIGN.md](DESIGN.md).

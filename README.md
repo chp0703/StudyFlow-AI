@@ -1,118 +1,40 @@
 # StudyFlow AI
 
-StudyFlow AI is a student-controlled academic planning assistant. It turns confirmed tasks and time constraints into feasible study-plan proposals, then saves a new schedule snapshot only after explicit approval.
+StudyFlow AI is a student-controlled learning workspace with three connected features: Intelligent Academic Planner, Learning Assessment & Adaptive Revision, and Daily AI Learning.
 
-This repository contains the frontend prototype, approved F1 design documentation,
-and the first backend component: a pure deterministic F1 scheduling engine. Database
-migrations, authentication integration, persistence, HTTP APIs, and live AI services
-are not yet implemented here.
+The repository currently contains the implemented Planner foundation: React frontend, FastAPI backend, deterministic scheduler, shared contract, Supabase migrations and automated acceptance tests. Assessment and Daily Learning are part of the current product scope; their requirements are defined and their implementation remains pending.
 
-## Current release scope
+## Product scope
 
-F1 is the Initial Release / MVP: Intelligent Academic Planner.
+| Feature | Purpose | Status |
+|---|---|---|
+| Intelligent Academic Planner | Tasks, personalized working time, deterministic plans and approval | Foundation implemented |
+| Learning Assessment & Adaptive Revision | Verified quizzes, deterministic grading and revision recommendations | Requirements defined |
+| Daily AI Learning | Source-grounded explanations, hints and confirmed session outcomes | Requirements defined |
 
-- Create task candidates from user messages or manual input.
-- Validate and explicitly confirm an `AcademicTask` before scheduling.
-- Record availability and busy periods as unified `TimeWindow` records.
-- Generate deterministic study-plan proposals with visible warnings and unscheduled work.
-- Approve or reject proposals; approval creates an immutable `StudyPlan` snapshot.
-- Keep one current plan per user through `current_plan_id` and `schedule_revision`.
-- Preserve historical snapshots and logical `StudyBlock` identity across replanning.
-- Support user scheduling preferences and one-time policy overrides.
-
-F2 (Learning Assessment & Adaptive Revision) and F3 (Daily AI Learning) are planned post-MVP features, outside the v1.1 execution scope.
-
-## Official data contract
-
-The [Unified F1 Integration Contract](contracts/README.md) joins the FE–BE API, Orchestrator–Tool/Service interface, and BE–DB schema/RPC boundary. It includes OpenAPI, shared JSON Schema, entity mapping, and validation fixtures. Package **1.0.0 is APPROVED**, effective 05/11/2026, covering IC-01–IC-08; the [approval record](contracts/APPROVAL.md) records the user's confirmation of team approval. The logical schema remains v1.1. Approval does not constitute implemented backend/database functionality.
-
-The authoritative logical contract is [Official F1 Schema v1.1](docs/database/schema_F1.md). It defines fields, lifecycle states, ownership rules, time semantics, tool contracts, scheduling-engine inputs/outputs, proposal approval, and idempotency behavior.
-
-The database mapping is documented in [Database Design Baseline v1.1](docs/database/StudyFlow_AI_Database_Design_Baseline_v1.1.md). The v1.0 draft remains historical and is superseded for F1 integration.
-
-Key v1.1 rules:
-
-- `TaskCandidate`: `DRAFT`, `CONFIRMED`, `CANCELLED`.
-- `AcademicTask`: `TODO`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`.
-- `PlanProposal`: `PROPOSED`, `APPROVED`, `REJECTED`, `STALE`.
-- `PendingAction` has explicit awaiting states and `requires_review`; it has no product TTL.
-- `IdempotencyRecord` is the only contract with an operational `expires_at`.
-- `TimeWindow` uses `AVAILABILITY` or `BUSY` with `NONE` or `WEEKLY` recurrence.
-- API timestamps use offsets; persistence stores UTC instants. Intervals are half-open: `[start_at, end_at)`.
-- Scheduling never infers task completion or decrements `remaining_minutes`.
-- LLM extraction is untrusted; ownership and approval evidence come from the trusted backend context.
-
-## Planning workflow
+## Repository map
 
 ```text
-User message / manual input
-        |
-Extraction and clarification (untrusted output)
-        |
-ValidationReport and TaskCandidate
-        |  explicit user confirmation
-AcademicTask + TimeWindow records
-        |
-Deterministic Scheduling Engine
-        |
-Full PlanProposal snapshot
-        |  explicit user approval
-Immutable StudyPlan + StudyBlocks
-        |
-Atomically update current_plan_id and schedule_revision
+backend/    FastAPI API, workflow orchestration, RPC client, NLU and scheduler
+contracts/  Approved OpenAPI, JSON Schema, registries and validation fixtures
+docs/       Product, feature and architecture documentation
+eval/       Independent Vietnamese NLU acceptance dataset
+frontend/   React 19 and Vite application
+supabase/   Local configuration, immutable migrations and database tests
+worklogs/   Team implementation logs
 ```
 
-The Scheduling Engine is pure and deterministic: it does not call the LLM, access the database, assign proposal IDs, or commit plans. The service layer resolves ownership, expands recurring windows, retains protected blocks, assigns block IDs, validates the full snapshot, and persists it.
+See [docs/README.md](docs/README.md) for the documentation index and
+[docs/architecture/overview.md](docs/architecture/overview.md)
+for the current runtime map.
 
-Proposal coverage is explicit: `FULL`, `PARTIAL`, `NONE`, or `NO_CHANGE`. Partial coverage must show unscheduled work; `NONE` is not committable.
+## Prerequisites
 
-## Architecture and current implementation
+- Python 3.11 or newer
+- Node.js and npm
+- Supabase CLI 3.0.0 for database and integration tests
 
-The planned architecture separates the UI, shared orchestrator, validation, F1 domain services, deterministic scheduler, persistence, and contract schemas. See [repository structure](docs/architecture/StudyFlow_AI_Repo_Structure.md).
-
-The React/Vite prototype lives under [`frontend/`](frontend/). The framework-independent
-F1 scheduler lives under [`backend/app/f1/scheduler/`](backend/app/f1/scheduler/) and
-includes deterministic allocation, constraint validation, replanning, proposal payload
-materialization, fixed unit cases, and evaluation metrics. There is still no authentication,
-persistence, HTTP API, PDF parsing, or live AI integration.
-
-Run the backend scheduler tests from the repository root:
-
-```bash
-python3 -m unittest discover -s backend/tests -v
-python3 backend/scripts/evaluate_planner.py
-```
-
-## Repository structure
-
-```text
-StudyFlow-AI/
-├── backend/
-│   ├── app/f1/scheduler/              # Pure deterministic F1 planner
-│   ├── tests/unit/f1/scheduler/       # Unit and fixed-case tests
-│   └── scripts/evaluate_planner.py    # Reproducibility/quality report
-├── frontend/                         # React/Vite prototype
-│   ├── src/                           # UI, assistant demo, styles and tests
-│   ├── public/                        # Brand assets
-│   ├── package.json
-│   └── README.md
-├── docs/
-│   ├── database/
-│   │   ├── schema_F1.md               # Official logical schema v1.1
-│   │   ├── StudyFlow_AI_Database_Design_Baseline_v1.1.md
-│   │   └── StudyFlow_AI_Supabase_Database_Codex_Guide.md
-│   ├── srs/                           # Software requirements
-│   ├── project/                       # Proposal, context and worklist
-│   ├── architecture/                 # Target repository architecture
-│   ├── planner/                       # Scheduler rules and evaluation report
-│   └── prompts/                       # Engineering prompts
-├── README.md
-└── .gitignore
-```
-
-The planned implementation layout (contracts, backend, tests, scheduler and database layers) is described in [StudyFlow_AI_Repo_Structure.md](docs/architecture/StudyFlow_AI_Repo_Structure.md). Those folders are architectural guidance and should not be interpreted as already implemented.
-
-## Run the frontend prototype
+## Frontend
 
 ```bash
 cd frontend
@@ -120,37 +42,55 @@ npm install
 npm run dev
 ```
 
-Other commands: `npm run build`, `npm run preview`, and `npm run format`.
+Copy `frontend/.env.example` to a local environment file when connecting the UI to the API. Without API variables, supported demo flows use local fallback data.
 
-## Documentation map
+Build the production bundle with `npm run build`.
 
-| Area | Document |
-|---|---|
-| Unified API / Tool / Data integration contract | [contracts/README.md](contracts/README.md) |
-| Official F1 logical schema | [docs/database/schema_F1.md](docs/database/schema_F1.md) |
-| Database baseline | [docs/database/StudyFlow_AI_Database_Design_Baseline_v1.1.md](docs/database/StudyFlow_AI_Database_Design_Baseline_v1.1.md) |
-| Requirements | [docs/srs/StudyFlow_AI_Software_Requirements_Specification_v1.0_Draft.md](docs/srs/StudyFlow_AI_Software_Requirements_Specification_v1.0_Draft.md) |
-| Team proposal | [docs/project/Team03_Proposal_Updated.md](docs/project/Team03_Proposal_Updated.md) |
-| Project context | [docs/project/context.md](docs/project/context.md) |
-| Worklist | [docs/project/cong_viec_can_lam.md](docs/project/cong_viec_can_lam.md) |
-| Repository target structure | [docs/architecture/StudyFlow_AI_Repo_Structure.md](docs/architecture/StudyFlow_AI_Repo_Structure.md) |
-| Supabase/database guide | [docs/database/StudyFlow_AI_Supabase_Database_Codex_Guide.md](docs/database/StudyFlow_AI_Supabase_Database_Codex_Guide.md) |
-| F1 scheduling rules | [docs/planner/scheduling_rules.md](docs/planner/scheduling_rules.md) |
-| Planner evaluation | [docs/planner/evaluation.md](docs/planner/evaluation.md) |
+## Backend API
 
-## Out of scope for F1 v1.1
+Install dependencies and start the local Supabase stack:
 
-- F2/F3 assessment and guided-learning entities.
-- Course management as a separate entity; F1 uses `course_label`.
-- PDF/OCR processing and mandatory `SourceDocument` persistence.
-- Manual study-block creation or individual block rescheduling.
-- Task update/cancel APIs and `StudySession`.
-- Automatic task completion or progress inference from elapsed blocks.
-- Multiple active confirmed plans, proposal/candidate/action TTLs, or legacy `EXPIRED` states.
+```bash
+python -m pip install -r backend/requirements.txt
+supabase start
+supabase db reset --yes
+uvicorn backend.app.main:create_app --factory --port 8000
+```
 
-## Status and implementation blockers
+Configure the variables documented in [.env.example](.env.example). Register a local RPC signing key using
+`supabase/scripts/register_dev_key.sql`. Keep signing secrets and API keys outside Git.
 
-The unified integration contract is the approved design baseline for F1 implementation. It settles payload/policy storage, same-owner foreign keys, typed approval targets, snapshot-scoped overlap, runtime authorization/attestation, owner row locking, idempotency retention, and indexes within its scope. Formal SRS reconciliation, concrete environment/tool versions, and implementation/runtime validation remain separate work; see the [decision register](docs/database/StudyFlow_AI_Phase_03_Implementation_Decision_Register.md).
+The current API exposes the eight Planner endpoints declared in `contracts/openapi.yaml`. Authentication uses Supabase JWTs, database access goes through signed RPC envelopes, and the scheduler remains deterministic. The technical `F1` identifiers remain for compatibility with the implemented Planner contract.
 
-Do not treat design documents, proposal diagrams, frontend mock data, or the pure scheduler
-as evidence that database, authentication, API, or approval-commit functionality exists.
+## Verification
+
+Run commands from the repository root:
+
+```bash
+python -B contracts/check_contract.py
+python -B -m unittest discover -s backend/tests/unit -t . -v
+python -B -m unittest discover -s backend/tests/acceptance_sol -v
+python -B -m unittest discover -s backend/tests/acceptance_api_sol -v
+python -B backend/scripts/evaluate_planner.py
+
+cd frontend
+npm run build
+```
+
+Database, integration and concurrency suites require the local Supabase stack:
+
+```bash
+supabase test db
+python -B -m unittest discover -s backend/tests/integration -t . -v
+python -B -m unittest discover -s supabase/tests_concurrency -v
+```
+
+## Sources of truth
+
+- Product requirements: [StudyFlow AI requirements](docs/product/requirements.md)
+- Feature map: [StudyFlow AI features](docs/features/README.md)
+- Planner semantics: [Planner domain schema](docs/features/planner/schema.md)
+- Planner HTTP and service boundaries: [contracts/README.md](contracts/README.md)
+- Database implementation: [Supabase migrations](supabase/migrations/)
+
+Supabase migrations are append-only history. Do not edit an applied migration; add a new migration instead.
