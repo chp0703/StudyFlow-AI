@@ -27,7 +27,7 @@ def intent(name, **slots):
     return {"intent": name, "slots": slots, "raw_expressions": {}, "ambiguities": []}
 
 
-FULL_TASK = dict(title="Bài tập OOP", start_at="2027-03-01T08:00:00+07:00", deadline_precision="DATE", deadline_date="2027-03-02",
+FULL_TASK = dict(title="Bài tập OOP", start_at="2026-01-01T08:00:00+07:00", deadline_precision="DATE", deadline_date="2027-03-02",
                  deadline_timezone="Asia/Ho_Chi_Minh", estimated_minutes=90, priority=0.5, color="#596CF0")
 SCRIPT = {
     "tìm bài tập rồi thêm bài OOP và lập kế hoạch": {"intents": [
