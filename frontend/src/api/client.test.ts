@@ -253,3 +253,85 @@ test("weekly window archive prepares an action without approving it", async () =
     },
   })
 })
+
+test("weekly ADD and UPDATE send exact schema 1.1 arguments and version", async () => {
+  const { client, calls } = setup([
+    json({ state: "AWAITING_APPROVAL" }),
+    json({ state: "AWAITING_APPROVAL" }),
+  ])
+  const window = {
+    kind: "AVAILABILITY" as const,
+    label: null,
+    recurrence: "WEEKLY" as const,
+    timezone: "Asia/Ho_Chi_Minh",
+    start_at: null,
+    end_at: null,
+    weekday: 1,
+    start_time: "08:15",
+    end_time: "11:30",
+    valid_from: "2026-11-16",
+    valid_until: null,
+  }
+  const endpoints = createEndpoints(client)
+  await endpoints.prepareAvailability(
+    "conv",
+    {
+      change_type: "ADD",
+      window_id: null,
+      expected_window_version: null,
+      window,
+    },
+    "add-key",
+  )
+  await endpoints.prepareAvailability(
+    "conv",
+    {
+      change_type: "UPDATE",
+      window_id: "server-window",
+      expected_window_version: 4,
+      window: { ...window, end_time: "17:45" },
+    },
+    "update-key",
+  )
+  assert.equal(calls.length, 2)
+  const add = JSON.parse(calls[0].init.body as string)
+  const update = JSON.parse(calls[1].init.body as string)
+  assert.equal(add.schema_version, "1.1")
+  assert.equal(add.operation, "set_availability")
+  assert.deepEqual(add.arguments, {
+    change_type: "ADD",
+    window_id: null,
+    expected_window_version: null,
+    window,
+  })
+  assert.equal(update.arguments.window_id, "server-window")
+  assert.equal(update.arguments.expected_window_version, 4)
+  assert.equal(update.arguments.window.end_time, "17:45")
+})
+
+test("availability POST retries a network failure with the same idempotency key", async () => {
+  const { client, calls } = setup([
+    new Error("timeout"),
+    json({ state: "AWAITING_APPROVAL" }),
+  ])
+  await createEndpoints(client).prepareAvailability(
+    "conv",
+    {
+      change_type: "ARCHIVE",
+      window_id: "server-window",
+      expected_window_version: 4,
+      window: null,
+    },
+    "same-key",
+  )
+  assert.equal(calls.length, 2)
+  assert.equal(
+    (calls[0].init.headers as Record<string, string>)["Idempotency-Key"],
+    "same-key",
+  )
+  assert.equal(
+    (calls[1].init.headers as Record<string, string>)["Idempotency-Key"],
+    "same-key",
+  )
+  assert.equal(calls[0].init.body, calls[1].init.body)
+})

@@ -1,6 +1,8 @@
 import type { PlannerIssue, TimeWindow } from "../../types/planner.ts"
 
 import type { Task } from "../../types/task.ts"
+import type { ApiTimeWindow } from "../../api/types.ts"
+import { fullWorkingHour } from "./workingTime.ts"
 
 import {
   addCivilDays,
@@ -167,6 +169,8 @@ export function runPlannerCommand(
   tasks: Task[],
 
   availability: TimeWindow[] = [],
+  weeklyWindows: ApiTimeWindow[] = [],
+  workingConfigured = false,
 ): PlannerCommandResult {
   const text = input.trim().toLocaleLowerCase("vi")
 
@@ -179,6 +183,8 @@ export function runPlannerCommand(
     for (let h = from; h <= LAST_HOUR; h++)
       if (
         !isBusy(date, h) &&
+        (!workingConfigured ||
+          fullWorkingHour(date, h, weeklyWindows, availability, true)) &&
         !tasks.some((t) => t.id !== ignoreId && t.date === date && t.hour === h)
       )
         return h
@@ -289,7 +295,13 @@ export function runPlannerCommand(
     const issues: PlannerIssue[] = []
 
     const taken = (date: string, hour: number) =>
-      isBusy(date, hour) ||
+      !fullWorkingHour(
+        date,
+        hour,
+        weeklyWindows,
+        availability,
+        workingConfigured,
+      ) ||
       tasks.some((t) => t.date === date && t.hour === hour) ||
       [...placed.values()].some((t) => t.date === date && t.hour === hour)
 
@@ -311,7 +323,9 @@ export function runPlannerCommand(
           if (
             h >= FIRST_HOUR &&
             !taken(date, h) &&
-            (!free.length || free.some((w) => w.hour === h))
+            (workingConfigured ||
+              !free.length ||
+              free.some((w) => w.hour === h))
           ) {
             slot = { date, hour: h }
 
@@ -407,7 +421,9 @@ export function runPlannerCommand(
 
     if (slot === undefined)
       return unchanged(
-        "Khung giờ hôm đó đã kín từ giờ bạn chọn, hãy chọn ngày hoặc giờ khác.",
+        workingConfigured
+          ? "Không còn khối học đủ 60 phút trong thời gian học đã khai báo từ giờ bạn chọn."
+          : "Khung giờ hôm đó đã kín từ giờ bạn chọn, hãy chọn ngày hoặc giờ khác.",
       )
 
     const title = rest.charAt(0).toLocaleUpperCase("vi") + rest.slice(1)
@@ -474,7 +490,11 @@ export function runPlannerCommand(
     const slot = freeHour(newDate, newHour, task.id)
 
     if (slot === undefined)
-      return unchanged("Khung giờ hôm đó đã kín, hãy chọn ngày hoặc giờ khác.")
+      return unchanged(
+        workingConfigured
+          ? "Không còn khối học đủ 60 phút trong thời gian học đã khai báo."
+          : "Khung giờ hôm đó đã kín, hãy chọn ngày hoặc giờ khác.",
+      )
 
     const next: Task = {
       ...task,

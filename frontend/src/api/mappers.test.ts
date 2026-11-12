@@ -176,6 +176,22 @@ test("a one-off busy interval overrides availability on the same hour", () => {
   )
 })
 
+test("partial working intervals do not become complete legacy hour cells", () => {
+  const monday = new Date("2026-11-09T12:00:00Z")
+  assert.deepEqual(
+    expandWindows([win({ start_time: "08:15", end_time: "09:45" })], monday, 1),
+    [],
+  )
+  assert.deepEqual(
+    expandWindows(
+      [win({ start_time: "08:15", end_time: "10:00" })],
+      monday,
+      1,
+    ).map((cell) => cell.hour),
+    [9],
+  )
+})
+
 const proposal = (
   over: Partial<PlanProposal["payload"]> = {},
 ): PlanProposal => ({

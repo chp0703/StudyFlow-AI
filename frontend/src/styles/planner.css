@@ -484,7 +484,7 @@
 .proposal-coverage { font-weight: 700; color: var(--color-warning-text) !important; }
 .proposal-issues { color: var(--color-warning-text); }
 .working-time-editor { padding: 8px 20px; border-bottom: 1px solid var(--color-line); max-height: 38vh; overflow-y: auto; flex-shrink: 0; font-size: 13px; }
-.working-time-editor > summary { cursor: pointer; font-weight: 700; }
+.working-time-editor > summary { min-height: 44px; padding-block: 12px; box-sizing: border-box; cursor: pointer; font-weight: 700; }
 .working-time-editor > p { margin: 8px 0; color: var(--color-muted); }
 .working-time-days { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
 .working-time-day { border: 1px solid var(--color-line); border-radius: 10px; padding: 8px; background: var(--bg-card); }
@@ -500,6 +500,11 @@
 .working-time-form .working-time-midnight { display: flex; align-items: center; gap: 6px; min-height: 44px; }
 .working-time-midnight input { min-height: auto; }
 .working-time-form [role="alert"] { width: 100%; margin: 0; color: var(--color-warning-text); }
+.working-time-note { margin: 0; padding: 4px 20px; font-size: 12px; color: var(--color-muted); }
+.window-segment { position: absolute; left: 3px; right: 3px; z-index: 0; overflow: hidden; border-radius: 3px; padding: 1px 3px; font-size: 10px; line-height: 1.2; font-weight: 600; pointer-events: none; }
+.window-segment.is-free { background: rgba(34, 160, 107, .18); color: #176449; }
+.window-segment.is-busy { background: repeating-linear-gradient(135deg, rgba(120, 130, 160, .24) 0 4px, rgba(120, 130, 160, .10) 4px 8px); color: #384157; }
+.planner-calendar .schedule-event { z-index: 1; }
 @media (max-width: 800px) {
   .proposal-bar { flex-wrap: wrap; }
   .proposal-text { flex-basis: calc(100% - 30px); }

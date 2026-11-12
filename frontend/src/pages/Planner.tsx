@@ -15,6 +15,7 @@ import Button from "../components/ui/Button"
 import Card from "../components/ui/Card"
 
 import { FIRST_HOUR, LAST_HOUR } from "../features/planner/plannerAgent"
+import { hourSegments } from "../features/planner/workingTime"
 
 import { apiEnabled } from "../api/config"
 
@@ -41,6 +42,12 @@ export default function Planner({
   events,
 
   windows = [],
+
+  setWorkingWindows,
+
+  workingConfigured,
+
+  setWorkingConfigured,
 
   userId,
 
@@ -113,6 +120,10 @@ export default function Planner({
     {
       tasks,
       events,
+      windows,
+      setWorkingWindows,
+      workingConfigured,
+      setWorkingConfigured,
       userId,
       conversationId,
       reload,
@@ -340,6 +351,9 @@ export default function Planner({
   )
   const dateOf = (date: Date) => vietnamDate(date)
 
+  const segmentsAt = (date: Date, hour: number) =>
+    hourSegments(dateOf(date), hour, windows, apiEnabled ? [] : shownWindows)
+
   const windowAt = (date: Date, hour: number) =>
     shownWindows.find((w) => w.id === `${dateOf(date)}-${hour}`)
 
@@ -486,13 +500,18 @@ export default function Planner({
           approve={approve}
           reject={reject}
         />
-        {apiEnabled && (
-          <WorkingTimeEditor
-            windows={windows}
-            busy={busy}
-            pending={!!proposal}
-            prepare={prepareAvailability}
-          />
+        <WorkingTimeEditor
+          windows={windows}
+          busy={busy}
+          pending={!!proposal}
+          prepare={prepareAvailability}
+        />
+        {!apiEnabled && (
+          <p className="working-time-note">
+            Bản demo chỉ xếp Lịch học thành khối đủ 60 phút bắt đầu đúng giờ.
+            Khoảng học lẻ phút vẫn được giữ và hiển thị chính xác. Lệnh rảnh/bận
+            cũ tạo ngoại lệ cho ngày cụ thể.
+          </p>
         )}
         <p className="planner-legend" aria-label="Chú thích">
           <span className="legend-confirmed">Đã xác nhận</span>
@@ -512,6 +531,7 @@ export default function Planner({
           hours={hours}
           eventAt={eventAt}
           windowAt={windowAt}
+          segmentsAt={segmentsAt}
           proposedWindows={proposedWindows}
           prefill={prefill}
           changeOf={changeOf}

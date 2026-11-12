@@ -1,4 +1,5 @@
 import type { ActionReference } from "../api/types"
+import type { ApiTimeWindow } from "../api/types"
 
 import type { Task } from "./task"
 
@@ -50,6 +51,10 @@ export type PlannerState = {
   tasks: Task[]
 
   availability: TimeWindow[]
+
+  weeklyWindows?: ApiTimeWindow[]
+
+  workingConfigured?: boolean
 }
 
 // Thay đổi lịch đang chờ. Chỉ ghi nhận khi người dùng phê duyệt.

@@ -2,6 +2,8 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import { runPlannerCommand } from "./plannerAgent.ts"
 import { toIsoDate, today } from "../../utils/date.ts"
+import { addCivilDays, civilWeekday, vietnamDate } from "../../utils/date.ts"
+import type { ApiTimeWindow } from "../../api/types.ts"
 
 test("adds, moves around conflicts, and deletes", () => {
   const day = toIsoDate(today)
@@ -56,6 +58,77 @@ test("sets, replaces and clears availability; busy hours are skipped", () => {
 
   r = runPlannerCommand("xóa rảnh hôm nay", [], r.availability)
   assert.equal(r.availability.length, 0)
+})
+
+test("demo scheduler only uses complete hour blocks within configured weekly time", () => {
+  const tomorrow = addCivilDays(vietnamDate(), 1)
+  const weekday = civilWeekday(tomorrow) + 1
+  const window = (
+    start_time: string,
+    end_time: string,
+    kind: ApiTimeWindow["kind"] = "AVAILABILITY",
+  ): ApiTimeWindow => ({
+    window_id: `${kind}-${start_time}`,
+    version: 1,
+    kind,
+    label: null,
+    recurrence: "WEEKLY",
+    timezone: "Asia/Ho_Chi_Minh",
+    start_at: null,
+    end_at: null,
+    weekday,
+    start_time,
+    end_time,
+    valid_from: vietnamDate(),
+    valid_until: null,
+    archived_at: null,
+  })
+  const task = {
+    id: "weekly-demo",
+    title: "Ôn bài",
+    course: "",
+    time: "",
+    done: false,
+    effort: 60,
+    priority: "Trung bình",
+    deadline: tomorrow,
+  }
+  const partial = runPlannerCommand(
+    "lập kế hoạch",
+    [task],
+    [],
+    [window("08:15", "09:45")],
+    true,
+  )
+  assert.equal(partial.tasks[0].hour, undefined)
+  assert.equal(partial.issues?.length, 1)
+  const [, month, day] = tomorrow.split("-")
+  const manual = runPlannerCommand(
+    `thêm Ôn bài lúc 8h ngày ${Number(day)}/${Number(month)}`,
+    [],
+    [],
+    [window("08:15", "09:45")],
+    true,
+  )
+  assert.equal(manual.tasks.length, 0)
+  const full = runPlannerCommand(
+    "lập kế hoạch",
+    [task],
+    [],
+    [window("08:15", "10:00")],
+    true,
+  )
+  assert.equal(full.tasks[0].hour, 9)
+  const busy = runPlannerCommand(
+    "lập kế hoạch",
+    [task],
+    [],
+    [window("08:00", "10:00"), window("09:30", "09:45", "BUSY")],
+    true,
+  )
+  assert.equal(busy.tasks[0].hour, 8)
+  const empty = runPlannerCommand("lập kế hoạch", [task], [], [], true)
+  assert.equal(empty.tasks[0].hour, undefined)
 })
 
 test("parses dd/mm dates", () => {

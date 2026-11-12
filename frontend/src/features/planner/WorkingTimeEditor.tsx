@@ -120,7 +120,7 @@ export default function WorkingTimeEditor({
                         disabled={busy || pending}
                         onClick={() => begin(weekday, item)}
                       >
-                        Sửa
+                        Sửa {item.start_time}–{item.end_time}
                       </Button>
                       <Button
                         type="button"
@@ -135,7 +135,7 @@ export default function WorkingTimeEditor({
                           })
                         }
                       >
-                        Xóa
+                        Xóa {item.start_time}–{item.end_time}
                       </Button>
                     </li>
                   ))}
@@ -168,8 +168,13 @@ export default function WorkingTimeEditor({
             Bắt đầu
             <input
               type="time"
+              step={60}
+              aria-describedby={error ? "working-time-error" : undefined}
               value={start}
-              onChange={(event) => setStart(event.target.value)}
+              onChange={(event) => {
+                setStart(event.target.value)
+                setError("")
+              }}
               required
             />
           </label>
@@ -177,8 +182,13 @@ export default function WorkingTimeEditor({
             Kết thúc
             <input
               type="time"
+              step={60}
+              aria-describedby={error ? "working-time-error" : undefined}
               value={end}
-              onChange={(event) => setEnd(event.target.value)}
+              onChange={(event) => {
+                setEnd(event.target.value)
+                setError("")
+              }}
               disabled={end24}
               required
             />
@@ -191,7 +201,11 @@ export default function WorkingTimeEditor({
             />{" "}
             Đến 24:00
           </label>
-          {error && <p role="alert">{error}</p>}
+          {error && (
+            <p role="alert" id="working-time-error">
+              {error}
+            </p>
+          )}
           <Button type="submit" className="primary" disabled={busy || pending}>
             Xem đề xuất
           </Button>

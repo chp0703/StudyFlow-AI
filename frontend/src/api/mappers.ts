@@ -7,6 +7,7 @@ import type {
 } from "./types.ts"
 
 import { FIRST_HOUR, LAST_HOUR } from "../features/planner/plannerAgent.ts"
+import { hourSegments } from "../features/planner/workingTime.ts"
 
 import type {
   PlannerIssue,
@@ -17,12 +18,7 @@ import type {
 
 import type { Task } from "../types/task.ts"
 
-import {
-  addCivilDays,
-  civilWeekday,
-  vietnamClock,
-  vietnamDate,
-} from "../utils/date.ts"
+import { addCivilDays, vietnamClock, vietnamDate } from "../utils/date.ts"
 
 // The approved main contract still uses string priorities and course_label.
 
@@ -136,13 +132,7 @@ export function mapTasksAndEvents(
   }
 }
 
-const toMinutes = (hhmm: string) => {
-  const [h, m] = hhmm.split(":").map(Number)
-
-  return h * 60 + m
-}
-
-// Free/busy cells (one per grid hour) for `days` days from `from`. Busy wins over free on the same hour.
+// Legacy hour-cell adapter. The calendar renders exact source intervals separately.
 
 export function expandWindows(
   windows: ApiTimeWindow[],
@@ -156,36 +146,19 @@ export function expandWindows(
   for (let i = 0; i < days; i++) {
     const date = addCivilDays(vietnamDate(from), i)
 
-    const weekday = civilWeekday(date) + 1
-
     for (let hour = FIRST_HOUR; hour <= LAST_HOUR; hour++) {
-      const cellStart = new Date(
-        `${date}T${String(hour).padStart(2, "0")}:00:00+07:00`,
-      )
-
-      const cellEnd = new Date(cellStart.getTime() + 3600000)
-
-      for (const w of windows) {
-        if (w.archived_at) continue
-
-        const hit =
-          w.recurrence === "WEEKLY"
-            ? w.weekday === weekday &&
-              (!w.valid_from || date >= w.valid_from) &&
-              (!w.valid_until || date <= w.valid_until) &&
-              toMinutes(w.start_time ?? "00:00") < (hour + 1) * 60 &&
-              toMinutes(w.end_time ?? "00:00") > hour * 60
-            : new Date(w.start_at ?? 0) < cellEnd &&
-              new Date(w.end_at ?? 0) > cellStart
-
-        if (!hit) continue
-
-        const kind = w.kind === "BUSY" ? "busy" : "free"
-
+      const segments = hourSegments(date, hour, windows)
+      const kind = segments.some((segment) => segment.kind === "busy")
+        ? "busy"
+        : segments.length === 1 &&
+            segments[0].kind === "free" &&
+            segments[0].start === hour * 60 &&
+            segments[0].end === (hour + 1) * 60
+          ? "free"
+          : null
+      if (kind) {
         const id = `${date}-${hour}`
-
-        if (cells.get(id)?.kind !== "busy")
-          cells.set(id, { id, date, hour, kind })
+        cells.set(id, { id, date, hour, kind })
       }
     }
   }

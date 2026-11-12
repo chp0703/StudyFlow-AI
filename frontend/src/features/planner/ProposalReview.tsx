@@ -58,7 +58,9 @@ export default function ProposalReview({
                 <>
                   Đề xuất:{" "}
                   {describeChanges(proposal.changes, proposal.windowChanges) ||
-                    "không đổi"}
+                    (proposal.next.weeklyWindows
+                      ? "đổi thời gian học"
+                      : "không đổi")}
                 </>
               )}
             </strong>
