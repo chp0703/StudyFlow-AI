@@ -18,10 +18,27 @@
     "color": "#596CF0"
   },
   "raw_expressions": {
-    "deadline": "hết ngày 06/11"
+    "start_at": "8h sáng ngày 06/11",
+    "deadline_at": "hết ngày 06/11"
   },
   "field_sources": {
     "title": {
+      "source": "USER_MESSAGE",
+      "reference": "00000000-0000-4000-8000-000000000003"
+    },
+    "start_at": {
+      "source": "USER_MESSAGE",
+      "reference": "00000000-0000-4000-8000-000000000003"
+    },
+    "deadline_at": {
+      "source": "USER_MESSAGE",
+      "reference": "00000000-0000-4000-8000-000000000003"
+    },
+    "deadline_timezone": {
+      "source": "USER_MESSAGE",
+      "reference": "00000000-0000-4000-8000-000000000003"
+    },
+    "priority": {
       "source": "USER_MESSAGE",
       "reference": "00000000-0000-4000-8000-000000000003"
     }

@@ -41,6 +41,10 @@ def semantic_errors(value, path='$'):
         return errors
     if not isinstance(value, dict):
         return errors
+    if path.endswith(('.raw_expressions', '.field_sources')):
+        for k, v in value.items():
+            errors += semantic_errors(v, f'{path}.{k}')
+        return errors
 
     def fail(message):
         errors.append(f'{path}: {message}')
@@ -50,15 +54,15 @@ def semantic_errors(value, path='$'):
             dt = instant(v)
             if dt.second or dt.microsecond:
                 fail(f'{k} must be aligned to whole minutes')
-        if k in {'timezone', 'deadline_timezone'} and v is not None and v != 'Asia/Ho_Chi_Minh':
+        if k in {'timezone', 'deadline_timezone'} and isinstance(v, str) and v != 'Asia/Ho_Chi_Minh':
             fail(f'{k} must be Asia/Ho_Chi_Minh')
     if 'priority' in value and value['priority'] is not None:
         if isinstance(value['priority'], bool) or value['priority'] not in (0.1, 0.5, 1):
             fail('priority must be strictly numeric 0.1, 0.5, or 1')
-    if value.get('start_at') is not None and value.get('end_at') is not None:
+    if isinstance(value.get('start_at'), str) and isinstance(value.get('end_at'), str):
         if instant(value['end_at']) <= instant(value['start_at']):
             fail('end_at must be after start_at')
-    if value.get('start_at') and value.get('deadline_at'):
+    if isinstance(value.get('start_at'), str) and isinstance(value.get('deadline_at'), str):
         if instant(value['start_at']) > instant(value['deadline_at']):
             fail('start_at cannot exceed deadline_at')
     if value.get('recurrence') == 'WEEKLY':
@@ -72,10 +76,10 @@ def semantic_errors(value, path='$'):
     if 'estimated_minutes' in value and 'remaining_minutes' in value:
         if value['remaining_minutes'] > value['estimated_minutes']:
             fail('remaining_minutes cannot exceed estimated_minutes')
-    if value.get('available_from_at') and value.get('deadline_at'):
+    if isinstance(value.get('available_from_at'), str) and isinstance(value.get('deadline_at'), str):
         if instant(value['available_from_at']) > instant(value['deadline_at']):
             fail('available_from_at cannot exceed deadline_at')
-    if value.get('deadline_precision') == 'DATE' and value.get('deadline_at'):
+    if value.get('deadline_precision') == 'DATE' and isinstance(value.get('deadline_at'), str):
         from datetime import date, time, timedelta
         expected = datetime.combine(date.fromisoformat(value['deadline_date']) + timedelta(days=1), time(), ZoneInfo(value['deadline_timezone']))
         if instant(value['deadline_at']) != expected:
