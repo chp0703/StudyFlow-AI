@@ -4,7 +4,7 @@
 **Created:** 2026-11-04
 **Last updated:** 2026-11-05
 
-Accepted effective 05/11/2026 through the [official contract](../../../contracts/README.md) and [approval record](../../../contracts/APPROVAL.md). The [decision register](../../database/StudyFlow_AI_Phase_03_Implementation_Decision_Register.md) tracks the accepted scope and separate E-12/E-14 work. The official service-contract.json registry governs operation arguments/results and internal RPCs; the overview below does not create a competing registry.
+Accepted effective 05/11/2026 through the [official contract](../../../contracts/README.md) and [approval record](../../../contracts/APPROVAL.md). The official `service-contract.json` registry governs operation arguments/results and internal RPCs; the overview below does not create a competing registry.
 
 ## Decision (E-03, E-05, E-10)
 

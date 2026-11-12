@@ -81,7 +81,7 @@ python -B -m unittest discover -s supabase/tests_concurrency -v
 
 - Business semantics: [F1 schema v1.1](docs/database/schema_F1.md)
 - HTTP and service boundaries: [contracts/README.md](contracts/README.md)
-- Database mapping: [database baseline v1.1](docs/database/StudyFlow_AI_Database_Design_Baseline_v1.1.md)
+- Database implementation: [Supabase migrations](supabase/migrations/)
 - Product requirements: [SRS Markdown](docs/srs/StudyFlow_AI_Software_Requirements_Specification_v1.0_Draft.md)
 
 Supabase migrations are append-only history. Do not edit an applied migration; add a new migration instead.

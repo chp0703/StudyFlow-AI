@@ -4,7 +4,7 @@
 **Created:** 2026-11-04
 **Last updated:** 2026-11-05
 
-Accepted effective 05/11/2026 through the [official contract, section 6](../../../contracts/README.md#6-rpc-quyền-và-nguồn-request) and [approval record](../../../contracts/APPROVAL.md). The [decision register](../../database/StudyFlow_AI_Phase_03_Implementation_Decision_Register.md) tracks scope under E-02/E-05/E-06. The accepted decision below supersedes the earlier INVOKER preference and open Option A/Option B recommendation; formal SRS reconciliation under E-12 remains separate.
+Accepted effective 05/11/2026 through the [official contract, section 6](../../../contracts/README.md#6-rpc-quyền-và-nguồn-request) and [approval record](../../../contracts/APPROVAL.md). The accepted decision below supersedes the earlier INVOKER preference and open Option A/Option B recommendation.
 
 ## Context
 

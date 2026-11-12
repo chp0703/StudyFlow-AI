@@ -12,8 +12,8 @@ and test 07; it is red baseline evidence, not a pass or execution of this plan.
 
 ## Approved additive 1.0.1 coverage
 
-User approval now covers A/B/C/D in
-[the internal RPC addendum](../../../docs/implementation/INTERNAL_RPC_ADDENDUM_PROPOSAL.md).
+User approval covers the A/B/C/D internal RPC addendum recorded in
+[the approval record](../../../contracts/APPROVAL.md).
 The six added internal wrappers and `workflow_continuations` are authorized while
 logical schema 1.1, eight HTTP endpoints and ten domain/LLM operations stay fixed.
 Tests 03–05 include the added infrastructure; test 06 retains its original 21
@@ -41,8 +41,8 @@ from the immediate-read CAS tests or catalog checks.
 Sources: [approved contract](../../../contracts/README.md),
 [RPC registry](../../../contracts/service-contract.json),
 [persistence mapping](../../../contracts/data-contract.json),
-[acceptance cases](../../../contracts/acceptance-cases.md), and
-[WP2](../../../docs/implementation/WP2_DATABASE.md).
+[acceptance cases](../../../contracts/acceptance-cases.md), and the executable
+[Supabase migrations](../../../supabase/migrations/).
 
 ## Existing evidence and boundaries
 

@@ -4,7 +4,7 @@
 **Created:** 2026-11-04
 **Last updated:** 2026-11-05
 
-Accepted effective 05/11/2026 through the [official contract, section 7](../../../contracts/README.md#7-transaction-và-idempotency) and [approval record](../../../contracts/APPROVAL.md), with scope tracked in the [decision register](../../database/StudyFlow_AI_Phase_03_Implementation_Decision_Register.md). The owner row lock below supersedes the earlier advisory-key proposal; E-12/SRS work remains separate.
+Accepted effective 05/11/2026 through the [official contract, section 7](../../../contracts/README.md#7-transaction-và-idempotency) and [approval record](../../../contracts/APPROVAL.md). The owner row lock below supersedes the earlier advisory-key proposal.
 
 ## Decision (E-10, E-11)
 

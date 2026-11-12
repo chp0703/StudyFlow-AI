@@ -7,7 +7,7 @@
 | Logical schema | **F1 v1.1**, `schema_version="1.1"` |
 | Ngày phê duyệt và hiệu lực | **05/11/2026**, múi giờ Việt Nam (`Asia/Ho_Chi_Minh`) |
 | Bên phê duyệt | Team dự án StudyFlow AI, theo xác nhận của người dùng trong cuộc trao đổi này |
-| Căn cứ | Người dùng xác nhận duyệt chính thức bộ contract `1.0.0` (“Oke team t đã duyệt mày hãy đổi thành chính thức đi, nếu có thông tin gì cứ hỏi t”) và tiếp tục phê duyệt rõ ràng toàn bộ mục A/B/C/D tại `docs/implementation/INTERNAL_RPC_ADDENDUM_PROPOSAL.md` cho bản `1.0.1` |
+| Căn cứ | Người dùng xác nhận duyệt chính thức bộ contract `1.0.0` và tiếp tục phê duyệt toàn bộ phụ lục RPC nội bộ A/B/C/D cho bản `1.0.1`; lịch sử chính xác được giữ tại các commit bên dưới |
 | Bản được duyệt | Bộ contract `1.0.0` tại commit `b629a5e` cùng phụ lục RPC nội bộ & workflow continuation `1.0.1` theo đề xuất tại commit `2bac72c` / baseline `5d29d2d` |
 
 Phê duyệt bao gồm cả ba ranh giới **API FE ↔ BE**, **Service/Tool Orchestrator ↔ BE**, **Data/RPC BE ↔ DB**, toàn bộ quyết định **IC-01–IC-08** tại [hợp đồng chính](README.md#10-quyết-định-đã-phê-duyệt-và-trách-nhiệm-duy-trì), cùng 6 helper RPC nội bộ (`ensure_user_context`, `list_time_windows`, `get_workflow_context`, `get_workflow_continuation`, `initialize_workflow_continuation`, `checkpoint_workflow_continuation`), bảng hạ tầng `app_private.workflow_continuations` và quy tắc bootstrap attested cho first `GET /v1/preferences`.

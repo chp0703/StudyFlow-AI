@@ -2,7 +2,7 @@
 
 Ngày cập nhật: **05/11/2026**, múi giờ Việt Nam.
 
-Package **1.0.1** (logical `schema_version="1.1"`) đã được phê duyệt chính thức theo [APPROVAL.md](APPROVAL.md), kế thừa nền tảng `1.0.0` (`b629a5e`) và bổ sung phụ lục RPC nội bộ đã duyệt (`docs/implementation/INTERNAL_RPC_ADDENDUM_PROPOSAL.md`). Trong phạm vi bàn giao WP0 chỉ chỉnh sửa file tĩnh trong `contracts/`, không tự thực thi lệnh terminal/test; việc chạy `contracts/check_contract.py` và bộ test độc lập do Sol thực hiện bên ngoài.
+Package **1.0.1** (logical `schema_version="1.1"`) đã được phê duyệt chính thức theo [APPROVAL.md](APPROVAL.md), kế thừa nền tảng `1.0.0` (`b629a5e`) và bổ sung phụ lục RPC nội bộ tại commit `2bac72c`. Các artifact hiện hành trong `contracts/` là nguồn chuẩn; tài liệu handoff WP0 đã được loại bỏ sau khi tích hợp hoàn tất.
 
 | Hạng mục | Phạm vi / Trạng thái |
 |---|---|
@@ -15,7 +15,7 @@ Package **1.0.1** (logical `schema_version="1.1"`) đã được phê duyệt ch
 | Đối chiếu schema F1 nguồn | Tên field 10 entity và catalog operation khớp `docs/database/schema_F1.md` |
 | Ví dụ | 100 positive/negative fixtures trong `examples/manifest.json` (88 fixture gốc cập nhật lên `1.0.1` + 12 fixture mới cho continuation/checkpoint/context/version) |
 | Thực thi checker & test độc lập | Đã chạy 05/11/2026 trên Python 3.14: `check_contract.py` PASS (122 definitions, 100 fixtures); `test_contract_addendum.py` 16/16 pass; scheduler acceptance 33, planner unit 24, tests 78 pass. Kiểm riêng: kết quả rỗng hợp lệ với `search_tasks`, bị loại với `get_study_plan` |
-| Backend/DB/auth/UI runtime | **NOT_RUN**; chưa có implementation trong phạm vi thay đổi WP0 |
+| Backend/DB/auth/UI runtime | Ngoài phạm vi của checker tĩnh này; được kiểm tra bởi backend, frontend và Supabase workflows riêng |
 
 Môi trường kiểm tra tham chiếu: Python, `jsonschema`, `openapi-spec-validator` theo `contracts/requirements-check.txt`.
 

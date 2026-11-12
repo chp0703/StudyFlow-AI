@@ -5,7 +5,7 @@
 **Last updated:** 2026-11-05
 **Scope:** F1 physical implementation
 
-Accepted effective 05/11/2026 through the [official contract](../../../contracts/README.md) and [approval record](../../../contracts/APPROVAL.md), with scope tracked in the [decision register](../../database/StudyFlow_AI_Phase_03_Implementation_Decision_Register.md), especially E-01, E-03, and E-04. This is design approval, not evidence of implementation or deployment.
+Accepted effective 05/11/2026 through the [official contract](../../../contracts/README.md) and [approval record](../../../contracts/APPROVAL.md). The implementation is represented by the current backend and append-only Supabase migrations.
 
 ## Context
 
