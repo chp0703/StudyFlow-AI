@@ -1,123 +1,49 @@
-# StudyFlow AI — Repository Structure
+# StudyFlow AI repository structure
 
-> **Tài liệu cấu trúc lịch sử — không phải inventory implementation.** Hiện trạng checkout và phương án tổ chức file, cập nhật theo góp ý team ngày **09/11/2026**, nằm tại [Bản đồ code F1 và đề xuất tổ chức file](F1_File_Organization_Proposal.md). Các tên file trong cây bên dưới là mục tiêu thiết kế, không xác nhận file đã tồn tại, đã được runtime sử dụng hay đã qua nghiệm thu. Thư mục có sẵn nhưng chỉ chứa `.gitkeep`/`__init__.py` cũng chưa chứng minh đã có chức năng.
+This document describes the code that currently exists and its runtime relationships. It is not a proposed directory tree.
 
-> Bộ contract chính thức hiện áp dụng là **package 1.0.1 — APPROVED**, logical schema **F1 v1.1**, `schema_version="1.1"`, hiệu lực 05/11/2026: [contracts/README.md](../../contracts/README.md), [APPROVAL.md](../../contracts/APPROVAL.md), [CHANGELOG.md](../../contracts/CHANGELOG.md). Package 1.0.1 bổ sung RPC nội bộ/workflow continuation trên nền 1.0.0; giữ 8 endpoint HTTP công khai, 10 operation nghiệp vụ và schema logic 1.1. Các artifact chính thức gồm OpenAPI, schema bundle, service/data registry và fixtures; tên file minh họa trong cây lịch sử không thay thế chúng.
-
-> Bản chuyển đổi Markdown từ PDF nguồn `repo structure.pdf` (3 trang). Cấu trúc cây được giữ trong một khối code để bảo toàn quan hệ thư mục và chú thích gốc.
+## Runtime flow
 
 ```text
-studyflow-ai/
-├── contracts/          # NGUỒN SỰ THẬT DUY NHẤT – 2 team cùng review
-│ ├── schemas/            # JSON Schema
-│ │ ├── user_message.json
-│ │ ├── extraction_result.json
-│ │ ├── pending_action.json
-│ │ ├── validated_command.json
-│ │ ├── tool_result.json
-│ │ ├── approval_evidence.json
-│ │ └── errors.json       # error code catalog
-│ ├── openapi.yaml          # API giữa FE ↔ BE
-│ ├── examples/           # JSON valid/invalid cho từng contract
-│ │ ├── valid/
-│ │ └── invalid/
-│ └── CHANGELOG.md               # mọi thay đổi contract phải ghi ở đây
-│
-├── backend/
-│ ├── app/
-│ │ ├── main.py
-│ │ ├── core/           # config, auth context, timezone, logging
-│ │ │ ├── auth.py         # user_id CHỈ lấy từ đây, không từ LLM
-│ │ │ ├── clock.py        # request timestamp, timezone
-│ │ │ └── errors.py
-│ │ ├── api/           # HTTP layer mỏng
-│ │ │ ├── chat.py         # POST /messages
-│ │ │ ├── tasks.py
-│ │ │ ├── availability.py
-│ │ │ ├── plans.py
-│ │ │ └── approvals.py
-│ │ ├── nlu/           # LLM/NLU layer – output là UNTRUSTED
-│ │ │ ├── adapter.py        # gọi LLM, timeout, retry
-│ │ │ ├── prompts/
-│ │ │ ├── parser.py        # raw → ExtractionResult
-│ │ │ └── time_expressions.py
-│ │ ├── orchestrator/      # Shared Orchestrator
-│ │ │ ├── pipeline.py # 10 stage
-│ │ │ ├── context.py
-│ │ │ ├── pending_actions.py
-│ │ │ ├── clarification.py
-│ │ │ ├── dispatcher.py # ValidatedCommand → tool (deterministic)
-│ │ │ ├── approval_router.py
-│ │ │ └── state_machine.py
-│ │ ├── validation/      # structural → semantic → domain → state
-│ │ │ ├── structural.py
-│ │ │ ├── semantic.py
-│ │ │ ├── domain.py
-│ │ │ └── state.py
-│ │ ├── f1/           # F1 Backend – business logic
-│ │ │ ├── tasks/          # create_task_candidate, confirm_task, search_tasks
-│ │ │ ├── availability/ # set_availability
-│ │ │ ├── scheduler/         # generate_study_plan – THUẦN, không gọi LLM/DB
-│ │ │ │ ├── engine.py
-│ │ │ │ ├── ordering.py # deadline → priority
-│ │ │ │ └── slots.py
-│ │ │ ├── planning/         # get_study_plan, propose_reschedule
-│ │ │ ├── approval/         # approve_study_plan: verify → revalidate → commit
-│ │ │ └── entity_resolution.py
-│ │ ├── models/            # Pydantic schemas (sinh/đối chiếu từ contracts/)
-│ │ └── db/
-│ │     ├── orm/         # AcademicTask, StudyPlan, PlannedStudyBlock…
-│ │     ├── repositories/
-│ │     └── migrations/
-│ ├── tests/
-│ │ ├── unit/           # scheduler, validator – chạy không cần DB
-│ │ ├── integration/
-│ │ ├── contract/         # đối chiếu response với contracts/schemas
-│ │ ├── workflow/          # multi-turn, pending action, approval
-│ │ ├── security/         # forged approval, cross-user access
-│ │ └── fixtures/
-│ ├── pyproject.toml
-│ └── Dockerfile
-│
-├── frontend/
-│ ├── src/
-│ │ ├── api/            # client sinh từ openapi.yaml
-│ │ ├── types/           # type sinh từ contracts/schemas
-│ │ ├── features/
-│ │ │ ├── chat/           # khung chat, clarification
-│ │ │ ├── tasks/          # task nháp vs đã xác nhận
-│ │ │ ├── availability/
-│ │ │ ├── schedule/         # lịch confirmed vs proposed
-│ │ │ └── proposals/         # preview, approve/reject, unscheduled work
-│ │ ├── components/           # UI dùng chung
-│ │ ├── i18n/vi/         # error code → thông báo tiếng Việt
-│ │ ├── hooks/
-│ │ └── lib/           # date/timezone utils
-│ ├── mocks/              # mock server từ contracts/examples
-│ ├── tests/
-│ │ ├── component/
-│ │ └── e2e/             # theo UC-01 → UC-13
-│ ├── package.json
-│ └── Dockerfile
-│
-├── eval/              # Đánh giá NLU – tách khỏi unit test
-│ ├── datasets/           # câu tiếng Việt + intent/slot kỳ vọng
-│ ├── run_eval.py
-│ └── reports/
-│
-├── docs/
-│ ├── srs/           # SRS .md + .docx
-│ ├── adr/            # Architecture Decision Records – ghi D1–D8 khi chốt
-│ ├── diagrams/          # Mermaid
-│ └── open-issues.md
-│
-├── docker-compose.yml        # fe + be + db chạy local
-├── .github/
-│ ├── workflows/
-│ │ ├── backend.yml
-│ │ ├── frontend.yml
-│ │ └── contracts.yml      # validate schema + examples
-│ ├── CODEOWNERS
-│ └── pull_request_template.md
-└── README.md
+React frontend
+    |
+    | HTTP /v1, Supabase access token
+    v
+backend/app/main.py
+    |
+    v
+backend/app/api/v1/routes.py
+    |
+    +--> workflow.py --> orchestrator/{receipts,actions,chat}.py
+    |                         |
+    |                         +--> NLU extractor
+    |                         +--> deterministic F1 scheduler
+    |
+    +--> clients/rpc.py --> signed app_api RPC --> Supabase/PostgreSQL
 ```
+
+The HTTP layer verifies the user JWT and creates server-owned request context. The workflow layer prepares and reviews actions. Database mutations are performed through approved RPCs and retain PostgreSQL transaction boundaries. The scheduler is pure and does not authenticate users or persist plans.
+
+## Top-level directories
+
+| Path | Responsibility |
+|---|---|
+| `backend/app/api/v1/` | Eight public F1 HTTP endpoints and workflow adapter |
+| `backend/app/orchestrator/` | Durable receipt, action and chat workflow steps |
+| `backend/app/clients/rpc.py` | Approved RPC transport and request signing |
+| `backend/app/core/` | Configuration, contract validation and JWT verification |
+| `backend/app/f1/scheduler/` | Deterministic planning, constraints and replanning |
+| `backend/app/nlu/` | Untrusted extraction and evaluation |
+| `backend/tests/` | Unit, independent acceptance and local integration tests |
+| `contracts/` | Approved OpenAPI, schema bundle, registries and fixtures |
+| `frontend/` | React/Vite user interface and API adapters |
+| `supabase/migrations/` | Append-only database history |
+| `supabase/tests/` | pgTAP database behavior and security tests |
+| `supabase/tests_concurrency/` | Real-PostgreSQL transaction and concurrency tests |
+| `eval/` | Held-out NLU acceptance data |
+
+## Sources of truth
+
+The logical business model is defined by `docs/database/schema_F1.md`. Machine-readable HTTP, service and data contracts live in `contracts/`. Physical database behavior is defined by the ordered migrations and verified by database tests.
+
+Historical proposals and parallel draft dispatcher/service implementations have been removed so that the repository exposes one current runtime path.
