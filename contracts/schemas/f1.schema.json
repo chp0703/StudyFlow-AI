@@ -248,12 +248,12 @@
             }
           ]
         },
-        "course_label": {
+        "start_at": {
           "anyOf": [
             {
               "type": "string",
-              "minLength": 1,
-              "pattern": "\\S"
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
             },
             {
               "type": "null"
@@ -313,6 +313,7 @@
           "anyOf": [
             {
               "type": "string",
+              "const": "Asia/Ho_Chi_Minh",
               "minLength": 1,
               "format": "iana-timezone"
             },
@@ -336,12 +337,23 @@
         "priority": {
           "anyOf": [
             {
-              "type": "string",
+              "type": "number",
               "enum": [
-                "LOW",
-                "NORMAL",
-                "HIGH"
+                0.1,
+                0.5,
+                1
               ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^#[0-9A-Fa-f]{6}$"
             },
             {
               "type": "null"
@@ -393,7 +405,8 @@
         "timezone": {
           "type": "string",
           "minLength": 1,
-          "format": "iana-timezone"
+          "format": "iana-timezone",
+          "const": "Asia/Ho_Chi_Minh"
         },
         "locale": {
           "type": "string",
@@ -588,17 +601,10 @@
             }
           ]
         },
-        "course_label": {
-          "anyOf": [
-            {
-              "type": "string",
-              "minLength": 1,
-              "pattern": "\\S"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "start_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
         },
         "available_from_at": {
           "anyOf": [
@@ -637,6 +643,7 @@
         },
         "deadline_timezone": {
           "type": "string",
+          "const": "Asia/Ho_Chi_Minh",
           "minLength": 1,
           "format": "iana-timezone"
         },
@@ -651,12 +658,16 @@
           "maximum": 9007199254740991
         },
         "priority": {
-          "type": "string",
+          "type": "number",
           "enum": [
-            "LOW",
-            "NORMAL",
-            "HIGH"
+            0.1,
+            0.5,
+            1
           ]
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
         },
         "status": {
           "$ref": "#/$defs/TaskStatus"
@@ -684,7 +695,7 @@
         "version",
         "title",
         "description",
-        "course_label",
+        "start_at",
         "available_from_at",
         "deadline_at",
         "deadline_precision",
@@ -693,6 +704,7 @@
         "estimated_minutes",
         "remaining_minutes",
         "priority",
+        "color",
         "status",
         "confirmed_at",
         "created_at",
@@ -795,7 +807,8 @@
         "timezone": {
           "type": "string",
           "minLength": 1,
-          "format": "iana-timezone"
+          "format": "iana-timezone",
+          "const": "Asia/Ho_Chi_Minh"
         },
         "start_at": {
           "anyOf": [
@@ -1005,7 +1018,8 @@
         "timezone": {
           "type": "string",
           "minLength": 1,
-          "format": "iana-timezone"
+          "format": "iana-timezone",
+          "const": "Asia/Ho_Chi_Minh"
         },
         "start_at": {
           "anyOf": [
@@ -2182,7 +2196,8 @@
         "timezone": {
           "type": "string",
           "minLength": 1,
-          "format": "iana-timezone"
+          "format": "iana-timezone",
+          "const": "Asia/Ho_Chi_Minh"
         },
         "locale": {
           "type": "string",
@@ -2678,7 +2693,8 @@
                 "timezone": {
                   "type": "string",
                   "minLength": 1,
-                  "format": "iana-timezone"
+                  "format": "iana-timezone",
+                  "const": "Asia/Ho_Chi_Minh"
                 },
                 "start_at": {
                   "anyOf": [
@@ -2901,7 +2917,8 @@
                   "timezone": {
                     "type": "string",
                     "minLength": 1,
-                    "format": "iana-timezone"
+                    "format": "iana-timezone",
+                    "const": "Asia/Ho_Chi_Minh"
                   },
                   "start_at": {
                     "anyOf": [
@@ -3116,7 +3133,8 @@
                   "timezone": {
                     "type": "string",
                     "minLength": 1,
-                    "format": "iana-timezone"
+                    "format": "iana-timezone",
+                    "const": "Asia/Ho_Chi_Minh"
                   },
                   "start_at": {
                     "anyOf": [
@@ -3375,7 +3393,8 @@
                 "timezone": {
                   "type": "string",
                   "minLength": 1,
-                  "format": "iana-timezone"
+                  "format": "iana-timezone",
+                  "const": "Asia/Ho_Chi_Minh"
                 },
                 "start_at": {
                   "anyOf": [
@@ -3598,7 +3617,8 @@
                   "timezone": {
                     "type": "string",
                     "minLength": 1,
-                    "format": "iana-timezone"
+                    "format": "iana-timezone",
+                    "const": "Asia/Ho_Chi_Minh"
                   },
                   "start_at": {
                     "anyOf": [
@@ -3813,7 +3833,8 @@
                   "timezone": {
                     "type": "string",
                     "minLength": 1,
-                    "format": "iana-timezone"
+                    "format": "iana-timezone",
+                    "const": "Asia/Ho_Chi_Minh"
                   },
                   "start_at": {
                     "anyOf": [
@@ -5633,7 +5654,8 @@
         "timezone": {
           "type": "string",
           "minLength": 1,
-          "format": "iana-timezone"
+          "format": "iana-timezone",
+          "const": "Asia/Ho_Chi_Minh"
         },
         "generation_scope": {
           "$ref": "#/$defs/GenerationScope"

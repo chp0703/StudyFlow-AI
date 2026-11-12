@@ -546,6 +546,30 @@
       "schema": "RpcRequest",
       "valid": false,
       "reason": "Package 1.0.1 rejects 1.0.0 RpcRequest envelopes"
+    },
+    {
+      "file": "examples/invalid/task-invalid-priority.json",
+      "schema": "AcademicTask",
+      "valid": false,
+      "reason": "Unsupported priority values fail contract validation"
+    },
+    {
+      "file": "examples/invalid/task-invalid-color.json",
+      "schema": "AcademicTask",
+      "valid": false,
+      "reason": "Invalid colors fail contract validation"
+    },
+    {
+      "file": "examples/invalid/task-course-label-removed.json",
+      "schema": "CandidateTaskFields",
+      "valid": false,
+      "reason": "course_label is removed from the contract"
+    },
+    {
+      "file": "examples/invalid/non-vietnam-timezone.json",
+      "schema": "TimeWindowInput",
+      "valid": false,
+      "reason": "Caller/model input cannot select another business timezone"
     }
   ]
 }

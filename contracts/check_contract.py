@@ -50,9 +50,17 @@ def semantic_errors(value, path='$'):
             dt = instant(v)
             if dt.second or dt.microsecond:
                 fail(f'{k} must be aligned to whole minutes')
+        if k in {'timezone', 'deadline_timezone'} and v is not None and v != 'Asia/Ho_Chi_Minh':
+            fail(f'{k} must be Asia/Ho_Chi_Minh')
+    if 'priority' in value and value['priority'] is not None:
+        if isinstance(value['priority'], bool) or value['priority'] not in (0.1, 0.5, 1):
+            fail('priority must be strictly numeric 0.1, 0.5, or 1')
     if value.get('start_at') is not None and value.get('end_at') is not None:
         if instant(value['end_at']) <= instant(value['start_at']):
             fail('end_at must be after start_at')
+    if value.get('start_at') and value.get('deadline_at'):
+        if instant(value['start_at']) > instant(value['deadline_at']):
+            fail('start_at cannot exceed deadline_at')
     if value.get('recurrence') == 'WEEKLY':
         if value['end_time'] <= value['start_time']:
             fail('WEEKLY end_time must exceed start_time; split overnight intervals')
@@ -278,6 +286,8 @@ def main():
         fields.add('created_at')
         if name in {'User', 'TaskCandidate', 'AcademicTask', 'TimeWindow', 'PlanProposal'}:
             fields.add('updated_at')
+        if name == 'AcademicTask':
+            fields = (fields - {'course_label'}) | {'start_at', 'color'}
         assert fields == set(definitions[name]['properties']), f'Logical fields drifted: {name}'
     catalog = source.split('### Danh mục operation chính thức')[1].split('### Kiểu arguments')[0]
     assert set(re.findall(r'^\| `([a-z_]+)`', catalog, re.M)) == operations
