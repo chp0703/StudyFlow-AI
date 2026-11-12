@@ -157,6 +157,11 @@ export default function TaskPanel({
             return (
               <li key={t.id}>
                 <strong>{t.title}</strong>
+                {t.description && (
+                  <span className="task-panel-description">
+                    {t.description}
+                  </span>
+                )}
                 <span className="task-panel-meta">
                   <CalendarClock aria-hidden="true" size={13} />
                   {formatShortDate(t.deadline)}

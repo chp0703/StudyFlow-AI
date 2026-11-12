@@ -571,10 +571,7 @@ export default function Assistant({
 
     const missing =
       scenario === "task"
-        ? !draft.title.trim() ||
-          !draft.course.trim() ||
-          !draft.deadline ||
-          !draft.duration
+        ? !draft.title.trim() || !draft.deadline || !draft.duration
         : scenario === "plan"
           ? !draft.title.trim() || !draft.deadline || !draft.availability.trim()
           : !draft.block.trim() || !draft.target
@@ -609,8 +606,6 @@ export default function Assistant({
             details: [
               { label: "Công việc", value: draft.title.trim() },
 
-              { label: "Môn học", value: draft.course.trim() },
-
               { label: "Hạn", value: draft.deadline },
 
               { label: "Thời lượng", value: `${draft.duration} phút` },
@@ -632,7 +627,7 @@ export default function Assistant({
 
                 { label: "Hạn", value: draft.deadline },
 
-                { label: "Thời gian rảnh", value: draft.availability.trim() },
+                { label: "Thời gian học", value: draft.availability.trim() },
               ],
             }
           : {
@@ -674,10 +669,10 @@ export default function Assistant({
   // API mode: the message goes to the server; its reply (question, approval card, result or error) is the answer.
 
   const attempt = useRef<{
- key: string
- text: string
- id: string
-} | null>(null)
+    key: string
+    text: string
+    id: string
+  } | null>(null)
 
   function appendAssistant(
     conversationId: string,
@@ -963,15 +958,6 @@ export default function Assistant({
           {scenario === "task" && (
             <>
               {field("title", "Tên công việc *", "text", "Ví dụ: Làm bài OOP")}
-              {field(
-                "course",
-
-                "Môn học *",
-
-                "text",
-
-                "Ví dụ: Lập trình hướng đối tượng",
-              )}
               {field("deadline", "Hạn hoàn thành *", "date")}
               {field("duration", "Thời lượng dự kiến (phút) *", "number", "60")}
             </>

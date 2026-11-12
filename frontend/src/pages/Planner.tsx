@@ -1,5 +1,6 @@
 import WeekCalendar from "../features/planner/WeekCalendar"
 import ProposalReview from "../features/planner/ProposalReview"
+import WorkingTimeEditor from "../features/planner/WorkingTimeEditor"
 import { usePlanner, type PlannerProps } from "../features/planner/usePlanner"
 import { useEffect, useRef, useState } from "react"
 
@@ -21,13 +22,12 @@ import TaskPanel from "../features/planner/TaskPanel"
 
 import type { Task } from "../types/task"
 
-import { today, toIsoDate } from "../utils/date"
-
-const todayIndex = (today.getDay() + 6) % 7
-
-const nowHour = new Date().getHours()
-
-const nowMinutes = new Date().getMinutes()
+import {
+  addCivilDays,
+  civilWeekday,
+  vietnamClock,
+  vietnamDate,
+} from "../utils/date"
 
 const hours = Array.from(
   { length: LAST_HOUR - FIRST_HOUR + 1 },
@@ -39,6 +39,8 @@ export default function Planner({
   tasks,
 
   events,
+
+  windows = [],
 
   userId,
 
@@ -104,6 +106,7 @@ export default function Planner({
     shownWindows,
     stale,
     send,
+    prepareAvailability,
     approve,
     reject,
   } = usePlanner(
@@ -142,6 +145,16 @@ export default function Planner({
   )
 
   const [week, setWeek] = useState(0)
+  const [now, setNow] = useState(() => new Date())
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const todayKey = vietnamDate(now)
+  const todayIndex = civilWeekday(todayKey)
+  const [nowHour, nowMinutes] = vietnamClock(now).split(":").map(Number)
 
   const [taskPanelOpen, setTaskPanelOpen] = useState(() => {
     try {
@@ -316,33 +329,19 @@ export default function Planner({
 
   // Ngày hôm nay dịch theo số tuần nguyên để theo đúng tuần đang xem.
 
-  const weekLabel = new Date(
-    today.getFullYear(),
-
-    today.getMonth(),
-
-    today.getDate() + week * 7,
-  ).toLocaleDateString("vi-VN", {
-    day: "2-digit",
-
-    month: "2-digit",
-
-    year: "numeric",
-  })
-
-  const monday = new Date(today)
-
-  monday.setDate(monday.getDate() - todayIndex + week * 7)
-
+  const weekLabel = addCivilDays(todayKey, week * 7)
+    .split("-")
+    .reverse()
+    .join("/")
+  const mondayKey = addCivilDays(todayKey, -todayIndex + week * 7)
   const weekDays = Array.from(
     { length: 7 },
-
-    (_, i) =>
-      new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i),
+    (_, i) => new Date(`${addCivilDays(mondayKey, i)}T12:00:00Z`),
   )
+  const dateOf = (date: Date) => vietnamDate(date)
 
   const windowAt = (date: Date, hour: number) =>
-    shownWindows.find((w) => w.id === `${toIsoDate(date)}-${hour}`)
+    shownWindows.find((w) => w.id === `${dateOf(date)}-${hour}`)
 
   const proposedWindows = new Set(
     proposal?.windowChanges
@@ -357,7 +356,8 @@ export default function Planner({
   // Nhấn ô trống để bắt đầu lệnh thêm vào khung giờ đó.
 
   const prefill = (date: Date, hour: number) => {
-    const d = `${date.getDate()}/${date.getMonth() + 1}`
+    const [, month, day] = dateOf(date).split("-")
+    const d = `${Number(day)}/${Number(month)}`
 
     const text = apiEnabled
       ? `Thêm công việc hạn ngày ${d}, làm khoảng 60 phút`
@@ -378,7 +378,7 @@ export default function Planner({
   const changeOf = new Map(proposal?.changes.map((c) => [c.task.id, c.kind]))
 
   const slotMatch = (task: Task, date: Date, hour: number) =>
-    task.date === toIsoDate(date) && task.hour === hour
+    task.date === dateOf(date) && task.hour === hour
 
   const eventAt = (date: Date, hour: number) =>
     shown.find((task) => slotMatch(task, date, hour)) ??
@@ -387,10 +387,8 @@ export default function Planner({
     )?.task
 
   const weekEmpty =
-    !shown.some(
-      (t) => t.date && weekDays.some((d) => toIsoDate(d) === t.date),
-    ) &&
-    !shownWindows.some((w) => weekDays.some((d) => toIsoDate(d) === w.date))
+    !shown.some((t) => t.date && weekDays.some((d) => dateOf(d) === t.date)) &&
+    !shownWindows.some((w) => weekDays.some((d) => dateOf(d) === w.date))
 
   return (
     <div
@@ -488,10 +486,18 @@ export default function Planner({
           approve={approve}
           reject={reject}
         />
+        {apiEnabled && (
+          <WorkingTimeEditor
+            windows={windows}
+            busy={busy}
+            pending={!!proposal}
+            prepare={prepareAvailability}
+          />
+        )}
         <p className="planner-legend" aria-label="Chú thích">
           <span className="legend-confirmed">Đã xác nhận</span>
 
-          <span className="legend-free">Rảnh</span>
+          <span className="legend-free">Thời gian học</span>
           <span className="legend-busy">Bận</span>
           <span className="legend-proposed">Đề xuất</span>
           <span>
@@ -547,7 +553,7 @@ export default function Planner({
                     .map((c) => c.task.id),
             )
           }
-          week={weekDays.map(toIsoDate)}
+          week={weekDays.map(dateOf)}
           onClose={() => setTaskPanelOpen(false)}
         />
       </div>

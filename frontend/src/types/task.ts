@@ -3,6 +3,8 @@ export type Task = {
 
   title: string
 
+  description?: string | null
+
   course: string
 
   time: string

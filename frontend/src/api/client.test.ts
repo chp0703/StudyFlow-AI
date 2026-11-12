@@ -226,3 +226,30 @@ test("decide sends the action reference untouched", async () => {
     decision: "APPROVE",
   })
 })
+
+test("weekly window archive prepares an action without approving it", async () => {
+  const { client, calls } = setup([json({ state: "AWAITING_APPROVAL" })])
+  await createEndpoints(client).prepareAvailability(
+    "conv",
+    {
+      change_type: "ARCHIVE",
+      window_id: "window-id",
+      expected_window_version: 3,
+      window: null,
+    },
+    "key-0123456789abcdef",
+  )
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0].url, "http://api.test/v1/actions")
+  assert.deepEqual(JSON.parse(calls[0].init.body as string), {
+    schema_version: "1.1",
+    conversation_id: "conv",
+    operation: "set_availability",
+    arguments: {
+      change_type: "ARCHIVE",
+      window_id: "window-id",
+      expected_window_version: 3,
+      window: null,
+    },
+  })
+})

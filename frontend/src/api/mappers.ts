@@ -17,9 +17,14 @@ import type {
 
 import type { Task } from "../types/task.ts"
 
-import { toIsoDate } from "../utils/date.ts"
+import {
+  addCivilDays,
+  civilWeekday,
+  vietnamClock,
+  vietnamDate,
+} from "../utils/date.ts"
 
-// Times are shown in the browser's local zone; the backend default zone is Asia/Ho_Chi_Minh.
+// The approved main contract still uses string priorities and course_label.
 
 const PRIORITY: Record<ApiTask["priority"], string> = {
   HIGH: "Cao",
@@ -29,18 +34,14 @@ const PRIORITY: Record<ApiTask["priority"], string> = {
   LOW: "Thấp",
 }
 
-const pad = (n: number) => String(n).padStart(2, "0")
-
-const clock = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`
-
 export const blockLabel = (block: Pick<ApiBlock, "start_at" | "end_at">) =>
-  `${clock(new Date(block.start_at))}–${clock(new Date(block.end_at))}`
+  `${vietnamClock(new Date(block.start_at))}–${vietnamClock(new Date(block.end_at))}`
 
 const minutesBetween = (a: string, b: string) =>
   Math.round((new Date(b).getTime() - new Date(a).getTime()) / 60000)
 
 export function deadlineDate(task: ApiTask): string {
-  return task.deadline_date ?? toIsoDate(new Date(task.deadline_at))
+  return task.deadline_date ?? vietnamDate(new Date(task.deadline_at))
 }
 
 // A task for the list. Its first block (if any) gives the "confirmed" calendar slot.
@@ -52,6 +53,8 @@ export function mapTask(task: ApiTask, firstBlock?: ApiBlock): Task {
     id: task.task_id,
 
     title: task.title,
+
+    description: task.description,
 
     course: task.course_label ?? "",
 
@@ -65,7 +68,12 @@ export function mapTask(task: ApiTask, firstBlock?: ApiBlock): Task {
 
     deadline: deadlineDate(task),
 
-    ...(start ? { date: toIsoDate(start), hour: start.getHours() } : {}),
+    ...(start
+      ? {
+          date: vietnamDate(start),
+          hour: Number(vietnamClock(start).slice(0, 2)),
+        }
+      : {}),
   }
 }
 
@@ -79,6 +87,8 @@ export function blockEvent(block: ApiBlock, task: Task | undefined): Task {
 
     title: task?.title ?? "Công việc",
 
+    description: task?.description,
+
     course: task?.course ?? "",
 
     time: blockLabel(block),
@@ -89,11 +99,11 @@ export function blockEvent(block: ApiBlock, task: Task | undefined): Task {
 
     priority: task?.priority ?? PRIORITY.NORMAL,
 
-    deadline: task?.deadline ?? toIsoDate(start),
+    deadline: task?.deadline ?? vietnamDate(start),
 
-    date: toIsoDate(start),
+    date: vietnamDate(start),
 
-    hour: start.getHours(),
+    hour: Number(vietnamClock(start).slice(0, 2)),
   }
 }
 
@@ -144,27 +154,13 @@ export function expandWindows(
   const cells = new Map<string, TimeWindow>()
 
   for (let i = 0; i < days; i++) {
-    const day = new Date(
-      from.getFullYear(),
+    const date = addCivilDays(vietnamDate(from), i)
 
-      from.getMonth(),
-
-      from.getDate() + i,
-    )
-
-    const date = toIsoDate(day)
-
-    const weekday = day.getDay() || 7
+    const weekday = civilWeekday(date) + 1
 
     for (let hour = FIRST_HOUR; hour <= LAST_HOUR; hour++) {
       const cellStart = new Date(
-        day.getFullYear(),
-
-        day.getMonth(),
-
-        day.getDate(),
-
-        hour,
+        `${date}T${String(hour).padStart(2, "0")}:00:00+07:00`,
       )
 
       const cellEnd = new Date(cellStart.getTime() + 3600000)
@@ -209,6 +205,8 @@ export function proposalFromReply(
 
     events: Task[]
 
+    windows?: ApiTimeWindow[]
+
     availability: TimeWindow[]
 
     revision: number
@@ -225,9 +223,9 @@ export function proposalFromReply(
   )
     return null
 
-  const summary = summarize(presentation)
+  const summary = summarize(presentation, ctx.windows)
 
-  const server = {
+  const server: NonNullable<Proposal["server"]> = {
     reference,
 
     title: summary.title,
@@ -238,6 +236,11 @@ export function proposalFromReply(
   }
 
   const plan = presentation.proposal
+
+  if (plan) {
+    server.coverage = plan.payload.coverage
+    server.unchangedBlockIds = plan.payload.plan_diff.unchanged
+  }
 
   if (!plan)
     return {
@@ -261,6 +264,14 @@ export function proposalFromReply(
     }
 
   const byId = new Map(ctx.tasks.map((t) => [t.id, t]))
+
+  server.unscheduled = plan.payload.task_summaries
+    .filter((item) => item.unallocated_minutes > 0)
+    .map((item) => ({
+      title: byId.get(item.task_id)?.title ?? "Công việc",
+      minutes: item.unallocated_minutes,
+      reasons: item.reason_codes,
+    }))
 
   const nextEvents = plan.payload.study_blocks.map((b) =>
     blockEvent(b, byId.get(b.task_id)),
@@ -370,26 +381,58 @@ const WEEKDAYS = [
   "Chủ nhật",
 ]
 
-function windowDetails(args: Record<string, unknown>): DetailRow[] {
+function windowDetails(
+  args: Record<string, unknown>,
+  windows: ApiTimeWindow[],
+): DetailRow[] {
   const w = (args.window ?? {}) as Partial<ApiTimeWindow>
+
+  const previous = windows.find((item) => item.window_id === args.window_id)
 
   const when =
     w.recurrence === "WEEKLY"
       ? `${WEEKDAYS[w.weekday ?? 0] ?? ""} hằng tuần, ${w.start_time}–${w.end_time}`
-      : `${w.start_at ? new Date(w.start_at).toLocaleString("vi-VN") : "?"} – ${
-          w.end_at ? new Date(w.end_at).toLocaleString("vi-VN") : "?"
+      : `${
+          w.start_at
+            ? new Date(w.start_at).toLocaleString("vi-VN", {
+                timeZone: "Asia/Ho_Chi_Minh",
+              })
+            : "?"
+        } – ${
+          w.end_at
+            ? new Date(w.end_at).toLocaleString("vi-VN", {
+                timeZone: "Asia/Ho_Chi_Minh",
+              })
+            : "?"
         }`
 
-  return [
-    { label: "Loại", value: w.kind === "BUSY" ? "Giờ bận" : "Giờ rảnh" },
+  const rows = [
+    { label: "Loại", value: w.kind === "BUSY" ? "Giờ bận" : "Thời gian học" },
 
-    { label: "Thời gian", value: when },
+    {
+      label: args.change_type === "ARCHIVE" ? "Sẽ xóa" : "Thời gian mới",
+      value:
+        args.change_type === "ARCHIVE" && previous
+          ? `${WEEKDAYS[previous.weekday ?? 0] ?? ""} hằng tuần, ${previous.start_time}–${previous.end_time}`
+          : when,
+    },
   ]
+
+  if (args.change_type === "UPDATE" && previous)
+    rows.splice(1, 0, {
+      label: "Thời gian cũ",
+      value: `${WEEKDAYS[previous.weekday ?? 0] ?? ""} hằng tuần, ${previous.start_time}–${previous.end_time}`,
+    })
+
+  return rows
 }
 
 // Title and rows describing what an approval would do, from the server-issued presentation.
 
-export function summarize(p: ActionPresentation): Summary {
+export function summarize(
+  p: ActionPresentation,
+  windows: ApiTimeWindow[] = [],
+): Summary {
   if (p.proposal) {
     const diff = p.proposal.payload.plan_diff
 
@@ -398,7 +441,7 @@ export function summarize(p: ActionPresentation): Summary {
 
       details: [
         {
-          label: "Khối học",
+          label: "Lịch học",
 
           value: String(p.proposal.payload.study_blocks.length),
         },
@@ -425,8 +468,6 @@ export function summarize(p: ActionPresentation): Summary {
       title: `Thêm công việc: ${s.title ?? ""}`,
 
       details: [
-        { label: "Môn học", value: String(s.course_label ?? "Chưa có") },
-
         {
           label: "Hạn nộp",
 
@@ -459,12 +500,17 @@ export function summarize(p: ActionPresentation): Summary {
 
   if (command)
     return {
-      title:
-        command.operation === "set_busy_interval"
-          ? "Thêm giờ bận"
-          : "Thêm giờ rảnh",
+      title: `${
+        command.arguments.change_type === "ARCHIVE"
+          ? "Xóa"
+          : command.arguments.change_type === "UPDATE"
+            ? "Sửa"
+            : "Thêm"
+      } ${
+        command.operation === "set_busy_interval" ? "giờ bận" : "thời gian học"
+      }`,
 
-      details: windowDetails(command.arguments),
+      details: windowDetails(command.arguments, windows),
     }
 
   return { title: "Thao tác đang chờ", details: [] }

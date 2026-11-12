@@ -13,12 +13,14 @@ import { proposalFromReply } from "../../api/mappers"
 
 import { savePending } from "../../api/pending"
 
-import type { OrchestratorReply } from "../../api/types"
+import type { ApiTimeWindow, OrchestratorReply } from "../../api/types"
 
 export type PlannerProps = {
   tasks: Task[]
 
   events: Task[]
+
+  windows?: ApiTimeWindow[]
 
   userId: string
 
@@ -47,6 +49,7 @@ export function usePlanner(
   {
     tasks,
     events,
+    windows,
     userId,
     conversationId,
     reload,
@@ -65,9 +68,9 @@ export function usePlanner(
   const [busy, setBusy] = useState(false)
   // Retrying the same message keeps its idempotency key.
   const attempt = useRef<{
- text: string
- key: string
-} | null>(null)
+    text: string
+    key: string
+  } | null>(null)
   const shown = proposal ? proposal.next.tasks : apiEnabled ? events : tasks
   const shownWindows = proposal ? proposal.next.availability : availability
   const stale = proposal ? isStale(proposal, revision) : false
@@ -79,6 +82,7 @@ export function usePlanner(
       const next = proposalFromReply(r, {
         tasks,
         events,
+        windows,
         availability,
         revision,
       })
@@ -132,6 +136,27 @@ export function usePlanner(
     }
   }
 
+  const prepareAvailability = async (
+    args: Parameters<typeof api.prepareAvailability>[1],
+  ) => {
+    if (!apiEnabled || busy || proposal) return false
+    setBusy(true)
+    try {
+      const prepared = await api.prepareAvailability(
+        conversationId,
+        args,
+        crypto.randomUUID(),
+      )
+      await showReply(prepared)
+      return prepared.state === "AWAITING_APPROVAL"
+    } catch (error) {
+      setReply(errorText(error))
+      return false
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const send = () => {
     const text = input.trim()
 
@@ -173,7 +198,7 @@ export function usePlanner(
   }
 
   const decideOnServer = async (decision: "APPROVE" | "REJECT") => {
-    if (!proposal?.server || busy) return
+    if (!proposal?.server || busy || (stale && decision === "APPROVE")) return
 
     setBusy(true)
 
@@ -184,17 +209,22 @@ export function usePlanner(
         decision,
       )
 
-      setProposal(null)
-
-      savePending(userId, null)
-
-      await reload()
-
-      if (r.state === "AWAITING_APPROVAL") await showReply(r)
-      else {
+      if (r.state === "AWAITING_APPROVAL") {
+        await showReply(r)
+      } else if (r.state === "SUCCEEDED" && r.result?.outcome === "COMMITTED") {
+        setProposal(null)
+        savePending(userId, null)
+        await reload()
         setReply("")
-
         showPlannerNotice(r.message)
+      } else if (decision === "REJECT" && r.state === "SUCCEEDED") {
+        setProposal(null)
+        savePending(userId, null)
+        await reload()
+        setReply(r.message)
+      } else {
+        setReply(r.error?.message ?? r.message)
+        await reload()
       }
     } catch (e) {
       setReply(errorText(e))
@@ -239,6 +269,7 @@ export function usePlanner(
     shownWindows,
     stale,
     send,
+    prepareAvailability,
     approve,
     reject,
   }

@@ -80,10 +80,23 @@ export type Proposal = {
 
     title: string
 
-    details: { label: string; value: string }[]
+    details: Array<{
+      label: string
+      value: string
+    }>
 
     // Tasks touched by the proposal (calendar events are keyed by block id, the task list by task id).
 
     taskIds: string[]
+
+    coverage?: "FULL" | "PARTIAL"
+
+    unchangedBlockIds?: string[]
+
+    unscheduled?: Array<{
+      title: string
+      minutes: number
+      reasons: string[]
+    }>
   }
 }

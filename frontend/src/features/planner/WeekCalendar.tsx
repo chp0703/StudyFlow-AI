@@ -42,7 +42,7 @@ export default function WeekCalendar({
       <div className="dashboard-schedule">
         <div className="schedule-header">
           <span className="schedule-header-time" aria-hidden="true" />
-          {weekDays.map((_, i) => (
+          {weekDays.map((date, i) => (
             <span
               key={i}
               className={`schedule-day ${
@@ -50,6 +50,7 @@ export default function WeekCalendar({
               }`}
             >
               <strong>{["T2", "T3", "T4", "T5", "T6", "T7", "CN"][i]}</strong>
+              <span>{`${String(date.getUTCDate()).padStart(2, "0")}/${String(date.getUTCMonth() + 1).padStart(2, "0")}`}</span>
             </span>
           ))}
         </div>
@@ -75,7 +76,7 @@ export default function WeekCalendar({
                 >
                   {win && (
                     <span className="window-tag">
-                      {win.kind === "free" ? "Rảnh" : "Bận"}
+                      {win.kind === "free" ? "Học" : "Bận"}
                     </span>
                   )}
                   {event && (

@@ -2,7 +2,13 @@ import type { PlannerIssue, TimeWindow } from "../../types/planner.ts"
 
 import type { Task } from "../../types/task.ts"
 
-import { daysUntil, toIsoDate, today } from "../../utils/date.ts"
+import {
+  addCivilDays,
+  civilWeekday,
+  daysUntil,
+  vietnamClock,
+  vietnamDate,
+} from "../../utils/date.ts"
 
 export const FIRST_HOUR = 8
 
@@ -50,6 +56,7 @@ type Parsed = {
 }
 
 function parseWhen(text: string): Parsed {
+  const current = vietnamDate()
   let rest = text
 
   let date: string | undefined
@@ -63,16 +70,12 @@ function parseWhen(text: string): Parsed {
 
     if (day[0] === "ngày mai") offset = 1
     else if (day[0] !== "hôm nay") {
-      const dow = day[1] ? WEEKDAY_WORDS[day[1]] : 0
+      const dow = day[1] ? WEEKDAY_WORDS[day[1]] - 1 : 6
 
-      offset = (dow - today.getDay() + 7) % 7
+      offset = (dow - civilWeekday(current) + 7) % 7
     }
 
-    const d = new Date(today)
-
-    d.setDate(d.getDate() + offset)
-
-    date = toIsoDate(d)
+    date = addCivilDays(current, offset)
 
     rest = rest.replace(day[0], " ")
   }
@@ -82,18 +85,18 @@ function parseWhen(text: string): Parsed {
   if (explicit) {
     // dd/mm: dùng năm nay; chuyển sang năm sau nếu ngày đó đã qua.
 
-    const d = new Date(
-      today.getFullYear(),
-
-      Number(explicit[2]) - 1,
-
-      Number(explicit[1]),
+    const year = Number(current.slice(0, 4))
+    const candidate = addCivilDays(
+      `${year}-${explicit[2].padStart(2, "0")}-${explicit[1].padStart(2, "0")}`,
+      0,
     )
-
-    if (d < new Date(today.getFullYear(), today.getMonth(), today.getDate()))
-      d.setFullYear(d.getFullYear() + 1)
-
-    date = toIsoDate(d)
+    date =
+      candidate < current
+        ? addCivilDays(
+            `${year + 1}-${explicit[2].padStart(2, "0")}-${explicit[1].padStart(2, "0")}`,
+            0,
+          )
+        : candidate
 
     rest = rest.replace(explicit[0], " ")
   }
@@ -294,18 +297,14 @@ export function runPlannerCommand(
       let slot: Slot | undefined
 
       for (let i = 0; i <= daysUntil(task.deadline) && !slot; i++) {
-        const d = new Date(today)
-
-        d.setDate(d.getDate() + i)
-
-        const date = toIsoDate(d)
+        const date = addCivilDays(vietnamDate(), i)
 
         const free = availability.filter(
           (w) => w.date === date && w.kind === "free",
         )
 
         for (
-          let h = i === 0 ? new Date().getHours() + 1 : FIRST_HOUR;
+          let h = i === 0 ? Number(vietnamClock().slice(0, 2)) + 1 : FIRST_HOUR;
           h <= LAST_HOUR;
           h++
         )

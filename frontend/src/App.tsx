@@ -97,7 +97,7 @@ export default function App() {
 
   const { session, loading: sessionLoading } = useSession()
 
-  const server = useServerData(apiEnabled && !!session)
+  const server = useServerData(apiEnabled && !!session, session?.user.id)
 
   const [demoTasks, setTasks] = useState<Task[]>([])
 
@@ -357,7 +357,12 @@ export default function App() {
   useEffect(() => {
     const userId = session?.user.id
 
-    if (!apiEnabled || !userId || server.loading || restoredFor.current === userId)
+    if (
+      !apiEnabled ||
+      !userId ||
+      server.loading ||
+      restoredFor.current === userId
+    )
       return
 
     restoredFor.current = userId
@@ -465,9 +470,7 @@ export default function App() {
             aria-label="Tài khoản sinh viên"
             onClick={() => setModal("account")}
           >
-            <span className="avatar">
-              {(email[0] ?? "S").toUpperCase()}
-            </span>
+            <span className="avatar">{(email[0] ?? "S").toUpperCase()}</span>
             <span>{apiEnabled ? email.split("@")[0] : "Sinh viên"}</span>
             <ChevronDown aria-hidden="true" size={13} />
           </Button>
@@ -554,6 +557,7 @@ export default function App() {
         </div>
         {page === "Planner" && (
           <Planner
+            windows={apiEnabled ? server.windows : []}
             tasks={tasks}
             events={apiEnabled ? server.events : tasks}
             userId={session?.user.id ?? "demo"}
