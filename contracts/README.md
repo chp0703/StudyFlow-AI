@@ -5,7 +5,7 @@
 | Contract package | **1.0.1 — APPROVED / CHÍNH THỨC**, hiệu lực 05/11/2026, giờ Việt Nam |
 | Logical schema | **Planner schema v1.1**, technical `schema_version: "1.1"` |
 | Phạm vi | API FE ↔ BE; Tool/Service Orchestrator ↔ BE; Data/RPC BE ↔ DB |
-| Trạng thái phê duyệt | **Team đã phê duyệt**, theo xác nhận của người dùng ngày 05/11/2026; căn cứ và phạm vi tại [APPROVAL.md](APPROVAL.md) |
+| Trạng thái phê duyệt | **Team đã phê duyệt**, hiệu lực từ ngày 05/11/2026 |
 | Phạm vi sản phẩm | Contract này áp dụng cho Planner; Assessment và Daily Learning có scope riêng trong tài liệu sản phẩm |
 | Trạng thái triển khai | Planner đã có API handler, migrations, database tests và frontend integration; từng môi trường vẫn phải được CI/acceptance tests xác minh |
 
@@ -16,18 +16,15 @@
 | File | Là nguồn chuẩn cho |
 |---|---|
 | [README.md](README.md) | Luồng xử lý, trust boundary, transaction, invariants và quyết định đã phê duyệt |
-| [APPROVAL.md](APPROVAL.md) | Căn cứ, phạm vi và ngày hiệu lực của bản chính thức |
 | [schemas/f1.schema.json](schemas/f1.schema.json) | Kiểu/enum/nullability/required của mọi DTO và 10 entity logic; JSON Schema 2020-12 |
 | [openapi.yaml](openapi.yaml) | Method/path/header/query/request/response HTTP; OpenAPI 3.1.1, viết bằng cú pháp JSON hợp lệ trong YAML |
 | [service-contract.json](service-contract.json) | 10 operation chính thức, schema arguments/result, approval và mapping RPC |
 | [data-contract.json](data-contract.json) | Tên bảng/cột, PostgreSQL type, nullability và PK cho 10 entity |
 | [examples/manifest.json](examples/manifest.json) | Các ví dụ hợp lệ/không hợp lệ và validator phải áp dụng |
-| [acceptance-cases.md](acceptance-cases.md) | Các ca runtime phải được các bên chứng minh khi triển khai |
-| [VALIDATION.md](VALIDATION.md) | Kết quả kiểm tra đã chạy và giới hạn của bằng chứng |
 
 FE sinh/đối chiếu TypeScript types từ schema chung; BE tạo Pydantic validator tương đương; DB đối chiếu mapping và invariants. Không duy trì ba bộ enum riêng. `contract_version` dùng để quản lý package/RPC, không thêm vào các DTO v1.1 vốn không có field này.
 
-Các quyết định IC-01–IC-08 ở mục 10 đã được team phê duyệt theo [ghi nhận phê duyệt](APPROVAL.md). Decision Register và ADR được đồng bộ theo phạm vi này. Khi tài liệu baseline/physical design cũ còn ghi phương án `PROPOSED/DRAFT` khác với bộ contract, áp dụng bộ contract chính thức; không suy ra toàn bộ nội dung hoặc công việc ngoài phạm vi của tài liệu cũ cũng đã được duyệt.
+Các quyết định IC-01–IC-08 ở mục 10 đã được team phê duyệt. Bộ contract máy đọc được quyết định interface hiện hành; test source và CI cung cấp bằng chứng thực thi hiện tại.
 
 ## 2. Quy ước chung
 
@@ -229,7 +226,7 @@ Attestation `payload` là base64url không padding của UTF-8 JSON với đủ:
 
 `signature=HMAC-SHA256(key, ASCII(payload))` dạng hex lowercase. DB kiểm tra key_id khớp payload, constant-time signature, strict payload schema, user_id=auth.uid(), rpc khớp routine đang chạy, digest khớp exact normalized request. Chốt transport validity **60 giây**, clock skew tối đa 5 giây; issued_at không vượt now+5s, expires_at=issued_at+60s, reject quá hạn. Request_id/operation/key được bind vào digest; replay hợp lệ chỉ trả cùng kết quả qua idempotency, không ghi thêm. Attestation của request mới không dùng cho request khác. Rotate key theo key_id, giữ key cũ đủ để xác minh request còn trong validity window.
 
-Attestation không gửi ra FE, không được nhận từ `/v1/messages/actions/decisions`. Backend ký lại attestation mới khi retry sau token expiry nhưng giữ normalized business request và key; fingerprint business loại phần attestation/time/request_id. TTL 60 giây là bảo vệ vận chuyển, **không phải TTL của proposal hay PendingAction**. Chưa có verifier chạy thật; test bảo mật ở acceptance-cases.md là bắt buộc trước triển khai.
+Attestation không gửi ra FE, không được nhận từ `/v1/messages/actions/decisions`. Backend ký lại attestation mới khi retry sau token expiry nhưng giữ normalized business request và key; fingerprint business loại phần attestation/time/request_id. TTL 60 giây là bảo vệ vận chuyển, **không phải TTL của proposal hay PendingAction**. Các test bảo mật của backend và Supabase là bằng chứng bắt buộc trước triển khai.
 
 ### 6.3. Inventory RPC
 
@@ -313,9 +310,9 @@ python -m pip install -r contracts/requirements-check.txt
 python contracts/check_contract.py
 ```
 
-Checker xác minh schema, OpenAPI, references, registry, entity mapping, fixtures hợp lệ/không hợp lệ và các invariant thuần quan trọng. Fixture `rpc-write-shape-only` chứa chữ ký giả chỉ để kiểm tra cấu trúc, **không phải attestation hợp lệ để gọi DB**. Checker không chứng minh JWT verification, grants/RLS, attestation verifier, transaction, concurrency, DB storage hoặc UI rendering đã chạy thật. Các ca đó có owner và expected result tại acceptance-cases.md.
+Checker xác minh schema, OpenAPI, references, registry, entity mapping, fixtures hợp lệ/không hợp lệ và các invariant thuần quan trọng. Fixture `rpc-write-shape-only` chứa chữ ký giả chỉ để kiểm tra cấu trúc, **không phải attestation hợp lệ để gọi DB**. Checker không chứng minh JWT verification, grants/RLS, attestation verifier, transaction, concurrency, DB storage hoặc UI rendering đã chạy thật; dùng các test suite tương ứng để xác minh runtime.
 
-Phần phê duyệt contract của M0 đã hoàn tất theo [APPROVAL.md](APPROVAL.md); schema và fixtures đã được kiểm tra theo VALIDATION.md. Việc mock/real adapter cùng tuân thủ contract vẫn cần bằng chứng triển khai, không tự coi toàn bộ M0 hoặc mốc tích hợp thật đã hoàn tất chỉ từ phê duyệt tài liệu. Các ca runtime tiếp tục theo dõi ở acceptance-cases.md.
+Contract package 1.0.1 đã có hiệu lực từ ngày 05/11/2026. Kết quả hiện tại phải lấy từ contract checker, test suites và CI; không lưu snapshot pass/fail thủ công trong tài liệu.
 
 ## 10. Quyết định đã phê duyệt và trách nhiệm duy trì
 
@@ -332,12 +329,12 @@ Tất cả IC-01–IC-08 dưới đây có trạng thái **APPROVED**, hiệu l�
 | IC-07 | Request receipt/message/presentation/workflow continuation persistence; retry 7 ngày; transport token 60 giây | TV1 + TV2 + TV3 |
 | IC-08 | Datetime theo phút, query defaults/cursors/filter; 64KiB/8000 ký tự/100 items | FE + TV2 |
 
-Vai trò TV1–TV4 theo bản phân công hiện có; không tự gán tên người. Thay đổi từng IC sau phê duyệt cần review cụ thể từ các consumer liên quan. Nếu thay trust model, phải cập nhật đồng thời API/service/data và acceptance cases, không chỉ sửa một ADR. Decision Register/ADR đã ghi nhận bản chính thức; physical design khi triển khai phải đối chiếu lại với bộ này. Merge tài liệu không thay thế căn cứ phê duyệt đã được ghi nhận.
+Vai trò TV1–TV4 là ký hiệu lịch sử của các consumer; không tự gán tên người. Thay đổi từng IC sau phê duyệt cần review cụ thể từ các consumer liên quan. Nếu thay trust model, phải cập nhật đồng thời API/service/data, ADR và acceptance cases. Merge tài liệu không thay thế căn cứ phê duyệt đã được ghi nhận.
 
 Breaking change về field/enum/nullability/side effect tăng major contract; additive thay đổi vẫn phải review consumer và cập nhật fixtures/changelog. Nếu đổi ngữ nghĩa Planner phải tăng schema gốc theo quy trình của nó. Không tái sử dụng version 1.1 cho behavior khác mà không ghi nhận.
 
 ## 11. Căn cứ
 
-- Planner schema v1.1, contract package 1.0.1, ADR-001..005 và lịch sử commit liên quan.
+- Planner schema v1.1, contract package 1.0.1 và lịch sử commit liên quan.
 - Physical design PR #15 head `d00a43d`: tham khảo draft, không coi là phê duyệt. Scheduler PR #12 đang mở: contract engine bám schema gốc; bộ này không chứng nhận code của PR đã tương thích.
 - [OpenAPI 3.1.1](https://spec.openapis.org/oas/v3.1.1.html), [JSON Schema 2020-12](https://json-schema.org/draft/2020-12/json-schema-core), [PostgreSQL datetime](https://www.postgresql.org/docs/current/datatype-datetime.html), [Supabase security](https://supabase.com/docs/guides/api/securing-your-api).

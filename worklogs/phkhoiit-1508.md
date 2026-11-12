@@ -379,3 +379,21 @@
 
 - Chưa chạy lại Supabase pgTAP/integration/concurrency trong lượt refactor này.
 - Chưa push cloud migration hoặc thay đổi project Supabase dùng chung.
+
+## 2026-11-12 — Hoàn tất repository cleanup và chia sẻ agent skills
+
+**Mục tiêu:** hoàn tất dọn repository, loại tài liệu/placeholder không còn giá trị và đưa hướng dẫn dùng chung cho các coding agent vào Git.
+
+**Đã làm**
+
+- Xóa các `.gitkeep`, thư mục rỗng, metadata nhánh Supabase local, `backend/pyproject.toml` dư thừa và tài liệu acceptance cũ không còn được dùng.
+- Xóa approval/changelog/validation/acceptance snapshot và các ADR cũ; gỡ toàn bộ metadata, link và mô tả còn trỏ tới các tài liệu đã xóa.
+- Cập nhật `.gitignore` để bỏ qua metadata Supabase local nhưng cho phép commit chỉ dẫn và skills của agent.
+- Thêm `AGENTS.md`, `CLAUDE.md`, `.agents/skills/` và `.claude/skills/`; ghi nguồn cài bắt buộc cho `ponytail`, `rtk`, `graphify`.
+
+**Kết quả:** nhánh `refactor/repository-cleanup`; contract checker pass (122 definitions, 100 fixtures), generated contract migration đồng bộ, 41 backend unit tests, 33 scheduler acceptance tests, 46 API acceptance tests, 465 pgTAP tests, 12 integration tests, 6 concurrency tests và 34 frontend tests đều pass; TypeScript và production build pass; 47 Markdown files không có link tương đối hỏng; 18 skill packages validate thành công.
+
+**Ghi chú**
+
+- Không thay đổi workflow YAML và không chạm cloud Supabase project.
+- `ponytail` chưa được cài trên máy hiện tại; repository cài đặt chính thức đã được ghi trong `AGENTS.md` cho từng thành viên tự bootstrap.

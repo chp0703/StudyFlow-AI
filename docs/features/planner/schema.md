@@ -11,7 +11,7 @@
 
 Tài liệu này là nguồn chuẩn cho tên trường, kiểu dữ liệu, quan hệ, trạng thái và hợp đồng dữ liệu của feature Planner. Khi tài liệu hỗ trợ có khác biệt, áp dụng schema này cùng bộ contract máy đọc được trong `contracts/`. Tên kỹ thuật `F1` và `schema_version="1.1"` được giữ để tương thích với contract, migration và client hiện hành; chúng không giới hạn scope toàn sản phẩm.
 
-Chi tiết tích hợp API FE–BE, Service/Tool và Data/RPC được chốt tại [Hợp đồng tích hợp chính thức](../../../contracts/README.md), team phê duyệt theo [ghi nhận ngày 05/11/2026](../../../contracts/APPROVAL.md). Việc phê duyệt này giữ nguyên schema logic v1.1.
+Chi tiết tích hợp API FE–BE, Service/Tool và Data/RPC được chốt tại [Hợp đồng tích hợp chính thức](../../../contracts/README.md). Contract package 1.0.1 có hiệu lực từ ngày 05/11/2026 và giữ nguyên schema logic v1.1.
 
 Đây là đặc tả logic đã được thống nhất; không xác nhận implementation, migration hoặc kiểm thử đã hoàn tất. Không dùng tài liệu này làm bằng chứng đã đối chiếu proposal PDF gốc.
 

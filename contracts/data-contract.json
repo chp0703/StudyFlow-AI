@@ -3,7 +3,6 @@
   "schema_version": "1.1",
   "status": "APPROVED",
   "approval": {
-    "record": "APPROVAL.md",
     "approved_on": "2026-11-05",
     "effective_on": "2026-11-05",
     "basis": "Team approval and explicit A/B/C/D 1.0.1 addendum approval confirmed by the user"

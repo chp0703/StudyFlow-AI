@@ -15,7 +15,6 @@ The Planner foundation is the currently implemented module. Assessment and Daily
 | Product scope and cross-feature requirements | [product/requirements.md](product/requirements.md) |
 | Feature boundaries and implementation status | [features/README.md](features/README.md) |
 | Current runtime architecture | [architecture/overview.md](architecture/overview.md) |
-| Architecture decisions | [architecture/decisions/](architecture/decisions/) |
 | Planner domain model | [features/planner/schema.md](features/planner/schema.md) |
 | Planner scheduling behavior | [features/planner/scheduling.md](features/planner/scheduling.md) |
 | Planner machine-readable contract | [../contracts/README.md](../contracts/README.md) |
