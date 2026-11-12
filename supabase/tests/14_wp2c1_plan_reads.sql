@@ -62,12 +62,12 @@ select ok(pg_temp.q_is(pg_temp.q_call('get_scheduling_context',jsonb_build_objec
 insert into app_private.user_profiles(user_id,timezone,locale,scheduling_policy)
  values ('d1410000-0000-4000-8000-000000000002','Asia/Ho_Chi_Minh','vi',app_private.default_policy());
 -- Nạp task, khung giờ còn hiệu lực/đã lưu trữ và lịch đã duyệt có hai block.
-insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,deadline_at,deadline_precision,deadline_date,
+insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,start_at,deadline_at,deadline_precision,deadline_date,
  deadline_timezone,estimated_minutes,remaining_minutes) values
  ('d1410000-0000-4000-8000-0000000000a1','d1410000-0000-4000-8000-000000000001',extensions.gen_random_uuid(),'Bài tập',
-  '2026-11-12T00:00:00Z','DATETIME',null,'UTC',120,120),
+  '2026-11-06T00:00:00Z','2026-11-12T00:00:00Z','DATETIME',null,'Asia/Ho_Chi_Minh',120,120),
  ('d1410000-0000-4000-8000-0000000000a2','d1410000-0000-4000-8000-000000000002',extensions.gen_random_uuid(),'Của người khác',
-  '2026-11-12T00:00:00Z','DATETIME',null,'UTC',60,60);
+  '2026-11-06T00:00:00Z','2026-11-12T00:00:00Z','DATETIME',null,'Asia/Ho_Chi_Minh',60,60);
 insert into app_private.time_windows(window_id,user_id,kind,recurrence,timezone,weekday,start_time,end_time,valid_from,archived_at)
  values ('d1410000-0000-4000-8000-0000000000b1','d1410000-0000-4000-8000-000000000001','AVAILABILITY','WEEKLY','Asia/Ho_Chi_Minh',1,'08:00','10:00','2026-11-01',null),
  ('d1410000-0000-4000-8000-0000000000b2','d1410000-0000-4000-8000-000000000001','AVAILABILITY','WEEKLY','Asia/Ho_Chi_Minh',2,'08:00','10:00','2026-11-01',clock_timestamp());

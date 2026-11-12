@@ -203,9 +203,9 @@ select is(pg_temp.q_rev(),(select (res#>>'{data,schedule_revision}')::bigint fro
 
 -- WP2c-4: cảnh báo khi block tương lai đã duyệt có thể bị ảnh hưởng; không có cảnh báo nếu chưa có lịch.
 select ok(res->'warnings'='[]'::jsonb,'no warning while no plan exists') from q12 where name='p1';
-insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,deadline_at,deadline_precision,deadline_date,
+insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,start_at,deadline_at,deadline_precision,deadline_date,
  deadline_timezone,estimated_minutes,remaining_minutes) values ('d1210000-0000-4000-8000-0000000000a1','d1210000-0000-4000-8000-000000000001',
- extensions.gen_random_uuid(),'Bài tập',clock_timestamp()+interval '30 days','DATETIME',null,'UTC',120,120);
+ extensions.gen_random_uuid(),'Bài tập',clock_timestamp(),clock_timestamp()+interval '30 days','DATETIME',null,'Asia/Ho_Chi_Minh',120,120);
 insert into app_private.plan_proposals(proposal_id,user_id,base_schedule_revision,generation_scope,payload,algorithm_version,policy_snapshot)
  values ('d1210000-0000-4000-8000-0000000000c1','d1210000-0000-4000-8000-000000000001',0,'{}','{}','q12-1','{}');
 insert into app_private.study_plans(plan_id,user_id,version,source_proposal_id)

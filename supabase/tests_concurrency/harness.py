@@ -41,20 +41,22 @@ def stamp(value=None):
 
 def canonical(value):
     """Bộ ký độc lập; không bao giờ dùng phần triển khai SQL để ký."""
-    def check(item):
+    def check(item, key=None):
         if item is None or type(item) in (str, bool):
             return
         if type(item) is int and abs(item) <= 9007199254740991:
+            return
+        if key == "priority" and type(item) is float and item in (0.1, 0.5):
             return
         if type(item) is list:
             for child in item:
                 check(child)
             return
-        if type(item) is dict and all(type(key) is str for key in item):
-            for child in item.values():
-                check(child)
+        if type(item) is dict and all(type(k) is str for k in item):
+            for k, child in item.items():
+                check(child, k)
             return
-        raise ValueError("canonical signing accepts JSON-safe integers, never floats")
+        raise ValueError("canonical signing accepts JSON-safe integers and canonical task priority weights")
     check(value)
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
@@ -270,10 +272,10 @@ class Fixture:
     def candidate(self, minutes=120):
         source = self.source("Create a 120 minute task")
         slots = {"title": "Independent concurrency task 🧠", "description": None,
-            "course_label": None, "available_from_at": None,
+            "start_at": stamp(self.start), "available_from_at": stamp(self.start),
             "deadline_at": stamp(self.start + timedelta(days=2)), "deadline_precision": "DATETIME",
-            "deadline_date": None, "deadline_timezone": "UTC", "estimated_minutes": minutes,
-            "priority": "NORMAL"}
+            "deadline_date": None, "deadline_timezone": "Asia/Ho_Chi_Minh", "estimated_minutes": minutes,
+            "priority": 0.5, "color": "#596CF0"}
         candidate = self.db.success(self, Call("create_task_candidate", {"slots": slots}, *source, self.key()), "DRAFTED")
         arguments = {"candidate_id": candidate["candidate_id"], "expected_candidate_version": candidate["version"]}
         call = self.prepare("confirm_task", arguments, intent="CREATE_TASK", target_type="TASK_CANDIDATE",
@@ -287,7 +289,7 @@ class Fixture:
     def availability(self):
         args = {"change_type": "ADD", "window_id": None, "expected_window_version": None,
             "window": {"kind": "AVAILABILITY", "label": "Acceptance availability", "recurrence": "NONE",
-                "timezone": "UTC", "start_at": stamp(self.start), "end_at": stamp(self.start + timedelta(hours=6)),
+                "timezone": "Asia/Ho_Chi_Minh", "start_at": stamp(self.start), "end_at": stamp(self.start + timedelta(hours=6)),
                 "weekday": None, "start_time": None, "end_time": None, "valid_from": None, "valid_until": None}}
         call = self.prepare("set_availability", args, intent="SET_AVAILABILITY", target_type="PENDING_ACTION")
         return self.db.success(self, call, "COMMITTED")

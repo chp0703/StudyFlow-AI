@@ -59,9 +59,9 @@ insert into app_private.rpc_attestation_keys(key_id,key_material,not_before,not_
  values ('q16-key',decode(repeat('16',32),'hex'),clock_timestamp()-interval '1 hour',clock_timestamp()+interval '1 hour');
 insert into app_private.user_profiles(user_id,timezone,locale,scheduling_policy)
  values (pg_temp.uid(),'Asia/Ho_Chi_Minh','vi',app_private.default_policy());
-insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,deadline_at,deadline_precision,deadline_date,
+insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,start_at,deadline_at,deadline_precision,deadline_date,
  deadline_timezone,estimated_minutes,remaining_minutes)
- values (pg_temp.tid(),pg_temp.uid(),extensions.gen_random_uuid(),'Bài tập','2026-11-20T00:00:00Z','DATETIME',null,'UTC',600,600);
+ values (pg_temp.tid(),pg_temp.uid(),extensions.gen_random_uuid(),'Bài tập','2026-11-06T00:00:00Z','2026-11-20T00:00:00Z','DATETIME',null,'Asia/Ho_Chi_Minh',600,600);
 
 -- Proposal n: mỗi đề xuất có một action trong hội thoại riêng; block bắt đầu ngày 9+n.
 create function pg_temp.q_seed(n int, rev bigint, base uuid, base_ver bigint, overlap boolean default false) returns void language plpgsql as $$
