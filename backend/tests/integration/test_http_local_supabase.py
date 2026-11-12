@@ -71,10 +71,10 @@ class LocalSupabaseHttp(unittest.TestCase):
     @staticmethod
     def task_body(conversation, title="Ôn giải tích"):
         return {"schema_version": "1.1", "conversation_id": conversation, "operation": "create_task_candidate",
-                "arguments": {"slots": {"title": title, "description": None, "course_label": "Giải tích",
-                                        "available_from_at": None, "deadline_at": None, "deadline_precision": "DATE",
+                "arguments": {"slots": {"title": title, "description": "Chương 1", "start_at": "2027-03-01T08:00:00+07:00",
+                                        "available_from_at": "2027-03-01T08:00:00+07:00", "deadline_at": None, "deadline_precision": "DATE",
                                         "deadline_date": "2027-03-01", "deadline_timezone": "Asia/Ho_Chi_Minh",
-                                        "estimated_minutes": 90, "priority": "HIGH"}}}
+                                        "estimated_minutes": 90, "priority": 1, "color": "#596CF0"}}}
 
     def test_candidate_decision_read_survives_retry_and_restart(self):
         conversation, key = str(uuid4()), f"it-prepare-{uuid4().hex}"

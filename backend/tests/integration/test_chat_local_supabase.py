@@ -27,8 +27,8 @@ def intent(name, **slots):
     return {"intent": name, "slots": slots, "raw_expressions": {}, "ambiguities": []}
 
 
-FULL_TASK = dict(title="Bài tập OOP", deadline_precision="DATE", deadline_date="2027-03-02",
-                 deadline_timezone="Asia/Ho_Chi_Minh", estimated_minutes=90, priority="NORMAL")
+FULL_TASK = dict(title="Bài tập OOP", start_at="2027-03-01T08:00:00+07:00", deadline_precision="DATE", deadline_date="2027-03-02",
+                 deadline_timezone="Asia/Ho_Chi_Minh", estimated_minutes=90, priority=0.5, color="#596CF0")
 SCRIPT = {
     "tìm bài tập rồi thêm bài OOP và lập kế hoạch": {"intents": [
         intent("SEARCH_TASKS", query="tập"), intent("CREATE_TASK", **FULL_TASK), intent("GENERATE_STUDY_PLAN")]},
@@ -117,7 +117,7 @@ class ChatHttp(unittest.TestCase):
         with self.client() as app:
             ask = self.say(app, "u2", conversation, "thêm bài OOP")
             self.assertEqual(ask.json()["state"], "NEEDS_CLARIFICATION", ask.text)
-            self.assertEqual({q["field"] for q in ask.json()["questions"]}, {"deadline_at", "deadline_timezone", "estimated_minutes"})
+            self.assertEqual({q["field"] for q in ask.json()["questions"]}, {"start_at", "estimated_minutes"})
             answered = self.say(app, "u2", conversation, "hạn 5/3, 60 phút")
             self.assertEqual(answered.status_code, 200, answered.text)
             self.assertEqual(answered.json()["state"], "AWAITING_APPROVAL", answered.text)

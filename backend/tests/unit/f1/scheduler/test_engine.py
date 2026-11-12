@@ -139,6 +139,13 @@ class SchedulingEngineTests(unittest.TestCase):
         self.assertEqual(first, generate_schedule(ctx))
         self.assertEqual(0, metrics.hard_constraint_violations)
 
+    def test_exact_start_at_is_preserved_in_generated_blocks(self) -> None:
+        item = task(140, remaining=60, start_at=dt(4, 9, 30), deadline=dt(4, 10, 30), priority=Priority.HIGH)
+        result = generate_schedule(context((item,), available=(Interval(dt(4, 8), dt(4, 12)),)))
+        self.assertEqual(Coverage.FULL, result.coverage)
+        self.assertEqual(1, len(result.generated_blocks))
+        self.assertEqual((dt(4, 9, 30), dt(4, 10, 30)), (result.generated_blocks[0].start_at, result.generated_blocks[0].end_at))
+
 
 if __name__ == "__main__":
     unittest.main()

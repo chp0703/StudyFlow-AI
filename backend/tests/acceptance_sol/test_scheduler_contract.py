@@ -41,7 +41,7 @@ def task(task_id=TASK, minutes=60):
 
 def context(minutes=60):
     return SchedulingContext(
-        now=instant(7), timezone="UTC",
+        now=instant(7), timezone="Asia/Ho_Chi_Minh",
         generation_scope=GenerationScope(
             instant(8), instant(18), SelectionMode.ALL_ELIGIBLE,
         ),
