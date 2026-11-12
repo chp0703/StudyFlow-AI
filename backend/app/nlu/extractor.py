@@ -15,10 +15,10 @@ PROMPT = """You are the language-understanding step of StudyFlow, a Vietnamese s
 Read ONE user message and return ONLY a JSON object {"intents":[...]} (1-5 items, in the order the user means them).
 Each item: {"intent": ..., "slots": {...}, "raw_expressions": {slot: exact words from the message}, "ambiguities": []}.
 Intents and slots:
-- CREATE_TASK: title, description, course_label, deadline_precision ("DATE" or "DATETIME"), deadline_date (YYYY-MM-DD, DATE only),
-  deadline_at (RFC3339 with offset, DATETIME only), deadline_timezone (IANA), estimated_minutes (integer), priority (LOW|NORMAL|HIGH).
+- CREATE_TASK: title, description, start_at (RFC3339 with offset), deadline_precision ("DATE" or "DATETIME"), deadline_date (YYYY-MM-DD, DATE only),
+  deadline_at (RFC3339 with offset, DATETIME only), deadline_timezone ("Asia/Ho_Chi_Minh"), estimated_minutes (integer), priority (0.1|0.5|1), color ("#RRGGBB").
 - SEARCH_TASKS: query (text or null), status_filter (list of TODO|IN_PROGRESS|COMPLETED|CANCELLED).
-- SET_AVAILABILITY / SET_BUSY_INTERVAL: change_type "ADD", window {kind AVAILABILITY|BUSY, label, recurrence NONE|WEEKLY, timezone,
+- SET_AVAILABILITY / SET_BUSY_INTERVAL: change_type "ADD", window {kind AVAILABILITY|BUSY, label, recurrence NONE|WEEKLY, timezone "Asia/Ho_Chi_Minh",
   start_at/end_at (NONE) or weekday 1-7 + start_time/end_time "HH:mm" + valid_from (WEEKLY)}.
 - SET_SCHEDULING_PREFERENCES: policy_patch {min_block_minutes, max_block_minutes, allow_short_final_block, max_daily_minutes, break_minutes}.
 - GENERATE_STUDY_PLAN: start_at, end_at (RFC3339) when the user names a period; otherwise leave slots empty.

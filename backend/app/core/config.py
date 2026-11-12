@@ -7,6 +7,8 @@ import binascii
 import os
 from dataclasses import dataclass, field
 
+PRODUCT_TIMEZONE = "Asia/Ho_Chi_Minh"
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -20,7 +22,7 @@ class Settings:
     deepseek_base_url: str = "https://api.deepseek.com/v1"
     deepseek_model: str = "deepseek-chat"
     cors_origins: list[str] = field(default_factory=list)
-    default_timezone: str = "Asia/Ho_Chi_Minh"
+    default_timezone: str = PRODUCT_TIMEZONE
     default_locale: str = "vi-VN"
     rpc_timeout_seconds: float = 10.0
     max_body_bytes: int = 64 * 1024
@@ -32,6 +34,8 @@ class Settings:
             raise ValueError("supabase_jwt_algorithm must be an asymmetric algorithm")
         if len(self.signing_secret) < 32:
             raise ValueError("rpc_signing_secret_base64 must decode to at least 32 bytes")
+        if self.default_timezone != PRODUCT_TIMEZONE:
+            raise ValueError(f"default_timezone must be {PRODUCT_TIMEZONE}")
 
     @property
     def signing_secret(self) -> bytes:

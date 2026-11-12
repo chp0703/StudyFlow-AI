@@ -11,12 +11,15 @@ from ..nlu.extractor import Extractor
 from .chat import ChatProcessor
 from .workflow_ports import Clock, RpcCall, WorkflowError
 from .workflow_shared import (
-    AWAITING, DONE_TEXT, FORM_TEXT, INTENT, POLICY_DEFAULT, Terminal, _ok, deadline_instant, reply,
+    AWAITING, DONE_TEXT, FORM_TEXT, INTENT, POLICY_DEFAULT, PRODUCT_TIMEZONE,
+    Terminal, _ok, deadline_instant, end_instant_from_start, reply,
 )
 
 
 class ActionProcessor:
-    def __init__(self, rpc: RpcCall, clock: Clock, extractor: Extractor, timezone: str):
+    def __init__(self, rpc: RpcCall, clock: Clock, extractor: Extractor, timezone: str = PRODUCT_TIMEZONE):
+        if timezone != PRODUCT_TIMEZONE:
+            raise ValueError(f"timezone must be {PRODUCT_TIMEZONE}")
         self.rpc, self.clock = rpc, clock
         self.chat = ChatProcessor(self, extractor, clock=clock, timezone=timezone)
 
@@ -80,8 +83,28 @@ class ActionProcessor:
     @staticmethod
     def normalize_slots(raw: dict) -> dict:
         slots = dict(raw)
+        slots.pop("course_label", None)
+        if type(slots.get("priority")) is float and slots["priority"] == 1.0:
+            slots["priority"] = 1
+        if slots.get("deadline_timezone") is None:
+            slots["deadline_timezone"] = PRODUCT_TIMEZONE
+        if slots.get("deadline_precision") is None and slots.get("deadline_date") is not None:
+            slots["deadline_precision"] = "DATE"
         if slots.get("deadline_precision") == "DATE" and slots.get("deadline_at") is None:
             slots["deadline_at"] = deadline_instant(slots)
+        if slots.get("start_at") is not None:
+            if slots.get("available_from_at") is None:
+                slots["available_from_at"] = slots["start_at"]
+            if slots.get("deadline_precision") is None:
+                slots["deadline_precision"] = "DATETIME"
+            if (
+                slots.get("deadline_precision") == "DATETIME"
+                and slots.get("deadline_at") is None
+                and slots.get("estimated_minutes") is not None
+            ):
+                slots["deadline_at"] = end_instant_from_start(slots["start_at"], slots["estimated_minutes"])
+        elif slots.get("available_from_at") is not None:
+            slots["start_at"] = slots["available_from_at"]
         return slots
 
     @staticmethod
@@ -166,11 +189,16 @@ class ActionProcessor:
         ask = []
         if not (slots.get("title") or "").strip():
             ask.append(("title", "Tên công việc là gì?"))
-        if slots.get("deadline_precision") not in ("DATE", "DATETIME") or slots.get("deadline_at") is None \
-                or (slots["deadline_precision"] == "DATE" and slots.get("deadline_date") is None):
-            ask.append(("deadline_at", "Hạn nộp là khi nào?"))
-        if not slots.get("deadline_timezone"):
-            ask.append(("deadline_timezone", "Hạn nộp tính theo múi giờ nào?"))
+        has_start = bool(slots.get("start_at"))
+        has_deadline = (
+            slots.get("deadline_precision") in ("DATE", "DATETIME")
+            and slots.get("deadline_at") is not None
+            and (slots["deadline_precision"] != "DATE" or slots.get("deadline_date") is not None)
+        )
+        if not has_start and not has_deadline:
+            field = "deadline_at" if slots.get("deadline_precision") in ("DATE", "DATETIME") else "start_at"
+            message = "Hạn nộp là khi nào?" if field == "deadline_at" else "Thời gian bắt đầu là khi nào?"
+            ask.append((field, message))
         if slots.get("estimated_minutes") is None:
             ask.append(("estimated_minutes", "Bạn dự kiến cần bao nhiêu phút?"))
         return [{"field": field, "message": message, "choices": []} for field, message in ask]
