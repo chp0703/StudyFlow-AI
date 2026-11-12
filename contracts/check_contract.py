@@ -269,7 +269,7 @@ def main():
         assert set(entity['primary_key']) <= set(props)
         for col in entity['columns']:
             assert col['nullable'] == ('anyOf' in props[col['name']])
-    source = (ROOT.parent / 'docs/database/schema_F1.md').read_text(encoding='utf-8')
+    source = (ROOT.parent / 'docs/features/planner/schema.md').read_text(encoding='utf-8')
     for entity in data['entities']:
         name = entity['entity']
         match = re.search(r'^### (?:3\.\d+\. )?' + name + r'[^\n]*\n[\s\S]*?```text\n([\s\S]*?)```', source, re.M)

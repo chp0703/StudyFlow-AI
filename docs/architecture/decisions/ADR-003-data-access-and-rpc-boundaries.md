@@ -26,13 +26,13 @@ Initial RPC inventory:
 
 RPC functions must not manually commit or roll back inside normal PostgREST execution. The request transaction provides atomicity. The pure scheduler runs outside PostgreSQL and returns data to a persistence RPC.
 
-## Direct invocation and F1 scope
+## Direct invocation and Planner scope
 
 The accepted boundary is a forwarded user JWT plus backend HMAC attestation for every write, through controlled SECURITY DEFINER wrappers as specified in ADR-002 and contract IC-05. Every RPC independently enforces ownership, versions, states, trusted approval evidence, payload validation and idempotency; a frontend JWT alone cannot authorize a direct mutation. Read routines enforce owner access without a mutation attestation.
 
 Each routine accepts `p_request jsonb` validated against RpcRequest and the operation-specific arguments/result schema. Internal snapshot, proposal persistence, source-message, pending-action, receipt and lease helpers are listed in service-contract.json; they are not extra LLM tools. `lookup_operation_result` allows generation retries to reuse a persisted proposal before rerunning the engine.
 
-The following are explicitly `DEFERRED / UNSUPPORTED IN F1 v1.1` and must not be added to the RPC inventory: task update API, task cancellation API, manual StudyBlock creation, and individual StudyBlock rescheduling.
+The following are explicitly unsupported by Planner schema v1.1 and must not be added to this RPC inventory without a contract revision: task update API, task cancellation API, manual StudyBlock creation, and individual StudyBlock rescheduling.
 
 ## Rejection idempotency (R-07)
 
@@ -44,7 +44,7 @@ The following are explicitly `DEFERRED / UNSUPPORTED IN F1 v1.1` and must not be
 
 ## Data API latency evaluation (R-13)
 
-The following are `PROPOSED` evaluation targets, not SLOs: same-region p95 ≤300 ms for ordinary reads and p95 ≤1000 ms for atomic mutation RPCs, excluding LLM and Scheduling Engine computation. Benchmark with a representative F1 dataset, expected concurrency, a warm-up phase, and at least 30 measured runs per operation. Report p50/p95/p99, errors, retries, and payload sizes. Optimize query shape, indexes, RPC batching, pagination, and client reuse (without sharing mutable auth headers) before considering a different access mode. Direct PostgreSQL access is not justified without benchmark evidence.
+The following are `PROPOSED` evaluation targets, not SLOs: same-region p95 ≤300 ms for ordinary reads and p95 ≤1000 ms for atomic mutation RPCs, excluding LLM and Scheduling Engine computation. Benchmark with a representative Planner dataset, expected concurrency, a warm-up phase, and at least 30 measured runs per operation. Report p50/p95/p99, errors, retries, and payload sizes. Optimize query shape, indexes, RPC batching, pagination, and client reuse (without sharing mutable auth headers) before considering a different access mode. Direct PostgreSQL access is not justified without benchmark evidence.
 
 ## Consequences
 
@@ -52,7 +52,7 @@ HTTP latency and pagination must be measured. Independent API calls cannot be tr
 
 ## Stage 03.2 implementation baseline
 
-**IMPLEMENTATION_BASELINE — selected for F1 implementation; not a claim of separate team approval.** The public database boundary is `app_api`, while `app_private` tables and helpers are unexposed. All user mutations use SECURITY INVOKER and derive owner from `auth.uid()`; no RPC accepts client `user_id` as authority. The final inventory is: `create_task_candidate`, `confirm_task`, `search_tasks`, `set_availability`, `set_busy_interval`, `set_scheduling_preferences`, `read_scheduling_context`, `persist_plan_proposal`, `get_study_plan`, `approve_study_plan`, and `reject_study_plan`. `generate_study_plan` is an application operation: read one consistent context, run the pure Python engine, then call revision-checked proposal persistence.
+**IMPLEMENTATION_BASELINE — selected for Planner implementation.** The public database boundary is `app_api`, while `app_private` tables and helpers are unexposed. All user mutations use SECURITY INVOKER and derive owner from `auth.uid()`; no RPC accepts client `user_id` as authority. The final inventory is: `create_task_candidate`, `confirm_task`, `search_tasks`, `set_availability`, `set_busy_interval`, `set_scheduling_preferences`, `read_scheduling_context`, `persist_plan_proposal`, `get_study_plan`, `approve_study_plan`, and `reject_study_plan`. `generate_study_plan` is an application operation: read one consistent context, run the pure Python engine, then call revision-checked proposal persistence.
 
 All response envelopes carry `schema_version = "1.1"`; errors use the stable codes documented in the physical design. Helper functions for locks, idempotency, typed target validation, and attestation consumption are private and receive no frontend execute grant. `issue_chat_approval_attestation` is the sole server-only entry point and is executable only by `service_role` from an isolated backend client. Unsupported task update/cancel, manual block creation, individual block rescheduling, and StudySession operations return `UNSUPPORTED_OPERATION` at the application boundary.
 

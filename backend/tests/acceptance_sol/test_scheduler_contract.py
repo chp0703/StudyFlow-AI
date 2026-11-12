@@ -1,4 +1,4 @@
-"""Test hồi quy hành vi theo schema_F1.md mục 6/7 và contract mục 4.2.
+"""Test hồi quy hành vi theo Planner schema mục 6/7 và contract mục 4.2.
 
 Các test dùng giao diện planner/validator công khai và kết quả kỳ vọng cụ thể.
 Chủ động không import hàm hỗ trợ test của nhóm triển khai.

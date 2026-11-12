@@ -1,24 +1,31 @@
-# Documentation index
+# StudyFlow AI documentation
 
-Only current product specifications, architecture decisions and runtime guides are kept here. Executable contracts and migrations remain the implementation sources of truth.
+StudyFlow AI is delivered as one product with three connected features:
 
-## Sources of truth
+1. Intelligent Academic Planner
+2. Learning Assessment & Adaptive Revision
+3. Daily AI Learning
 
-| Area | Source |
+The Planner foundation is the currently implemented module. Assessment and Daily Learning are part of the approved product scope and must be designed and implemented against the shared trust, source and approval boundaries.
+
+## Start here
+
+| Need | Document |
 |---|---|
-| F1 business schema and lifecycle rules | [database/schema_F1.md](database/schema_F1.md) |
-| HTTP, service and persistence contract | [../contracts/README.md](../contracts/README.md) |
-| Database implementation | [../supabase/migrations/](../supabase/migrations/) |
-| Software requirements | [srs/StudyFlow_AI_Software_Requirements_Specification_v1.0_Draft.md](srs/StudyFlow_AI_Software_Requirements_Specification_v1.0_Draft.md) |
-
-## Engineering guides
-
-| Area | Source |
-|---|---|
-| Current repository/runtime map | [architecture/StudyFlow_AI_Repo_Structure.md](architecture/StudyFlow_AI_Repo_Structure.md) |
+| Product scope and cross-feature requirements | [product/requirements.md](product/requirements.md) |
+| Feature boundaries and implementation status | [features/README.md](features/README.md) |
+| Current runtime architecture | [architecture/overview.md](architecture/overview.md) |
 | Architecture decisions | [architecture/decisions/](architecture/decisions/) |
-| Scheduling rules | [planner/scheduling_rules.md](planner/scheduling_rules.md) |
-| Planner evaluation | [planner/evaluation.md](planner/evaluation.md) |
+| Planner domain model | [features/planner/schema.md](features/planner/schema.md) |
+| Planner scheduling behavior | [features/planner/scheduling.md](features/planner/scheduling.md) |
+| Planner machine-readable contract | [../contracts/README.md](../contracts/README.md) |
+| Database implementation | [../supabase/migrations/](../supabase/migrations/) |
 | Frontend conventions | [../frontend/DESIGN.md](../frontend/DESIGN.md) |
 
-Historical proposals, handoff notes, work-package logs and duplicated database design documents are intentionally excluded.
+## Documentation rules
+
+- Product scope lives in `product/requirements.md`.
+- Feature-specific behavior lives under `features/<feature>/`.
+- Machine-readable contracts and migrations override prose when describing implemented interfaces.
+- Test status comes from test source and CI, not committed result snapshots.
+- Historical proposals and superseded handoff documents are kept in Git history, not in the current tree.

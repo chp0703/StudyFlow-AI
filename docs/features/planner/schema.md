@@ -1,16 +1,17 @@
-# StudyFlow AI — Schema chính thức F1
+# StudyFlow AI — Planner domain schema
 
 | Thuộc tính | Giá trị |
 |---|---|
 | Phiên bản schema | **1.1**; giá trị `schema_version` trên contract: `"1.1"` |
-| Trạng thái | **ĐÃ THỐNG NHẤT — áp dụng cho giai đoạn tích hợp F1 hiện tại** |
+| Feature | **Intelligent Academic Planner** |
+| Trạng thái | **ĐÃ THỐNG NHẤT — áp dụng cho Planner hiện tại** |
 | Ngày hiệu lực | 04/11/2026, múi giờ Việt Nam |
-| Căn cứ phê duyệt | Nhóm thống nhất theo bản đề xuất F1 v0.1; người dùng xác nhận sửa hai phần: cho custom cấu hình học và bỏ thời hạn cố định cho nháp/yêu cầu chờ/proposal trong cuộc trao đổi ngày 04/11/2026. |
+| Căn cứ phê duyệt | Nhóm thống nhất bản Planner v0.1; người dùng xác nhận cho phép tùy chỉnh cấu hình học và bỏ thời hạn cố định cho nháp/yêu cầu chờ/proposal trong cuộc trao đổi ngày 04/11/2026. |
 | Đối tượng sử dụng | Database, Tool Layer, Orchestrator, Scheduling Engine và bên tích hợp giao diện. |
 
-Tài liệu này là nguồn chuẩn cho tên trường, kiểu dữ liệu, quan hệ, trạng thái và hợp đồng dữ liệu F1 trong giai đoạn hiện tại. Khi tài liệu hỗ trợ có khác biệt, áp dụng schema này cùng bộ contract máy đọc được trong `contracts/`.
+Tài liệu này là nguồn chuẩn cho tên trường, kiểu dữ liệu, quan hệ, trạng thái và hợp đồng dữ liệu của feature Planner. Khi tài liệu hỗ trợ có khác biệt, áp dụng schema này cùng bộ contract máy đọc được trong `contracts/`. Tên kỹ thuật `F1` và `schema_version="1.1"` được giữ để tương thích với contract, migration và client hiện hành; chúng không giới hạn scope toàn sản phẩm.
 
-Chi tiết tích hợp API FE–BE, Service/Tool và Data/RPC được chốt tại [Hợp đồng tích hợp chính thức](../../contracts/README.md), team phê duyệt theo [ghi nhận ngày 05/11/2026](../../contracts/APPROVAL.md). Việc phê duyệt này giữ nguyên schema logic v1.1.
+Chi tiết tích hợp API FE–BE, Service/Tool và Data/RPC được chốt tại [Hợp đồng tích hợp chính thức](../../../contracts/README.md), team phê duyệt theo [ghi nhận ngày 05/11/2026](../../../contracts/APPROVAL.md). Việc phê duyệt này giữ nguyên schema logic v1.1.
 
 Đây là đặc tả logic đã được thống nhất; không xác nhận implementation, migration hoặc kiểm thử đã hoàn tất. Không dùng tài liệu này làm bằng chứng đã đối chiếu proposal PDF gốc.
 
@@ -695,4 +696,4 @@ Thay đổi contract từ 1.0 sang 1.1: bỏ expires_at khỏi TaskCandidate, Pe
 | Phiên bản | Ngày | Nội dung |
 |---|---|---|
 | 1.1 | 04/11/2026 | Cho custom policy lưu trong hồ sơ hoặc override cho một lần lập lịch; 25–90/240/10 chỉ là mặc định. Bỏ thời hạn cố định của nháp/action/proposal; giữ dữ liệu, xem lại ngữ cảnh và kiểm tra lại trước mỗi lần ghi. Thay thế quy định TTL sản phẩm ở 1.0. |
-| 1.0 | 04/11/2026 | Chính thức hóa phương án F1 v0.1 sau khi nhóm thống nhất; chuẩn hóa dữ liệu nghiệp vụ, I/O, trạng thái, thời gian, quyền, duyệt và giao dịch; chốt mặc định 25–90 phút/buổi, 240 phút/ngày, nghỉ 10 phút, cho phép buổi cuối ngắn và TTL 1440/30/30 phút. |
+| 1.0 | 04/11/2026 | Chính thức hóa phương án Planner v0.1 sau khi nhóm thống nhất; chuẩn hóa dữ liệu nghiệp vụ, I/O, trạng thái, thời gian, quyền, duyệt và giao dịch; chốt mặc định 25–90 phút/buổi, 240 phút/ngày, nghỉ 10 phút, cho phép buổi cuối ngắn và TTL 1440/30/30 phút. |

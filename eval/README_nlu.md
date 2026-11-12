@@ -1,6 +1,6 @@
-# Bộ đánh giá trích xuất tiếng Việt F1
+# Bộ đánh giá trích xuất tiếng Việt cho Planner
 
-`datasets/f1_nlu_acceptance.jsonl` gồm **40 câu độc lập**, do Sol soạn trước khi dùng để đánh giá implementation. Đây là dữ liệu kỳ vọng, chưa phải kết quả chạy mô hình. Nguồn chuẩn: [`ExtractionResult` trong schema](../contracts/schemas/f1.schema.json), [schema nghiệp vụ F1 §5](../docs/database/schema_F1.md) và [contract tích hợp](../contracts/README.md).
+`datasets/f1_nlu_acceptance.jsonl` gồm **40 câu độc lập** cho feature Planner. Tên dataset giữ nguyên để tương thích với tooling hiện tại. Đây là dữ liệu kỳ vọng, chưa phải kết quả chạy mô hình. Nguồn chuẩn: [`ExtractionResult` trong schema](../contracts/schemas/f1.schema.json), [Planner domain schema §5](../docs/features/planner/schema.md) và [Planner integration contract](../contracts/README.md).
 
 Ngữ cảnh mỗi câu cố định: `received_at=2026-11-05T12:00:00Z`, `timezone=Asia/Ho_Chi_Minh`, tức 19:00 ngày 05/11/2026 tại Việt Nam. Mỗi câu bắt đầu không có hội thoại trước, entity lookup hoặc pending action được chọn. Không nối các dòng thành một cuộc hội thoại. Không suy ra người dùng chưa có task/lịch chỉ vì không cung cấp snapshot.
 

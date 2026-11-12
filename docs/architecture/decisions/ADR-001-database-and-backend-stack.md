@@ -3,7 +3,7 @@
 **Status: ACCEPTED — Unified Integration Contract 1.0.0**
 **Created:** 2026-11-04
 **Last updated:** 2026-11-05
-**Scope:** F1 physical implementation
+**Scope:** Planner physical implementation within the three-feature product
 
 Accepted effective 05/11/2026 through the [official contract](../../../contracts/README.md) and [approval record](../../../contracts/APPROVAL.md). The implementation is represented by the current backend and append-only Supabase migrations.
 

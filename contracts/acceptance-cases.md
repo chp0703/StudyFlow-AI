@@ -1,4 +1,4 @@
-# Ca nghiệm thu tích hợp F1
+# Ca nghiệm thu tích hợp Planner
 
 Trạng thái ban đầu: **NOT_RUN** cho toàn bộ ca runtime dưới đây. Fixtures JSON và checker chỉ xác minh contract tĩnh/các invariant từ một payload. Người triển khai ghi commit, môi trường, lệnh chạy và bằng chứng vào cột kết quả khi nghiệm thu.
 

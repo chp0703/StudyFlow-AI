@@ -1,10 +1,10 @@
-# Ghi nhận phê duyệt contract F1
+# Ghi nhận phê duyệt Planner contract
 
 | Nội dung | Ghi nhận |
 |---|---|
 | Trạng thái | **APPROVED — CHÍNH THỨC** |
 | Package | **1.0.1** |
-| Logical schema | **F1 v1.1**, `schema_version="1.1"` |
+| Logical schema | **Planner v1.1**, technical `schema_version="1.1"` |
 | Ngày phê duyệt và hiệu lực | **05/11/2026**, múi giờ Việt Nam (`Asia/Ho_Chi_Minh`) |
 | Bên phê duyệt | Team dự án StudyFlow AI, theo xác nhận của người dùng trong cuộc trao đổi này |
 | Căn cứ | Người dùng xác nhận duyệt chính thức bộ contract `1.0.0` và tiếp tục phê duyệt toàn bộ phụ lục RPC nội bộ A/B/C/D cho bản `1.0.1`; lịch sử chính xác được giữ tại các commit bên dưới |

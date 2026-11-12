@@ -1,6 +1,6 @@
-# Scheduling rules — F1 schema 1.1
+# Planner scheduling rules
 
-This module follows `schema_F1.md` version 1.1. It treats the assignment document as role guidance and the official schema as the contract when wording differs.
+This module implements the Intelligent Academic Planner and follows [the Planner domain schema](schema.md), technical schema version 1.1. The technical `F1` identifier remains for compatibility; the product scope also includes Assessment and Daily Learning.
 
 ## Input boundary
 

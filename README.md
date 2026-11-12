@@ -1,15 +1,23 @@
 # StudyFlow AI
 
-StudyFlow AI is a student-controlled academic planning assistant. It turns confirmed tasks, availability and scheduling preferences into reviewable study plans. A plan is persisted only after explicit user approval.
+StudyFlow AI is a student-controlled learning workspace with three connected features: Intelligent Academic Planner, Learning Assessment & Adaptive Revision, and Daily AI Learning.
 
-The repository contains the React frontend, FastAPI backend, deterministic scheduler, shared F1 contract, Supabase migrations and automated acceptance tests.
+The repository currently contains the implemented Planner foundation: React frontend, FastAPI backend, deterministic scheduler, shared contract, Supabase migrations and automated acceptance tests. Assessment and Daily Learning are part of the current product scope; their requirements are defined and their implementation remains pending.
+
+## Product scope
+
+| Feature | Purpose | Status |
+|---|---|---|
+| Intelligent Academic Planner | Tasks, personalized working time, deterministic plans and approval | Foundation implemented |
+| Learning Assessment & Adaptive Revision | Verified quizzes, deterministic grading and revision recommendations | Requirements defined |
+| Daily AI Learning | Source-grounded explanations, hints and confirmed session outcomes | Requirements defined |
 
 ## Repository map
 
 ```text
 backend/    FastAPI API, workflow orchestration, RPC client, NLU and scheduler
 contracts/  Approved OpenAPI, JSON Schema, registries and validation fixtures
-docs/       Current product, architecture, database and planner documentation
+docs/       Product, feature and architecture documentation
 eval/       Independent Vietnamese NLU acceptance dataset
 frontend/   React 19 and Vite application
 supabase/   Local configuration, immutable migrations and database tests
@@ -17,7 +25,7 @@ worklogs/   Team implementation logs
 ```
 
 See [docs/README.md](docs/README.md) for the documentation index and
-[docs/architecture/StudyFlow_AI_Repo_Structure.md](docs/architecture/StudyFlow_AI_Repo_Structure.md)
+[docs/architecture/overview.md](docs/architecture/overview.md)
 for the current runtime map.
 
 ## Prerequisites
@@ -52,7 +60,7 @@ uvicorn backend.app.main:create_app --factory --port 8000
 Configure the variables documented in [.env.example](.env.example). Register a local RPC signing key using
 `supabase/scripts/register_dev_key.sql`. Keep signing secrets and API keys outside Git.
 
-The API exposes the eight F1 endpoints declared in `contracts/openapi.yaml`. Authentication uses Supabase JWTs, database access goes through signed RPC envelopes, and the scheduler remains deterministic.
+The current API exposes the eight Planner endpoints declared in `contracts/openapi.yaml`. Authentication uses Supabase JWTs, database access goes through signed RPC envelopes, and the scheduler remains deterministic. The technical `F1` identifiers remain for compatibility with the implemented Planner contract.
 
 ## Verification
 
@@ -79,9 +87,10 @@ python -B -m unittest discover -s supabase/tests_concurrency -v
 
 ## Sources of truth
 
-- Business semantics: [F1 schema v1.1](docs/database/schema_F1.md)
-- HTTP and service boundaries: [contracts/README.md](contracts/README.md)
+- Product requirements: [StudyFlow AI requirements](docs/product/requirements.md)
+- Feature map: [StudyFlow AI features](docs/features/README.md)
+- Planner semantics: [Planner domain schema](docs/features/planner/schema.md)
+- Planner HTTP and service boundaries: [contracts/README.md](contracts/README.md)
 - Database implementation: [Supabase migrations](supabase/migrations/)
-- Product requirements: [SRS Markdown](docs/srs/StudyFlow_AI_Software_Requirements_Specification_v1.0_Draft.md)
 
 Supabase migrations are append-only history. Do not edit an applied migration; add a new migration instead.

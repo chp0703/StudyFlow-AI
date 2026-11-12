@@ -1,16 +1,17 @@
-# Hợp đồng tích hợp thống nhất StudyFlow F1
+# Hợp đồng tích hợp Intelligent Academic Planner
 
 | Thuộc tính | Giá trị |
 |---|---|
 | Contract package | **1.0.1 — APPROVED / CHÍNH THỨC**, hiệu lực 05/11/2026, giờ Việt Nam |
-| Logical schema | **F1 v1.1**, `schema_version: "1.1"` |
+| Logical schema | **Planner schema v1.1**, technical `schema_version: "1.1"` |
 | Phạm vi | API FE ↔ BE; Tool/Service Orchestrator ↔ BE; Data/RPC BE ↔ DB |
 | Trạng thái phê duyệt | **Team đã phê duyệt**, theo xác nhận của người dùng ngày 05/11/2026; căn cứ và phạm vi tại [APPROVAL.md](APPROVAL.md) |
-| Trạng thái triển khai | Đặc tả + schemas + fixtures + kiểm tra contract; chưa có API handler, migration hoặc DB chạy thật |
+| Phạm vi sản phẩm | Contract này áp dụng cho Planner; Assessment và Daily Learning có scope riêng trong tài liệu sản phẩm |
+| Trạng thái triển khai | Planner đã có API handler, migrations, database tests và frontend integration; từng môi trường vẫn phải được CI/acceptance tests xác minh |
 
 ## 1. Nguồn chuẩn và cách sử dụng
 
-[Schema F1 v1.1](../docs/database/schema_F1.md) tiếp tục quyết định **ngữ nghĩa nghiệp vụ**. Bộ này cụ thể hóa các chi tiết transport, chữ ký service và persistence còn thiếu. Không sửa field/state/scope của F1 v1.1. Nếu phát hiện mâu thuẫn, dừng tích hợp phần liên quan, sửa bộ contract; không âm thầm sửa schema gốc.
+[Planner domain schema v1.1](../docs/features/planner/schema.md) quyết định **ngữ nghĩa nghiệp vụ của Planner**. Bộ này cụ thể hóa transport, chữ ký service và persistence. Các tên kỹ thuật `F1`, `f1.schema.json` và `schema_version="1.1"` được giữ để tương thích; chúng không giới hạn scope StudyFlow AI chỉ còn một feature. Nếu phát hiện mâu thuẫn, dừng tích hợp phần liên quan và sửa bộ contract.
 
 | File | Là nguồn chuẩn cho |
 |---|---|
@@ -135,7 +136,7 @@ engine.schedule(SchedulingContext) -> SchedulingResult
 
 Các arguments nullable vẫn phải có key ở service. HTTP adapter bổ sung null/default trước khi gọi. `ADD`: window_id/version=null, window khác null. `UPDATE`: gửi toàn bộ window và ID/version. `ARCHIVE`: window=null, ID/version khác null. Không hiểu request thêm một khoảng thành thay cả tuần.
 
-Dispatcher allowlist đúng 10 tên. `get_scheduling_context`, normalizer, classifier và validator là service nội bộ, không tự biến thành tool public. Intent hợp lệ và allowlist slots được xác định ở schema F1; mọi intent lạ ngoài scope trả UNSUPPORTED_OPERATION. LLM output là ExtractionResult chưa tin cậy; server resolve owner/reference, phân giải ngày tương đối theo tin nhắn gốc, chạy ValidationReport rồi mới tạo command.
+Dispatcher allowlist đúng 10 tên. `get_scheduling_context`, normalizer, classifier và validator là service nội bộ, không tự biến thành tool public. Intent hợp lệ và allowlist slots được xác định ở Planner schema; mọi intent lạ ngoài contract Planner trả UNSUPPORTED_OPERATION. LLM output là ExtractionResult chưa tin cậy; server resolve owner/reference, phân giải ngày tương đối theo tin nhắn gốc, chạy ValidationReport rồi mới tạo command.
 
 ### 4.1. Pipeline xác nhận
 
@@ -333,10 +334,10 @@ Tất cả IC-01–IC-08 dưới đây có trạng thái **APPROVED**, hiệu l�
 
 Vai trò TV1–TV4 theo bản phân công hiện có; không tự gán tên người. Thay đổi từng IC sau phê duyệt cần review cụ thể từ các consumer liên quan. Nếu thay trust model, phải cập nhật đồng thời API/service/data và acceptance cases, không chỉ sửa một ADR. Decision Register/ADR đã ghi nhận bản chính thức; physical design khi triển khai phải đối chiếu lại với bộ này. Merge tài liệu không thay thế căn cứ phê duyệt đã được ghi nhận.
 
-Breaking change về field/enum/nullability/side effect tăng major contract; additive thay đổi vẫn phải review consumer và cập nhật fixtures/changelog. Nếu đổi ngữ nghĩa F1 phải tăng schema gốc theo quy trình của nó. Không tái sử dụng version 1.1 cho behavior khác mà không ghi nhận.
+Breaking change về field/enum/nullability/side effect tăng major contract; additive thay đổi vẫn phải review consumer và cập nhật fixtures/changelog. Nếu đổi ngữ nghĩa Planner phải tăng schema gốc theo quy trình của nó. Không tái sử dụng version 1.1 cho behavior khác mà không ghi nhận.
 
 ## 11. Căn cứ
 
-- Repo main `70f463b`; schema F1 v1.1; Database Baseline v1.1; ADR-001..005 và Implementation Decision Register.
+- Planner schema v1.1, contract package 1.0.1, ADR-001..005 và lịch sử commit liên quan.
 - Physical design PR #15 head `d00a43d`: tham khảo draft, không coi là phê duyệt. Scheduler PR #12 đang mở: contract engine bám schema gốc; bộ này không chứng nhận code của PR đã tương thích.
 - [OpenAPI 3.1.1](https://spec.openapis.org/oas/v3.1.1.html), [JSON Schema 2020-12](https://json-schema.org/draft/2020-12/json-schema-core), [PostgreSQL datetime](https://www.postgresql.org/docs/current/datatype-datetime.html), [Supabase security](https://supabase.com/docs/guides/api/securing-your-api).
