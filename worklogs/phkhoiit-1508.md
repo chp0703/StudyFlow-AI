@@ -359,3 +359,23 @@
 
 - Phần hiểu ngôn ngữ trong lần chạy trình duyệt là extractor kịch bản (chưa có khóa DeepSeek); chưa kiểm với DeepSeek thật.
 - Lịch hiển thị 8h–17h theo giờ bắt đầu khối, múi giờ trình duyệt.
+
+## 2026-11-12 — Refactor repository và chuẩn hóa tài liệu sản phẩm
+
+**Mục tiêu:** loại bỏ mã/tài liệu legacy, làm rõ runtime hiện tại và mở rộng phạm vi tài liệu từ riêng Planner sang đầy đủ ba feature StudyFlow AI.
+
+**Đã làm**
+
+- Xóa handoff, proposal, draft, PDF trùng, cấu hình editor cá nhân và các package rỗng không còn sử dụng.
+- Xóa dispatcher/service stack cùng root tests legacy; cập nhật backend CI sang runtime và acceptance suites hiện hành.
+- Viết lại README, documentation index và architecture overview theo code đang chạy.
+- Tổ chức tài liệu theo Product Requirements và ba feature: Intelligent Academic Planner, Learning Assessment & Adaptive Revision, Daily AI Learning.
+- Đổi tài liệu schema/scheduler sang module Planner; giữ các tên kỹ thuật `F1` chỉ để tương thích contract, migration và package hiện tại.
+- Hai file giao việc FE/BE từ feedback demo được giữ local và loại khỏi Git, không nằm trong branch.
+
+**Kết quả:** nhánh `refactor/repository-cleanup`; contract checker pass (122 definitions, 100 fixtures), 41 backend unit tests pass, 33 scheduler acceptance tests pass, 46 API acceptance tests pass, planner evaluation pass và frontend production build pass.
+
+**Ghi chú**
+
+- Chưa chạy lại Supabase pgTAP/integration/concurrency trong lượt refactor này.
+- Chưa push cloud migration hoặc thay đổi project Supabase dùng chung.
