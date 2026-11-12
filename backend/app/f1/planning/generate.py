@@ -13,8 +13,8 @@ from uuid import UUID, uuid4
 
 from ..scheduler.constraints import validate_context
 from ..scheduler.models import (
-    AcademicTask, GenerationScope, Issue, Priority, SchedulingContext, SchedulingPolicy, SelectionMode, StudyBlock,
-    TaskStatus,
+    DEFAULT_TASK_COLOR, PRODUCT_TIMEZONE, AcademicTask, GenerationScope, Issue, Priority,
+    SchedulingContext, SchedulingPolicy, SelectionMode, StudyBlock, TaskStatus,
 )
 from ..scheduler.normalization import normalize_time_windows
 from ..scheduler.replanning import partition_blocks_for_replan
@@ -44,11 +44,21 @@ def _issue(issue: Issue) -> dict:
 
 
 def _task(raw: dict) -> AcademicTask:
+    raw_priority = raw["priority"]
+    priority = (
+        Priority(float(raw_priority))
+        if type(raw_priority) in (int, float) and float(raw_priority) in (0.1, 0.5, 1.0)
+        else raw_priority
+    )
     return AcademicTask(
         task_id=UUID(raw["task_id"]), user_id=UUID(raw["user_id"]), title=raw["title"], deadline_at=_when(raw["deadline_at"]),
         estimated_minutes=raw["estimated_minutes"], remaining_minutes=raw["remaining_minutes"],
-        priority=Priority(raw["priority"]), status=TaskStatus(raw["status"]),
-        available_from_at=_when(raw["available_from_at"]) if raw.get("available_from_at") else None)
+        priority=priority, status=TaskStatus(raw["status"]),
+        available_from_at=_when(raw["available_from_at"]) if raw.get("available_from_at") else None,
+        start_at=_when(raw["start_at"]) if raw.get("start_at") else None,
+        color=raw.get("color", DEFAULT_TASK_COLOR),
+        description=raw.get("description"),
+        deadline_timezone=raw.get("deadline_timezone", PRODUCT_TIMEZONE))
 
 
 def _block(raw: dict) -> StudyBlock:

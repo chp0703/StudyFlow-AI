@@ -8,10 +8,14 @@ from typing import Callable, Mapping
 from uuid import UUID
 
 
-class Priority(str, Enum):
-    LOW = "LOW"
-    NORMAL = "NORMAL"
-    HIGH = "HIGH"
+PRODUCT_TIMEZONE = "Asia/Ho_Chi_Minh"
+DEFAULT_TASK_COLOR = "#596CF0"
+
+
+class Priority(float, Enum):
+    LOW = 0.1
+    NORMAL = 0.5
+    HIGH = 1.0
 
 
 class TaskStatus(str, Enum):
@@ -77,6 +81,10 @@ class AcademicTask:
     priority: Priority = Priority.NORMAL
     status: TaskStatus = TaskStatus.TODO
     available_from_at: datetime | None = None
+    start_at: datetime | None = None
+    color: str = DEFAULT_TASK_COLOR
+    description: str | None = None
+    deadline_timezone: str = PRODUCT_TIMEZONE
 
 
 @dataclass(frozen=True, slots=True)

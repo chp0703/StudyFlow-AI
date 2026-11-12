@@ -112,14 +112,21 @@ def _free_intervals(context: SchedulingContext, generated: list[EngineBlock]) ->
     return subtract_intervals(merge_intervals(available), [*busy, *protected])
 
 
+def _task_available_from(task: AcademicTask) -> datetime | None:
+    if task.start_at is not None and task.available_from_at is not None:
+        return max_instant(task.start_at, task.available_from_at)
+    return task.start_at if task.start_at is not None else task.available_from_at
+
+
 def _task_windows(
     context: SchedulingContext,
     task: AcademicTask,
     generated: list[EngineBlock],
 ) -> list[Interval]:
     lower = max_instant(_effective_now(context), context.generation_scope.start_at)
-    if task.available_from_at is not None:
-        lower = max_instant(lower, task.available_from_at)
+    available_from = _task_available_from(task)
+    if available_from is not None:
+        lower = max_instant(lower, available_from)
     upper = min_instant(context.generation_scope.end_at, task.deadline_at)
     if to_utc(lower) >= to_utc(upper):
         return []
@@ -187,7 +194,8 @@ def _reason_codes(
         return ("OUTSIDE_HORIZON",)
     if to_utc(task.deadline_at) <= to_utc(lower):
         return ("OUTSIDE_HORIZON",)
-    if task.available_from_at is not None and to_utc(task.available_from_at) >= to_utc(min_instant(task.deadline_at, context.generation_scope.end_at)):
+    available_from = _task_available_from(task)
+    if available_from is not None and to_utc(available_from) >= to_utc(min_instant(task.deadline_at, context.generation_scope.end_at)):
         return ("OUTSIDE_HORIZON",)
 
     windows = _task_windows(context, task, generated)
@@ -268,7 +276,12 @@ def generate_schedule(context: SchedulingContext) -> SchedulingResult:
     retained = _retained_future_minutes(context)
     ordered_tasks = sorted(
         (tasks[task_id] for task_id in context.selected_task_ids),
-        key=lambda task: (to_utc(task.deadline_at), _PRIORITY_ORDER.get(task.priority, 99), str(task.task_id)),
+        key=lambda task: (
+            to_utc(task.deadline_at),
+            _PRIORITY_ORDER.get(task.priority, 99),
+            to_utc(task.start_at) if task.start_at is not None else to_utc(task.deadline_at),
+            str(task.task_id),
+        ),
     )
     generated: list[EngineBlock] = []
     summaries_by_id: dict[object, TaskSchedulingSummary] = {}

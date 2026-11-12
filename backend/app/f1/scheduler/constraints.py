@@ -3,11 +3,13 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Hashable
 from datetime import datetime
+import re
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .intervals import contains, duration_minutes, is_single_local_day, merge_intervals, overlaps, to_utc
 from .models import (
+    PRODUCT_TIMEZONE,
     AcademicTask,
     EngineBlock,
     Interval,
@@ -20,6 +22,7 @@ from .models import (
 )
 
 _VALID_PRIORITIES = (Priority.LOW, Priority.NORMAL, Priority.HIGH)
+_HEX_COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
 _VALID_TASK_STATUSES = (
     TaskStatus.TODO,
     TaskStatus.IN_PROGRESS,
@@ -83,6 +86,9 @@ def _validate_context_structure(context: SchedulingContext) -> list[Issue]:
         ZoneInfo(context.timezone)
     except (ZoneInfoNotFoundError, KeyError, ValueError, TypeError):
         issues.append(_issue("INVALID_TIMEZONE", "timezone must be a valid IANA name", "timezone", value=context.timezone))
+        return issues
+    if context.timezone != PRODUCT_TIMEZONE:
+        issues.append(_issue("INVALID_TIMEZONE", f"timezone must be {PRODUCT_TIMEZONE}", "timezone", value=context.timezone))
         return issues
 
     if not _aware(context.now):
@@ -148,8 +154,22 @@ def _validate_context_structure(context: SchedulingContext) -> list[Issue]:
                     issues.append(_issue("TIMESTAMP_NOT_MINUTE_ALIGNED", "available_from_at must be minute-aligned", f"{prefix}.available_from_at"))
                 if _aware(task.deadline_at) and to_utc(task.available_from_at) > to_utc(task.deadline_at):
                     issues.append(_issue("INVALID_TASK", "available_from_at must not be later than deadline", f"{prefix}.available_from_at"))
-        if not isinstance(task.priority, Hashable) or task.priority not in _VALID_PRIORITIES:
-            issues.append(_issue("INVALID_TASK", "task priority must be LOW, NORMAL, or HIGH", f"{prefix}.priority"))
+        if task.start_at is not None:
+            if not _aware(task.start_at):
+                issues.append(_issue("NAIVE_TIMESTAMP", "start_at must include an offset", f"{prefix}.start_at"))
+            else:
+                if not _minute_aligned(task.start_at):
+                    issues.append(_issue("TIMESTAMP_NOT_MINUTE_ALIGNED", "start_at must be minute-aligned", f"{prefix}.start_at"))
+                if _aware(task.deadline_at) and to_utc(task.start_at) > to_utc(task.deadline_at):
+                    issues.append(_issue("INVALID_TASK", "start_at must not be later than deadline", f"{prefix}.start_at"))
+        if type(task.priority) is bool or not isinstance(task.priority, Hashable) or task.priority not in _VALID_PRIORITIES:
+            issues.append(_issue("INVALID_TASK", "task priority must be 0.1, 0.5, or 1", f"{prefix}.priority"))
+        if not isinstance(task.color, str) or not _HEX_COLOR_RE.fullmatch(task.color):
+            issues.append(_issue("INVALID_TASK", "task color must be a #RRGGBB hex string", f"{prefix}.color"))
+        if task.description is not None and not isinstance(task.description, str):
+            issues.append(_issue("INVALID_TASK", "task description must be null or string", f"{prefix}.description"))
+        if task.deadline_timezone != PRODUCT_TIMEZONE:
+            issues.append(_issue("INVALID_TIMEZONE", f"deadline_timezone must be {PRODUCT_TIMEZONE}", f"{prefix}.deadline_timezone", value=task.deadline_timezone))
         if not isinstance(task.status, Hashable) or task.status not in _VALID_TASK_STATUSES:
             issues.append(_issue("INVALID_TASK", "task status must be TODO, IN_PROGRESS, COMPLETED, or CANCELLED", f"{prefix}.status"))
         elif task.status in (TaskStatus.TODO, TaskStatus.IN_PROGRESS) and task.remaining_minutes == 0:
@@ -242,7 +262,10 @@ def _validate_retained_block_constraints(context: SchedulingContext) -> list[Iss
             issues.append(_issue("RETAINED_BUSY_CONFLICT", "retained block overlaps a busy interval", block_id=str(block.block_id)))
         if to_utc(block.end_at) > to_utc(task.deadline_at):
             issues.append(_issue("RETAINED_AFTER_DEADLINE", "retained block ends after task deadline", block_id=str(block.block_id), task_id=str(block.task_id)))
-        if task.available_from_at is not None and to_utc(block.start_at) < to_utc(task.available_from_at):
+        effective_available = task.available_from_at
+        if task.start_at is not None:
+            effective_available = task.start_at if effective_available is None or to_utc(task.start_at) > to_utc(effective_available) else effective_available
+        if effective_available is not None and to_utc(block.start_at) < to_utc(effective_available):
             issues.append(_issue("RETAINED_BEFORE_AVAILABLE", "retained block starts before task is available", block_id=str(block.block_id), task_id=str(block.task_id)))
 
     retained_minutes: dict[object, int] = defaultdict(int)
@@ -405,7 +428,10 @@ def validate_generated_result(
             issues.append(_issue("GENERATED_BUSY_CONFLICT", "generated block overlaps a busy interval", field))
         if to_utc(block.end_at) > to_utc(task.deadline_at):
             issues.append(_issue("GENERATED_AFTER_DEADLINE", "generated block ends after task deadline", field))
-        if task.available_from_at is not None and to_utc(block.start_at) < to_utc(task.available_from_at):
+        effective_available = task.available_from_at
+        if task.start_at is not None:
+            effective_available = task.start_at if effective_available is None or to_utc(task.start_at) > to_utc(effective_available) else effective_available
+        if effective_available is not None and to_utc(block.start_at) < to_utc(effective_available):
             issues.append(_issue("GENERATED_BEFORE_AVAILABLE", "generated block starts before task is available", field))
         if not is_single_local_day(interval, context.timezone):
             issues.append(_issue("BLOCK_CROSSES_LOCAL_DAY", "generated block crosses a local-day boundary", field))
