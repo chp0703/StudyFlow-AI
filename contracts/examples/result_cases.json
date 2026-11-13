@@ -225,6 +225,25 @@
             "moved": [],
             "removed": [],
             "unchanged": []
+          },
+          "schedule_confirmation": {
+            "proposal_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+            "proposal_version": 1,
+            "base_schedule_revision": 0,
+            "entries": [],
+            "added": [],
+            "changed": [],
+            "removed": [],
+            "warnings": [],
+            "unscheduled_work": [
+              {
+                "task_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+                "task_name": "Công việc c732",
+                "color": "#596CF0",
+                "unscheduled_minutes": 60,
+                "reason_codes": []
+              }
+            ]
           }
         },
         "algorithm_version": "1",
@@ -323,6 +342,25 @@
             "moved": [],
             "removed": [],
             "unchanged": []
+          },
+          "schedule_confirmation": {
+            "proposal_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+            "proposal_version": 1,
+            "base_schedule_revision": 0,
+            "entries": [],
+            "added": [],
+            "changed": [],
+            "removed": [],
+            "warnings": [],
+            "unscheduled_work": [
+              {
+                "task_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+                "task_name": "Công việc c732",
+                "color": "#596CF0",
+                "unscheduled_minutes": 60,
+                "reason_codes": []
+              }
+            ]
           }
         },
         "algorithm_version": "1",
@@ -529,6 +567,25 @@
             "moved": [],
             "removed": [],
             "unchanged": []
+          },
+          "schedule_confirmation": {
+            "proposal_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+            "proposal_version": 1,
+            "base_schedule_revision": 0,
+            "entries": [],
+            "added": [],
+            "changed": [],
+            "removed": [],
+            "warnings": [],
+            "unscheduled_work": [
+              {
+                "task_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+                "task_name": "Công việc c732",
+                "color": "#596CF0",
+                "unscheduled_minutes": 60,
+                "reason_codes": []
+              }
+            ]
           }
         },
         "algorithm_version": "1",

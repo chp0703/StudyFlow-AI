@@ -52,7 +52,8 @@ begin
  'version',1,'intent',intent,'state','AWAITING_CONFIRMATION','requires_review',false,'candidate_id',null,'proposal_id',null,
  'draft_arguments','{}'::jsonb,'missing_fields','[]'::jsonb,'ambiguities','[]'::jsonb,'depends_on_action_id',null,
  'created_at','2026-11-05T01:00:00.000000Z','updated_at','2026-11-05T01:00:00.000000Z'),'candidate',null,'proposal',null,
- 'normalized_command',jsonb_build_object('schema_version','1.1','operation',op,'arguments',args),'effective_policy',null),
+ 'normalized_command',jsonb_build_object('schema_version','1.1','operation',op,'arguments',args),'effective_policy',null,
+ 'schedule_confirmation',null),
  'expected_action_version',null),'q12-prep-'||act::text,conv);
  if prep->>'outcome' <> 'COMMITTED' then return prep; end if;
  insert into q12_last(k,action_id,conv) values (1, act, conv) on conflict (k) do update set action_id=excluded.action_id, conv=excluded.conv;

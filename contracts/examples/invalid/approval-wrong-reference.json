@@ -90,7 +90,8 @@
           "expected_candidate_version": 1
         }
       },
-      "effective_policy": null
+      "effective_policy": null,
+      "schedule_confirmation": null
     },
     "error": null,
     "warnings": []

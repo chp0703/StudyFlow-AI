@@ -52,22 +52,32 @@ insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,start_
 create function pg_temp.q_cmd(over jsonb default '{}') returns jsonb language sql as $$
  select jsonb_build_object('generation_scope',jsonb_build_object('start_at','2026-11-06T00:00:00.000000Z',
   'end_at','2026-11-13T00:00:00.000000Z','selection_mode','ALL_ELIGIBLE','task_ids','[]'::jsonb),'policy_overrides',over) $$;
+create function pg_temp.q_confirmation(pid text, rev int, blocks jsonb) returns jsonb language sql as $$
+ select jsonb_build_object('proposal_id',pid,'proposal_version',1,'base_schedule_revision',rev,
+  'entries',coalesce((select jsonb_agg(jsonb_build_object('block_id',b.value->>'block_id','task_id',b.value->>'task_id',
+   'task_name','Bài tập','date',to_char((b.value->>'start_at')::timestamptz at time zone 'Asia/Ho_Chi_Minh','YYYY-MM-DD'),
+   'start_at',b.value->>'start_at','end_at',b.value->>'end_at','duration_minutes',
+   (extract(epoch from ((b.value->>'end_at')::timestamptz-(b.value->>'start_at')::timestamptz))/60)::int,
+   'color','#596CF0') order by b.ord) from jsonb_array_elements(blocks) with ordinality b(value,ord)),'[]'::jsonb),
+  'added','[]'::jsonb,'changed','[]'::jsonb,'removed','[]'::jsonb,'warnings','[]'::jsonb,'unscheduled_work','[]'::jsonb) $$;
 -- Mặc định có hai block một giờ không giao nhau cho task a1, trừ khi ghi đè.
 create function pg_temp.q_prop(pid text, blocks jsonb default null, rev int default 0, cmd jsonb default null,
  policy jsonb default null) returns jsonb language sql as $$
  select jsonb_build_object('proposal_id',pid,'user_id','d1510000-0000-4000-8000-000000000001','version',1,'status','PROPOSED',
   'base_plan_id',null,'base_plan_version',null,'base_schedule_revision',rev,
   'generation_scope',coalesce(cmd,pg_temp.q_cmd())->'generation_scope',
-  'payload',jsonb_build_object('study_blocks',coalesce(blocks,jsonb_build_array(
+  'payload',jsonb_build_object('study_blocks',chosen.value,
+   'task_summaries','[]'::jsonb,'coverage','FULL','warnings','[]'::jsonb,
+   'plan_diff','{"added":[],"moved":[],"removed":[],"unchanged":[]}'::jsonb,
+   'schedule_confirmation',pg_temp.q_confirmation(pid,rev,chosen.value)),
+  'algorithm_version','q15-1','policy_snapshot',coalesce(policy,app_private.default_policy()),
+  'generated_at','2026-11-05T03:00:00.000000Z','committed_plan_id',null,
+  'created_at','2026-11-05T03:00:00.000000Z','updated_at','2026-11-05T03:00:00.000000Z')
+ from (select coalesce(blocks,jsonb_build_array(
     jsonb_build_object('block_id','d1510000-0000-4000-8000-0000000000e1','user_id','d1510000-0000-4000-8000-000000000001',
      'task_id','d1510000-0000-4000-8000-0000000000a1','start_at','2026-11-09T01:00:00.000000Z','end_at','2026-11-09T02:00:00.000000Z','is_locked',false),
     jsonb_build_object('block_id','d1510000-0000-4000-8000-0000000000e2','user_id','d1510000-0000-4000-8000-000000000001',
-     'task_id','d1510000-0000-4000-8000-0000000000a1','start_at','2026-11-10T01:00:00.000000Z','end_at','2026-11-10T02:00:00.000000Z','is_locked',false))),
-   'task_summaries','[]'::jsonb,'coverage','FULL','warnings','[]'::jsonb,
-   'plan_diff','{"added":[],"moved":[],"removed":[],"unchanged":[]}'::jsonb),
-  'algorithm_version','q15-1','policy_snapshot',coalesce(policy,app_private.default_policy()),
-  'generated_at','2026-11-05T03:00:00.000000Z','committed_plan_id',null,
-  'created_at','2026-11-05T03:00:00.000000Z','updated_at','2026-11-05T03:00:00.000000Z') $$;
+     'task_id','d1510000-0000-4000-8000-0000000000a1','start_at','2026-11-10T01:00:00.000000Z','end_at','2026-11-10T02:00:00.000000Z','is_locked',false))) value) chosen $$;
 create function pg_temp.q_persist(prop jsonb, cmd jsonb default null, idem text default 'q15-gen-key-000001') returns jsonb language sql as $$
  select pg_temp.q_call('persist_plan_proposal',jsonb_build_object('command_arguments',coalesce(cmd,pg_temp.q_cmd()),'proposal',prop),idem) $$;
 create temporary table q15(name text primary key, res jsonb);
