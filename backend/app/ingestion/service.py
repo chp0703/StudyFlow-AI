@@ -80,9 +80,9 @@ class SourceExtractor:
             if not isinstance(data, dict) or set(data) != {'intents'}:
                 raise ValueError()
             intents = data['intents']
-            if not isinstance(intents, list) or not 1 <= len(intents) <= MAX_CANDIDATES:
+            if not isinstance(intents, list) or not 0 <= len(intents) <= MAX_CANDIDATES:
                 raise ValueError()
-            if not contract.is_valid('ExtractionResult', data):
+            if intents and not contract.is_valid('ExtractionResult', data):
                 raise ValueError()
             if any(i['intent'] != 'CREATE_TASK' or not contract.is_valid('CandidateTaskFields', i['slots']) for i in intents):
                 raise ValueError()

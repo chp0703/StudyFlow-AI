@@ -10609,7 +10609,7 @@
         },
         "intents": {
           "type": "array",
-          "minItems": 1,
+          "minItems": 0,
           "maxItems": 20,
           "items": {
             "$ref": "#/$defs/SourceIntent"

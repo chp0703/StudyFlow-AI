@@ -97,6 +97,37 @@ class SourceWorkflowTests(unittest.TestCase):
             self.operations.upload(self.ctx, 'upload-key-0000001', {**self.body, 'content_base64': '!!!'})
         self.assertEqual(self.store.calls, [])
 
+    def test_empty_extraction_is_ready_cached_and_chat_reports_no_tasks(self):
+        provider = SourceExtractor('https://deepseek.example.test', 'test-key', transport=httpx.MockTransport(
+            lambda r: httpx.Response(200, json={'choices': [{'finish_reason': 'stop',
+                'message': {'content': '{"intents":[]}'}}]})))
+        self.operations = SourceOperations(self.store, provider, lambda: NOW)
+        source = self.operations.upload(self.ctx, 'empty-upload-key-001', {**self.body,
+            'filename': 'notes.txt', 'mime_type': 'text/plain', 'content_base64': base64.b64encode(b'Photosynthesis').decode()})['data']
+        result = self.operations.extract(self.ctx, 'empty-extract-key-01', source['source_id'], CONVERSATION)
+        self.assertEqual(result['data']['status'], 'READY')
+        self.assertEqual(result['data']['extraction']['intents'], [])
+        replay = self.operations.extract(self.ctx, 'empty-replay-key-001', source['source_id'], CONVERSATION)
+        self.assertEqual(replay['data']['extraction'], result['data']['extraction'])
+        self.assertEqual(self.store.calls.count('complete_source_extraction'), 1)
+        class Actions:
+            def step(inner, ctx, operation, arguments, **kwargs):
+                if operation == 'get_ingestion_source':
+                    return self.store(ctx, operation, arguments, **kwargs)
+                if operation == 'record_source_message':
+                    return {'data': arguments['message']}
+                if operation == 'get_workflow_continuation':
+                    return {'data': {'continuation': None}}
+                raise AssertionError(operation)
+        chat = ChatProcessor(Actions(), UnavailableExtractor(), clock=lambda: NOW)
+        status, reply = chat.handle_message(self.ctx, {'message_id': '00200000-0000-4000-8000-000000000003',
+            'created_at': '2026-11-13T09:00:00Z'}, 'empty-message-key01',
+            {'conversation_id': CONVERSATION, 'text': '', 'source_ids': [source['source_id']]})
+        self.assertEqual(status, 200)
+        self.assertEqual(reply['state'], 'SUCCEEDED')
+        self.assertIn('không tìm thấy công việc', reply['message'].lower())
+        self.assertIsNone(reply['action_reference'])
+
     def test_source_message_only_queues_source_candidates_not_annotation_instructions(self):
         source = self.upload()
         self.operations.extract(self.ctx, 'extract-key-000001', source['source_id'], CONVERSATION)

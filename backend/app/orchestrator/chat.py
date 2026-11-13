@@ -61,6 +61,8 @@ class ChatProcessor:
             # With attachments, text is an annotation. It cannot authorize a plan
             # or add unrelated model-generated operations to the source queue.
             extraction = {'intents': source_intents} if source_ids else self.extract(ctx, conversation, text, None)
+            if source_ids and not extraction['intents']:
+                return 200, reply(ctx.request_id, 'SUCCEEDED', 'Không tìm thấy công việc hoặc sự kiện trong nguồn đã gửi.')
             if all(i["intent"] in ("UNKNOWN", "UNSUPPORTED") for i in extraction["intents"]):
                 return 200, reply(ctx.request_id, "NEEDS_CLARIFICATION", "Mình chưa hiểu bạn muốn làm gì.", questions=[GENERIC_QUESTION])
             own = self.initialize(ctx, receipt, key, conversation, message_id, extraction)

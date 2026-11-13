@@ -77,5 +77,16 @@ select ok(pg_temp.b4_call('record_source_message',jsonb_build_object('message',j
  'conversation_id','d1940000-0000-4000-8000-000000000003','source','CHAT','role','USER','text','Use source','received_at',app_private.iso(clock_timestamp())),
  'source_ids',jsonb_build_array('d1940000-0000-4000-8000-000000000006')))->>'outcome'='COMMITTED','source lineage bound');
 select is((select count(*) from app_private.message_source_links where user_id='d1940000-0000-4000-8000-000000000001'),1::bigint,'one message link');
+-- A valid source with no tasks is still READY and binds to a chat message.
+insert into b4 values('empty_upload',pg_temp.b4_call('store_ingestion_source',
+ pg_temp.b4_upload()||'{"source_id":"d1940000-0000-4000-8000-000000000007"}'));
+insert into b4 values('empty_claim',pg_temp.b4_call('claim_source_extraction',
+ pg_temp.b4_lookup()||'{"source_id":"d1940000-0000-4000-8000-000000000007"}'));
+insert into b4 values('empty_done',pg_temp.b4_call('complete_source_extraction',
+ jsonb_set(pg_temp.b4_complete(1),'{extraction,intents}','[]')||'{"source_id":"d1940000-0000-4000-8000-000000000007"}'));
+select is(result#>>'{data,status}','READY','empty extraction is successful') from b4 where name='empty_done';
+select is(result#>'{data,extraction,intents}','[]'::jsonb,'empty intents preserved') from b4 where name='empty_done';
+select ok((select content is null from app_private.ingestion_sources where source_id='d1940000-0000-4000-8000-000000000007'),
+ 'empty extraction also clears source bytes');
 select * from finish();
 rollback;

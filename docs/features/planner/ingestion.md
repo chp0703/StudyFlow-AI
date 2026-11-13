@@ -46,7 +46,8 @@ and conversation checks. Foreign sources return the same 404 as unknown IDs.
 Maximum 20 candidates/source and 20 intents/message, 20 PDF pages, 24,000 extracted
 text characters, 2,048 model output tokens and 45 seconds/model call. No automatic
 model retries or paid-provider fallback. Missing key/dependency returns a safe
-503. Invalid/empty/truncated provider output never becomes a candidate. API keys,
+503. A valid `{"intents":[]}` extraction is READY and chat reports that no tasks
+or events were found. Invalid or truncated provider output never becomes a candidate. API keys,
 provider bodies, file contents and encoded images are never logged. The existing
 DeepSeek API key is reused; the ingestion model is independently configurable and
 defaults to `deepseek-flash`. No paid live test without an available configured key.

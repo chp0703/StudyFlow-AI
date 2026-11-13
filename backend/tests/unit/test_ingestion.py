@@ -84,6 +84,11 @@ class CalendarTests(unittest.TestCase):
 
 
 class ProviderTests(unittest.TestCase):
+    def test_valid_source_without_tasks_returns_empty_extraction(self):
+        result = self.provider({'intents': []}).extract(b'A page about photosynthesis', 'text/plain', now=NOW)
+        self.assertEqual(result['intents'], [])
+        self.assertEqual(result['usage'], {'input_tokens': 100, 'output_tokens': 50})
+
     def provider(self, content=None, *, status=200, finish='stop'):
         self.requests = []
         def handle(request):

@@ -29,6 +29,7 @@ class IngestionContractTests(unittest.TestCase):
                       'extracted_at': '2026-11-13T09:00:00Z', 'usage': {'input_tokens': 3, 'output_tokens': 4},
                       'intents': [{'intent': 'CREATE_TASK', 'slots': {'title': 'Homework'}, 'raw_expressions': {}, 'ambiguities': []}]}
         self.assertTrue(contract.is_valid('SourceExtraction', extraction))
+        self.assertTrue(contract.is_valid('SourceExtraction', {**extraction, 'intents': []}))
         bad = copy.deepcopy(extraction)
         bad['intents'][0]['intent'] = 'GENERATE_STUDY_PLAN'
         self.assertFalse(contract.is_valid('SourceExtraction', bad))
