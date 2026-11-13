@@ -133,6 +133,7 @@ class ChatHttp(unittest.TestCase):
             current = restarted.get('/v1/plans', headers={'Authorization': f'Bearer {self.token(who)}'})
             self.assertIsNone(current.json()['data']['plan'])
             if request_plan and not reject:
+                self.assertIsNotNone(last.json()['action_reference'], last.text)
                 self.assertEqual(last.json()['action_reference']['target_type'], 'PLAN_PROPOSAL', last.text)
                 approved = self.decide(restarted, who, conversation, last.json()['action_reference'])
                 self.assertEqual(approved.status_code, 200, approved.text)
