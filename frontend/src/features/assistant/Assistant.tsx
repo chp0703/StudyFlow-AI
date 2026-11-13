@@ -141,32 +141,15 @@ export default function Assistant({
           ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
           : `${Math.max(1, Math.round(file.size / 1024))} KB`
 
-      if (isImg) {
-        const reader = new FileReader()
-        reader.onload = () => {
-          setAttachedFiles((prev) => [
-            ...prev,
-            {
-              id: crypto.randomUUID(),
-              name: file.name,
-              size: sizeStr,
-              type: "image",
-              dataUrl: String(reader.result || ""),
-            },
-          ])
-        }
-        reader.readAsDataURL(file)
-      } else {
-        setAttachedFiles((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            name: file.name,
-            size: sizeStr,
-            type: "file",
-          },
-        ])
-      }
+      setAttachedFiles((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          name: file.name,
+          size: sizeStr,
+          type: isImg ? "image" : "file",
+        },
+      ])
     })
   }
 
@@ -500,7 +483,7 @@ export default function Assistant({
       text:
         text ||
         (currentAttachments.length > 0
-          ? `Đã gửi ${currentAttachments.length} tệp đính kèm.`
+          ? `Đã chọn ${currentAttachments.length} tệp để hiển thị (chưa tải lên).`
           : ""),
       ...(currentAttachments.length > 0
         ? { attachments: currentAttachments }

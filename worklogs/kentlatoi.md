@@ -58,3 +58,19 @@
 
 **Ghi chú**
 - Chưa kiểm thử E2E API có đăng nhập vì không có backend và tài khoản thử nghiệm được cấp quyền.
+
+## 2026-11-13 — Correct Planner follow-up to leader specification
+
+**Mục tiêu:** Sửa cách hiểu sai FE-03 thành tùy chỉnh giờ hiển thị lịch theo từng thứ, chỉ nằm ở frontend.
+
+**Đã làm**
+- Ghi ma trận truy vết FE-01–FE-06; giữ nhánh FE follow-up làm nền, không lấy editor từ nhánh UX refresh.
+- Gỡ editor giờ học hằng tuần và ràng buộc scheduler demo do FE-03 cũ tạo ra. `CalendarDisplaySettings` giữ một dải giờ cho mỗi thứ trong bộ nhớ frontend; lịch đặt sự kiện đúng phút theo từng cột ngày.
+- Giữ múi giờ Việt Nam, đầu đề ngày cố định và luồng duyệt đề xuất; mở rộng chi tiết lịch học đầy đủ, bỏ môn học khỏi Planner và sửa phản hồi tệp bản mẫu để không nhận là đã tải/đọc.
+- Bổ sung kiểm thử dải giờ hiển thị, giờ 09:15 và tệp chỉ hiển thị; giữ các kiểm thử API/đề xuất hợp lệ.
+
+**Kết quả:** Nhánh `fix/planner-followup-leader-spec-kent`; chưa mở PR mới hoặc đẩy nhánh. Kiểm tra kỹ thuật và QA ghi trong báo cáo bàn giao.
+
+**Ghi chú**
+- FE-01 API còn chờ PR #32 được merge và xác minh runtime; FE-06 còn chờ hợp đồng upload/trích xuất.
+- FE-03 ban đầu được triển khai từ yêu cầu hiểu nhầm về giờ học hằng tuần; commit lịch sử không bị xóa hay viết lại.

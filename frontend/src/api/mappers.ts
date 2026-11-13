@@ -52,8 +52,6 @@ export function mapTask(task: ApiTask, firstBlock?: ApiBlock): Task {
 
     description: task.description,
 
-    course: task.course_label ?? "",
-
     time: firstBlock ? blockLabel(firstBlock) : "",
 
     done: task.status === "COMPLETED",
@@ -84,8 +82,6 @@ export function blockEvent(block: ApiBlock, task: Task | undefined): Task {
     title: task?.title ?? "Công việc",
 
     description: task?.description,
-
-    course: task?.course ?? "",
 
     time: blockLabel(block),
 

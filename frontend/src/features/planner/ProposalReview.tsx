@@ -23,20 +23,22 @@ export default function ProposalReview({
   const changes = new Map(
     proposal?.changes.map((change) => [change.task.id, change.kind]),
   )
-  const entries = proposal?.server
-    ? [
-        ...proposal.next.tasks.map((task) => ({
-          task,
-          kind: changes.get(task.id) ?? "unchanged",
-        })),
-        ...proposal.changes
-          .filter((change) => change.kind === "removed")
-          .map((change) => ({ task: change.task, kind: "removed" })),
-      ]
-    : (proposal?.changes.map((change) => ({
-        task: change.task,
-        kind: change.kind,
-      })) ?? [])
+  const entries =
+    proposal && (!proposal.server || proposal.server.coverage)
+      ? [
+          ...proposal.next.tasks
+            .filter(
+              (task) => task.date && task.time && task.time !== "Chưa xếp",
+            )
+            .map((task) => ({
+              task,
+              kind: changes.get(task.id) ?? "unchanged",
+            })),
+          ...proposal.changes
+            .filter((change) => change.kind === "removed" && change.task.date)
+            .map((change) => ({ task: change.task, kind: "removed" })),
+        ]
+      : []
   const kindLabel: Record<string, string> = {
     added: "Thêm",
     scheduled: "Thêm",
@@ -50,7 +52,7 @@ export default function ProposalReview({
       {proposal ? (
         <div className={`proposal-bar ${stale ? "is-stale" : ""}`}>
           <Sparkles aria-hidden="true" size={16} />
-          <span className="proposal-text">
+          <div className="proposal-text">
             <strong>
               {proposal.server ? (
                 proposal.server.title
@@ -58,9 +60,7 @@ export default function ProposalReview({
                 <>
                   Đề xuất:{" "}
                   {describeChanges(proposal.changes, proposal.windowChanges) ||
-                    (proposal.next.weeklyWindows
-                      ? "đổi thời gian học"
-                      : "không đổi")}
+                    "không đổi"}
                 </>
               )}
             </strong>
@@ -82,7 +82,7 @@ export default function ProposalReview({
               </span>
             )}
             {entries.length > 0 && (
-              <details className="proposal-entries" open>
+              <details className="proposal-entries">
                 <summary>Lịch học đề xuất ({entries.length})</summary>
                 <ul>
                   {entries.map(({ task, kind }) => (
@@ -93,12 +93,18 @@ export default function ProposalReview({
                       <span className="proposal-entry-kind">
                         {kindLabel[kind]}
                       </span>
-                      <strong>{task.title}</strong>
+                      <strong
+                        style={
+                          task.color && /^#[0-9a-fA-F]{6}$/.test(task.color)
+                            ? { color: task.color }
+                            : undefined
+                        }
+                      >
+                        {task.title}
+                      </strong>
                       <span>
-                        {task.date
-                          ? `${task.date.split("-").reverse().join("/")} · `
-                          : ""}
-                        {task.time || "Chưa có giờ"} · {task.effort} phút
+                        {task.date?.split("-").reverse().join("/")} ·{" "}
+                        {task.time} · {task.effort} phút
                       </span>
                     </li>
                   ))}
@@ -142,7 +148,7 @@ export default function ProposalReview({
                 </ul>
               </section>
             )}
-          </span>
+          </div>
           <Button
             className="secondary proposal-reject"
             onClick={reject}

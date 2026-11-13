@@ -1,26 +1,3 @@
-/* Lịch tuần. */
-.dashboard-calendar-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.dashboard-calendar-controls>span { font-size: 14px; color: var(--color-muted); margin-right: 12px; }
-.dashboard-calendar-controls select { width: auto; min-width: 90px; }
-.dashboard-calendar-scroll { overflow-x: auto; border-radius: 0 0 12px 12px; }
-.dashboard-schedule { min-width: 1050px; padding: 0 20px; }
-.schedule-header,.schedule-row { display: grid; grid-template-columns: 62px repeat(7,minmax(0,1fr)); }
-.schedule-header { align-items: center; padding: 16px 0; }
-.schedule-day { flex-direction: column; gap: 3px; padding: 6px; font-size: 13px; }
-.schedule-day>span { font-size: 12px; color: var(--color-muted); }
-.schedule-day>strong { font-size: 17px; min-height: 32px; min-width: 32px; display: grid; place-items: center; }
-.schedule-day.is-today>strong { border-radius: 50%; background: var(--color-primary); color: white; }
-.schedule-row { min-height: 96px; }
-.schedule-cell { min-height: 96px; padding: 4px; border-top: 1px solid var(--color-line); border-left: 1px solid var(--color-line); }
-.schedule-cell:last-child { border-right: 1px solid var(--color-line); }
-.today-column { background: #fbfcff; }
-.schedule-event { min-height: 86px; width: 100%; padding: 8px; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; text-align: left; gap: 4px; border-left: 3px solid #1d4ed8; border-radius: 5px; background: #eff6ff; color: #1e40af; }
-.schedule-event strong { font-size: 13px; font-weight: 600; line-height: 1.4; }
-.schedule-event span,.schedule-event small { font-size: 12px; line-height: 1.4; color: inherit; }
-.schedule-event.deadline { background: #fff1f2; border-color: #be123c; color: #9f1239; }
-.schedule-event:hover:not(:disabled) { background: #e0eaff; }
-.schedule-event.deadline:hover:not(:disabled) { background: #ffe4e6; }
-
 /* Planner vừa vùng hiển thị: chat ở trên, lịch lấp phần còn lại, hàng giờ co lại để trang không cuộn. */
 .main-content:has(.planner-page) {
   height: calc(100dvh - 58px);
@@ -87,9 +64,9 @@
 }
 .planner-chat-form input {
   width: 100%;
-  min-height: 36px;
-  height: 36px;
-  padding: 0 44px 0 14px;
+  min-height: 44px;
+  height: 44px;
+  padding: 0 52px 0 14px;
   border: 1px solid var(--color-line);
   border-radius: 100px;
   background: var(--bg-card);
@@ -99,12 +76,12 @@
 }
 .planner-chat-form .button.primary {
   position: absolute;
-  right: 4px;
+  right: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
-  min-height: 28px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
   padding: 0;
   border-radius: 50%;
   display: grid;
@@ -165,89 +142,39 @@
   padding: 0 16px 12px;
 }
 
-.planner-calendar .schedule-header,
-.planner-calendar .schedule-row {
-  display: grid;
-  grid-template-columns: 56px repeat(7, minmax(0, 1fr));
-}
-.planner-calendar .schedule-header-time {
-  width: 56px;
-  display: block;
-}
-.planner-calendar .schedule-hour {
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--color-muted);
-  font-variant-numeric: tabular-nums;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding-right: 12px;
-  user-select: none;
+.planner-calendar .dashboard-calendar-scroll { scroll-padding-top: 64px; }
+.planner-calendar .schedule-header, .planner-calendar .schedule-columns {
+  display: grid; grid-template-columns: repeat(7, minmax(112px, 1fr));
 }
 .planner-calendar .schedule-header {
-  flex: none;
-  padding: 2px 0 4px;
-  border-bottom: 1px solid var(--color-line);
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  background: var(--bg-card);
+  position: sticky; top: 0; z-index: 5; min-height: 52px;
+  background: var(--bg-card); border-bottom: 1px solid var(--color-line);
 }
-.planner-calendar .dashboard-calendar-scroll { scroll-padding-top: 58px; }
 .planner-calendar .schedule-day {
-  width: 100%;
-  min-height: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 44px; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 2px; font-size: 12px;
 }
-.planner-calendar .schedule-day > strong {
-  min-height: 24px;
-  min-width: 24px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-muted);
-  letter-spacing: 0.3px;
-  display: grid;
-  place-items: center;
+.planner-calendar .schedule-day strong { color: var(--color-ink); }
+.planner-calendar .schedule-day span { color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.planner-calendar .schedule-day.is-today strong { color: var(--color-primary); }
+.planner-calendar .schedule-day-column { min-width: 0; border-right: 1px solid var(--color-line); }
+.planner-calendar .schedule-day-column.today-column { background: rgba(89, 108, 240, .04); }
+.planner-calendar .schedule-time-grid { position: relative; overflow: hidden; }
+.planner-calendar .schedule-time-slot {
+  position: absolute; left: 0; right: 0; width: 100%; border: 0;
+  border-top: 1px solid var(--color-line); padding: 4px 6px;
+  background: transparent; color: var(--color-muted); text-align: left;
+  font: inherit; font-size: 11px; cursor: pointer;
 }
-.planner-calendar .schedule-day > span { font-size: 11px; line-height: 1.2; font-variant-numeric: tabular-nums; color: var(--color-muted); }
-.planner-calendar .schedule-day.is-today > strong {
-  color: white;
-  background: var(--gradient-brand);
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(89, 108, 240, 0.35);
-}
-
-.planner-calendar .schedule-row {
-  flex: 1;
-  min-height: 64px;
-}
-.planner-calendar .schedule-cell {
-  position: relative;
-  min-height: 0;
-  padding: 3px 6px;
-  border-top: 0;
-  border-bottom: 0;
-  border-left: 0;
-  border-right: 1px solid rgba(229, 232, 244, 0.55);
-}
-.planner-calendar .schedule-cell:last-child {
-  border-right: 0;
-}
-.planner-calendar .today-column {
-  background: rgba(89, 108, 240, 0.04);
-}
+.planner-calendar .schedule-time-slot:hover { background: var(--color-info-bg); }
+.planner-calendar .schedule-time-slot span { pointer-events: none; }
+.planner-calendar .schedule-time-slot .schedule-range-start { display: none; }
 
 /* Nhãn sự kiện dạng thẻ bo góc gọn như tin nhắn */
 .planner-calendar .schedule-event {
-  position: relative;
-  min-height: 38px;
-  height: 100%;
+  position: absolute;
+  left: 30px; right: 4px; width: auto;
+  min-height: 28px;
   padding: 6px 10px 6px 12px;
   gap: 2px;
   display: flex;
@@ -355,8 +282,8 @@
   margin-right: 4px;
 }
 .planner-calendar .dashboard-calendar-controls .button {
-  min-height: 32px;
-  height: 32px;
+  min-height: 44px;
+  height: 44px;
   padding: 0 12px;
   font-size: 13px;
   font-weight: 500;
@@ -369,8 +296,8 @@
   background: var(--color-info-bg);
 }
 .planner-calendar .dashboard-calendar-controls .icon-button {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   display: grid;
   place-items: center;
@@ -419,8 +346,8 @@
 .task-panel-close {
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 6px;
   background: transparent;
@@ -483,37 +410,36 @@
 .proposal-entry.is-moved { border-color: var(--color-primary); }
 .proposal-coverage { font-weight: 700; color: var(--color-warning-text) !important; }
 .proposal-issues { color: var(--color-warning-text); }
-.working-time-editor { padding: 8px 20px; border-bottom: 1px solid var(--color-line); max-height: 38vh; overflow-y: auto; flex-shrink: 0; font-size: 13px; }
-.working-time-editor > summary { min-height: 44px; padding-block: 12px; box-sizing: border-box; cursor: pointer; font-weight: 700; }
-.working-time-editor > p { margin: 8px 0; color: var(--color-muted); }
-.working-time-days { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
-.working-time-day { border: 1px solid var(--color-line); border-radius: 10px; padding: 8px; background: var(--bg-card); }
-.working-time-day h3 { margin: 0 0 6px; font-size: 13px; }
-.working-time-day p { margin: 4px 0; color: var(--color-muted); }
-.working-time-day ul { list-style: none; margin: 0 0 6px; padding: 0; }
-.working-time-day li { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-bottom: 5px; }
-.working-time-day .button, .working-time-form .button { min-height: 44px; }
-.working-time-form { display: flex; align-items: end; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding: 10px; border-radius: 10px; background: var(--color-info-bg); }
-.working-time-form > strong { width: 100%; }
-.working-time-form label { display: grid; gap: 3px; }
-.working-time-form input { min-height: 44px; }
-.working-time-form .working-time-midnight { display: flex; align-items: center; gap: 6px; min-height: 44px; }
-.working-time-midnight input { min-height: auto; }
-.working-time-form [role="alert"] { width: 100%; margin: 0; color: var(--color-warning-text); }
-.working-time-note { margin: 0; padding: 4px 20px; font-size: 12px; color: var(--color-muted); }
-.window-segment { position: absolute; left: 3px; right: 3px; z-index: 0; overflow: hidden; border-radius: 3px; padding: 1px 3px; font-size: 10px; line-height: 1.2; font-weight: 600; pointer-events: none; }
-.window-segment.is-free { background: rgba(34, 160, 107, .18); color: #176449; }
-.window-segment.is-busy { background: repeating-linear-gradient(135deg, rgba(120, 130, 160, .24) 0 4px, rgba(120, 130, 160, .10) 4px 8px); color: #384157; }
-.planner-calendar .schedule-event { z-index: 1; }
+/* Display ranges are local presentation state, never scheduler availability. */
+.calendar-display-settings { position: relative; padding: 0 20px 4px; }
+.calendar-settings-toggle { display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
+  border: 0; background: transparent; color: var(--color-primary); font: inherit; font-size: 13px;
+  font-weight: 650; cursor: pointer; }
+.calendar-display-panel { position: absolute; z-index: 8; left: 20px; top: 44px; width: min(460px, calc(100vw - 44px));
+  max-height: min(54vh, 460px); overflow-y: auto; padding: 16px; border: 1px solid var(--color-line);
+  border-radius: 12px; background: var(--bg-card); box-shadow: 0 12px 32px rgba(23,32,59,.16); }
+.calendar-display-panel p { margin: 0 0 12px; color: var(--color-muted); font-size: 13px; }
+.calendar-display-days { display: grid; gap: 7px; }
+.calendar-display-day { display: grid; grid-template-columns: 72px 1fr 1fr; align-items: center; gap: 8px; }
+.calendar-display-day strong { font-size: 13px; }
+.calendar-display-day label { display: grid; gap: 2px; color: var(--color-muted); font-size: 12px; }
+.calendar-display-day input { width: 100%; min-height: 40px; padding: 4px 8px; border: 1px solid var(--color-line); border-radius: 7px;
+  color: var(--color-ink); background: var(--bg-card); font: inherit; font-variant-numeric: tabular-nums; }
+.calendar-display-day small { grid-column: 1 / -1; color: var(--color-warning-text); }
+.calendar-display-actions { display: flex; justify-content: end; gap: 8px; margin-top: 12px; }
+.calendar-display-actions button { min-height: 44px; padding: 0 14px; border: 1px solid var(--color-line);
+  border-radius: 8px; background: var(--bg-card); color: var(--color-ink); font: inherit; cursor: pointer; }
+.calendar-display-actions .primary { background: var(--color-primary); color: white; }
+.calendar-display-settings :focus-visible, .dashboard-calendar-scroll :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
 @media (max-width: 800px) {
   .proposal-bar { flex-wrap: wrap; }
   .proposal-text { flex-basis: calc(100% - 30px); }
   .proposal-bar .button { min-height: 44px; height: auto; }
-  .working-time-editor { max-height: 45vh; padding-inline: 12px; }
 }
 .proposal-bar .button {
-  min-height: 32px;
-  height: 32px;
+  min-height: 44px;
+  height: 44px;
   padding: 0 14px;
   font-size: 13px;
   gap: 6px;
@@ -582,23 +508,6 @@
   color: var(--color-ink);
 }
 
-/* Khung rảnh/bận trên lịch: dùng nhãn và họa tiết, không chỉ dùng màu. */
-.schedule-cell.is-free { background: rgba(34, 160, 107, 0.1); }
-.schedule-cell.is-busy {
-  background: repeating-linear-gradient(135deg, rgba(120, 130, 160, 0.16) 0 6px, transparent 6px 12px);
-}
-.schedule-cell.is-proposed { outline: 2px dashed var(--color-primary, #596cf0); outline-offset: -2px; }
-.window-tag {
-  position: absolute;
-  top: 2px;
-  right: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--color-muted, #6b7390);
-  pointer-events: none;
-}
-.planner-calendar .schedule-cell:not(:has(.schedule-event)):hover { background-color: rgba(89, 108, 240, 0.07); cursor: cell; }
-
 .planner-legend {
   display: flex;
   flex-wrap: wrap;
@@ -618,8 +527,6 @@
   vertical-align: -2px;
   border-radius: 3px;
 }
-.legend-free::before { background: rgba(34, 160, 107, 0.25); }
-.legend-busy::before { background: repeating-linear-gradient(135deg, rgba(120, 130, 160, 0.4) 0 3px, transparent 3px 6px); }
 .legend-proposed::before { border: 2px dashed var(--color-primary, #596cf0); box-sizing: border-box; }
 
 /* Khung danh sách công việc bên phải lịch */
@@ -696,7 +603,7 @@
 }
 .task-panel-filters { display: flex; flex-wrap: wrap; gap: 4px; }
 .task-panel-filters button {
-  min-height: 26px;
+  min-height: 44px;
   padding: 0 9px;
   border: 1px solid var(--color-line);
   border-radius: 100px;
@@ -767,8 +674,10 @@
   .planner-heading-action { flex: 1 1 100%; margin-left: 0; flex-wrap: wrap; gap: 8px; }
   .planner-chat-form { max-width: none; flex-basis: 100%; }
   .planner-heading-action .dashboard-calendar-controls { width: 100%; margin-left: 0; }
-  .planner-calendar .dashboard-schedule { min-width: 780px; }
+  .planner-calendar .dashboard-schedule { min-width: 840px; }
   .task-panel-wrap, .task-panel-wrap .task-panel { width: 100%; }
   .task-panel-wrap { flex: none; height: 280px; }
   .planner-page.is-tasks-closed .task-panel-wrap { display: none; }
 }
+
+@media (prefers-reduced-motion: reduce) { .planner-page, .task-panel-wrap, .planner-calendar .schedule-event { transition: none; } }

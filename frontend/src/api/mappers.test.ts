@@ -77,7 +77,6 @@ test("a task maps to the list shape; a scheduled one gets its first block as slo
     id: "t1",
     title: "Ôn OOP",
     description: "Đọc chương 3",
-    course: "OOP",
     time: "09:00–10:30",
     done: false,
     effort: 120,
@@ -88,7 +87,6 @@ test("a task maps to the list shape; a scheduled one gets its first block as slo
   })
   assert.equal(tasks[1].done, true)
   assert.equal(tasks[1].date, undefined)
-  assert.equal(tasks[1].course, "")
   assert.deepEqual(
     events.map((e) => [e.id, e.title, e.date, e.hour, e.time, e.effort]),
     [

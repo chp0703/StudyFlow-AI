@@ -1,6 +1,10 @@
 import WeekCalendar from "../features/planner/WeekCalendar"
 import ProposalReview from "../features/planner/ProposalReview"
-import WorkingTimeEditor from "../features/planner/WorkingTimeEditor"
+import CalendarDisplaySettings from "../features/planner/CalendarDisplaySettings"
+import {
+  DEFAULT_DISPLAY_RANGES,
+  type CalendarDisplayRanges,
+} from "../features/planner/calendarDisplay"
 import { usePlanner, type PlannerProps } from "../features/planner/usePlanner"
 import { useEffect, useRef, useState } from "react"
 
@@ -13,9 +17,6 @@ import { ChevronLeft, ChevronRight, ListTodo, Send, X } from "lucide-react"
 import Button from "../components/ui/Button"
 
 import Card from "../components/ui/Card"
-
-import { FIRST_HOUR, LAST_HOUR } from "../features/planner/plannerAgent"
-import { hourSegments } from "../features/planner/workingTime"
 
 import { apiEnabled } from "../api/config"
 
@@ -30,24 +31,12 @@ import {
   vietnamDate,
 } from "../utils/date"
 
-const hours = Array.from(
-  { length: LAST_HOUR - FIRST_HOUR + 1 },
-
-  (_, i) => i + FIRST_HOUR,
-)
-
 export default function Planner({
   tasks,
 
   events,
 
-  windows = [],
-
-  setWorkingWindows,
-
-  workingConfigured,
-
-  setWorkingConfigured,
+  windows,
 
   userId,
 
@@ -110,10 +99,8 @@ export default function Planner({
     reply,
     setReply,
     shown,
-    shownWindows,
     stale,
     send,
-    prepareAvailability,
     approve,
     reject,
   } = usePlanner(
@@ -121,9 +108,6 @@ export default function Planner({
       tasks,
       events,
       windows,
-      setWorkingWindows,
-      workingConfigured,
-      setWorkingConfigured,
       userId,
       conversationId,
       reload,
@@ -156,6 +140,9 @@ export default function Planner({
   )
 
   const [week, setWeek] = useState(0)
+  const [displayRanges, setDisplayRanges] = useState<CalendarDisplayRanges>(
+    DEFAULT_DISPLAY_RANGES,
+  )
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
@@ -351,20 +338,6 @@ export default function Planner({
   )
   const dateOf = (date: Date) => vietnamDate(date)
 
-  const segmentsAt = (date: Date, hour: number) =>
-    hourSegments(dateOf(date), hour, windows, apiEnabled ? [] : shownWindows)
-
-  const windowAt = (date: Date, hour: number) =>
-    shownWindows.find((w) => w.id === `${dateOf(date)}-${hour}`)
-
-  const proposedWindows = new Set(
-    proposal?.windowChanges
-
-      .filter((c) => c.kind === "added")
-
-      .map((c) => c.window.id),
-  )
-
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Nhấn ô trống để bắt đầu lệnh thêm vào khung giờ đó.
@@ -391,18 +364,16 @@ export default function Planner({
 
   const changeOf = new Map(proposal?.changes.map((c) => [c.task.id, c.kind]))
 
-  const slotMatch = (task: Task, date: Date, hour: number) =>
-    task.date === dateOf(date) && task.hour === hour
-
-  const eventAt = (date: Date, hour: number) =>
-    shown.find((task) => slotMatch(task, date, hour)) ??
-    proposal?.changes.find(
-      (c) => c.kind === "removed" && slotMatch(c.task, date, hour),
-    )?.task
-
-  const weekEmpty =
-    !shown.some((t) => t.date && weekDays.some((d) => dateOf(d) === t.date)) &&
-    !shownWindows.some((w) => weekDays.some((d) => dateOf(d) === w.date))
+  const calendarEvents = [
+    ...shown,
+    ...(proposal?.changes
+      .filter((change) => change.kind === "removed")
+      .map((change) => change.task) ?? []),
+  ]
+  const weekEmpty = !calendarEvents.some(
+    (event) =>
+      event.date && weekDays.some((date) => dateOf(date) === event.date),
+  )
 
   return (
     <div
@@ -500,27 +471,16 @@ export default function Planner({
           approve={approve}
           reject={reject}
         />
-        <WorkingTimeEditor
-          windows={windows}
-          busy={busy}
-          pending={!!proposal}
-          prepare={prepareAvailability}
+        <CalendarDisplaySettings
+          ranges={displayRanges}
+          onChange={setDisplayRanges}
         />
-        {!apiEnabled && (
-          <p className="working-time-note">
-            Bản demo chỉ xếp Lịch học thành khối đủ 60 phút bắt đầu đúng giờ.
-            Khoảng học lẻ phút vẫn được giữ và hiển thị chính xác. Lệnh rảnh/bận
-            cũ tạo ngoại lệ cho ngày cụ thể.
-          </p>
-        )}
         <p className="planner-legend" aria-label="Chú thích">
           <span className="legend-confirmed">Đã xác nhận</span>
 
-          <span className="legend-free">Thời gian học</span>
-          <span className="legend-busy">Bận</span>
           <span className="legend-proposed">Đề xuất</span>
           <span>
-            {weekEmpty ? "Tuần này chưa có việc." : "Bấm ô trống để thêm việc"}
+            {weekEmpty ? "Tuần này chưa có việc." : "Chọn giờ để nhập yêu cầu"}
           </span>
         </p>
         <WeekCalendar
@@ -528,11 +488,8 @@ export default function Planner({
           weekDays={weekDays}
           week={week}
           todayIndex={todayIndex}
-          hours={hours}
-          eventAt={eventAt}
-          windowAt={windowAt}
-          segmentsAt={segmentsAt}
-          proposedWindows={proposedWindows}
+          ranges={displayRanges}
+          events={calendarEvents}
           prefill={prefill}
           changeOf={changeOf}
           nowHour={nowHour}

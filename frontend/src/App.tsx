@@ -45,7 +45,6 @@ import Study from "./pages/Study"
 import type { Proposal, TimeWindow } from "./types/planner"
 
 import type { Task } from "./types/task"
-import type { ApiTimeWindow } from "./api/types"
 
 const destinations = [
   { name: "Assistant", label: "Trang chủ", icon: House },
@@ -103,12 +102,6 @@ export default function App() {
   const [demoTasks, setTasks] = useState<Task[]>([])
 
   const [demoAvailability, setAvailability] = useState<TimeWindow[]>([])
-
-  const [demoWorkingWindows, setDemoWorkingWindows] = useState<ApiTimeWindow[]>(
-    [],
-  )
-
-  const [demoWorkingConfigured, setDemoWorkingConfigured] = useState(false)
 
   // Thay đổi lịch đang chờ người dùng duyệt và số phiên bản sửa đổi của lịch đã xác nhận.
 
@@ -564,10 +557,7 @@ export default function App() {
         </div>
         {page === "Planner" && (
           <Planner
-            windows={apiEnabled ? server.windows : demoWorkingWindows}
-            setWorkingWindows={setDemoWorkingWindows}
-            workingConfigured={demoWorkingConfigured}
-            setWorkingConfigured={setDemoWorkingConfigured}
+            windows={apiEnabled ? server.windows : []}
             tasks={tasks}
             events={apiEnabled ? server.events : tasks}
             userId={session?.user.id ?? "demo"}

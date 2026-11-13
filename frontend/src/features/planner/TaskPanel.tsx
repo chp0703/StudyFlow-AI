@@ -155,7 +155,14 @@ export default function TaskPanel({
             const left = daysUntil(t.deadline)
 
             return (
-              <li key={t.id}>
+              <li
+                key={t.id}
+                style={
+                  t.color && /^#[0-9a-fA-F]{6}$/.test(t.color)
+                    ? { borderLeft: `4px solid ${t.color}` }
+                    : undefined
+                }
+              >
                 <strong>{t.title}</strong>
                 {t.description && (
                   <span className="task-panel-description">
@@ -164,9 +171,12 @@ export default function TaskPanel({
                 )}
                 <span className="task-panel-meta">
                   <CalendarClock aria-hidden="true" size={13} />
-                  {formatShortDate(t.deadline)}
-                  {left >= 0 ? ` · còn ${left} ngày` : " · quá hạn"} ·{" "}
-                  {t.effort} phút
+                  {t.date
+                    ? `${formatShortDate(t.date)} · ${t.time}`
+                    : `${formatShortDate(t.deadline)}${
+                        left >= 0 ? ` · còn ${left} ngày` : " · quá hạn"
+                      }`}{" "}
+                  · {t.effort} phút
                 </span>
                 <span className="task-panel-tags">
                   <span className="priority-badge">{t.priority}</span>

@@ -14,7 +14,6 @@ import { proposalFromReply } from "../../api/mappers"
 import { savePending } from "../../api/pending"
 
 import type { ApiTimeWindow, OrchestratorReply } from "../../api/types"
-import { prepareDemoWorkingChange } from "./workingTime"
 
 export type PlannerProps = {
   tasks: Task[]
@@ -22,12 +21,6 @@ export type PlannerProps = {
   events: Task[]
 
   windows?: ApiTimeWindow[]
-
-  setWorkingWindows: Dispatch<SetStateAction<ApiTimeWindow[]>>
-
-  workingConfigured: boolean
-
-  setWorkingConfigured: Dispatch<SetStateAction<boolean>>
 
   userId: string
 
@@ -57,9 +50,6 @@ export function usePlanner(
     tasks,
     events,
     windows,
-    setWorkingWindows,
-    workingConfigured,
-    setWorkingConfigured,
     userId,
     conversationId,
     reload,
@@ -79,10 +69,6 @@ export function usePlanner(
   // Retrying the same message keeps its idempotency key.
   const attempt = useRef<{
     text: string
-    key: string
-  } | null>(null)
-  const availabilityAttempt = useRef<{
-    body: string
     key: string
   } | null>(null)
   const shown = proposal ? proposal.next.tasks : apiEnabled ? events : tasks
@@ -150,60 +136,6 @@ export function usePlanner(
     }
   }
 
-  const prepareAvailability = async (
-    args: Parameters<typeof api.prepareAvailability>[1],
-  ) => {
-    if (busy || proposal) return false
-    if (!apiEnabled) {
-      const change = prepareDemoWorkingChange(
-        windows ?? [],
-        args,
-        crypto.randomUUID(),
-      )
-      if (!change) {
-        setReply("Khoảng học đã thay đổi. Hãy mở lại rồi thử tiếp.")
-        return false
-      }
-      setProposal({
-        id: crypto.randomUUID(),
-        createdAt: Date.now(),
-        baseRevision: revision,
-        next: {
-          tasks,
-          availability,
-          weeklyWindows: change.windows,
-          workingConfigured: true,
-        },
-        changes: [],
-        windowChanges: [],
-        issues: [],
-        reply: change.description,
-      })
-      setReply(change.description)
-      return true
-    }
-    setBusy(true)
-    try {
-      const body = JSON.stringify(args)
-      const key =
-        availabilityAttempt.current?.body === body
-          ? availabilityAttempt.current.key
-          : crypto.randomUUID()
-      availabilityAttempt.current = { body, key }
-      const prepared = await api.prepareAvailability(conversationId, args, key)
-      await showReply(prepared)
-      availabilityAttempt.current = null
-      return prepared.state === "AWAITING_APPROVAL"
-    } catch (error) {
-      setReply(errorText(error))
-      if (error instanceof ApiError && !error.retryable)
-        availabilityAttempt.current = null
-      return false
-    } finally {
-      setBusy(false)
-    }
-  }
-
   const send = () => {
     const text = input.trim()
 
@@ -213,13 +145,7 @@ export function usePlanner(
 
     // Commands stack on a pending proposal, but are always diffed against the committed schedule.
 
-    const result = runPlannerCommand(
-      text,
-      shown,
-      shownWindows,
-      proposal?.next.weeklyWindows ?? windows ?? [],
-      proposal?.next.workingConfigured ?? workingConfigured,
-    )
+    const result = runPlannerCommand(text, shown, shownWindows)
 
     const changes = diffTasks(tasks, result.tasks)
 
@@ -247,9 +173,6 @@ export function usePlanner(
       next: {
         tasks: result.tasks,
         availability: result.availability,
-        weeklyWindows: proposal?.next.weeklyWindows ?? windows,
-        workingConfigured:
-          proposal?.next.workingConfigured ?? workingConfigured,
       },
 
       changes,
@@ -307,12 +230,6 @@ export function usePlanner(
 
     setAvailability(proposal.next.availability)
 
-    if (proposal.next.weeklyWindows)
-      setWorkingWindows(proposal.next.weeklyWindows)
-
-    if (proposal.next.workingConfigured !== undefined)
-      setWorkingConfigured(proposal.next.workingConfigured)
-
     setRevision((r) => r + 1)
 
     setProposal(null)
@@ -340,7 +257,6 @@ export function usePlanner(
     shownWindows,
     stale,
     send,
-    prepareAvailability,
     approve,
     reject,
   }

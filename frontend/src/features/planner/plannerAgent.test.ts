@@ -2,8 +2,6 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import { runPlannerCommand } from "./plannerAgent.ts"
 import { toIsoDate, today } from "../../utils/date.ts"
-import { addCivilDays, civilWeekday, vietnamDate } from "../../utils/date.ts"
-import type { ApiTimeWindow } from "../../api/types.ts"
 
 test("adds, moves around conflicts, and deletes", () => {
   const day = toIsoDate(today)
@@ -60,77 +58,6 @@ test("sets, replaces and clears availability; busy hours are skipped", () => {
   assert.equal(r.availability.length, 0)
 })
 
-test("demo scheduler only uses complete hour blocks within configured weekly time", () => {
-  const tomorrow = addCivilDays(vietnamDate(), 1)
-  const weekday = civilWeekday(tomorrow) + 1
-  const window = (
-    start_time: string,
-    end_time: string,
-    kind: ApiTimeWindow["kind"] = "AVAILABILITY",
-  ): ApiTimeWindow => ({
-    window_id: `${kind}-${start_time}`,
-    version: 1,
-    kind,
-    label: null,
-    recurrence: "WEEKLY",
-    timezone: "Asia/Ho_Chi_Minh",
-    start_at: null,
-    end_at: null,
-    weekday,
-    start_time,
-    end_time,
-    valid_from: vietnamDate(),
-    valid_until: null,
-    archived_at: null,
-  })
-  const task = {
-    id: "weekly-demo",
-    title: "Ôn bài",
-    course: "",
-    time: "",
-    done: false,
-    effort: 60,
-    priority: "Trung bình",
-    deadline: tomorrow,
-  }
-  const partial = runPlannerCommand(
-    "lập kế hoạch",
-    [task],
-    [],
-    [window("08:15", "09:45")],
-    true,
-  )
-  assert.equal(partial.tasks[0].hour, undefined)
-  assert.equal(partial.issues?.length, 1)
-  const [, month, day] = tomorrow.split("-")
-  const manual = runPlannerCommand(
-    `thêm Ôn bài lúc 8h ngày ${Number(day)}/${Number(month)}`,
-    [],
-    [],
-    [window("08:15", "09:45")],
-    true,
-  )
-  assert.equal(manual.tasks.length, 0)
-  const full = runPlannerCommand(
-    "lập kế hoạch",
-    [task],
-    [],
-    [window("08:15", "10:00")],
-    true,
-  )
-  assert.equal(full.tasks[0].hour, 9)
-  const busy = runPlannerCommand(
-    "lập kế hoạch",
-    [task],
-    [],
-    [window("08:00", "10:00"), window("09:30", "09:45", "BUSY")],
-    true,
-  )
-  assert.equal(busy.tasks[0].hour, 8)
-  const empty = runPlannerCommand("lập kế hoạch", [task], [], [], true)
-  assert.equal(empty.tasks[0].hour, undefined)
-})
-
 test("parses dd/mm dates", () => {
   const r = runPlannerCommand("thêm Ôn bài lúc 9h ngày 5/11", [])
   assert.match(r.tasks[0]?.date ?? "", /-11-05$/)
@@ -157,7 +84,6 @@ test("plans unscheduled tasks deterministically and reports what does not fit", 
     ({
       id: String(id),
       title: `T${id}`,
-      course: "",
       time: "",
       done: false,
       effort: 60,
@@ -175,4 +101,23 @@ test("plans unscheduled tasks deterministically and reports what does not fit", 
     a.issues?.map((i) => i.taskId),
     ["3"],
   )
+})
+
+test("preserves a requested non-round demo start exactly", () => {
+  const result = runPlannerCommand("thêm Ôn bài hôm nay lúc 09:15", [])
+  assert.equal(result.tasks[0].time, "09:15 – 10:15")
+  assert.equal(result.tasks[0].minute, 15)
+  assert.equal(result.tasks[0].priority, 0.5)
+  assert.match(result.reply, /09:15/)
+  const conflict = runPlannerCommand(
+    "thêm Bài khác hôm nay lúc 09:15",
+    result.tasks,
+  )
+  assert.equal(conflict.tasks.length, 1)
+  assert.match(conflict.reply, /09:15/)
+  const overlap = runPlannerCommand(
+    "thêm Việc khác hôm nay lúc 10h",
+    result.tasks,
+  )
+  assert.equal(overlap.tasks[1].hour, 11)
 })
