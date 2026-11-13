@@ -50,7 +50,7 @@ create function pg_temp.q_pres(candidate jsonb, action_id uuid, version bigint d
  'candidate_id',candidate->>'candidate_id','proposal_id',null,'draft_arguments','{}'::jsonb,'missing_fields','[]'::jsonb,
  'ambiguities','[]'::jsonb,'depends_on_action_id',null,'created_at','2026-11-05T01:00:00.000000Z',
  'updated_at','2026-11-05T01:00:00.000000Z'),'candidate',candidate,'proposal',null,'normalized_command',null,
- 'effective_policy',null) $$;
+ 'effective_policy',null,'schedule_confirmation',null) $$;
 create function pg_temp.q_ref(action_id uuid, action_version bigint, candidate jsonb) returns jsonb language sql as $$
  select jsonb_build_object('action_id',action_id,'action_version',action_version,'target_type','TASK_CANDIDATE',
  'target_id',candidate->>'candidate_id','target_version',(candidate->>'version')::bigint) $$;
