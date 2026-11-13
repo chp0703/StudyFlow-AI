@@ -2232,9 +2232,7 @@
         },
         "text": {
           "type": "string",
-          "minLength": 1,
-          "maxLength": 8000,
-          "pattern": "\\S"
+          "maxLength": 8000
         },
         "source_ids": {
           "type": "array",
@@ -2248,10 +2246,32 @@
       },
       "required": [
         "schema_version",
-        "conversation_id",
-        "text"
+        "conversation_id"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "required": [
+            "source_ids"
+          ],
+          "properties": {
+            "source_ids": {
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          }
+        }
+      ]
     },
     "UserDecision": {
       "type": "object",

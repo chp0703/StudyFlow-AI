@@ -79,7 +79,7 @@ class ChatHttp(unittest.TestCase):
                             deepseek_api_key='test-source-key' if 'llm_transport' in kwargs else '')
         return TestClient(create_app(settings, extractor=extractor or ScriptedExtractor(SCRIPT), **kwargs))
 
-    def source_plan_flow(self, *, reject=False, request_plan=True):
+    def source_plan_flow(self, *, reject=False, request_plan=True, attachment_only=False):
         conversation, who = str(uuid4()), f'source-{uuid4().hex[:8]}'
         start = (datetime.now(timezone.utc) + timedelta(days=2)).replace(hour=3, minute=0, second=0, microsecond=0)
         stamp = lambda dt: dt.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -111,6 +111,8 @@ class ChatHttp(unittest.TestCase):
             self.assertEqual(extracted.status_code, 200, extracted.text)
             key = f'source-message-{uuid4().hex}'
             body = {'schema_version': '1.1', 'conversation_id': conversation, 'text': text, 'source_ids': [source_id]}
+            if attachment_only:
+                body.pop('text')
             first = post(app, '/v1/messages', body, key)
             self.assertEqual(first.status_code, 200, first.text)
             self.assertEqual(first.json()['action_reference']['target_type'], 'TASK_CANDIDATE')
@@ -146,6 +148,9 @@ class ChatHttp(unittest.TestCase):
 
     def test_source_instructions_cannot_request_a_plan(self):
         self.source_plan_flow(request_plan=False)
+
+    def test_attachment_only_source_is_confirmed_without_nlu_or_plan(self):
+        self.source_plan_flow(request_plan=False, attachment_only=True)
 
     def say(self, app, who, conversation, text, key=None):
         return app.post("/v1/messages", json={"schema_version": "1.1", "conversation_id": conversation, "text": text},

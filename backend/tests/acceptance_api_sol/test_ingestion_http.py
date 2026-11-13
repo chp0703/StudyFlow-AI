@@ -5,12 +5,15 @@ Database ownership, SQL signatures and transaction behavior are verified by pgTA
 
 import base64
 import unittest
+from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from starlette.responses import JSONResponse
 
 from backend.tests.unit.test_source_routes import SourceRouteTests
 from backend.tests.unit.test_source_workflow import CONVERSATION, ICS
+from backend.app.orchestrator.workflow_shared import reply
 
 
 class IngestionHttpAcceptance(unittest.TestCase):
@@ -35,6 +38,21 @@ class IngestionHttpAcceptance(unittest.TestCase):
         response = self.client.post('/v1/sources', json={})
         self.assertEqual(response.status_code, 401)
         self.assertEqual(self.fixture.store.calls, [])
+
+    def test_message_http_contract_accepts_attachment_only_but_rejects_empty_without_source(self):
+        base = {'schema_version': '1.1', 'conversation_id': CONVERSATION}
+        source_id = '00200000-0000-4000-8000-000000000099'
+        # Isolate HTTP/auth/schema dispatch; real source/confirmation behavior is covered by DB integration.
+        with patch.object(self.fixture.api.processor, 'run', return_value=JSONResponse(reply('test', 'SUCCEEDED', 'OK'))) as dispatch:
+            for text in ({}, {'text': ''}, {'text': '  '}):
+                body = {**base, **text, 'source_ids': [source_id]}
+                response = self.client.post('/v1/messages', headers=self.headers, json=body)
+                self.assertEqual(response.status_code, 200, response.text)
+                self.assertEqual(dispatch.call_args.args[4], body)
+                dispatch.reset_mock()
+                invalid = self.client.post('/v1/messages', headers=self.headers, json={**base, **text, 'source_ids': []})
+                self.assertEqual(invalid.status_code, 422, invalid.text)
+                dispatch.assert_not_called()
 
     def test_uploaded_calendar_is_extracted_and_cached_without_applying_schedule(self):
         response = self.upload()

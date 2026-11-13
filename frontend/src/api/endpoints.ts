@@ -80,7 +80,7 @@ export function createEndpoints(client: ApiClient) {
         idempotencyKey: key,
       }),
 
-    sendMessage: (conversationId: string, text: string, key?: string, sourceIds?: string[]) =>
+    sendMessage: (conversationId: string, text: string = "", key?: string, sourceIds?: string[]) =>
       client.request<OrchestratorReply>("POST", "/v1/messages", {
         body: {
           schema_version: SCHEMA,

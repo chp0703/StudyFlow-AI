@@ -29,6 +29,8 @@ test("old messages omit source IDs; source messages reference IDs without approv
   const { calls, endpoints } = fixture()
   await endpoints.sendMessage("conversation", "hello", "message-key")
   await endpoints.sendMessage("conversation", "import this", "source-message-key", ["source"])
+  await endpoints.sendMessage("conversation", undefined, "attachment-key", ["source"])
   assert.deepEqual(calls[0].options.body, { schema_version: "1.1", conversation_id: "conversation", text: "hello" })
   assert.deepEqual(calls[1].options.body, { schema_version: "1.1", conversation_id: "conversation", text: "import this", source_ids: ["source"] })
+  assert.deepEqual(calls[2].options.body, { schema_version: "1.1", conversation_id: "conversation", text: "", source_ids: ["source"] })
 })

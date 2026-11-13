@@ -23,6 +23,15 @@ class IngestionContractTests(unittest.TestCase):
         self.assertFalse(contract.is_valid('UserMessage', {**body, 'source_ids': [SOURCE, SOURCE]}))
         self.assertFalse(contract.is_valid('UserMessage', {**body, 'source_ids': ['https://private-file']}))
 
+    def test_attachment_only_message_requires_sources_or_nonblank_text(self):
+        base = {'schema_version': '1.1', 'conversation_id': CONVERSATION}
+        for text in ({}, {'text': ''}, {'text': '  '}):
+            with self.subTest(text=text):
+                self.assertTrue(contract.is_valid('UserMessage', {**base, **text, 'source_ids': [SOURCE]}))
+                self.assertFalse(contract.is_valid('UserMessage', {**base, **text}))
+                self.assertFalse(contract.is_valid('UserMessage', {**base, **text, 'source_ids': []}))
+        self.assertFalse(contract.is_valid('UserMessage', {**base, 'source_ids': [SOURCE], 'text': None}))
+
     def test_source_intents_cannot_authorize_plan_or_unknown_fields(self):
         self.assertTrue('SourceExtraction' in contract.SCHEMA['$defs'])
         extraction = {'parser': 'document-v1', 'model': 'deepseek-flash', 'prompt_version': 'be04-1',

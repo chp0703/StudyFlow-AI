@@ -29,6 +29,8 @@ as page images in this version. No Google/Microsoft calendar OAuth or scraping.
   completed results are reused. Failed extraction can be explicitly retried.
 - `POST /v1/messages`: optional unique `source_ids` (maximum 5). References must
   belong to the authenticated owner AND conversation and be fully extracted.
+  Text may be omitted or blank when at least one source is attached; otherwise
+  nonblank text is required. Attachment-only import does not call the text NLU.
   Source candidates enter the durable confirmation queue. A direct plan request in
   the user's separate text is persisted as the final continuation step, depending
   on all imported candidates. After each candidate is confirmed, the server

@@ -591,6 +591,21 @@
       "file": "examples/invalid/source-id-url.json",
       "schema": "UserMessage",
       "valid": false
+    },
+    {
+      "file": "examples/valid/message-attachment-only.json",
+      "schema": "UserMessage",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/message-without-text-or-source.json",
+      "schema": "UserMessage",
+      "valid": false
+    },
+    {
+      "file": "examples/valid/SourceExtractionEmpty.json",
+      "schema": "SourceExtraction",
+      "valid": true
     }
   ]
 }

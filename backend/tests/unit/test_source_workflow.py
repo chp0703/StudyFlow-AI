@@ -122,7 +122,7 @@ class SourceWorkflowTests(unittest.TestCase):
         chat = ChatProcessor(Actions(), UnavailableExtractor(), clock=lambda: NOW)
         status, reply = chat.handle_message(self.ctx, {'message_id': '00200000-0000-4000-8000-000000000003',
             'created_at': '2026-11-13T09:00:00Z'}, 'empty-message-key01',
-            {'conversation_id': CONVERSATION, 'text': '', 'source_ids': [source['source_id']]})
+            {'conversation_id': CONVERSATION, 'source_ids': [source['source_id']]})
         self.assertEqual(status, 200)
         self.assertEqual(reply['state'], 'SUCCEEDED')
         self.assertIn('không tìm thấy công việc', reply['message'].lower())

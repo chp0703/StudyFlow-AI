@@ -43,7 +43,7 @@ class ChatProcessor:
 
     # ------------------------------------------------------------ đầu vào: POST /v1/messages
     def handle_message(self, ctx, receipt, key, body):
-        conversation, text, message_id = body["conversation_id"], body["text"], receipt["message_id"]
+        conversation, text, message_id = body["conversation_id"], body.get("text", ""), receipt["message_id"]
         source_ids = body.get('source_ids', [])
         source_intents = self.source_intents(ctx, conversation, source_ids)
         self.proc.step(ctx, "record_source_message", {"message": {
