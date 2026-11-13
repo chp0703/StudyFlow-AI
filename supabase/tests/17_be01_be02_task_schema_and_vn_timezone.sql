@@ -126,5 +126,35 @@ select ok(res->>'outcome'='COMMITTED'
  'confirm_task derives scheduling fields deterministically from canonical BE-01 task slots')
  from q17 where name='confirm';
 
+-- 5. Kiểm tra confirm_task bắt buộc start_at ngay cả khi candidate đã có deadline.
+insert into q17 values ('cand_no_start',pg_temp.q_call('create_task_candidate',jsonb_build_object('slots',jsonb_build_object(
+ 'title','Thiếu giờ bắt đầu','deadline_precision','DATE','deadline_date','2026-11-06',
+ 'deadline_timezone','Asia/Ho_Chi_Minh','estimated_minutes',60)),'q17-cand2-key-0001'));
+insert into q17 select 'prep_no_start',pg_temp.q_call('prepare_pending_action',jsonb_build_object(
+ 'presentation',jsonb_build_object('kind','ACTION_PRESENTATION','pending_action',jsonb_build_object(
+  'action_id','d1710000-0000-4000-8000-0000000000a2','user_id','d1710000-0000-4000-8000-000000000001',
+  'conversation_id','d1710000-0000-4000-8000-000000000003','version',1,'intent','CREATE_TASK',
+  'state','AWAITING_CONFIRMATION','requires_review',false,'candidate_id',res#>>'{data,candidate_id}',
+  'proposal_id',null,'draft_arguments','{}'::jsonb,'missing_fields','[]'::jsonb,'ambiguities','[]'::jsonb,
+  'depends_on_action_id',null,'created_at','2026-11-05T01:00:00.000000Z','updated_at','2026-11-05T01:00:00.000000Z'),
+  'candidate',res->'data','proposal',null,'normalized_command',null,'effective_policy',null,'schedule_confirmation',null),
+ 'expected_action_version',null),'q17-prep2-key-0001') from q17 where name='cand_no_start';
+select ok(
+ res->>'outcome'='ERROR'
+ and res#>>'{error,code}'='MISSING_REQUIRED_FIELD'
+ and res#>>'{error,field}'='start_at',
+ 'confirm_task rejects deadline-only candidate without start_at')
+from (
+ select pg_temp.q_call('confirm_task',
+  jsonb_build_object('candidate_id',res#>>'{data,candidate_id}','expected_candidate_version',1),
+  'q17-conf2-key-0001','d1710000-0000-4000-8000-000000000001','d1710000-0000-4000-8000-000000000004',
+  jsonb_build_object('approval_action_id',extensions.gen_random_uuid(),'user_id','d1710000-0000-4000-8000-000000000001',
+   'target_type','TASK_CANDIDATE','target_id',res#>>'{data,candidate_id}','target_version',1,
+   'decision','APPROVE','source','UI','source_message_id',null,'created_at','2026-11-05T01:00:00.000000Z'),
+  jsonb_build_object('action_id','d1710000-0000-4000-8000-0000000000a2','action_version',1,
+   'target_type','TASK_CANDIDATE','target_id',res#>>'{data,candidate_id}','target_version',1)) as res
+ from q17 where name='cand_no_start'
+) denied;
+
 select * from finish();
 rollback;
