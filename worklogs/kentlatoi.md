@@ -74,3 +74,17 @@
 **Ghi chú**
 - FE-01 API còn chờ PR #32 được merge và xác minh runtime; FE-06 còn chờ hợp đồng upload/trích xuất.
 - FE-03 ban đầu được triển khai từ yêu cầu hiểu nhầm về giờ học hằng tuần; commit lịch sử không bị xóa hay viết lại.
+
+## 2026-11-13 — Restore Planner Free/Busy display
+
+**Mục tiêu:** Khôi phục cách xem Rảnh/Bận sau khi FE-03 chuyển thành tùy chỉnh giờ hiển thị.
+
+**Đã làm**
+- Vẽ các khoảng Rảnh/Bận chỉ để xem trong `WeekCalendar.tsx`, gộp đoạn liền nhau, ưu tiên Bận và cắt phần vẽ theo dải giờ hiển thị.
+- Giữ trạng thái đề xuất khác với đã duyệt; bổ sung kiểm thử phép chiếu theo phút và HTML render cho Demo/API.
+- Kiểm tra Demo trên trình duyệt: Rảnh 09:00–12:00, sau đó Bận 10:00–11:00 chia thành ba đoạn đúng.
+
+**Kết quả:** Nhánh `fix/planner-followup-leader-spec-kent`; 49/49 Node tests, TypeScript, Vite build và `git diff --check` đạt.
+
+**Ghi chú**
+- API E2E có đăng nhập chưa chạy; Vite cảnh báo chunk JS trên 500 kB.

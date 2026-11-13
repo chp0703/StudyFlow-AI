@@ -1,8 +1,10 @@
 import type { RefObject } from "react"
 import type { Task } from "../../types/task"
-import type { TaskChange } from "../../types/planner"
+import type { TaskChange, TimeWindow } from "../../types/planner"
 import type { CalendarDisplayRanges } from "./calendarDisplay"
 import { displayMinutes, eventPosition } from "./calendarDisplay"
+import type { ApiTimeWindow } from "../../api/types"
+import { visibleSegments } from "./workingTime"
 
 const weekdayNames = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
 const pxPerMinute = 0.8
@@ -14,6 +16,9 @@ export default function WeekCalendar({
   todayIndex,
   ranges,
   events,
+  windows,
+  availability,
+  proposedWindowIds,
   changeOf,
   prefill,
   nowHour,
@@ -25,6 +30,9 @@ export default function WeekCalendar({
   todayIndex: number
   ranges: CalendarDisplayRanges
   events: Task[]
+  windows: ApiTimeWindow[]
+  availability: TimeWindow[]
+  proposedWindowIds: Set<string>
   changeOf: Map<Task["id"], TaskChange["kind"]>
   prefill: (date: Date, hour: number) => void
   nowHour: number
@@ -69,6 +77,13 @@ export default function WeekCalendar({
               `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
             const dayEvents = events.filter((event) => event.date === dateKey)
             const now = nowHour * 60 + nowMinutes
+            const segments = visibleSegments(
+              dateKey,
+              from,
+              to,
+              windows,
+              availability,
+            )
             return (
               <section
                 key={dateKey}
@@ -81,6 +96,32 @@ export default function WeekCalendar({
                   className="schedule-time-grid"
                   style={{ height: (to - from) * pxPerMinute }}
                 >
+                  {segments.map((segment) => (
+                    <div
+                      key={`${segment.start}-${segment.end}-${segment.kind}`}
+                      className={`calendar-window is-${segment.kind}${
+                        proposedWindowIds.has(
+                          `${dateKey}-${Math.floor(segment.start / 60)}`,
+                        )
+                          ? " is-proposed-window"
+                          : ""
+                      }`}
+                      role="img"
+                      aria-label={`${
+                        segment.kind === "busy" ? "Bận" : "Rảnh"
+                      } ${timeLabel(segment.start)}–${timeLabel(segment.end)}`}
+                      style={{
+                        top: (segment.start - from) * pxPerMinute,
+                        height: (segment.end - segment.start) * pxPerMinute,
+                      }}
+                    >
+                      {segment.end - segment.start >= 30
+                        ? `${
+                            segment.kind === "busy" ? "Bận" : "Rảnh"
+                          } ${timeLabel(segment.start)}–${timeLabel(segment.end)}`
+                        : ""}
+                    </div>
+                  ))}
                   {ticks.map((minute, index) => (
                     <button
                       key={minute}

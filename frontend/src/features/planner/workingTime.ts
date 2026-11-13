@@ -77,3 +77,24 @@ export function hourSegments(
   }
   return result
 }
+
+export function visibleSegments(
+  date: string,
+  from: number,
+  to: number,
+  windows: ApiTimeWindow[],
+  legacy: TimeWindow[] = [],
+): MinuteSegment[] {
+  const result: MinuteSegment[] = []
+  for (let hour = Math.floor(from / 60); hour < Math.ceil(to / 60); hour++) {
+    for (const segment of hourSegments(date, hour, windows, legacy)) {
+      const start = Math.max(from, segment.start)
+      const end = Math.min(to, segment.end)
+      if (start >= end) continue
+      const last = result.at(-1)
+      if (last?.kind === segment.kind && last.end === start) last.end = end
+      else result.push({ start, end, kind: segment.kind })
+    }
+  }
+  return result
+}

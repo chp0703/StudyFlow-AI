@@ -160,6 +160,10 @@
 .planner-calendar .schedule-day-column { min-width: 0; border-right: 1px solid var(--color-line); }
 .planner-calendar .schedule-day-column.today-column { background: rgba(89, 108, 240, .04); }
 .planner-calendar .schedule-time-grid { position: relative; overflow: hidden; }
+.planner-calendar .calendar-window { position: absolute; left: 0; right: 0; z-index: 0; pointer-events: none; border-left: 3px solid; padding: 3px 5px; overflow: hidden; font-size: 10px; font-weight: 600; }
+.planner-calendar .calendar-window.is-free { color: var(--color-primary); background: var(--color-info-bg); }
+.planner-calendar .calendar-window.is-busy { color: var(--color-warning-text); background: var(--color-warning-bg); }
+.planner-calendar .calendar-window.is-proposed-window { border-left-style: dashed; outline: 1px dashed var(--color-primary); outline-offset: -1px; }
 .planner-calendar .schedule-time-slot {
   position: absolute; left: 0; right: 0; width: 100%; border: 0;
   border-top: 1px solid var(--color-line); padding: 4px 6px;
@@ -172,6 +176,7 @@
 
 /* Nhãn sự kiện dạng thẻ bo góc gọn như tin nhắn */
 .planner-calendar .schedule-event {
+  z-index: 2;
   position: absolute;
   left: 30px; right: 4px; width: auto;
   min-height: 28px;

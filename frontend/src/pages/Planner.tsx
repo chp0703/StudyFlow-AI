@@ -490,6 +490,13 @@ export default function Planner({
           todayIndex={todayIndex}
           ranges={displayRanges}
           events={calendarEvents}
+          windows={windows ?? []}
+          availability={
+            apiEnabled ? [] : (proposal?.next.availability ?? availability)
+          }
+          proposedWindowIds={
+            new Set(proposal?.windowChanges.map((change) => change.window.id))
+          }
           prefill={prefill}
           changeOf={changeOf}
           nowHour={nowHour}
