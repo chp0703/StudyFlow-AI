@@ -191,6 +191,30 @@ class LocalSupabaseHttp(unittest.TestCase):
             self.assertEqual(reply["action_reference"]["target_type"], "PLAN_PROPOSAL")
             proposal = reply["result"]["data"]["proposal"]
             blocks = proposal["payload"]["study_blocks"]
+            confirmation = reply["result"]["data"]["schedule_confirmation"]
+            self.assertEqual(confirmation, proposal["payload"]["schedule_confirmation"])
+            self.assertEqual(
+                (confirmation["proposal_id"], confirmation["proposal_version"],
+                 confirmation["base_schedule_revision"]),
+                (proposal["proposal_id"], proposal["version"], proposal["base_schedule_revision"]),
+            )
+            self.assertEqual(
+                (reply["action_reference"]["target_id"], reply["action_reference"]["target_version"]),
+                (confirmation["proposal_id"], confirmation["proposal_version"]),
+            )
+            self.assertEqual(confirmation["added"], confirmation["entries"])
+            self.assertEqual(confirmation["changed"], [])
+            self.assertEqual(confirmation["removed"], [])
+            self.assertEqual(confirmation["unscheduled_work"], [])
+            for entry in confirmation["entries"]:
+                self.assertEqual(entry["task_name"], "Ôn lập kế hoạch")
+                self.assertEqual(entry["color"], "#596CF0")
+                self.assertGreater(entry["duration_minutes"], 0)
+                self.assertEqual(
+                    entry["duration_minutes"],
+                    int((datetime.fromisoformat(entry["end_at"]) -
+                         datetime.fromisoformat(entry["start_at"])).total_seconds() // 60),
+                )
             self.assertEqual(proposal["payload"]["coverage"], "FULL")
             self.assertEqual(sum((datetime.fromisoformat(b["end_at"]) - datetime.fromisoformat(b["start_at"])).seconds // 60
                                  for b in blocks), 90)
