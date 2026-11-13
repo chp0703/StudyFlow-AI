@@ -44,3 +44,17 @@
 
 **Ghi chú**
 - Chưa kiểm thử thủ công luồng demo trên trình duyệt hoặc phiên API có đăng nhập.
+
+## 2026-11-13 — Sửa phản hồi lệnh khi chờ duyệt FE-03
+
+**Mục tiêu:** Giữ mô tả thay đổi giờ học đang chờ và hiển thị phản hồi lệnh chat không hợp lệ riêng biệt.
+
+**Đã làm**
+- Giữ nội dung đề xuất tuần trong `frontend/src/features/planner/usePlanner.ts`; đưa phản hồi lệnh không đổi lịch vào thông báo Planner hiện có.
+- Mở rộng kiểm thử hồi quy trong `frontend/src/features/planner/proposal.test.ts` cho thay đổi tuần và lệnh không hợp lệ.
+- Kiểm tra demo trên trình duyệt: mô tả giữ nguyên, toast riêng, chỉ ghi sau Duyệt và Từ chối không ghi.
+
+**Kết quả:** Nhánh `feat/fe-planner-followup-kent`; 47 Node tests đạt, TypeScript, Vite build và `git diff --check` đạt.
+
+**Ghi chú**
+- Chưa kiểm thử E2E API có đăng nhập vì không có backend và tài khoản thử nghiệm được cấp quyền.

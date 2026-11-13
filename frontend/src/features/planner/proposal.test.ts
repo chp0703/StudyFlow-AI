@@ -1,11 +1,14 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import {
+  demoNoOpResult,
   describeChanges,
   diffTasks,
   hasPendingWeeklyChange,
   isStale,
 } from "./proposal.ts"
+import { prepareDemoWorkingChange } from "./workingTime.ts"
+import { runPlannerCommand } from "./plannerAgent.ts"
 import type { Task } from "../../types/task.ts"
 import type { Proposal } from "../../types/planner.ts"
 
@@ -45,6 +48,29 @@ test("a proposal is stale once the schedule revision moved on", () => {
 })
 
 test("a no-op chat command leaves a weekly-only proposal pending for explicit approval", () => {
+  const change = prepareDemoWorkingChange(
+    [],
+    {
+      change_type: "ADD",
+      window_id: null,
+      expected_window_version: null,
+      window: {
+        kind: "AVAILABILITY",
+        label: null,
+        recurrence: "WEEKLY",
+        timezone: "Asia/Ho_Chi_Minh",
+        start_at: null,
+        end_at: null,
+        weekday: 1,
+        start_time: "08:15",
+        end_time: "11:30",
+        valid_from: "2026-11-01",
+        valid_until: null,
+      },
+    },
+    "weekly",
+  )!
+  const savedWindows: typeof change.windows = []
   const pending = {
     id: "weekly",
     createdAt: 0,
@@ -52,9 +78,29 @@ test("a no-op chat command leaves a weekly-only proposal pending for explicit ap
     changes: [],
     windowChanges: [],
     issues: [],
-    reply: "",
-    next: { tasks: [], availability: [], weeklyWindows: [] },
+    reply: change.description,
+    next: { tasks: [], availability: [], weeklyWindows: change.windows },
   } satisfies Proposal
+  const command = runPlannerCommand(
+    "không hợp lệ",
+    [],
+    [],
+    change.windows,
+    true,
+  )
+  assert.deepEqual(diffTasks([], command.tasks), [])
+  assert.deepEqual(command.availability, [])
+  const result = demoNoOpResult(pending, command.reply)
+  assert.equal(result.proposal, pending)
+  assert.equal(result.reply, change.description)
+  assert.equal(result.notice, command.reply)
+  assert.deepEqual(savedWindows, [])
+  assert.deepEqual(result.proposal?.next.weeklyWindows, change.windows)
+  assert.deepEqual(demoNoOpResult(null, command.reply), {
+    proposal: null,
+    reply: command.reply,
+    notice: null,
+  })
   assert.equal(hasPendingWeeklyChange(pending), true)
   assert.equal(
     hasPendingWeeklyChange({

@@ -2,12 +2,7 @@ import { useRef, useState, type Dispatch, type SetStateAction } from "react"
 import type { Task } from "../../types/task"
 import type { Proposal, TimeWindow } from "../../types/planner"
 import { runPlannerCommand } from "./plannerAgent"
-import {
-  diffTasks,
-  diffWindows,
-  hasPendingWeeklyChange,
-  isStale,
-} from "./proposal"
+import { demoNoOpResult, diffTasks, diffWindows, isStale } from "./proposal"
 import { api } from "../../api"
 
 import { apiEnabled } from "../../api/config"
@@ -230,14 +225,17 @@ export function usePlanner(
 
     const windowChanges = diffWindows(availability, result.availability)
 
-    setReply(result.reply)
-
     setInput("")
 
     if (!changes.length && !windowChanges.length) {
-      if (!proposal || !hasPendingWeeklyChange(proposal)) setProposal(null)
+      const next = demoNoOpResult(proposal, result.reply)
+      setProposal(next.proposal)
+      setReply(next.reply)
+      if (next.notice) showPlannerNotice(next.notice)
       return
     }
+
+    setReply(result.reply)
 
     setProposal({
       id: proposal?.id ?? crypto.randomUUID(),

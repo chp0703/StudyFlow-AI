@@ -64,6 +64,11 @@ export const isStale = (proposal: Proposal, revision: number) =>
 export const hasPendingWeeklyChange = (proposal: Proposal) =>
   proposal.next.weeklyWindows !== undefined
 
+export const demoNoOpResult = (proposal: Proposal | null, response: string) =>
+  proposal && hasPendingWeeklyChange(proposal)
+    ? { proposal, reply: proposal.reply, notice: response }
+    : { proposal: null, reply: response, notice: null }
+
 export function describeChanges(
   changes: TaskChange[],
 
