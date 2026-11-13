@@ -113,6 +113,47 @@ def semantic_errors(value, path='$'):
             fail('persisted proposal must change the snapshot')
         if any(b['user_id'] != value['user_id'] for b in payload['study_blocks']):
             fail('proposal blocks must have the same owner')
+        confirmation = payload['schedule_confirmation']
+        if (confirmation['proposal_id'] != value['proposal_id']
+                or confirmation['proposal_version'] != value['version']
+                or confirmation['base_schedule_revision'] != value['base_schedule_revision']):
+            fail('schedule confirmation must bind the exact proposal version and schedule revision')
+        if confirmation['warnings'] != payload['warnings']:
+            fail('schedule confirmation warnings must match the proposal warnings')
+        expected_unscheduled = {
+            summary['task_id']: (summary['unallocated_minutes'], summary['reason_codes'])
+            for summary in payload['task_summaries'] if summary['unallocated_minutes'] > 0
+        }
+        actual_unscheduled = {
+            item['task_id']: (item['unscheduled_minutes'], item['reason_codes'])
+            for item in confirmation['unscheduled_work']
+        }
+        if actual_unscheduled != expected_unscheduled:
+            fail('schedule confirmation must expose every unscheduled task and reason')
+        block_shape = lambda block: (block['block_id'], block['task_id'], block['start_at'], block['end_at'])
+        entry_shape = lambda entry: (entry['block_id'], entry['task_id'], entry['start_at'], entry['end_at'])
+        if [entry_shape(entry) for entry in confirmation['entries']] != [block_shape(block) for block in payload['study_blocks']]:
+            fail('schedule confirmation entries must match the proposed snapshot')
+        if {entry['block_id'] for entry in confirmation['added']} != set(payload['plan_diff']['added']):
+            fail('schedule confirmation added entries must match plan_diff.added')
+        if {change['after']['block_id'] for change in confirmation['changed']} != set(payload['plan_diff']['moved']):
+            fail('schedule confirmation changed entries must match plan_diff.moved')
+        if {entry['block_id'] for entry in confirmation['removed']} != set(payload['plan_diff']['removed']):
+            fail('schedule confirmation removed entries must match plan_diff.removed')
+    if {'proposal_id', 'proposal_version', 'base_schedule_revision', 'entries', 'added',
+            'changed', 'removed', 'warnings', 'unscheduled_work'} <= set(value):
+        visible = [*value['entries'], *value['added'], *value['removed']]
+        visible += [side for change in value['changed'] for side in (change['before'], change['after'])]
+        for entry in visible:
+            start, end = instant(entry['start_at']), instant(entry['end_at'])
+            if entry['date'] != start.astimezone(ZoneInfo('Asia/Ho_Chi_Minh')).date().isoformat():
+                fail('schedule entry date must use Vietnam local time')
+            if entry['duration_minutes'] != int((end - start).total_seconds() // 60):
+                fail('schedule entry duration must match start_at/end_at')
+        if len({entry['block_id'] for entry in value['entries']}) != len(value['entries']):
+            fail('schedule confirmation entries must have unique block IDs')
+        if any(change['before']['block_id'] != change['after']['block_id'] for change in value['changed']):
+            fail('changed schedule entries must retain the same block ID')
     blocks = value.get('study_blocks', [])
     if blocks:
         ids = [b['block_id'] for b in blocks]
@@ -134,6 +175,11 @@ def semantic_errors(value, path='$'):
         command = value['normalized_command']
         if command and command['operation'] == 'set_scheduling_preferences' and value['effective_policy'] is None:
             fail('policy confirmation must present the full effective policy')
+        confirmation = value['schedule_confirmation']
+        if value['proposal'] is None and confirmation is not None:
+            fail('non-proposal presentation cannot contain schedule confirmation data')
+        if value['proposal'] is not None and confirmation != value['proposal']['payload']['schedule_confirmation']:
+            fail('proposal presentation must expose the exact persisted schedule confirmation')
     if value.get('state') == 'AWAITING_APPROVAL' and 'result' in value:
         result = value['result']
         if result['outcome'] not in {'DRAFTED', 'PROPOSED'}:
