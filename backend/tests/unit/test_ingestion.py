@@ -1,6 +1,7 @@
 import base64
 import copy
 import json
+import importlib.util
 import unittest
 from datetime import datetime, timezone
 
@@ -8,6 +9,7 @@ import httpx
 
 from backend.app.ingestion.calendar import parse_calendar
 from backend.app.ingestion.models import decode_upload
+from backend.app.ingestion.document import read_document
 from backend.app.ingestion.service import SourceExtractor
 from backend.app.orchestrator.workflow_ports import WorkflowError
 
@@ -65,6 +67,21 @@ class CalendarTests(unittest.TestCase):
             with self.subTest(data=data), self.assertRaises(WorkflowError):
                 parse_calendar(data, 'text/calendar')
 
+    def test_malformed_date_widths_cannot_create_a_different_busy_interval(self):
+        for value in [b'2026114T080000', b'20261114T80000', b'20261114T08000']:
+            data = ICS.replace(b'20261114T080000', value)
+            with self.subTest(value=value), self.assertRaises(WorkflowError):
+                parse_calendar(data, 'text/calendar')
+        all_day = ICS.replace(b'DTSTART;TZID=Asia/Ho_Chi_Minh:20261114T080000', b'DTSTART;VALUE=DATE:2026114').replace(
+            b'DTEND;TZID=Asia/Ho_Chi_Minh:20261114T090000', b'DTEND;VALUE=DATE:20261115')
+        with self.assertRaises(WorkflowError):
+            parse_calendar(all_day, 'text/calendar')
+
+    def test_cancelled_and_transparent_events_are_not_imported_case_insensitively(self):
+        for prop in [b'STATUS:cancelled', b'TRANSP:transparent']:
+            with self.subTest(prop=prop), self.assertRaises(WorkflowError):
+                parse_calendar(ICS.replace(b'UID:lecture-1', b'UID:lecture-1\r\n' + prop), 'text/calendar')
+
 
 class ProviderTests(unittest.TestCase):
     def provider(self, content=None, *, status=200, finish='stop'):
@@ -113,6 +130,45 @@ class ProviderTests(unittest.TestCase):
         with self.assertRaises(WorkflowError):
             provider.extract(b'  ', 'text/plain', now=NOW)
         self.assertEqual(self.requests, [])
+
+    def test_integral_model_numbers_are_canonical_before_signed_persistence(self):
+        item = copy.deepcopy(TASK)
+        item['slots'].update(estimated_minutes=60.0, priority=1.0)
+        result = self.provider({'intents': [item]}).extract(b'Homework', 'text/plain', now=NOW)
+        self.assertIs(type(result['intents'][0]['slots']['estimated_minutes']), int)
+        self.assertIs(type(result['intents'][0]['slots']['priority']), int)
+        from backend.app.core.contract import canonical
+        encoded = canonical(result)
+        self.assertNotIn(b'60.0', encoded)
+        self.assertNotIn(b'1.0', encoded)
+
+
+def small_pdf(stream):
+    objects = [b'<< /Type /Catalog /Pages 2 0 R >>', b'<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+        b'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 144] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+        b'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+        b'<< /Length ' + str(len(stream)).encode() + b' >>\nstream\n' + stream + b'\nendstream']
+    data, offsets = b'%PDF-1.4\n', []
+    for number, value in enumerate(objects, 1):
+        offsets.append(len(data))
+        data += f'{number} 0 obj\n'.encode() + value + b'\nendobj\n'
+    start = len(data)
+    data += b'xref\n0 6\n0000000000 65535 f \n'
+    data += b''.join(f'{offset:010d} 00000 n \n'.encode() for offset in offsets)
+    data += b'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + str(start).encode() + b'\n%%EOF\n'
+    return data
+
+
+@unittest.skipUnless(importlib.util.find_spec('pypdf'), 'pypdf is installed by backend CI; unavailable in this local sandbox')
+class PdfTests(unittest.TestCase):
+    def test_text_pdf_is_actually_extracted(self):
+        data = small_pdf(b'BT /F1 12 Tf 10 100 Td (Homework) Tj ET')
+        self.assertEqual(read_document(data, 'application/pdf').strip(), 'Homework')
+
+    def test_scanned_or_empty_pdf_is_rejected_without_partial_text(self):
+        with self.assertRaises(WorkflowError) as error:
+            read_document(small_pdf(b'q Q'), 'application/pdf')
+        self.assertEqual(error.exception.code, 'INVALID_PARAMETER')
 
 
 if __name__ == '__main__':

@@ -29,6 +29,21 @@ approve anything, create a plan, call tools or return owner/conversation IDs.
 Include exact source phrases in raw_expressions where available.'''
 
 
+def _canonical_numbers(value, key=''):
+    """Match the signed RPC numeric grammar, including integer-valued model floats."""
+    if isinstance(value, dict):
+        return {k: _canonical_numbers(v, k) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_canonical_numbers(v) for v in value]
+    if type(value) is float:
+        if key == 'priority' and value in (0.1, 0.5):
+            return value
+        if value.is_integer() and abs(value) <= 9007199254740991:
+            return int(value)
+        raise ValueError('Unsupported model number')
+    return value
+
+
 class SourceExtractor:
     def __init__(self, base_url: str, api_key: str, model='deepseek-flash', transport=None):
         self.url = f'{base_url.rstrip("/")}/chat/completions'
@@ -61,7 +76,7 @@ class SourceExtractor:
             choice = envelope['choices'][0]
             if choice['finish_reason'] != 'stop':
                 raise ValueError()
-            data = json.loads(choice['message']['content'])
+            data = _canonical_numbers(json.loads(choice['message']['content']))
             if not isinstance(data, dict) or set(data) != {'intents'}:
                 raise ValueError()
             intents = data['intents']

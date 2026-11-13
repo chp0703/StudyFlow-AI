@@ -35,6 +35,9 @@ def _ical_time(prop: tuple[dict, str]) -> tuple[datetime, bool]:
     params, value = prop
     is_date = params.get('VALUE') == 'DATE'
     try:
+        pattern = r'[0-9]{8}' if is_date else r'[0-9]{8}T[0-9]{6}Z?'
+        if re.fullmatch(pattern, value) is None:
+            raise ValueError()
         if is_date:
             if params.get('TZID'):
                 raise ValueError()
@@ -85,7 +88,7 @@ def _ics(text: str) -> list[dict]:
                     if not uid or uid in uids:
                         raise invalid('UID sự kiện bị trùng hoặc rỗng.')
                     uids.add(uid)
-                    if event.get('STATUS', ({}, ''))[1] == 'CANCELLED' or event.get('TRANSP', ({}, ''))[1] == 'TRANSPARENT':
+                    if event.get('STATUS', ({}, ''))[1].upper() == 'CANCELLED' or event.get('TRANSP', ({}, ''))[1].upper() == 'TRANSPARENT':
                         raise invalid('Lịch chứa sự kiện đã hủy hoặc không đánh dấu bận; hãy loại chúng trước khi nhập.')
                     start, all_day = _ical_time(event['DTSTART'])
                     if 'DTEND' in event:

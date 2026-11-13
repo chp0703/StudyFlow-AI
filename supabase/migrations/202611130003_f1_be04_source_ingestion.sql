@@ -137,7 +137,7 @@ begin
   return app_private.error_result(p_request,'INVALID_PARAMETER','Exactly one extraction result or error is required.'); end if;
  if a->'extraction' <> 'null'::jsonb then
   for item in select value from jsonb_array_elements(a#>'{extraction,intents}') loop
-   if item->>'intent' is distinct from case when r.mime_type in ('text/calendar','text/csv') then 'SET_BUSY_INTERVAL' else 'CREATE_TASK' end then
+   if item->>'intent' is distinct from (case when r.mime_type in ('text/calendar','text/csv') then 'SET_BUSY_INTERVAL' else 'CREATE_TASK' end) then
     return app_private.error_result(p_request,'INVALID_PARAMETER','Source intent does not match its media type.'); end if;
   end loop;
  end if;
