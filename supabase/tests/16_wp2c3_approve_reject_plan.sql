@@ -36,6 +36,15 @@ create function pg_temp.cid(n int) returns uuid language sql as $$ select ('d161
 create function pg_temp.uid() returns uuid language sql as $$ select 'd1610000-0000-4000-8000-000000000001'::uuid $$;
 create function pg_temp.tid() returns uuid language sql as $$ select 'd1610000-0000-4000-8000-0000000000a1'::uuid $$;
 
+create function pg_temp.q_confirmation(pid uuid, rev bigint, blocks jsonb) returns jsonb language sql as $$
+ select jsonb_build_object('proposal_id',pid,'proposal_version',1,'base_schedule_revision',rev,
+  'entries',coalesce((select jsonb_agg(jsonb_build_object('block_id',b.value->>'block_id','task_id',b.value->>'task_id',
+   'task_name','Bài tập','date',to_char((b.value->>'start_at')::timestamptz at time zone 'Asia/Ho_Chi_Minh','YYYY-MM-DD'),
+   'start_at',b.value->>'start_at','end_at',b.value->>'end_at','duration_minutes',
+   (extract(epoch from ((b.value->>'end_at')::timestamptz-(b.value->>'start_at')::timestamptz))/60)::int,
+   'color','#596CF0') order by b.ord) from jsonb_array_elements(blocks) with ordinality b(value,ord)),'[]'::jsonb),
+  'added','[]'::jsonb,'changed','[]'::jsonb,'removed','[]'::jsonb,'warnings','[]'::jsonb,'unscheduled_work','[]'::jsonb) $$;
+
 -- Yêu cầu quyết định cho proposal n; wrong_ver cho phép test gửi phê duyệt sai version.
 create function pg_temp.q_decide(op text, n int, idem text, expected_plan bigint default null, approval_ver bigint default 1,
  with_approval boolean default true) returns jsonb language sql as $$
@@ -66,7 +75,7 @@ insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,start_
 -- Proposal n: mỗi đề xuất có một action trong hội thoại riêng; block bắt đầu ngày 9+n.
 create function pg_temp.q_seed(n int, rev bigint, base uuid, base_ver bigint, overlap boolean default false) returns void language plpgsql as $$
 declare blocks jsonb; scope jsonb := '{"start_at":"2026-11-06T00:00:00.000000Z","end_at":"2026-11-19T00:00:00.000000Z","selection_mode":"ALL_ELIGIBLE","task_ids":[]}';
- act app_private.pending_actions; pres jsonb := '{"proposal":null,"normalized_command":null,"effective_policy":null}';
+ act app_private.pending_actions; pres jsonb := '{"proposal":null,"normalized_command":null,"effective_policy":null,"schedule_confirmation":null}';
 begin
  blocks := jsonb_build_array(jsonb_build_object('block_id',extensions.gen_random_uuid(),'user_id',pg_temp.uid(),'task_id',pg_temp.tid(),
    'start_at',to_char(timestamptz '2026-11-08 01:00+00'+n*interval '1 day','YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
@@ -76,7 +85,8 @@ begin
    'end_at',to_char(timestamptz '2026-11-08 02:00+00'+n*interval '1 day'+case when overlap then interval '30 minutes' else interval '2 hours' end,'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),'is_locked',false));
  insert into app_private.plan_proposals(proposal_id,user_id,base_plan_id,base_plan_version,base_schedule_revision,generation_scope,payload,algorithm_version,policy_snapshot)
  values (pg_temp.pid(n),pg_temp.uid(),base,base_ver,rev,scope,jsonb_build_object('study_blocks',blocks,'task_summaries','[]'::jsonb,'coverage','FULL',
-  'warnings','[]'::jsonb,'plan_diff','{"added":[],"moved":[],"removed":[],"unchanged":[]}'::jsonb),'q16-1',app_private.default_policy());
+  'warnings','[]'::jsonb,'plan_diff','{"added":[],"moved":[],"removed":[],"unchanged":[]}'::jsonb,
+  'schedule_confirmation',pg_temp.q_confirmation(pg_temp.pid(n),rev,blocks)),'q16-1',app_private.default_policy());
  insert into app_private.conversation_records(user_id,conversation_id) values (pg_temp.uid(),pg_temp.cid(n));
  insert into app_private.pending_actions(action_id,user_id,conversation_id,intent,state,proposal_id)
   values (pg_temp.aid(n),pg_temp.uid(),pg_temp.cid(n),'GENERATE_STUDY_PLAN','AWAITING_APPROVAL',pg_temp.pid(n)) returning * into act;
