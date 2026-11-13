@@ -274,7 +274,7 @@ class ChatProcessor:
         command = None if missing else {"schema_version": "1.1", "operation": "confirm_task", "arguments": {
             "candidate_id": updated["candidate_id"], "expected_candidate_version": updated["version"]}}
         presentation = {"kind": "ACTION_PRESENTATION", "pending_action": new_pending, "candidate": updated, "proposal": None,
-                        "normalized_command": command, "effective_policy": None}
+                        "normalized_command": command, "effective_policy": None, "schedule_confirmation": None}
         stored = self.proc.step(ctx, "prepare_pending_action", {"presentation": presentation, "expected_action_version": pending["version"]},
                                 conversation_id=conversation, idempotency_key=child_key(key, "reprepare"),
                                 message_id=message_id)["data"]

@@ -97,7 +97,7 @@ insert into q17 select 'prep',pg_temp.q_call('prepare_pending_action',jsonb_buil
   'state','AWAITING_CONFIRMATION','requires_review',false,'candidate_id',res#>>'{data,candidate_id}',
   'proposal_id',null,'draft_arguments','{}'::jsonb,'missing_fields','[]'::jsonb,'ambiguities','[]'::jsonb,
   'depends_on_action_id',null,'created_at','2026-11-05T01:00:00.000000Z','updated_at','2026-11-05T01:00:00.000000Z'),
-  'candidate',res->'data','proposal',null,'normalized_command',null,'effective_policy',null),
+  'candidate',res->'data','proposal',null,'normalized_command',null,'effective_policy',null,'schedule_confirmation',null),
  'expected_action_version',null),'q17-prep-key-000001') from q17 where name='cand';
 
 insert into q17 select 'confirm',pg_temp.q_call('confirm_task',

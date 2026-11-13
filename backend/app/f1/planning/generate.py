@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Callable
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 
 from ..scheduler.constraints import validate_context
 from ..scheduler.models import (
@@ -66,6 +67,22 @@ def _block(raw: dict) -> StudyBlock:
                       start_at=_when(raw["start_at"]), end_at=_when(raw["end_at"]), is_locked=raw["is_locked"])
 
 
+def _confirmation_entry(block: StudyBlock, tasks: dict[UUID, AcademicTask]) -> dict:
+    task = tasks[block.task_id]
+    start = block.start_at.astimezone(timezone.utc)
+    end = block.end_at.astimezone(timezone.utc)
+    return {
+        "block_id": str(block.block_id),
+        "task_id": str(task.task_id),
+        "task_name": task.title,
+        "date": block.start_at.astimezone(ZoneInfo(PRODUCT_TIMEZONE)).date().isoformat(),
+        "start_at": _iso(block.start_at),
+        "end_at": _iso(block.end_at),
+        "duration_minutes": int((end - start).total_seconds() // 60),
+        "color": task.color,
+    }
+
+
 def generate(snapshot: dict, command: dict, *, now: datetime, block_id_factory: Callable[[], UUID] = uuid4) -> Generated:
     """snapshot: SchedulingInputSnapshot; command: generate_study_planArguments đã được kiểm tra."""
     user = snapshot["user"]
@@ -74,6 +91,7 @@ def generate(snapshot: dict, command: dict, *, now: datetime, block_id_factory: 
     policy_raw = {**DEFAULT_POLICY, **user["scheduling_policy"], **command["policy_overrides"]}
     user_id = UUID(user["user_id"])
     tasks = tuple(sorted((_task(t) for t in snapshot["tasks"]), key=lambda t: str(t.task_id)))
+    tasks_by_id = {task.task_id: task for task in tasks}
     if scope_raw["selection_mode"] == "SELECTED_TASKS":
         selected = tuple(UUID(i) for i in scope_raw["task_ids"])
     else:
@@ -110,16 +128,41 @@ def generate(snapshot: dict, command: dict, *, now: datetime, block_id_factory: 
     base = snapshot["base_plan"]["plan"]
     stamp = _iso(now)
     diff = payload.plan_diff
+    proposal_id = str(uuid4())
+    proposed_by_id = {block.block_id: block for block in payload.study_blocks}
+    base_by_id = {block.block_id: block for block in blocks}
+    warnings = [_issue(warning) for warning in payload.warnings]
+    confirmation = {
+        "proposal_id": proposal_id,
+        "proposal_version": 1,
+        "base_schedule_revision": snapshot["schedule_revision"],
+        "entries": [_confirmation_entry(block, tasks_by_id) for block in payload.study_blocks],
+        "added": [_confirmation_entry(proposed_by_id[block_id], tasks_by_id) for block_id in diff.added],
+        "changed": [{
+            "before": _confirmation_entry(base_by_id[block_id], tasks_by_id),
+            "after": _confirmation_entry(proposed_by_id[block_id], tasks_by_id),
+        } for block_id in diff.moved],
+        "removed": [_confirmation_entry(base_by_id[block_id], tasks_by_id) for block_id in diff.removed],
+        "warnings": warnings,
+        "unscheduled_work": [{
+            "task_id": str(summary.task_id),
+            "task_name": tasks_by_id[summary.task_id].title,
+            "color": tasks_by_id[summary.task_id].color,
+            "unscheduled_minutes": summary.unallocated_minutes,
+            "reason_codes": list(summary.reason_codes),
+        } for summary in result.task_summaries if summary.unallocated_minutes > 0],
+    }
     proposal = {
-        "proposal_id": str(uuid4()), "user_id": user["user_id"], "version": 1, "status": "PROPOSED",
+        "proposal_id": proposal_id, "user_id": user["user_id"], "version": 1, "status": "PROPOSED",
         "base_plan_id": base["plan_id"] if base else None, "base_plan_version": base["version"] if base else None,
         "base_schedule_revision": snapshot["schedule_revision"], "generation_scope": scope_raw,
         "payload": {
             "study_blocks": [{"block_id": str(b.block_id), "user_id": str(b.user_id), "task_id": str(b.task_id),
                               "start_at": _iso(b.start_at), "end_at": _iso(b.end_at), "is_locked": b.is_locked}
                              for b in payload.study_blocks],
-            "task_summaries": summaries, "coverage": payload.coverage.value, "warnings": [_issue(w) for w in payload.warnings],
-            "plan_diff": {name: [str(i) for i in getattr(diff, name)] for name in ("added", "moved", "removed", "unchanged")}},
+            "task_summaries": summaries, "coverage": payload.coverage.value, "warnings": warnings,
+            "plan_diff": {name: [str(i) for i in getattr(diff, name)] for name in ("added", "moved", "removed", "unchanged")},
+            "schedule_confirmation": confirmation},
         "algorithm_version": result.algorithm_version, "policy_snapshot": policy_raw, "generated_at": stamp,
         "committed_plan_id": None, "created_at": stamp, "updated_at": stamp}
     return Generated(proposal, None)
