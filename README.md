@@ -32,11 +32,24 @@ The repository currently contains the implemented Planner foundation: a React fr
 
 ## Demo
 
-Screens captured from the frontend running in demo mode (no login, in-memory data). Click an image to open the full-size file.
+Screens captured from the frontend running in demo mode (no login, in-memory data).
 
-| Homepage | Planner | Study |
-|:---:|:---:|:---:|
-| **Assistant home** <br> [<img src="docs/assets/demo/homepage.png" alt="StudyFlow AI homepage" width="100%">](docs/assets/demo/homepage.png) | **Weekly planner** <br> [<img src="docs/assets/demo/planner.png" alt="StudyFlow AI weekly planner" width="100%">](docs/assets/demo/planner.png) | **Study workspace** <br> [<img src="docs/assets/demo/study.png" alt="StudyFlow AI study workspace" width="100%">](docs/assets/demo/study.png) |
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <strong>Homepage</strong><br />
+      <img src="docs/screenshots/Homepage.png" alt="StudyFlow AI Homepage" />
+    </td>
+    <td align="center" width="33%">
+      <strong>Planner</strong><br />
+      <img src="docs/screenshots/Planner.png" alt="StudyFlow AI Planner" />
+    </td>
+    <td align="center" width="33%">
+      <strong>Study</strong><br />
+      <img src="docs/screenshots/Study.png" alt="StudyFlow AI Study workspace" />
+    </td>
+  </tr>
+</table>
 
 ---
 
