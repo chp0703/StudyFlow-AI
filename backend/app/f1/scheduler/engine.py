@@ -91,6 +91,19 @@ def _daily_usage(context: SchedulingContext, generated: list[EngineBlock]) -> di
     return usage
 
 
+def _protected_intervals(
+    context: SchedulingContext,
+    generated: list[EngineBlock],
+) -> list[Interval]:
+    occupied = [
+        Interval(block.start_at, block.end_at)
+        for block in context.retained_blocks
+        if to_utc(block.end_at) > to_utc(context.now)
+    ]
+    occupied.extend(Interval(block.start_at, block.end_at) for block in generated)
+    return [pad(value, context.policy.break_minutes) for value in occupied]
+
+
 def _free_intervals(context: SchedulingContext, generated: list[EngineBlock]) -> list[Interval]:
     scope_start = max_instant(context.generation_scope.start_at, _effective_now(context))
     if to_utc(scope_start) >= to_utc(context.generation_scope.end_at):
@@ -101,21 +114,37 @@ def _free_intervals(context: SchedulingContext, generated: list[EngineBlock]) ->
         clipped = clip(value, scope)
         if clipped is not None:
             available.append(clipped)
-    busy = list(context.busy_intervals)
-    occupied = [
-        Interval(block.start_at, block.end_at)
-        for block in context.retained_blocks
-        if to_utc(block.end_at) > to_utc(context.now)
-    ]
-    occupied.extend(Interval(block.start_at, block.end_at) for block in generated)
-    protected = [pad(value, context.policy.break_minutes) for value in occupied]
-    return subtract_intervals(merge_intervals(available), [*busy, *protected])
+    return subtract_intervals(
+        merge_intervals(available),
+        [*context.busy_intervals, *_protected_intervals(context, generated)],
+    )
 
 
 def _task_available_from(task: AcademicTask) -> datetime | None:
     if task.start_at is not None and task.available_from_at is not None:
         return max_instant(task.start_at, task.available_from_at)
     return task.start_at if task.start_at is not None else task.available_from_at
+
+
+def _expected_block_start(
+    context: SchedulingContext,
+    task: AcademicTask,
+    generated: list[EngineBlock],
+) -> datetime | None:
+    if task.start_at is None:
+        return None
+    task_generated = [block for block in generated if block.task_id == task.task_id]
+    if task_generated:
+        return add_minutes(task_generated[-1].end_at, context.policy.break_minutes)
+    retained_future = [
+        block
+        for block in context.retained_blocks
+        if block.task_id == task.task_id and to_utc(block.start_at) >= to_utc(context.now)
+    ]
+    if retained_future:
+        latest = max(retained_future, key=lambda block: to_utc(block.end_at))
+        return add_minutes(latest.end_at, context.policy.break_minutes)
+    return task.start_at
 
 
 def _task_windows(
@@ -139,6 +168,19 @@ def _task_windows(
     return sorted(windows, key=lambda value: (to_utc(value.start_at), to_utc(value.end_at)))
 
 
+def _eligible_windows(
+    context: SchedulingContext,
+    task: AcademicTask,
+    generated: list[EngineBlock],
+    expected_start: datetime | None,
+) -> list[Interval]:
+    windows = _task_windows(context, task, generated)
+    if expected_start is None:
+        return windows
+    expected_utc = to_utc(expected_start)
+    return [window for window in windows if to_utc(_ceil_to_minute(window.start_at)) == expected_utc]
+
+
 def _next_block(
     context: SchedulingContext,
     task: AcademicTask,
@@ -148,7 +190,8 @@ def _next_block(
     policy = context.policy
     tz = ZoneInfo(context.timezone)
     usage = _daily_usage(context, generated)
-    for window in _task_windows(context, task, generated):
+    expected_start = _expected_block_start(context, task, generated)
+    for window in _eligible_windows(context, task, generated, expected_start):
         start_at = _ceil_to_minute(window.start_at)
         if to_utc(start_at) >= to_utc(window.end_at):
             continue
@@ -197,11 +240,19 @@ def _reason_codes(
     available_from = _task_available_from(task)
     if available_from is not None and to_utc(available_from) >= to_utc(min_instant(task.deadline_at, context.generation_scope.end_at)):
         return ("OUTSIDE_HORIZON",)
+    expected_start = _expected_block_start(context, task, generated)
+    if expected_start is not None and to_utc(expected_start) < to_utc(lower):
+        return ("OUTSIDE_HORIZON",)
 
-    windows = _task_windows(context, task, generated)
     if not context.available_intervals:
         return ("NO_AVAILABILITY",)
+    windows = _eligible_windows(context, task, generated, expected_start)
     if not windows:
+        if expected_start is not None:
+            expected_utc = to_utc(expected_start)
+            conflicts = [*context.busy_intervals, *_protected_intervals(context, generated)]
+            if any(to_utc(item.start_at) <= expected_utc < to_utc(item.end_at) for item in conflicts):
+                return ("START_TIME_CONFLICT",)
         return ("INSUFFICIENT_CAPACITY",)
     if remaining < context.policy.min_block_minutes and not context.policy.allow_short_final_block:
         return ("BLOCK_TOO_SHORT",)

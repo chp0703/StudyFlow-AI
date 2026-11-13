@@ -154,6 +154,48 @@ class CompleteScheduleConfirmationAcceptance(unittest.TestCase):
             "reason_codes": ["INSUFFICIENT_CAPACITY"],
         }])
 
+    def test_exact_start_at_busy_leaves_task_unscheduled_in_confirmation(self):
+        busy_task_id = "00000000-0000-4000-8000-000000000003"
+        snap = snapshot(
+            windows=[
+                availability("2026-11-05T08:00:00Z", "2026-11-05T15:00:00Z"),
+                {
+                    **availability("2026-11-05T09:00:00Z", "2026-11-05T10:00:00Z"),
+                    "window_id": "00000000-0000-4000-8000-000000000021",
+                    "kind": "BUSY",
+                    "label": "Họp nhóm",
+                },
+            ],
+        )
+        snap["tasks"].append({
+            **task(60),
+            "task_id": busy_task_id,
+            "title": "Học đúng 9 giờ",
+            "start_at": "2026-11-05T09:00:00Z",
+            "available_from_at": "2026-11-05T09:00:00Z",
+            "deadline_at": "2026-11-05T12:00:00Z",
+            "color": "#10B981",
+        })
+        cmd = {
+            "generation_scope": {
+                "start_at": "2026-11-05T00:00:00Z",
+                "end_at": "2026-11-06T00:00:00Z",
+                "selection_mode": "SELECTED_TASKS",
+                "task_ids": [TASK, busy_task_id],
+            },
+            "policy_overrides": {},
+        }
+        outcome = generate(snap, cmd, now=datetime(2026, 11, 5, 7, tzinfo=timezone.utc), block_id_factory=lambda: FRESH_BLOCK)
+        confirmation = outcome.proposal["payload"]["schedule_confirmation"]
+        self.assertEqual([TASK], [entry["task_id"] for entry in confirmation["added"]])
+        self.assertEqual([{
+            "task_id": busy_task_id,
+            "task_name": "Học đúng 9 giờ",
+            "color": "#10B981",
+            "unscheduled_minutes": 60,
+            "reason_codes": ["START_TIME_CONFLICT"],
+        }], confirmation["unscheduled_work"])
+
 
 if __name__ == "__main__":
     unittest.main()

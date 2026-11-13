@@ -103,8 +103,6 @@ class ActionProcessor:
                 and slots.get("estimated_minutes") is not None
             ):
                 slots["deadline_at"] = end_instant_from_start(slots["start_at"], slots["estimated_minutes"])
-        elif slots.get("available_from_at") is not None:
-            slots["start_at"] = slots["available_from_at"]
         return slots
 
     @staticmethod
@@ -191,16 +189,14 @@ class ActionProcessor:
         ask = []
         if not (slots.get("title") or "").strip():
             ask.append(("title", "Tên công việc là gì?"))
-        has_start = bool(slots.get("start_at"))
-        has_deadline = (
-            slots.get("deadline_precision") in ("DATE", "DATETIME")
-            and slots.get("deadline_at") is not None
-            and (slots["deadline_precision"] != "DATE" or slots.get("deadline_date") is not None)
-        )
-        if not has_start and not has_deadline:
-            field = "deadline_at" if slots.get("deadline_precision") in ("DATE", "DATETIME") else "start_at"
-            message = "Hạn nộp là khi nào?" if field == "deadline_at" else "Thời gian bắt đầu là khi nào?"
-            ask.append((field, message))
+        if not slots.get("start_at"):
+            ask.append(("start_at", "Thời gian bắt đầu là khi nào?"))
+        if slots.get("deadline_precision") == "DATE" and (
+            slots.get("deadline_date") is None or slots.get("deadline_at") is None
+        ):
+            ask.append(("deadline_date", "Hạn nộp là ngày nào?"))
+        elif slots.get("deadline_precision") == "DATETIME" and slots.get("deadline_at") is None:
+            ask.append(("deadline_at", "Hạn nộp là khi nào?"))
         if slots.get("estimated_minutes") is None:
             ask.append(("estimated_minutes", "Bạn dự kiến cần bao nhiêu phút?"))
         return [{"field": field, "message": message, "choices": []} for field, message in ask]

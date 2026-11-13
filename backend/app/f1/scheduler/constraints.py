@@ -7,7 +7,7 @@ import re
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from .intervals import contains, duration_minutes, is_single_local_day, merge_intervals, overlaps, to_utc
+from .intervals import add_minutes, contains, duration_minutes, is_single_local_day, merge_intervals, overlaps, to_utc
 from .models import (
     PRODUCT_TIMEZONE,
     AcademicTask,
@@ -404,10 +404,13 @@ def validate_generated_result(
     scope = Interval(context.generation_scope.start_at, context.generation_scope.end_at)
     now_utc = to_utc(context.now)
     retained_minutes: dict[object, int] = defaultdict(int)
+    retained_future_by_task: dict[object, list[StudyBlock]] = defaultdict(list)
     generated_minutes: dict[object, int] = defaultdict(int)
+    generated_by_task: dict[object, list[tuple[str, EngineBlock]]] = defaultdict(list)
     for block in context.retained_blocks:
         if to_utc(block.start_at) >= now_utc:
             retained_minutes[block.task_id] += duration_minutes(Interval(block.start_at, block.end_at))
+            retained_future_by_task[block.task_id].append(block)
 
     calendar_generated: list[EngineBlock] = []
     for index, block in valid_generated:
@@ -418,6 +421,7 @@ def validate_generated_result(
             issues.append(_issue("INVALID_GENERATED_TASK", "generated block must target a selected task", field, task_id=str(block.task_id)))
             continue
         calendar_generated.append(block)
+        generated_by_task[block.task_id].append((field, block))
         if to_utc(block.start_at) < now_utc:
             issues.append(_issue("GENERATED_IN_PAST", "generated block starts before now", field))
         if not contains(scope, interval):
@@ -441,5 +445,20 @@ def validate_generated_result(
         task = tasks.get(task_id)
         if task is not None and retained_minutes[task_id] + generated_minutes[task_id] > task.remaining_minutes:
             issues.append(_issue("SCHEDULED_EXCEEDS_REMAINING", "retained and generated minutes exceed remaining work", task_id=str(task_id)))
+        task_generated = sorted(
+            generated_by_task[task_id],
+            key=lambda item: (to_utc(item[1].start_at), to_utc(item[1].end_at), item[0]),
+        )
+        if task is not None and task.start_at is not None and task_generated:
+            earliest_field, earliest_block = task_generated[0]
+            has_retained_start = any(
+                to_utc(block.start_at) <= to_utc(task.start_at) for block in retained_future_by_task[task_id]
+            )
+            if not has_retained_start and to_utc(earliest_block.start_at) > to_utc(task.start_at):
+                issues.append(_issue("GENERATED_START_MISMATCH", "generated block must start at task start_at", earliest_field, task_id=str(task_id)))
+            if not retained_future_by_task[task_id]:
+                for (_, prev_block), (next_field, next_block) in zip(task_generated, task_generated[1:]):
+                    if to_utc(next_block.start_at) != to_utc(add_minutes(prev_block.end_at, context.policy.break_minutes)):
+                        issues.append(_issue("GENERATED_START_MISMATCH", "continuation block must follow break_minutes from exact start_at", next_field, task_id=str(task_id)))
     issues.extend(_validate_calendar_policy(context, tuple(calendar_generated)))
     return tuple(issues)

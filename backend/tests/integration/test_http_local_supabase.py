@@ -69,11 +69,11 @@ class LocalSupabaseHttp(unittest.TestCase):
         return client.post(path, json=body, headers=self.auth(who, **{"Idempotency-Key": key or f"it-{uuid4().hex}"}))
 
     @staticmethod
-    def task_body(conversation, title="Ôn giải tích"):
+    def task_body(conversation, title="Ôn giải tích", start_at="2026-01-01T08:00:00+07:00", deadline_date="2027-03-01"):
         return {"schema_version": "1.1", "conversation_id": conversation, "operation": "create_task_candidate",
-                "arguments": {"slots": {"title": title, "description": "Chương 1", "start_at": "2026-01-01T08:00:00+07:00",
-                                        "available_from_at": "2026-01-01T08:00:00+07:00", "deadline_at": None, "deadline_precision": "DATE",
-                                        "deadline_date": "2027-03-01", "deadline_timezone": "Asia/Ho_Chi_Minh",
+                "arguments": {"slots": {"title": title, "description": "Chương 1", "start_at": start_at,
+                                        "available_from_at": start_at, "deadline_at": None, "deadline_precision": "DATE",
+                                        "deadline_date": deadline_date, "deadline_timezone": "Asia/Ho_Chi_Minh",
                                         "estimated_minutes": 90, "priority": 1, "color": "#596CF0"}}}
 
     def test_candidate_decision_read_survives_retry_and_restart(self):
@@ -175,12 +175,18 @@ class LocalSupabaseHttp(unittest.TestCase):
                  "selection_mode": "ALL_ELIGIBLE", "task_ids": []}
         generate = lambda: {"schema_version": "1.1", "conversation_id": str(uuid4()), "operation": "generate_study_plan",
                             "arguments": {"generation_scope": scope, "policy_overrides": {}}}
+        slot_day = (tomorrow + timedelta(days=1)).date()
         weekly = {"kind": "AVAILABILITY", "label": "Giờ học", "recurrence": "WEEKLY", "timezone": "Asia/Ho_Chi_Minh",
-                  "start_at": None, "end_at": None, "weekday": (tomorrow + timedelta(days=1)).isoweekday(),
+                  "start_at": None, "end_at": None, "weekday": slot_day.isoweekday(),
                   "start_time": "09:00", "end_time": "24:00", "valid_from": datetime.now(timezone.utc).date().isoformat(),
                   "valid_until": None}
         with self.client() as app:
-            self.approve(app, self.task_body(str(uuid4()), "Ôn lập kế hoạch"), "c")
+            self.approve(app, self.task_body(
+                str(uuid4()),
+                "Ôn lập kế hoạch",
+                start_at=f"{slot_day.isoformat()}T09:00:00+07:00",
+                deadline_date=(slot_day + timedelta(days=2)).isoformat(),
+            ), "c")
             self.approve(app, {"schema_version": "1.1", "conversation_id": str(uuid4()), "operation": "set_availability",
                                "arguments": {"change_type": "ADD", "window_id": None, "expected_window_version": None,
                                              "window": weekly}}, "c")
@@ -244,20 +250,31 @@ class LocalSupabaseHttp(unittest.TestCase):
         scope = {"start_at": tomorrow.strftime("%Y-%m-%dT%H:%M:%SZ"),
                  "end_at": (tomorrow + timedelta(days=8)).strftime("%Y-%m-%dT%H:%M:%SZ"),
                  "selection_mode": "ALL_ELIGIBLE", "task_ids": []}
+        slot_day = (tomorrow + timedelta(days=1)).date()
         weekly = {"kind": "AVAILABILITY", "label": "Giờ học", "recurrence": "WEEKLY", "timezone": "Asia/Ho_Chi_Minh",
-                  "start_at": None, "end_at": None, "weekday": (tomorrow + timedelta(days=1)).isoweekday(),
+                  "start_at": None, "end_at": None, "weekday": slot_day.isoweekday(),
                   "start_time": "09:00", "end_time": "24:00", "valid_from": datetime.now(timezone.utc).date().isoformat(),
                   "valid_until": None}
         conversation = str(uuid4())
         with self.client() as app:
-            self.approve(app, self.task_body(str(uuid4()), "Việc thứ nhất"), "d")
+            self.approve(app, self.task_body(
+                str(uuid4()),
+                "Việc thứ nhất",
+                start_at=f"{slot_day.isoformat()}T09:00:00+07:00",
+                deadline_date=(slot_day + timedelta(days=2)).isoformat(),
+            ), "d")
             self.approve(app, {"schema_version": "1.1", "conversation_id": str(uuid4()), "operation": "set_availability",
                                "arguments": {"change_type": "ADD", "window_id": None, "expected_window_version": None, "window": weekly}}, "d")
             prepared = self.post(app, "/v1/actions", {"schema_version": "1.1", "conversation_id": conversation, "operation": "generate_study_plan",
                                                       "arguments": {"generation_scope": scope, "policy_overrides": {}}}, who="d")
             self.assertEqual(prepared.json()["state"], "AWAITING_APPROVAL", prepared.text)
             reference = prepared.json()["action_reference"]
-            self.approve(app, self.task_body(str(uuid4()), "Việc thứ hai"), "d")  # moves the schedule revision on
+            self.approve(app, self.task_body(
+                str(uuid4()),
+                "Việc thứ hai",
+                start_at=f"{slot_day.isoformat()}T11:00:00+07:00",
+                deadline_date=(slot_day + timedelta(days=2)).isoformat(),
+            ), "d")  # moves the schedule revision on
             decision = {"schema_version": "1.1", "conversation_id": conversation, "action_reference": reference}
             stale = self.post(app, "/v1/decisions", {**decision, "decision": "APPROVE"}, who="d")
             self.assertEqual((stale.status_code, stale.json()["error"]["code"]), (409, "STALE_PROPOSAL"), stale.text)
