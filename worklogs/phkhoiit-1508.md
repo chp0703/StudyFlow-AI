@@ -423,7 +423,7 @@
 
 **Đã làm**
 - Viết lại `README.md` theo bố cục README tham chiếu: demo, tính năng, công nghệ, cách chạy, biến môi trường, lệnh, cấu trúc thư mục, các trang, luồng lập kế hoạch, API, kiểm thử, quy ước phát triển.
-- Thêm 3 ảnh demo vào `docs/screenshots/` (`Homepage.png`, `Planner.png`, `Study.png`, Git LFS), ghép từ ảnh chụp giao diện chế độ demo vào mockup MacBook Pro 14.
+- Thêm 3 ảnh demo vào `docs/screenshots/` (`Homepage.png`, `Planner.png`, `Study.png`, Git LFS, nền trong suốt và cắt sát khung laptop), ghép từ ảnh chụp giao diện chế độ demo vào mockup MacBook Pro 14.
 - Đối chiếu nội dung với `CLAUDE.md`, `backend/README.md`, `frontend/.env.example` và `contracts/openapi.yaml`; kiểm tra mọi liên kết tương đối và mục lục trỏ đúng.
 
 **Kết quả:** Nhánh `docs/readme-studyflow`; chỉ thay đổi tài liệu và ảnh, không đụng mã nguồn nên không chạy build hay test.
