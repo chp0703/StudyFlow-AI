@@ -1278,5 +1278,34 @@
       "Only migration/key rotation owner writes; sf_rpc_owner may SELECT through private verifier",
       "ENABLE/FORCE RLS; sf_rpc_owner SELECT policy is role-restricted, not user-owner scoped for this global key store"
     ]
+  },
+  "extensions": {
+    "ingestion": {
+      "version": "1.0.0",
+      "source_record": {
+        "schema": "IngestionSource",
+        "table": "app_private.ingestion_sources",
+        "primary_key": [
+          "source_id"
+        ],
+        "private_columns": {
+          "content": "bytea, removed after successful extraction",
+          "lease_until": "timestamptz, fenced extraction lease"
+        },
+        "ownership": [
+          "user_id",
+          "conversation_id"
+        ]
+      },
+      "message_links": {
+        "table": "app_private.message_source_links",
+        "primary_key": [
+          "user_id",
+          "message_id",
+          "source_id"
+        ],
+        "same_owner_conversation": true
+      }
+    }
   }
 }

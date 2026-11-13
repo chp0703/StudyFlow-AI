@@ -73,6 +73,14 @@ class TimeWindowNormalizationAcceptance(unittest.TestCase):
             Interval(utc("2026-11-05T01:30:00Z"), utc("2026-11-05T02:30:00Z")),
         ))
 
+    def test_database_zero_microseconds_preserve_minute_aligned_windows(self):
+        for kind in ('AVAILABILITY', 'BUSY'):
+            with self.subTest(kind=kind):
+                window = once('2026-11-05T01:00:00.000000Z', '2026-11-05T03:00:00.000000Z', kind=kind)
+                self.assertEqual(self.normalize([window]), (
+                    Interval(utc('2026-11-05T01:00:00Z'), utc('2026-11-05T03:00:00Z')),
+                ))
+
     def test_half_open_boundaries_do_not_create_zero_length_intervals(self):
         self.assertEqual(self.normalize([once()], "2026-11-05T03:00:00Z", "2026-11-05T04:00:00Z"), ())
 

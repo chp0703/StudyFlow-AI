@@ -62,8 +62,6 @@ def _parse_uuid(value: object, field_name: str) -> UUID:
 def _parse_rfc3339(value: object, field_name: str, *, minute_aligned: bool) -> datetime:
     if not isinstance(value, str) or not _RFC3339_RE.fullmatch(value):
         raise ValueError(f"{field_name} must be a valid RFC 3339 timestamp with offset")
-    if minute_aligned and "." in value:
-        raise ValueError(f"{field_name} must be minute-aligned without fractional seconds")
     normalized = f"{value[:-1]}+00:00" if value.endswith("Z") else value
     try:
         parsed = datetime.fromisoformat(normalized)

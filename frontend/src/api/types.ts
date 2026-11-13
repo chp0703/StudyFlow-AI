@@ -205,3 +205,32 @@ export type OrchestratorReply = {
 export type ListResult<T,> = {
   data: Page<T>
 }
+
+// Optional BE-04 extension 1.0.0. Source content is draft data, never approval.
+export type IngestionSource = {
+  ingestion_version: "1.0.0"
+  source_id: string
+  user_id: string
+  conversation_id: string
+  filename: string
+  mime_type: string
+  size_bytes: number
+  sha256: string
+  status: "UPLOADED" | "EXTRACTING" | "READY" | "FAILED"
+  lease_version: number
+  created_at: string
+  extraction: {
+    parser: "document-v1" | "vision-v1" | "calendar-v1"
+    model: string | null
+    prompt_version: "be04-1"
+    extracted_at: string
+    usage: { input_tokens: number; output_tokens: number }
+    intents: Array<{
+      intent: "CREATE_TASK" | "SET_BUSY_INTERVAL"
+      slots: Record<string, unknown>
+      raw_expressions: Record<string, string>
+      ambiguities: Array<{ code: string; message: string; field: string | null }>
+    }>
+  } | null
+  error_code: "INVALID_PARAMETER" | "SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | null
+}

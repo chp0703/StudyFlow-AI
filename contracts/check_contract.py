@@ -357,11 +357,20 @@ def main():
                 check_refs(item, document)
     check_refs(bundle, bundle)
     check_refs(api, api)
+    ingestion_api = read('ingestion-openapi.yaml')
+    check_refs(ingestion_api, ingestion_api)
+    assert service['extensions']['ingestion']['version'] == data['extensions']['ingestion']['version'] == ingestion_api['info']['version'] == '1.0.0'
+    assert len(ingestion_api['paths']) == 3
+    for interface in service['extensions']['ingestion']['internal_interfaces']:
+        assert interface['arguments_schema'] in definitions and interface['result_schema'] in definitions
+        assert interface['llm_callable'] is False
+        assert interface['attestation_required'] == (not interface['read_only'])
     try:
         from openapi_spec_validator import validate
     except ImportError as exc:
         raise SystemExit('Install contracts/requirements-check.txt to validate OpenAPI too.') from exc
     validate(api, base_uri=(ROOT / 'openapi.yaml').as_uri())
+    validate(ingestion_api, base_uri=(ROOT / 'ingestion-openapi.yaml').as_uri())
     manifest = read('examples/manifest.json')
     for case in manifest['cases']:
         payload = read(case['file'])

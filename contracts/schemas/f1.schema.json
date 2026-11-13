@@ -2232,17 +2232,46 @@
         },
         "text": {
           "type": "string",
-          "minLength": 1,
-          "maxLength": 8000,
-          "pattern": "\\S"
+          "maxLength": 8000
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maxItems": 5,
+          "uniqueItems": true
         }
       },
       "required": [
         "schema_version",
-        "conversation_id",
-        "text"
+        "conversation_id"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "required": [
+            "source_ids"
+          ],
+          "properties": {
+            "source_ids": {
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          }
+        }
+      ]
     },
     "UserDecision": {
       "type": "object",
@@ -6718,6 +6747,15 @@
       "properties": {
         "message": {
           "$ref": "#/$defs/SourceMessageRecord"
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maxItems": 5,
+          "uniqueItems": true
         }
       },
       "required": [
@@ -10398,6 +10436,562 @@
             "attestation"
           ],
           "additionalProperties": false
+        }
+      ]
+    },
+    "SourceUploadRequest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\x00-\\x1f]+$"
+        },
+        "mime_type": {
+          "type": "string",
+          "enum": [
+            "text/plain",
+            "text/markdown",
+            "application/pdf",
+            "text/calendar",
+            "text/csv",
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif"
+          ]
+        },
+        "content_base64": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 6990508,
+          "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+        }
+      },
+      "required": [
+        "schema_version",
+        "conversation_id",
+        "filename",
+        "mime_type",
+        "content_base64"
+      ],
+      "additionalProperties": false
+    },
+    "SourceExtractRequest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "schema_version",
+        "conversation_id"
+      ],
+      "additionalProperties": false
+    },
+    "SourceIntent": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "intent": {
+              "const": "CREATE_TASK"
+            },
+            "slots": {
+              "$ref": "#/$defs/CandidateTaskFields"
+            },
+            "raw_expressions": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "ambiguities": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "intent",
+            "slots",
+            "raw_expressions",
+            "ambiguities"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "intent": {
+              "const": "SET_BUSY_INTERVAL"
+            },
+            "slots": {
+              "type": "object",
+              "properties": {
+                "change_type": {
+                  "const": "ADD"
+                },
+                "window": {
+                  "$ref": "#/$defs/TimeWindowInput"
+                }
+              },
+              "required": [
+                "change_type",
+                "window"
+              ],
+              "additionalProperties": false
+            },
+            "raw_expressions": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "ambiguities": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "intent",
+            "slots",
+            "raw_expressions",
+            "ambiguities"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "SourceExtraction": {
+      "type": "object",
+      "properties": {
+        "parser": {
+          "enum": [
+            "document-v1",
+            "vision-v1",
+            "calendar-v1"
+          ]
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt_version": {
+          "const": "be04-1"
+        },
+        "extracted_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        },
+        "usage": {
+          "type": "object",
+          "properties": {
+            "input_tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "output_tokens": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "input_tokens",
+            "output_tokens"
+          ],
+          "additionalProperties": false
+        },
+        "intents": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/SourceIntent"
+          }
+        }
+      },
+      "required": [
+        "parser",
+        "model",
+        "prompt_version",
+        "extracted_at",
+        "usage",
+        "intents"
+      ],
+      "additionalProperties": false
+    },
+    "IngestionSource": {
+      "type": "object",
+      "properties": {
+        "ingestion_version": {
+          "const": "1.0.0"
+        },
+        "source_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "user_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\x00-\\x1f]+$"
+        },
+        "mime_type": {
+          "type": "string",
+          "enum": [
+            "text/plain",
+            "text/markdown",
+            "application/pdf",
+            "text/calendar",
+            "text/csv",
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif"
+          ]
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5242880
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "status": {
+          "enum": [
+            "UPLOADED",
+            "EXTRACTING",
+            "READY",
+            "FAILED"
+          ]
+        },
+        "lease_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        },
+        "extraction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceExtraction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "enum": [
+                "INVALID_PARAMETER",
+                "SERVICE_UNAVAILABLE",
+                "INTERNAL_ERROR"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "ingestion_version",
+        "source_id",
+        "user_id",
+        "conversation_id",
+        "filename",
+        "mime_type",
+        "size_bytes",
+        "sha256",
+        "status",
+        "lease_version",
+        "created_at",
+        "extraction",
+        "error_code"
+      ],
+      "additionalProperties": false
+    },
+    "StoreSourceArguments": {
+      "type": "object",
+      "properties": {
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\x00-\\x1f]+$"
+        },
+        "mime_type": {
+          "type": "string",
+          "enum": [
+            "text/plain",
+            "text/markdown",
+            "application/pdf",
+            "text/calendar",
+            "text/csv",
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif"
+          ]
+        },
+        "content_base64": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 6990508,
+          "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+        },
+        "source_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5242880
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "conversation_id",
+        "filename",
+        "mime_type",
+        "content_base64",
+        "source_id",
+        "size_bytes",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "SourceLookupArguments": {
+      "type": "object",
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "source_id",
+        "conversation_id"
+      ],
+      "additionalProperties": false
+    },
+    "CompleteSourceExtractionArguments": {
+      "type": "object",
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expected_lease_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "extraction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceExtraction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "enum": [
+                "INVALID_PARAMETER",
+                "SERVICE_UNAVAILABLE",
+                "INTERNAL_ERROR"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "source_id",
+        "conversation_id",
+        "expected_lease_version",
+        "extraction",
+        "error_code"
+      ],
+      "additionalProperties": false
+    },
+    "SourceClaimData": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/IngestionSource"
+        },
+        "content_base64": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 4,
+              "maxLength": 6990508,
+              "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "source",
+        "content_base64"
+      ],
+      "additionalProperties": false
+    },
+    "IngestionSourceResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "outcome": {
+              "enum": [
+                "READ",
+                "COMMITTED"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/IngestionSource"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "SourceClaimResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "outcome": {
+              "enum": [
+                "READ",
+                "COMMITTED"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/SourceClaimData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
         }
       ]
     }

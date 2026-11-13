@@ -8,6 +8,7 @@ việc phê duyệt luôn đi qua /v1/decisions với tham chiếu thao tác do 
 from __future__ import annotations
 
 import uuid
+import copy
 from datetime import datetime, timedelta, timezone
 
 from ..clients.rpc import child_key, iso
@@ -42,21 +43,50 @@ class ChatProcessor:
 
     # ------------------------------------------------------------ đầu vào: POST /v1/messages
     def handle_message(self, ctx, receipt, key, body):
-        conversation, text, message_id = body["conversation_id"], body["text"], receipt["message_id"]
+        conversation, text, message_id = body["conversation_id"], body.get("text", ""), receipt["message_id"]
+        source_ids = body.get('source_ids', [])
+        source_intents = self.source_intents(ctx, conversation, source_ids)
         self.proc.step(ctx, "record_source_message", {"message": {
             "message_id": message_id, "user_id": ctx.user_id, "conversation_id": conversation, "source": "CHAT",
-            "role": "USER", "text": text, "received_at": receipt["created_at"]}},
+            "role": "USER", "text": text, "received_at": receipt["created_at"]},
+            **({'source_ids': source_ids} if source_ids else {})},
             conversation_id=conversation, idempotency_key=child_key(key, "message"), message_id=message_id)
         own = self.continuation(ctx, conversation, message_id)
         if own is None:
             open_queue = self.continuation(ctx, conversation, None)
             if open_queue is not None:
+                if source_ids:
+                    raise Terminal('ACTION_REVIEW_REQUIRED', 'Hãy xử lý thao tác đang chờ trước khi nhập nguồn mới.')
                 return self.answer_open_queue(ctx, receipt, key, conversation, text, open_queue)
-            extraction = self.extract(ctx, conversation, text, None)
+            extraction = {'intents': source_intents} if source_ids else self.extract(ctx, conversation, text, None)
+            if source_ids and not extraction['intents']:
+                return 200, reply(ctx.request_id, 'SUCCEEDED', 'Không tìm thấy công việc hoặc sự kiện trong nguồn đã gửi.')
+            if source_ids and text.strip():
+                # Only the user's separate text can request a plan, after source confirmations.
+                direct = self.extract(ctx, conversation, text, None)
+                plan = next((i for i in direct['intents'] if i['intent'] == 'GENERATE_STUDY_PLAN'), None)
+                if plan is not None:
+                    extraction['intents'].append(plan)
             if all(i["intent"] in ("UNKNOWN", "UNSUPPORTED") for i in extraction["intents"]):
                 return 200, reply(ctx.request_id, "NEEDS_CLARIFICATION", "Mình chưa hiểu bạn muốn làm gì.", questions=[GENERIC_QUESTION])
             own = self.initialize(ctx, receipt, key, conversation, message_id, extraction)
         return 200, self.advance(ctx, receipt, key, own)
+
+    def source_intents(self, ctx, conversation, source_ids):
+        intents = []
+        for source_id in source_ids:
+            source = self.proc.step(ctx, 'get_ingestion_source', {'source_id': source_id, 'conversation_id': conversation},
+                                    conversation_id=conversation)['data']
+            if (source.get('user_id') != ctx.user_id or source.get('conversation_id') != conversation
+                    or source.get('status') != 'READY'):
+                raise Terminal('ENTITY_NOT_FOUND', 'Không tìm thấy nguồn đã trích xuất trong cuộc hội thoại này.')
+            extraction = source.get('extraction')
+            if not contract.is_valid('SourceExtraction', extraction):
+                raise Terminal('INVALID_PARAMETER', 'Nguồn chưa có dữ liệu trích xuất hợp lệ.')
+            intents.extend(copy.deepcopy(extraction['intents']))
+        if len(intents) > 20:
+            raise Terminal('INVALID_PARAMETER', 'Một tin nhắn chỉ nhập tối đa 20 công việc hoặc sự kiện.')
+        return intents
 
     def continuation(self, ctx, conversation: str, source_message_id: str | None):
         return self.proc.step(ctx, "get_workflow_continuation", {"conversation_id": conversation,
