@@ -570,6 +570,21 @@
       "schema": "TimeWindowInput",
       "valid": false,
       "reason": "Caller/model input cannot select another business timezone"
+    },
+    {
+      "file": "examples/valid/SourceUploadRequest.json",
+      "schema": "SourceUploadRequest",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/source-owner-injection.json",
+      "schema": "SourceUploadRequest",
+      "valid": false
+    },
+    {
+      "file": "examples/invalid/source-id-url.json",
+      "schema": "UserMessage",
+      "valid": false
     }
   ]
 }

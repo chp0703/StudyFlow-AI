@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.1",
+  "conversation_id": "00100000-0000-4000-8000-000000000002",
+  "text": "Nhập tệp",
+  "source_ids": [
+    "https://private.example/file"
+  ]
+}
