@@ -532,6 +532,22 @@ class HttpContractAcceptance(unittest.TestCase):
         self.assertNotIn("Access-Control-Allow-Origin", response.headers)
         self.assertEqual(self.rpc_calls, [])
 
+    def test_be01_be02_task_schema_and_vietnam_timezone_enforced_at_http_boundary(self):
+        base = fixture("ActionRequest.json")
+        base["conversation_id"] = CONVERSATION
+        for label, patch in (
+            ("removed_course_label", {"course_label": "CS201"}),
+            ("string_priority", {"priority": "HIGH"}),
+            ("invalid_numeric_priority", {"priority": 0.2}),
+            ("invalid_color", {"color": "blue"}),
+            ("non_vietnam_timezone", {"deadline_timezone": "America/New_York"}),
+        ):
+            with self.subTest(case=label):
+                bad = copy.deepcopy(base)
+                bad["arguments"]["slots"].update(patch)
+                response = self.client.post("/v1/actions", json=bad, headers=self.post_headers())
+                self.assert_error(response, 422, "INVALID_PARAMETER", post=True)
+
 
 if __name__ == "__main__":
     unittest.main()

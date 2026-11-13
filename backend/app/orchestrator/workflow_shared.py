@@ -7,6 +7,9 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from ..clients.rpc import iso
 
+PRODUCT_TIMEZONE = "Asia/Ho_Chi_Minh"
+DEFAULT_TASK_COLOR = "#596CF0"
+DEFAULT_TASK_PRIORITY = 0.5
 POLICY_DEFAULT = {"min_block_minutes": 25, "max_block_minutes": 90, "allow_short_final_block": True,
                   "max_daily_minutes": 240, "break_minutes": 10}
 INTENT = {"create_task_candidate": "CREATE_TASK", "set_availability": "SET_AVAILABILITY",
@@ -38,10 +41,26 @@ def reply(request_id: str, state: str, message: str, *, reference=None, question
 
 
 def deadline_instant(slots: dict) -> str | None:
-    """Deadline chỉ có ngày kết thúc ở đầu ngày kế tiếp theo giờ địa phương (contract mục 2)."""
+    """Deadline chỉ có ngày kết thúc ở đầu ngày kế tiếp theo giờ Việt Nam (Asia/Ho_Chi_Minh)."""
     try:
-        zone = ZoneInfo(slots["deadline_timezone"])
+        tz_name = slots.get("deadline_timezone") or PRODUCT_TIMEZONE
+        if tz_name != PRODUCT_TIMEZONE:
+            return None
+        zone = ZoneInfo(tz_name)
         local = datetime.combine(date.fromisoformat(slots["deadline_date"]) + timedelta(days=1), time.min, zone)
     except (KeyError, TypeError, ValueError, ZoneInfoNotFoundError):
         return None
     return iso(local.astimezone(timezone.utc))
+
+
+def end_instant_from_start(start_at: object, estimated_minutes: object) -> str | None:
+    """Tính deadline_at mặc định = start_at + estimated_minutes khi tạo task theo schema mới."""
+    if not isinstance(start_at, str) or type(estimated_minutes) is not int or estimated_minutes <= 0:
+        return None
+    try:
+        parsed = datetime.fromisoformat(start_at.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        return None
+    return iso((parsed + timedelta(minutes=estimated_minutes)).astimezone(timezone.utc))

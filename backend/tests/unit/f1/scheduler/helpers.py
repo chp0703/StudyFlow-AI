@@ -37,6 +37,9 @@ def task(
     priority: Priority = Priority.NORMAL,
     status: TaskStatus = TaskStatus.TODO,
     available_from: datetime | None = None,
+    start_at: datetime | None = None,
+    color: str = "#596CF0",
+    description: str | None = None,
 ) -> AcademicTask:
     return AcademicTask(
         task_id=uid(value),
@@ -48,6 +51,9 @@ def task(
         priority=priority,
         status=status,
         available_from_at=available_from,
+        start_at=start_at,
+        color=color,
+        description=description,
     )
 
 

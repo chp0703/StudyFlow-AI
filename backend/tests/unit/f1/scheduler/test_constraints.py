@@ -54,6 +54,38 @@ class ConstraintTests(unittest.TestCase):
         result = generate_schedule(broken)
         self.assertIn("INVALID_GENERATION_SCOPE", {issue.code for issue in result.conflicts})
 
+    def test_numeric_priority_color_start_at_and_vietnam_timezone_validation(self) -> None:
+        from dataclasses import replace
+        from backend.app.f1.scheduler.constraints import validate_context
+
+        base = task(305, remaining=60, start_at=dt(4, 9), deadline=dt(4, 12), color="#596CF0", description="Note")
+        self.assertEqual((), validate_context(context((base,))))
+
+        for bad_priority in ("HIGH", 0.2, True, False):
+            with self.subTest(priority=bad_priority):
+                issues = validate_context(context((replace(base, priority=bad_priority),)))
+                self.assertIn("INVALID_TASK", {issue.code for issue in issues})
+
+        for bad_color in ("red", "#12345", "#GGGGGG", ""):
+            with self.subTest(color=bad_color):
+                issues = validate_context(context((replace(base, color=bad_color),)))
+                self.assertIn("INVALID_TASK", {issue.code for issue in issues})
+
+        late_start = replace(base, start_at=dt(4, 13))
+        self.assertIn("INVALID_TASK", {issue.code for issue in validate_context(context((late_start,)))})
+
+        non_vn_ctx = replace(context((base,)), timezone="UTC")
+        self.assertIn("INVALID_TIMEZONE", {issue.code for issue in validate_context(non_vn_ctx)})
+
+        non_vn_task = replace(base, deadline_timezone="America/New_York")
+        self.assertIn("INVALID_TIMEZONE", {issue.code for issue in validate_context(context((non_vn_task,)))})
+
+        early_block = EngineBlock(base.task_id, dt(4, 8), dt(4, 9))
+        self.assertIn("GENERATED_BEFORE_AVAILABLE", {issue.code for issue in validate_generated_result(context((base,)), (early_block,))})
+
+        late_block = EngineBlock(base.task_id, dt(4, 10), dt(4, 11))
+        self.assertIn("GENERATED_START_MISMATCH", {issue.code for issue in validate_generated_result(context((base,)), (late_block,))})
+
 
 if __name__ == "__main__":
     unittest.main()

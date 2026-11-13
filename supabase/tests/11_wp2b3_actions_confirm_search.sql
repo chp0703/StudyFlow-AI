@@ -40,8 +40,8 @@ end $$;
 create function pg_temp.q_is(res jsonb, code text) returns boolean language sql as $$
  select coalesce(res->>'outcome'='ERROR' and res#>>'{error,code}'=code and res->'data'='null'::jsonb,false) $$;
 create function pg_temp.q_slots(title text, with_deadline boolean default true) returns jsonb language sql as $$
- select jsonb_build_object('slots',jsonb_build_object('title',title,'estimated_minutes',120,'priority','HIGH')
- || case when with_deadline then jsonb_build_object('deadline_precision','DATE','deadline_date','2026-11-06',
+ select jsonb_build_object('slots',jsonb_build_object('title',title,'estimated_minutes',120,'priority',1,'color','#596CF0')
+ || case when with_deadline then jsonb_build_object('start_at','2026-11-06T09:00:00.000000Z','deadline_precision','DATE','deadline_date','2026-11-06',
  'deadline_timezone','Asia/Ho_Chi_Minh') else '{}'::jsonb end) $$;
 create function pg_temp.q_pres(candidate jsonb, action_id uuid, version bigint default 1) returns jsonb language sql as $$
  select jsonb_build_object('kind','ACTION_PRESENTATION','pending_action',jsonb_build_object('action_id',action_id,
@@ -50,7 +50,7 @@ create function pg_temp.q_pres(candidate jsonb, action_id uuid, version bigint d
  'candidate_id',candidate->>'candidate_id','proposal_id',null,'draft_arguments','{}'::jsonb,'missing_fields','[]'::jsonb,
  'ambiguities','[]'::jsonb,'depends_on_action_id',null,'created_at','2026-11-05T01:00:00.000000Z',
  'updated_at','2026-11-05T01:00:00.000000Z'),'candidate',candidate,'proposal',null,'normalized_command',null,
- 'effective_policy',null) $$;
+ 'effective_policy',null,'schedule_confirmation',null) $$;
 create function pg_temp.q_ref(action_id uuid, action_version bigint, candidate jsonb) returns jsonb language sql as $$
  select jsonb_build_object('action_id',action_id,'action_version',action_version,'target_type','TASK_CANDIDATE',
  'target_id',candidate->>'candidate_id','target_version',(candidate->>'version')::bigint) $$;
@@ -165,7 +165,8 @@ insert into q11 select 'confirm',pg_temp.q_confirm('q11-confirm-0000008',
  pg_temp.q_appr(res->'data','CHAT','d1110000-0000-4000-8000-000000000004'),
  pg_temp.q_ref((select action_a from q11_ids),2,res->'data')) from q11 where name='candA';
 select ok(res->>'outcome'='COMMITTED' and res#>>'{data,status}'='TODO' and res#>>'{data,title}'='Ôn giải tích'
- and res#>>'{data,estimated_minutes}'='120' and res#>>'{data,remaining_minutes}'='120' and res#>>'{data,priority}'='HIGH',
+ and res#>>'{data,estimated_minutes}'='120' and res#>>'{data,remaining_minutes}'='120' and res#>'{data,priority}'='1'::jsonb
+ and res#>>'{data,color}'='#596CF0' and res#>>'{data,start_at}'='2026-11-06T09:00:00.000000Z',
  'confirmation creates a TODO task with remaining = estimated') from q11 where name='confirm';
 select ok(res#>>'{data,deadline_date}'='2026-11-06' and res#>>'{data,deadline_precision}'='DATE'
  and res#>>'{data,deadline_at}'='2026-11-06T17:00:00.000000Z','a date-only deadline ends at the next local midnight') from q11 where name='confirm';
@@ -187,12 +188,12 @@ select ok(pg_temp.q_is(pg_temp.q_confirm('q11-confirm-0000009',pg_temp.q_appr((s
  pg_temp.q_ref((select action_a from q11_ids),2,(select res->'data' from q11 where name='candA'))),'STALE_ENTITY_VERSION'),
  'a new key after confirmation is stale, not a second task');
 
--- Không xác nhận candidate thiếu thông tin, ở đây là thiếu deadline.
+-- Không xác nhận candidate thiếu thông tin, ở đây là thiếu start_at/deadline.
 insert into q11 select 'actB',pg_temp.q_call('prepare_pending_action',jsonb_build_object(
  'presentation',pg_temp.q_pres(res->'data',(select action_b from q11_ids)),'expected_action_version',null),'q11-prep-b-00000002')
  from q11 where name='candB';
 select ok(res->>'outcome'='COMMITTED','candidate B is presented (the first action completed, freeing the conversation)') from q11 where name='actB';
-select ok((select e->'error'->>'code'='MISSING_REQUIRED_FIELD' and e#>>'{error,field}'='deadline_precision' from (select pg_temp.q_call('confirm_task',
+select ok((select e->'error'->>'code'='MISSING_REQUIRED_FIELD' and e#>>'{error,field}'='start_at' from (select pg_temp.q_call('confirm_task',
  jsonb_build_object('candidate_id',(select res#>>'{data,candidate_id}' from q11 where name='candB'),'expected_candidate_version',1),
  'q11-confirm-0000010','d1110000-0000-4000-8000-000000000001','d1110000-0000-4000-8000-000000000004',
  pg_temp.q_appr((select res->'data' from q11 where name='candB')),
@@ -211,10 +212,10 @@ select is(pg_temp.q_call('cancel_pending_action',jsonb_build_object('action_refe
  (select res->'data' from q11 where name='cancel'),'retrying the cancel returns the cancelled action');
 
 -- search_tasks: bộ lọc, phân trang keyset và cursor chống sửa đổi.
-insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,course_label,deadline_at,deadline_precision,
- deadline_date,deadline_timezone,estimated_minutes,remaining_minutes,priority,status)
+insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,description,start_at,deadline_at,deadline_precision,
+ deadline_date,deadline_timezone,estimated_minutes,remaining_minutes,priority,color,status)
  select extensions.gen_random_uuid(),'d1110000-0000-4000-8000-000000000001',extensions.gen_random_uuid(),'Bài '||n,
- case when n=2 then 'Toán rời rạc' end,timestamptz '2026-11-10 00:00+00'+n*interval '1 day','DATETIME',null,'UTC',60,60,'NORMAL',
+ case when n=2 then 'Toán rời rạc' end,timestamptz '2026-11-10 00:00+00'+(n-1)*interval '1 day',timestamptz '2026-11-10 00:00+00'+n*interval '1 day','DATETIME',null,'Asia/Ho_Chi_Minh',60,60,0.5,'#596CF0',
  case when n=3 then 'IN_PROGRESS' else 'TODO' end from generate_series(1,4) n;
 create function pg_temp.q_search(q text, statuses jsonb, size int, cur text, uid uuid default 'd1110000-0000-4000-8000-000000000001')
  returns jsonb language sql as $$ select pg_temp.q_call('search_tasks',jsonb_build_object('query',q,'status_filter',statuses,
@@ -229,7 +230,7 @@ select ok(jsonb_array_length(res#>'{data,items}')=1 and res#>'{data,next_cursor}
 select is((select count(distinct i->>'task_id') from q11,jsonb_array_elements(res#>'{data,items}') i where name in ('s1','s2','s3')),
  5::bigint,'pages cover all five tasks without repeats');
 select is(jsonb_array_length(pg_temp.q_search(null,'["IN_PROGRESS"]',10,null)#>'{data,items}'),1,'status filter applies');
-select is(jsonb_array_length(pg_temp.q_search('rời rạc','[]',10,null)#>'{data,items}'),1,'query matches the course label');
+select is(jsonb_array_length(pg_temp.q_search('rời rạc','[]',10,null)#>'{data,items}'),1,'query matches the description');
 select is(jsonb_array_length(pg_temp.q_search('100%','[]',10,null)#>'{data,items}'),0,'wildcard characters are matched literally');
 select ok(pg_temp.q_is(pg_temp.q_search(null,'[]',2,'v1.tampered.deadbeef'),'INVALID_PARAMETER'),'a tampered cursor is rejected');
 select ok(pg_temp.q_is(pg_temp.q_search(null,'["TODO"]',2,(select res#>>'{data,next_cursor}' from q11 where name='s1')),'INVALID_PARAMETER'),

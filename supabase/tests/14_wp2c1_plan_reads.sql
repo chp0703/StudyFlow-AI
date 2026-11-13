@@ -62,19 +62,19 @@ select ok(pg_temp.q_is(pg_temp.q_call('get_scheduling_context',jsonb_build_objec
 insert into app_private.user_profiles(user_id,timezone,locale,scheduling_policy)
  values ('d1410000-0000-4000-8000-000000000002','Asia/Ho_Chi_Minh','vi',app_private.default_policy());
 -- Nạp task, khung giờ còn hiệu lực/đã lưu trữ và lịch đã duyệt có hai block.
-insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,deadline_at,deadline_precision,deadline_date,
+insert into app_private.academic_tasks(task_id,user_id,candidate_id,title,start_at,deadline_at,deadline_precision,deadline_date,
  deadline_timezone,estimated_minutes,remaining_minutes) values
  ('d1410000-0000-4000-8000-0000000000a1','d1410000-0000-4000-8000-000000000001',extensions.gen_random_uuid(),'Bài tập',
-  '2026-11-12T00:00:00Z','DATETIME',null,'UTC',120,120),
+  '2026-11-06T00:00:00Z','2026-11-12T00:00:00Z','DATETIME',null,'Asia/Ho_Chi_Minh',120,120),
  ('d1410000-0000-4000-8000-0000000000a2','d1410000-0000-4000-8000-000000000002',extensions.gen_random_uuid(),'Của người khác',
-  '2026-11-12T00:00:00Z','DATETIME',null,'UTC',60,60);
+  '2026-11-06T00:00:00Z','2026-11-12T00:00:00Z','DATETIME',null,'Asia/Ho_Chi_Minh',60,60);
 insert into app_private.time_windows(window_id,user_id,kind,recurrence,timezone,weekday,start_time,end_time,valid_from,archived_at)
  values ('d1410000-0000-4000-8000-0000000000b1','d1410000-0000-4000-8000-000000000001','AVAILABILITY','WEEKLY','Asia/Ho_Chi_Minh',1,'08:00','10:00','2026-11-01',null),
  ('d1410000-0000-4000-8000-0000000000b2','d1410000-0000-4000-8000-000000000001','AVAILABILITY','WEEKLY','Asia/Ho_Chi_Minh',2,'08:00','10:00','2026-11-01',clock_timestamp());
 insert into app_private.plan_proposals(proposal_id,user_id,base_schedule_revision,generation_scope,payload,algorithm_version,policy_snapshot)
  values ('d1410000-0000-4000-8000-0000000000c1','d1410000-0000-4000-8000-000000000001',0,
  (pg_temp.q_scope('ALL_ELIGIBLE')->'generation_scope'),
- '{"study_blocks":[],"task_summaries":[],"coverage":"FULL","warnings":[],"plan_diff":{"added":[],"moved":[],"removed":[],"unchanged":[]}}',
+ '{"study_blocks":[],"task_summaries":[],"coverage":"FULL","warnings":[],"plan_diff":{"added":[],"moved":[],"removed":[],"unchanged":[]},"schedule_confirmation":{"proposal_id":"d1410000-0000-4000-8000-0000000000c1","proposal_version":1,"base_schedule_revision":0,"entries":[],"added":[],"changed":[],"removed":[],"warnings":[],"unscheduled_work":[]}}',
  'q14-1',app_private.default_policy());
 insert into app_private.study_plans(plan_id,user_id,version,source_proposal_id)
  values ('d1410000-0000-4000-8000-0000000000d1','d1410000-0000-4000-8000-000000000001',1,'d1410000-0000-4000-8000-0000000000c1');

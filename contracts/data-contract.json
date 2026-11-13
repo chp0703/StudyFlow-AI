@@ -195,10 +195,10 @@
           "schema_pointer": "#/$defs/AcademicTask/properties/description"
         },
         {
-          "name": "course_label",
-          "postgres_type": "text",
-          "nullable": true,
-          "schema_pointer": "#/$defs/AcademicTask/properties/course_label"
+          "name": "start_at",
+          "postgres_type": "timestamptz",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/start_at"
         },
         {
           "name": "available_from_at",
@@ -244,9 +244,15 @@
         },
         {
           "name": "priority",
-          "postgres_type": "text",
+          "postgres_type": "numeric",
           "nullable": false,
           "schema_pointer": "#/$defs/AcademicTask/properties/priority"
+        },
+        {
+          "name": "color",
+          "postgres_type": "text",
+          "nullable": false,
+          "schema_pointer": "#/$defs/AcademicTask/properties/color"
         },
         {
           "name": "status",

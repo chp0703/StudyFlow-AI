@@ -7,7 +7,7 @@ from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .intervals import clip, is_single_local_day, merge_intervals
-from .models import Interval
+from .models import PRODUCT_TIMEZONE, Interval
 
 
 _RFC3339_RE = re.compile(
@@ -89,9 +89,12 @@ def _parse_timezone(value: object) -> ZoneInfo:
     if not isinstance(value, str) or not value.strip():
         raise ValueError("timezone must be a non-empty IANA timezone name")
     try:
-        return ZoneInfo(value)
+        tz = ZoneInfo(value)
     except (ZoneInfoNotFoundError, KeyError, ValueError) as exc:
         raise ValueError(f"Invalid IANA timezone: {value}") from exc
+    if value != PRODUCT_TIMEZONE:
+        raise ValueError(f"timezone must be {PRODUCT_TIMEZONE}: {value}")
+    return tz
 
 
 def _resolve_strict_local_datetime(local_date: date, local_time: time, tz: ZoneInfo) -> datetime:

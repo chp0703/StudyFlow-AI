@@ -112,34 +112,31 @@ class TimeWindowNormalizationAcceptance(unittest.TestCase):
         ))
 
     def test_iana_timezone_changes_utc_offset_across_dst(self):
-        # 09:00 New York là 13:00Z ngày 25/10, thành 14:00Z sau khi lùi đồng hồ ngày 1/11.
-        self.assertEqual(self.normalize(
-            [weekly(timezone="America/New_York", weekday=7, start_time="09:00",
-                    end_time="10:00", valid_from="2026-10-25", valid_until="2026-11-02")],
-            "2026-10-25T00:00:00Z", "2026-11-02T00:00:00Z",
-        ), (
-            Interval(utc("2026-10-25T13:00:00Z"), utc("2026-10-25T14:00:00Z")),
-            Interval(utc("2026-11-01T14:00:00Z"), utc("2026-11-01T15:00:00Z")),
-        ))
+        # BE-02 fixes the Planner product boundary to Asia/Ho_Chi_Minh; non-Vietnam timezones are rejected.
+        for bad_tz in ("America/New_York", "UTC", "Europe/London"):
+            with self.subTest(timezone=bad_tz), self.assertRaises(ValueError):
+                self.normalize(
+                    [weekly(timezone=bad_tz, weekday=7, start_time="09:00",
+                            end_time="10:00", valid_from="2026-10-25", valid_until="2026-11-02")],
+                    "2026-10-25T00:00:00Z", "2026-11-02T00:00:00Z",
+                )
 
     def test_ambiguous_fall_back_local_time_requires_clarification(self):
         # Cả hai fold đều tồn tại; tự chọn fold=0 sẽ tự suy diễn ý định người dùng.
+        from datetime import date, time
+        from backend.app.f1.scheduler.normalization import _resolve_strict_local_datetime
         self.assertNotEqual(
             datetime(2026, 11, 1, 1, 30, tzinfo=ZoneInfo("America/New_York"), fold=0).utcoffset(),
             datetime(2026, 11, 1, 1, 30, tzinfo=ZoneInfo("America/New_York"), fold=1).utcoffset(),
         )
         with self.assertRaises(ValueError):
-            self.normalize([weekly(
-                timezone="America/New_York", weekday=7, start_time="01:30", end_time="02:30",
-                valid_from="2026-11-01", valid_until="2026-11-02",
-            )], "2026-11-01T00:00:00Z", "2026-11-02T00:00:00Z")
+            _resolve_strict_local_datetime(date(2026, 11, 1), time(1, 30), ZoneInfo("America/New_York"))
 
     def test_nonexistent_spring_forward_local_time_requires_clarification(self):
+        from datetime import date, time
+        from backend.app.f1.scheduler.normalization import _resolve_strict_local_datetime
         with self.assertRaises(ValueError):
-            self.normalize([weekly(
-                timezone="America/New_York", weekday=7, start_time="02:30", end_time="03:30",
-                valid_from="2026-03-08", valid_until="2026-03-09",
-            )], "2026-03-08T00:00:00Z", "2026-03-09T00:00:00Z")
+            _resolve_strict_local_datetime(date(2026, 3, 8), time(2, 30), ZoneInfo("America/New_York"))
 
     def test_invalid_none_windows_raise_value_error(self):
         invalid = {

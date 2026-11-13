@@ -15,7 +15,7 @@ from ..core import contract
 from ..nlu.extractor import ExtractionError, ExtractorUnavailable
 from .workflow_ports import ChatActions, Clock, WorkflowError
 from ..nlu.extractor import Extractor
-from .workflow_shared import AWAITING, DONE_TEXT, INTENT, Terminal, _ok, reply
+from .workflow_shared import AWAITING, DONE_TEXT, INTENT, PRODUCT_TIMEZONE, Terminal, _ok, reply
 
 WRITE_INTENTS = {"CREATE_TASK", "SET_AVAILABILITY", "SET_BUSY_INTERVAL", "SET_SCHEDULING_PREFERENCES", "GENERATE_STUDY_PLAN"}
 APPROVAL_OPERATIONS = {"confirm_task", "set_availability", "set_busy_interval", "set_scheduling_preferences",
@@ -34,7 +34,9 @@ def step_key(origin_key: str, source_message_id: str, index: int) -> str:
 
 
 class ChatProcessor:
-    def __init__(self, processor: ChatActions, extractor: Extractor, *, clock: Clock, timezone: str):
+    def __init__(self, processor: ChatActions, extractor: Extractor, *, clock: Clock, timezone: str = PRODUCT_TIMEZONE):
+        if timezone != PRODUCT_TIMEZONE:
+            raise ValueError(f"timezone must be {PRODUCT_TIMEZONE}")
         self.proc, self.extractor = processor, extractor
         self.clock, self.timezone = clock, timezone
 
@@ -70,6 +72,10 @@ class ChatProcessor:
             raise WorkflowError("SERVICE_UNAVAILABLE", "Chưa đọc được kết quả phân tích, hãy thử lại.", retryable=True, retry_after=2) from None
         if not contract.is_valid("ExtractionResult", result):
             raise WorkflowError("SERVICE_UNAVAILABLE", "Chưa đọc được kết quả phân tích, hãy thử lại.", retryable=True, retry_after=2)
+        for item in result.get("intents", []):
+            slots = item.get("slots")
+            if isinstance(slots, dict) and type(slots.get("priority")) is float and slots["priority"] == 1.0:
+                slots["priority"] = 1
         return result
 
     @staticmethod
@@ -215,8 +221,11 @@ class ChatProcessor:
     def operation_for(self, ctx, kind, slots):
         if kind in ("SET_AVAILABILITY", "SET_BUSY_INTERVAL"):
             operation = INTENT_TO_OPERATION[kind]
+            window = dict(slots["window"]) if isinstance(slots.get("window"), dict) else slots.get("window")
+            if isinstance(window, dict) and window.get("timezone") is None:
+                window["timezone"] = PRODUCT_TIMEZONE
             arguments = {"change_type": slots.get("change_type", "ADD"), "window_id": None,
-                         "expected_window_version": None, "window": slots.get("window")}
+                         "expected_window_version": None, "window": window}
             return operation, arguments if arguments["change_type"] == "ADD" and contract.is_valid(f"{operation}Arguments", arguments) else None
         if kind == "SET_SCHEDULING_PREFERENCES":
             profile = self.proc.step(ctx, "ensure_user_context", {})["data"]
@@ -265,7 +274,7 @@ class ChatProcessor:
         command = None if missing else {"schema_version": "1.1", "operation": "confirm_task", "arguments": {
             "candidate_id": updated["candidate_id"], "expected_candidate_version": updated["version"]}}
         presentation = {"kind": "ACTION_PRESENTATION", "pending_action": new_pending, "candidate": updated, "proposal": None,
-                        "normalized_command": command, "effective_policy": None}
+                        "normalized_command": command, "effective_policy": None, "schedule_confirmation": None}
         stored = self.proc.step(ctx, "prepare_pending_action", {"presentation": presentation, "expected_action_version": pending["version"]},
                                 conversation_id=conversation, idempotency_key=child_key(key, "reprepare"),
                                 message_id=message_id)["data"]

@@ -95,7 +95,7 @@ POST luôn dùng `OrchestratorReply`, kể cả lỗi. GET dùng ToolResult đú
 | SUCCEEDED | Hiển thị theo ToolResult; chỉ COMMITTED mới báo đã lưu task/lịch chính thức |
 | ERROR | Hiển thị code/message; xử lý retry theo mã và retryable |
 
-`ActionPresentation` là **DTO trình bày tích hợp**, không phải entity thứ 11. Nó chứa PendingAction, candidate/proposal nếu có, normalized_command và effective_policy. Khi sửa policy phải trả policy đầy đủ sau merge để người dùng thấy. Với TimeWindow hiển thị ADD/UPDATE/ARCHIVE, nội dung mới và target/version; với candidate hiển thị deadline precision/timezone và effort/priority; với proposal hiển thị full snapshot, diff, policy_snapshot, warnings và unallocated của PARTIAL.
+`ActionPresentation` là **DTO trình bày tích hợp**, không phải entity thứ 11. Nó chứa PendingAction, candidate/proposal nếu có, normalized_command, effective_policy và `schedule_confirmation`. Khi sửa policy phải trả policy đầy đủ sau merge để người dùng thấy. Với TimeWindow hiển thị ADD/UPDATE/ARCHIVE, nội dung mới và target/version; với candidate hiển thị deadline precision/timezone và effort/priority; với proposal hiển thị toàn bộ lịch, tên/ID/màu task, ngày/giờ/thời lượng, added/changed/removed, policy_snapshot, warnings và phần việc chưa xếp. DTO gắn với đúng proposal ID/version/revision; `OrchestratorReply.action_reference` là reference duy nhất FE gửi lại khi duyệt.
 
 Orchestrator được phép bọc kết quả chuẩn bị trong ToolResult DRAFTED có `data=ActionPresentation`; raw tool `create_task_candidate` vẫn trả DRAFTED/TaskCandidate. Đây là adapter trình bày nội bộ, không thêm operation LLM. `ActionPresentation.normalized_command` chỉ là preview dữ liệu đã kiểm tra, FE không được sửa rồi gửi làm command thực thi.
 

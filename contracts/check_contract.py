@@ -41,6 +41,10 @@ def semantic_errors(value, path='$'):
         return errors
     if not isinstance(value, dict):
         return errors
+    if path.endswith(('.raw_expressions', '.field_sources')):
+        for k, v in value.items():
+            errors += semantic_errors(v, f'{path}.{k}')
+        return errors
 
     def fail(message):
         errors.append(f'{path}: {message}')
@@ -50,9 +54,17 @@ def semantic_errors(value, path='$'):
             dt = instant(v)
             if dt.second or dt.microsecond:
                 fail(f'{k} must be aligned to whole minutes')
-    if value.get('start_at') is not None and value.get('end_at') is not None:
+        if k in {'timezone', 'deadline_timezone'} and isinstance(v, str) and v != 'Asia/Ho_Chi_Minh':
+            fail(f'{k} must be Asia/Ho_Chi_Minh')
+    if 'priority' in value and value['priority'] is not None:
+        if isinstance(value['priority'], bool) or value['priority'] not in (0.1, 0.5, 1):
+            fail('priority must be strictly numeric 0.1, 0.5, or 1')
+    if isinstance(value.get('start_at'), str) and isinstance(value.get('end_at'), str):
         if instant(value['end_at']) <= instant(value['start_at']):
             fail('end_at must be after start_at')
+    if isinstance(value.get('start_at'), str) and isinstance(value.get('deadline_at'), str):
+        if instant(value['start_at']) > instant(value['deadline_at']):
+            fail('start_at cannot exceed deadline_at')
     if value.get('recurrence') == 'WEEKLY':
         if value['end_time'] <= value['start_time']:
             fail('WEEKLY end_time must exceed start_time; split overnight intervals')
@@ -64,10 +76,10 @@ def semantic_errors(value, path='$'):
     if 'estimated_minutes' in value and 'remaining_minutes' in value:
         if value['remaining_minutes'] > value['estimated_minutes']:
             fail('remaining_minutes cannot exceed estimated_minutes')
-    if value.get('available_from_at') and value.get('deadline_at'):
+    if isinstance(value.get('available_from_at'), str) and isinstance(value.get('deadline_at'), str):
         if instant(value['available_from_at']) > instant(value['deadline_at']):
             fail('available_from_at cannot exceed deadline_at')
-    if value.get('deadline_precision') == 'DATE' and value.get('deadline_at'):
+    if value.get('deadline_precision') == 'DATE' and isinstance(value.get('deadline_at'), str):
         from datetime import date, time, timedelta
         expected = datetime.combine(date.fromisoformat(value['deadline_date']) + timedelta(days=1), time(), ZoneInfo(value['deadline_timezone']))
         if instant(value['deadline_at']) != expected:
@@ -101,6 +113,47 @@ def semantic_errors(value, path='$'):
             fail('persisted proposal must change the snapshot')
         if any(b['user_id'] != value['user_id'] for b in payload['study_blocks']):
             fail('proposal blocks must have the same owner')
+        confirmation = payload['schedule_confirmation']
+        if (confirmation['proposal_id'] != value['proposal_id']
+                or confirmation['proposal_version'] != value['version']
+                or confirmation['base_schedule_revision'] != value['base_schedule_revision']):
+            fail('schedule confirmation must bind the exact proposal version and schedule revision')
+        if confirmation['warnings'] != payload['warnings']:
+            fail('schedule confirmation warnings must match the proposal warnings')
+        expected_unscheduled = {
+            summary['task_id']: (summary['unallocated_minutes'], summary['reason_codes'])
+            for summary in payload['task_summaries'] if summary['unallocated_minutes'] > 0
+        }
+        actual_unscheduled = {
+            item['task_id']: (item['unscheduled_minutes'], item['reason_codes'])
+            for item in confirmation['unscheduled_work']
+        }
+        if actual_unscheduled != expected_unscheduled:
+            fail('schedule confirmation must expose every unscheduled task and reason')
+        block_shape = lambda block: (block['block_id'], block['task_id'], block['start_at'], block['end_at'])
+        entry_shape = lambda entry: (entry['block_id'], entry['task_id'], entry['start_at'], entry['end_at'])
+        if [entry_shape(entry) for entry in confirmation['entries']] != [block_shape(block) for block in payload['study_blocks']]:
+            fail('schedule confirmation entries must match the proposed snapshot')
+        if {entry['block_id'] for entry in confirmation['added']} != set(payload['plan_diff']['added']):
+            fail('schedule confirmation added entries must match plan_diff.added')
+        if {change['after']['block_id'] for change in confirmation['changed']} != set(payload['plan_diff']['moved']):
+            fail('schedule confirmation changed entries must match plan_diff.moved')
+        if {entry['block_id'] for entry in confirmation['removed']} != set(payload['plan_diff']['removed']):
+            fail('schedule confirmation removed entries must match plan_diff.removed')
+    if {'proposal_id', 'proposal_version', 'base_schedule_revision', 'entries', 'added',
+            'changed', 'removed', 'warnings', 'unscheduled_work'} <= set(value):
+        visible = [*value['entries'], *value['added'], *value['removed']]
+        visible += [side for change in value['changed'] for side in (change['before'], change['after'])]
+        for entry in visible:
+            start, end = instant(entry['start_at']), instant(entry['end_at'])
+            if entry['date'] != start.astimezone(ZoneInfo('Asia/Ho_Chi_Minh')).date().isoformat():
+                fail('schedule entry date must use Vietnam local time')
+            if entry['duration_minutes'] != int((end - start).total_seconds() // 60):
+                fail('schedule entry duration must match start_at/end_at')
+        if len({entry['block_id'] for entry in value['entries']}) != len(value['entries']):
+            fail('schedule confirmation entries must have unique block IDs')
+        if any(change['before']['block_id'] != change['after']['block_id'] for change in value['changed']):
+            fail('changed schedule entries must retain the same block ID')
     blocks = value.get('study_blocks', [])
     if blocks:
         ids = [b['block_id'] for b in blocks]
@@ -122,6 +175,11 @@ def semantic_errors(value, path='$'):
         command = value['normalized_command']
         if command and command['operation'] == 'set_scheduling_preferences' and value['effective_policy'] is None:
             fail('policy confirmation must present the full effective policy')
+        confirmation = value['schedule_confirmation']
+        if value['proposal'] is None and confirmation is not None:
+            fail('non-proposal presentation cannot contain schedule confirmation data')
+        if value['proposal'] is not None and confirmation != value['proposal']['payload']['schedule_confirmation']:
+            fail('proposal presentation must expose the exact persisted schedule confirmation')
     if value.get('state') == 'AWAITING_APPROVAL' and 'result' in value:
         result = value['result']
         if result['outcome'] not in {'DRAFTED', 'PROPOSED'}:
@@ -278,6 +336,8 @@ def main():
         fields.add('created_at')
         if name in {'User', 'TaskCandidate', 'AcademicTask', 'TimeWindow', 'PlanProposal'}:
             fields.add('updated_at')
+        if name == 'AcademicTask':
+            fields = (fields - {'course_label'}) | {'start_at', 'color'}
         assert fields == set(definitions[name]['properties']), f'Logical fields drifted: {name}'
     catalog = source.split('### Danh mục operation chính thức')[1].split('### Kiểu arguments')[0]
     assert set(re.findall(r'^\| `([a-z_]+)`', catalog, re.M)) == operations

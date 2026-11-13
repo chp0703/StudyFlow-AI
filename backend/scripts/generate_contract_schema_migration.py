@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA = ROOT / "contracts" / "schemas" / "f1.schema.json"
-TARGET = ROOT / "supabase" / "migrations" / "202611050012_f1_contract_schema.sql"
+TARGET = ROOT / "supabase" / "migrations" / "202611130001_f1_be03_contract_schema.sql"
 
 
 def render() -> str:
@@ -26,19 +26,19 @@ def render() -> str:
 create extension if not exists pg_jsonschema with schema extensions;
 
 -- shortcut: the bundle is rebuilt from a literal on every call; cache it if validation shows up in profiles.
-create function app_private.contract_defs() returns jsonb
+create or replace function app_private.contract_defs() returns jsonb
 language sql immutable set search_path = '' as $fn$
 select $json${body}$json$::jsonb
 $fn$;
 
-create function app_private.contract_schema_digest() returns text
+create or replace function app_private.contract_schema_digest() returns text
 language sql immutable set search_path = '' as $fn$
 select '{digest}'
 $fn$;
 
 -- True when p_value satisfies the approved definition p_def (e.g. 'create_task_candidateArguments').
 -- Unknown definitions and unsupported/unknown fields are rejected, never accepted.
-create function app_private.matches_contract(p_def text, p_value jsonb) returns boolean
+create or replace function app_private.matches_contract(p_def text, p_value jsonb) returns boolean
 language plpgsql immutable set search_path = '' as $fn$
 begin
     if not (app_private.contract_defs() ? p_def) then
