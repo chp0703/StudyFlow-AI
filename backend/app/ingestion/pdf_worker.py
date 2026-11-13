@@ -7,12 +7,19 @@ import sys
 
 def main():
     try:
-        from pypdf import PdfReader, filters
+        from pypdf import PdfReader, overwrite_configuration
     except ImportError:
         print(json.dumps({'error': 'DEPENDENCY_MISSING'}))
         return 1
     try:
-        filters.ZLIB_MAX_OUTPUT_LENGTH = 1024 * 1024
+        overwrite_configuration(
+            maximum_declared_stream_length=1024 * 1024,
+            zlib_maximum_output_length=1024 * 1024,
+            lzw_maximum_output_length=1024 * 1024,
+            run_length_maximum_output_length=1024 * 1024,
+            array_based_stream_maximum_output_length=1024 * 1024,
+            stream_decoding_work_maximum_length=5 * 1024 * 1024,
+        )
         reader = PdfReader(io.BytesIO(sys.stdin.buffer.read(5 * 1024 * 1024 + 1)), strict=True,
                            xref_stream_maximum_entries=100000)
         if reader.is_encrypted or not 1 <= len(reader.pages) <= 20:
