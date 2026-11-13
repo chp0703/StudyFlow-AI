@@ -1,6 +1,11 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { describeChanges, diffTasks, isStale } from "./proposal.ts"
+import {
+  describeChanges,
+  diffTasks,
+  hasPendingWeeklyChange,
+  isStale,
+} from "./proposal.ts"
 import type { Task } from "../../types/task.ts"
 import type { Proposal } from "../../types/planner.ts"
 
@@ -37,6 +42,27 @@ test("a proposal is stale once the schedule revision moved on", () => {
   const p = { baseRevision: 2 } as Proposal
   assert.equal(isStale(p, 2), false)
   assert.equal(isStale(p, 3), true)
+})
+
+test("a no-op chat command leaves a weekly-only proposal pending for explicit approval", () => {
+  const pending = {
+    id: "weekly",
+    createdAt: 0,
+    baseRevision: 0,
+    changes: [],
+    windowChanges: [],
+    issues: [],
+    reply: "",
+    next: { tasks: [], availability: [], weeklyWindows: [] },
+  } satisfies Proposal
+  assert.equal(hasPendingWeeklyChange(pending), true)
+  assert.equal(
+    hasPendingWeeklyChange({
+      ...pending,
+      next: { tasks: [], availability: [] },
+    }),
+    false,
+  )
 })
 
 test("diffWindows reports new, changed and removed windows", async () => {

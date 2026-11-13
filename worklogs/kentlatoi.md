@@ -31,3 +31,16 @@
 **Ghi chú**
 - Chưa kiểm thử trực tiếp với phiên đăng nhập và backend API đang chạy.
 - Demo chỉ xếp khối 60 phút bắt đầu đúng giờ; API vẫn dùng hợp đồng F1 v1.1 hiện hành.
+
+## 2026-11-13 — Sửa đề xuất thời gian học FE-03
+
+**Mục tiêu:** Giữ đề xuất thời gian học hằng tuần khi lệnh chat tiếp theo không đổi công việc hoặc khung giờ cũ.
+
+**Đã làm**
+- Sửa nhánh không có thay đổi trong `frontend/src/features/planner/usePlanner.ts` để giữ đề xuất tuần đến khi duyệt hoặc từ chối.
+- Bổ sung kiểm thử hồi quy trong `frontend/src/features/planner/proposal.test.ts`.
+
+**Kết quả:** Nhánh `feat/fe-planner-followup-kent`; 46 Node tests đạt, TypeScript, Vite build và kiểm tra định dạng đạt.
+
+**Ghi chú**
+- Chưa kiểm thử thủ công luồng demo trên trình duyệt hoặc phiên API có đăng nhập.

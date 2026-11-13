@@ -61,6 +61,9 @@ export function diffWindows(
 export const isStale = (proposal: Proposal, revision: number) =>
   proposal.baseRevision !== revision
 
+export const hasPendingWeeklyChange = (proposal: Proposal) =>
+  proposal.next.weeklyWindows !== undefined
+
 export function describeChanges(
   changes: TaskChange[],
 
