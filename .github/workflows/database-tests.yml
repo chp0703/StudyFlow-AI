@@ -5,6 +5,7 @@ on:
     branches:
       - feat/supabase-database-foundation
       - feat/f1-mvp-intergration
+      - feat/be-04-source-ingestion
   pull_request:
     branches:
       - main

@@ -28,7 +28,8 @@ as page images in this version. No Google/Microsoft calendar OAuth or scraping.
   completed results are reused. Failed extraction can be explicitly retried.
 - `POST /v1/messages`: optional unique `source_ids` (maximum 5). References must
   belong to the authenticated owner AND conversation and be fully extracted.
-  Source candidates precede user-text intents in the durable confirmation queue.
+  With source IDs, text is an annotation: only the source candidates enter the
+  durable confirmation queue. Request a plan separately after confirming imports.
   Source content cannot authorize a plan or an unrelated write operation.
 
 Sources and provenance are immutable after successful extraction. Original bytes

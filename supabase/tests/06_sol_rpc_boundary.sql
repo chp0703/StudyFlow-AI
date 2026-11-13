@@ -73,7 +73,9 @@ select ok(not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pron
  -- Giữ nguyên 21 chữ ký hàm bắt buộc ban đầu ở trên.
  ((not exists(select 1 from sol_expected_rpc e where e.name=p.proname)
  and p.proname not in ('ensure_user_context','list_time_windows','get_workflow_context',
- 'get_workflow_continuation','initialize_workflow_continuation','checkpoint_workflow_continuation'))
+ 'get_workflow_continuation','initialize_workflow_continuation','checkpoint_workflow_continuation',
+ -- BE-04 extension 1.0.0; source behavior is exercised in test 19.
+ 'store_ingestion_source','get_ingestion_source','claim_source_extraction','complete_source_extraction'))
  or p.pronargs<>1 or p.proargtypes[0]<>'jsonb'::regtype
  or p.proargnames is distinct from array['p_request']::text[])),
  'old overloads, legacy issuer and unregistered public RPCs are removed');

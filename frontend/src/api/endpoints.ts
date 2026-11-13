@@ -8,6 +8,7 @@ import type {
   OrchestratorReply,
   PlanProposal,
   PlanView,
+  IngestionSource,
 } from "./types.ts"
 
 type Read<T> = { data: T }
@@ -62,12 +63,30 @@ export function createEndpoints(client: ApiClient) {
         })
         .then((r) => r.data.proposal),
 
-    sendMessage: (conversationId: string, text: string, key?: string) =>
+    uploadSource: (conversationId: string, filename: string, mimeType: string, contentBase64: string, key?: string) =>
+      client.request<Read<IngestionSource>>("POST", "/v1/sources", {
+        body: { schema_version: SCHEMA, conversation_id: conversationId, filename, mime_type: mimeType, content_base64: contentBase64 },
+        idempotencyKey: key,
+      }),
+
+    getSource: (conversationId: string, sourceId: string) =>
+      client.request<Read<IngestionSource>>("GET", `/v1/sources/${encodeURIComponent(sourceId)}`, {
+        query: { conversation_id: conversationId },
+      }),
+
+    extractSource: (conversationId: string, sourceId: string, key?: string) =>
+      client.request<Read<IngestionSource>>("POST", `/v1/sources/${encodeURIComponent(sourceId)}/extract`, {
+        body: { schema_version: SCHEMA, conversation_id: conversationId },
+        idempotencyKey: key,
+      }),
+
+    sendMessage: (conversationId: string, text: string, key?: string, sourceIds?: string[]) =>
       client.request<OrchestratorReply>("POST", "/v1/messages", {
         body: {
           schema_version: SCHEMA,
           conversation_id: conversationId,
           text,
+          ...(sourceIds?.length ? { source_ids: sourceIds } : {}),
         },
         idempotencyKey: key,
       }),

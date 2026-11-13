@@ -2,7 +2,7 @@ name: F1 backend verification
 
 on:
   push:
-    branches: [feat/f1-mvp-intergration]
+    branches: [feat/f1-mvp-intergration, feat/be-04-source-ingestion]
   pull_request:
     branches: [main, feat/f1-mvp-intergration]
   workflow_dispatch:
@@ -29,13 +29,15 @@ jobs:
               python -B -m unittest discover -s backend/tests/acceptance_sol -v
               python -B backend/scripts/evaluate_planner.py
           - suite: HTTP API independent acceptance
-            command: python -B -m unittest discover -s backend/tests/acceptance_api_sol -p test_http_contract.py -v
+            command: |
+              python -B -m unittest discover -s backend/tests/acceptance_api_sol -p test_http_contract.py -v
+              python -B -m unittest discover -s backend/tests/acceptance_api_sol -p test_ingestion_http.py -v
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install independent acceptance dependencies
-        run: python -m pip install -r backend/requirements-acceptance.txt
+        run: python -m pip install -r backend/requirements.txt -r backend/requirements-acceptance.txt
       - name: Run independent acceptance group
         run: ${{ matrix.command }}

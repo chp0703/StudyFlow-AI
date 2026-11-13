@@ -21,6 +21,7 @@ class Settings:
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com/v1"
     deepseek_model: str = "deepseek-chat"
+    ingestion_model: str = "deepseek-flash"
     cors_origins: list[str] = field(default_factory=list)
     default_timezone: str = PRODUCT_TIMEZONE
     default_locale: str = "vi-VN"
@@ -62,5 +63,6 @@ class Settings:
             deepseek_api_key=env.get("DEEPSEEK_API_KEY", ""),
             deepseek_base_url=env.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1"),
             deepseek_model=env.get("DEEPSEEK_MODEL", "deepseek-chat"),
+            ingestion_model=env.get("INGESTION_MODEL", "deepseek-flash"),
             cors_origins=origins,
         )

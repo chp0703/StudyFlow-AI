@@ -157,10 +157,12 @@ create function app_api.record_source_message(p_request jsonb) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare e jsonb := app_private.precheck(p_request,'record_source_message','RecordSourceMessageArguments');
  a jsonb := p_request->'arguments'; uid uuid := app_private.current_uid();
- conv uuid := (a#>>'{message,conversation_id}')::uuid; msg uuid := (a#>>'{message,message_id}')::uuid;
+ conv uuid; msg uuid;
  ids jsonb := coalesce(a->'source_ids','[]'::jsonb); id text; old_ids jsonb; result jsonb;
 begin
  if e is not null then return e; end if;
+ conv := (a#>>'{message,conversation_id}')::uuid;
+ msg := (a#>>'{message,message_id}')::uuid;
  for id in select jsonb_array_elements_text(ids) loop
   if not exists(select 1 from app_private.ingestion_sources where user_id=uid and conversation_id=conv and source_id=id::uuid and status='READY') then
    return app_private.error_result(p_request,'ENTITY_NOT_FOUND','Ready source not found.'); end if;
