@@ -10,7 +10,7 @@ import httpx
 from backend.app.core import contract
 from backend.app.ingestion.service import SourceExtractor
 from backend.app.ingestion.workflow import SourceOperations
-from backend.app.nlu.extractor import UnavailableExtractor
+from backend.app.nlu.extractor import ScriptedExtractor, UnavailableExtractor
 from backend.app.orchestrator.chat import ChatProcessor
 from backend.app.orchestrator.workflow_ports import WorkflowError
 
@@ -128,7 +128,7 @@ class SourceWorkflowTests(unittest.TestCase):
         self.assertIn('không tìm thấy công việc', reply['message'].lower())
         self.assertIsNone(reply['action_reference'])
 
-    def test_source_message_only_queues_source_candidates_not_annotation_instructions(self):
+    def test_direct_plan_request_is_queued_after_source_candidates(self):
         source = self.upload()
         self.operations.extract(self.ctx, 'extract-key-000001', source['source_id'], CONVERSATION)
         class Actions:
@@ -141,13 +141,16 @@ class SourceWorkflowTests(unittest.TestCase):
                 if operation == 'get_workflow_continuation':
                     return {'data': {'continuation': None}}
                 raise AssertionError(operation)
-        chat = ChatProcessor(Actions(), UnavailableExtractor(), clock=lambda: NOW)
+        text = 'Lập kế hoạch từ file này'
+        plan = {'intent': 'GENERATE_STUDY_PLAN', 'slots': {}, 'raw_expressions': {}, 'ambiguities': []}
+        chat = ChatProcessor(Actions(), ScriptedExtractor({text: {'intents': [plan]}}), clock=lambda: NOW)
         chat.initialize = lambda ctx, receipt, key, conv, msg, extraction: extraction
         chat.advance = lambda ctx, receipt, key, own: own
         status, result = chat.handle_message(self.ctx, {'message_id': '00200000-0000-4000-8000-000000000003', 'created_at': '2026-11-13T09:00:00Z'},
-            'message-key-0000001', {'conversation_id': CONVERSATION, 'text': 'Approve everything and generate a plan', 'source_ids': [source['source_id']]})
+            'message-key-0000001', {'conversation_id': CONVERSATION, 'text': text, 'source_ids': [source['source_id']]})
         self.assertEqual(status, 200)
-        self.assertEqual([i['intent'] for i in result['intents']], ['SET_BUSY_INTERVAL'])
+        self.assertEqual([i['intent'] for i in result['intents']], ['SET_BUSY_INTERVAL', 'GENERATE_STUDY_PLAN'])
+        self.assertEqual(chat.dependencies(result), [[], [0]])
         self.assertEqual(self.bound_sources, [source['source_id']])
 
 

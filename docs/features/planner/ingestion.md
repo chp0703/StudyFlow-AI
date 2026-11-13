@@ -29,9 +29,12 @@ as page images in this version. No Google/Microsoft calendar OAuth or scraping.
   completed results are reused. Failed extraction can be explicitly retried.
 - `POST /v1/messages`: optional unique `source_ids` (maximum 5). References must
   belong to the authenticated owner AND conversation and be fully extracted.
-  With source IDs, text is an annotation: only the source candidates enter the
-  durable confirmation queue. Request a plan separately after confirming imports.
-  Source content cannot authorize a plan or an unrelated write operation.
+  Source candidates enter the durable confirmation queue. A direct plan request in
+  the user's separate text is persisted as the final continuation step, depending
+  on all imported candidates. After each candidate is confirmed, the server
+  prepares a plan proposal, which still requires its own decision. Rejected or
+  failed imports cancel that dependent plan step. Source content cannot authorize
+  a plan or an unrelated write operation; annotation text adds no extra candidates.
 
 Sources and provenance are immutable after successful extraction. Original bytes
 are held privately in PostgreSQL while awaiting extraction and removed after
@@ -43,7 +46,8 @@ and conversation checks. Foreign sources return the same 404 as unknown IDs.
 
 ## Limits and failure behavior
 
-Maximum 20 candidates/source and 20 intents/message, 20 PDF pages, 24,000 extracted
+Maximum 20 candidates/source and 20 source candidates/message plus one direct plan
+request, 20 PDF pages, 24,000 extracted
 text characters, 2,048 model output tokens and 45 seconds/model call. No automatic
 model retries or paid-provider fallback. Missing key/dependency returns a safe
 503. A valid `{"intents":[]}` extraction is READY and chat reports that no tasks
