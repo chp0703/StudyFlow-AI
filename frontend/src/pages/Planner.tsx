@@ -1,4 +1,5 @@
 import WeekCalendar from "../features/planner/WeekCalendar"
+import CompactWeekCalendar from "../features/planner/CompactWeekCalendar"
 import ProposalReview from "../features/planner/ProposalReview"
 import CalendarDisplaySettings from "../features/planner/CalendarDisplaySettings"
 import {
@@ -140,6 +141,9 @@ export default function Planner({
   )
 
   const [week, setWeek] = useState(0)
+  const [calendarView, setCalendarView] = useState<"compact" | "detail">(
+    "compact",
+  )
   const [displayRanges, setDisplayRanges] = useState<CalendarDisplayRanges>(
     DEFAULT_DISPLAY_RANGES,
   )
@@ -378,7 +382,9 @@ export default function Planner({
   return (
     <div
       ref={pageRef}
-      className={`planner-page ${taskPanelOpen ? "" : "is-tasks-closed"}`}
+      className={`planner-page ${
+        calendarView === "compact" ? "is-compact" : ""
+      } ${taskPanelOpen ? "" : "is-tasks-closed"}`}
     >
       <Card
         className="dashboard-calendar planner-calendar"
@@ -412,6 +418,18 @@ export default function Planner({
             </form>
 
             <div className="dashboard-calendar-controls">
+              <Button
+                className="secondary calendar-view-toggle"
+                type="button"
+                aria-pressed={calendarView === "detail"}
+                onClick={() =>
+                  setCalendarView(
+                    calendarView === "compact" ? "detail" : "compact",
+                  )
+                }
+              >
+                {calendarView === "compact" ? "Chi tiết giờ" : "Tuần thu gọn"}
+              </Button>
               <span className="calendar-week-label">{weekLabel}</span>
               {week !== 0 && (
                 <Button
@@ -483,25 +501,41 @@ export default function Planner({
             {weekEmpty ? "Tuần này chưa có việc." : "Chọn giờ để nhập yêu cầu"}
           </span>
         </p>
-        <WeekCalendar
-          calendarRef={calendarRef}
-          weekDays={weekDays}
-          week={week}
-          todayIndex={todayIndex}
-          ranges={displayRanges}
-          events={calendarEvents}
-          windows={windows ?? []}
-          availability={
-            apiEnabled ? [] : (proposal?.next.availability ?? availability)
-          }
-          proposedWindowIds={
-            new Set(proposal?.windowChanges.map((change) => change.window.id))
-          }
-          prefill={prefill}
-          changeOf={changeOf}
-          nowHour={nowHour}
-          nowMinutes={nowMinutes}
-        />
+        {calendarView === "compact" ? (
+          <CompactWeekCalendar
+            weekDays={weekDays}
+            todayKey={todayKey}
+            events={calendarEvents}
+            windows={windows ?? []}
+            availability={
+              apiEnabled ? [] : (proposal?.next.availability ?? availability)
+            }
+            changeOf={changeOf}
+            proposedWindowIds={
+              new Set(proposal?.windowChanges.map((change) => change.window.id))
+            }
+          />
+        ) : (
+          <WeekCalendar
+            calendarRef={calendarRef}
+            weekDays={weekDays}
+            week={week}
+            todayIndex={todayIndex}
+            ranges={displayRanges}
+            events={calendarEvents}
+            windows={windows ?? []}
+            availability={
+              apiEnabled ? [] : (proposal?.next.availability ?? availability)
+            }
+            proposedWindowIds={
+              new Set(proposal?.windowChanges.map((change) => change.window.id))
+            }
+            prefill={prefill}
+            changeOf={changeOf}
+            nowHour={nowHour}
+            nowMinutes={nowMinutes}
+          />
+        )}
         {plannerNotice && (
           <div className="planner-notice-wrap">
             <div className="planner-notice" ref={noticeRef}>

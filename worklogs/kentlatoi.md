@@ -88,3 +88,18 @@
 
 **Ghi chú**
 - API E2E có đăng nhập chưa chạy; Vite cảnh báo chunk JS trên 500 kB.
+
+## 2026-11-13 — Add compact Planner week view
+
+**Mục tiêu:** Giảm các hàng giờ trống và giữ lịch chi tiết khi cần xem theo phút.
+
+**Đã làm**
+- Thêm `CompactWeekCalendar.tsx` làm chế độ mặc định: bảy ngày, sự kiện xếp theo giờ bắt đầu, Rảnh/Bận, xem đầy đủ ngày và nút mở thêm sự kiện.
+- Thêm nút chuyển sang timeline chi tiết; giữ FE-03, header sticky, đề xuất và dữ liệu lịch không đổi khi chuyển chế độ.
+- Sửa bố cục mobile: bộ chọn ngày cuộn ngang, agenda đủ chiều rộng và không tràn trang.
+- Kiểm tra Demo trên trình duyệt ở 390×844, 768×1024, 1440×900; sự kiện 09:15 giữ nguyên trong cả hai chế độ.
+
+**Kết quả:** Nhánh `fix/planner-followup-leader-spec-kent`; 50/50 Node tests, TypeScript, Vite build và `git diff --check` đạt.
+
+**Ghi chú**
+- Chưa chạy API E2E có đăng nhập. Vite cảnh báo chunk lớn; test SSR phát cảnh báo WebSocket sandbox nhưng toàn bộ assertion đạt.
