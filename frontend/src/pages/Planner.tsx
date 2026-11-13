@@ -340,11 +340,13 @@ export default function Planner({
 
   // Ngày hôm nay dịch theo số tuần nguyên để theo đúng tuần đang xem.
 
-  const weekLabel = addCivilDays(todayKey, week * 7)
-    .split("-")
-    .reverse()
-    .join("/")
   const mondayKey = addCivilDays(todayKey, -todayIndex + week * 7)
+  const sundayKey = addCivilDays(mondayKey, 6)
+  const shortDate = (date: string) => {
+    const [year, month, day] = date.split("-")
+    return `${day}/${month}/${year}`
+  }
+  const weekLabel = `${shortDate(mondayKey)} – ${shortDate(sundayKey)}`
   const weekDays = Array.from(
     { length: 7 },
     (_, i) => new Date(`${addCivilDays(mondayKey, i)}T12:00:00Z`),
@@ -426,7 +428,7 @@ export default function Planner({
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Nhập yêu cầu lịch học"
+                placeholder="Bạn muốn xếp lịch như thế nào?"
                 aria-label="Yêu cầu điều chỉnh lịch"
                 disabled={busy}
               />
@@ -452,14 +454,14 @@ export default function Planner({
               )}
               <Button
                 className="icon-button"
-                aria-label="Tuần trước"
+                aria-label="Xem tuần trước"
                 onClick={() => setWeek(week - 1)}
               >
                 <ChevronLeft aria-hidden="true" size={18} />
               </Button>
               <Button
                 className="icon-button"
-                aria-label="Tuần sau"
+                aria-label="Xem tuần sau"
                 onClick={() => setWeek(week + 1)}
               >
                 <ChevronRight aria-hidden="true" size={18} />
@@ -508,9 +510,8 @@ export default function Planner({
         />
         {!apiEnabled && (
           <p className="working-time-note">
-            Bản demo chỉ xếp Lịch học thành khối đủ 60 phút bắt đầu đúng giờ.
-            Khoảng học lẻ phút vẫn được giữ và hiển thị chính xác. Lệnh rảnh/bận
-            cũ tạo ngoại lệ cho ngày cụ thể.
+            Bản demo xếp lịch theo khối 60 phút tròn giờ; giờ học lẻ phút vẫn
+            được hiển thị chính xác.
           </p>
         )}
         <p className="planner-legend" aria-label="Chú thích">
