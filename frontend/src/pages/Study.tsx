@@ -208,6 +208,8 @@ export default function Study() {
 
   const [score, setScore] = useState(0)
 
+  const [failedIndices, setFailedIndices] = useState<Set<number>>(new Set())
+
   const [quizCompleted, setQuizCompleted] = useState(false)
 
   const currentQ = quizQuestions[quizIndex]
@@ -225,8 +227,16 @@ export default function Study() {
 
     setShowExplanationPopup(true)
 
-    if (selectedOption === currentQ.correctIndex) {
-      setScore((s) => s + 1)
+    const isCorrect = selectedOption === currentQ.correctIndex
+
+    const isRetry = failedIndices.has(quizIndex)
+
+    if (isCorrect) {
+      if (!isRetry) {
+        setScore((s) => s + 1)
+      }
+    } else {
+      setFailedIndices((prev) => new Set(prev).add(quizIndex))
     }
   }
 
@@ -379,7 +389,23 @@ export default function Study() {
     }
   }
 
+  const handleRetryQuestion = () => {
+    if (showExplanationPopup) {
+      closePopup(() => {
+        setSelectedOption(null)
+
+        setIsAnswerChecked(false)
+      })
+    } else {
+      setSelectedOption(null)
+
+      setIsAnswerChecked(false)
+    }
+  }
+
   const handleRestartQuiz = () => {
+    setFailedIndices(new Set())
+
     setQuizIndex(0)
 
     setSelectedOption(null)
@@ -635,6 +661,15 @@ export default function Study() {
                   <p>{currentQ.explanation}</p>
                 </div>
                 <div className="quiz-popup-footer">
+                  {selectedOption !== currentQ.correctIndex && (
+                    <Button
+                      className="secondary quiz-popup-retry-btn"
+                      onClick={handleRetryQuestion}
+                    >
+                      <RotateCcw size={15} aria-hidden="true" />
+                      Làm lại câu này
+                    </Button>
+                  )}
                   <Button
                     className="primary quiz-popup-next-btn"
                     onClick={() => closePopup(handleNextQuestion)}
@@ -741,6 +776,15 @@ export default function Study() {
                   </Button>
                 ) : (
                   <div className="quiz-action-group">
+                    {selectedOption !== currentQ.correctIndex && (
+                      <Button
+                        className="secondary quiz-retry-btn"
+                        onClick={handleRetryQuestion}
+                      >
+                        <RotateCcw size={15} aria-hidden="true" />
+                        Làm lại
+                      </Button>
+                    )}
                     <Button
                       className="secondary quiz-review-btn"
                       onClick={() => setShowExplanationPopup(true)}

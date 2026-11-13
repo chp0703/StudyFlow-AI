@@ -117,6 +117,10 @@ export default function App() {
 
   const [modal, setModal] = useState("")
 
+  useEffect(() => {
+    setModal("")
+  }, [session])
+
   const [notice, setNotice] = useState("")
 
   useEffect(() => {
@@ -357,7 +361,12 @@ export default function App() {
   useEffect(() => {
     const userId = session?.user.id
 
-    if (!apiEnabled || !userId || server.loading || restoredFor.current === userId)
+    if (
+      !apiEnabled ||
+      !userId ||
+      server.loading ||
+      restoredFor.current === userId
+    )
       return
 
     restoredFor.current = userId
@@ -367,17 +376,23 @@ export default function App() {
     if (!pending) return
 
     api
+
       .reviewAction(
         pending.conversationId,
+
         pending.reference.action_id,
+
         pending.reference.action_version,
       )
 
       .then((reply) => {
         const next = proposalFromReply(reply, {
           tasks: server.tasks,
+
           events: server.events,
+
           availability: server.availability,
+
           revision: server.revision,
         })
 
@@ -386,6 +401,7 @@ export default function App() {
 
           savePending(userId, {
             conversationId: pending.conversationId,
+
             reference: reply.action_reference,
           })
         } else savePending(userId, null)
@@ -400,6 +416,7 @@ export default function App() {
 
   const conversationId = useMemo(
     () => plannerConversationId(session?.user.id ?? "demo"),
+
     [session?.user.id],
   )
 
@@ -465,9 +482,7 @@ export default function App() {
             aria-label="Tài khoản sinh viên"
             onClick={() => setModal("account")}
           >
-            <span className="avatar">
-              {(email[0] ?? "S").toUpperCase()}
-            </span>
+            <span className="avatar">{(email[0] ?? "S").toUpperCase()}</span>
             <span>{apiEnabled ? email.split("@")[0] : "Sinh viên"}</span>
             <ChevronDown aria-hidden="true" size={13} />
           </Button>
@@ -579,7 +594,14 @@ export default function App() {
       {modal === "account" && apiEnabled && (
         <Modal title="Tài khoản" close={() => setModal("")}>
           <p>Đăng nhập với {email}.</p>
-          <Button className="secondary" onClick={() => void signOut()}>
+          <Button
+            className="secondary"
+            onClick={() => {
+              setModal("")
+
+              void signOut()
+            }}
+          >
             Đăng xuất
           </Button>
         </Modal>
