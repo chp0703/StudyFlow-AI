@@ -35,6 +35,7 @@ SCRIPT = {
     "thêm bài OOP": {"intents": [intent("CREATE_TASK", title="Bài OOP")]},
     "hạn 5/3, 60 phút": {"intents": [intent("CREATE_TASK", deadline_precision="DATE", deadline_date="2027-03-05",
                                             deadline_timezone="Asia/Ho_Chi_Minh", estimated_minutes=60)]},
+    "lúc 9 giờ sáng 5/3": {"intents": [intent("CREATE_TASK", start_at="2027-03-05T09:00:00+07:00")]},
     "tìm công việc": {"intents": [intent("SEARCH_TASKS")]},
     "ok đồng ý xác nhận": {"intents": [intent("UNKNOWN")]},
     "thêm bài hóa": {"intents": [intent("CREATE_TASK", **{**FULL_TASK, "title": "Bài hóa"})]},
@@ -118,11 +119,16 @@ class ChatHttp(unittest.TestCase):
             ask = self.say(app, "u2", conversation, "thêm bài OOP")
             self.assertEqual(ask.json()["state"], "NEEDS_CLARIFICATION", ask.text)
             self.assertEqual({q["field"] for q in ask.json()["questions"]}, {"start_at", "estimated_minutes"})
-            answered = self.say(app, "u2", conversation, "hạn 5/3, 60 phút")
+            still_missing = self.say(app, "u2", conversation, "hạn 5/3, 60 phút")
+            self.assertEqual(still_missing.status_code, 200, still_missing.text)
+            self.assertEqual(still_missing.json()["state"], "NEEDS_CLARIFICATION", still_missing.text)
+            self.assertEqual([q["field"] for q in still_missing.json()["questions"]], ["start_at"])
+            answered = self.say(app, "u2", conversation, "lúc 9 giờ sáng 5/3")
             self.assertEqual(answered.status_code, 200, answered.text)
             self.assertEqual(answered.json()["state"], "AWAITING_APPROVAL", answered.text)
             slots = answered.json()["result"]["data"]["candidate"]["slots"]
-            self.assertEqual((slots["title"], slots["deadline_date"], slots["estimated_minutes"]), ("Bài OOP", "2027-03-05", 60))
+            self.assertEqual((slots["title"], slots["start_at"], slots["deadline_date"], slots["estimated_minutes"]),
+                             ("Bài OOP", "2027-03-05T09:00:00+07:00", "2027-03-05", 60))
             done = self.decide(app, "u2", conversation, answered.json()["action_reference"])
             self.assertEqual(done.status_code, 200, done.text)
             self.assertEqual([t["title"] for t in self.tasks(app, "u2")], ["Bài OOP"])
