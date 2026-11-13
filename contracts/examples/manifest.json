@@ -358,6 +358,12 @@
       "reason": "FULL must not hide unallocated work"
     },
     {
+      "file": "examples/invalid/proposal-missing-schedule-confirmation.json",
+      "schema": "PlanProposal",
+      "valid": false,
+      "reason": "Proposal payload must include schedule confirmation"
+    },
+    {
       "file": "examples/invalid/proposal-none.json",
       "schema": "PlanProposal",
       "valid": false,

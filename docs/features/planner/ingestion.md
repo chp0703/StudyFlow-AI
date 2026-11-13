@@ -2,7 +2,8 @@
 
 ## Scope and decisions
 
-This additive boundary builds on BE-01/02/03 at `07bcebb`. Uploads create private,
+This additive boundary incorporates BE-01/02/03 through PR #37 at `c7b93f8`.
+The initial implementation started at the earlier `07bcebb`. Uploads create private,
 server-owned source records. They never create academic tasks, busy intervals or
 plans. Images use the official `deepseek-flash` API with thinking disabled;
 documents with text and calendars are parsed locally before any model call.

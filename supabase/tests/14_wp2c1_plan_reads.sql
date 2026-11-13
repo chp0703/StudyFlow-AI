@@ -74,7 +74,7 @@ insert into app_private.time_windows(window_id,user_id,kind,recurrence,timezone,
 insert into app_private.plan_proposals(proposal_id,user_id,base_schedule_revision,generation_scope,payload,algorithm_version,policy_snapshot)
  values ('d1410000-0000-4000-8000-0000000000c1','d1410000-0000-4000-8000-000000000001',0,
  (pg_temp.q_scope('ALL_ELIGIBLE')->'generation_scope'),
- '{"study_blocks":[],"task_summaries":[],"coverage":"FULL","warnings":[],"plan_diff":{"added":[],"moved":[],"removed":[],"unchanged":[]}}',
+ '{"study_blocks":[],"task_summaries":[],"coverage":"FULL","warnings":[],"plan_diff":{"added":[],"moved":[],"removed":[],"unchanged":[]},"schedule_confirmation":{"proposal_id":"d1410000-0000-4000-8000-0000000000c1","proposal_version":1,"base_schedule_revision":0,"entries":[],"added":[],"changed":[],"removed":[],"warnings":[],"unscheduled_work":[]}}',
  'q14-1',app_private.default_policy());
 insert into app_private.study_plans(plan_id,user_id,version,source_proposal_id)
  values ('d1410000-0000-4000-8000-0000000000d1','d1410000-0000-4000-8000-000000000001',1,'d1410000-0000-4000-8000-0000000000c1');

@@ -17,6 +17,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 import psycopg
 from psycopg import sql
@@ -258,7 +259,8 @@ class Fixture:
         presentation = {"kind": "ACTION_PRESENTATION", "pending_action": pending,
             "candidate": candidate, "proposal": proposal, "normalized_command": {
                 "schema_version": "1.1", "operation": operation, "arguments": arguments},
-            "effective_policy": policy}
+            "effective_policy": policy,
+            "schedule_confirmation": proposal["payload"]["schedule_confirmation"] if proposal is not None else None}
         stored = self.db.success(self, Call("prepare_pending_action", {"presentation": presentation,
             "expected_action_version": None}, conversation, message, self.key()), "COMMITTED")
         reference = {"action_id": stored["pending_action"]["action_id"],
@@ -316,13 +318,22 @@ class Fixture:
             "start_at": stamp(self.start + timedelta(minutes=offset + index * 70)),
             "end_at": stamp(self.start + timedelta(minutes=offset + index * 70 + 60)),
             "is_locked": False} for index in range(2)]
-        proposal = {"proposal_id": uid(), "user_id": self.owner, "version": 1, "status": "PROPOSED",
+        proposal_id = uid()
+        entries = [{"block_id": block["block_id"], "task_id": task["task_id"], "task_name": task["title"],
+            "date": datetime.fromisoformat(block["start_at"].replace("Z", "+00:00")).astimezone(
+                ZoneInfo("Asia/Ho_Chi_Minh")).date().isoformat(),
+            "start_at": block["start_at"], "end_at": block["end_at"], "duration_minutes": 60,
+            "color": task["color"]} for block in blocks]
+        confirmation = {"proposal_id": proposal_id, "proposal_version": 1,
+            "base_schedule_revision": snapshot["schedule_revision"], "entries": entries,
+            "added": entries, "changed": [], "removed": [], "warnings": [], "unscheduled_work": []}
+        proposal = {"proposal_id": proposal_id, "user_id": self.owner, "version": 1, "status": "PROPOSED",
             "base_plan_id": None, "base_plan_version": None, "base_schedule_revision": snapshot["schedule_revision"],
             "generation_scope": scope, "payload": {"study_blocks": blocks, "task_summaries": [{
                 "task_id": task["task_id"], "remaining_minutes": 120, "retained_future_minutes": 0,
                 "newly_scheduled_minutes": 120, "unallocated_minutes": 0, "reason_codes": []}],
                 "coverage": "FULL", "warnings": [], "plan_diff": {"added": [b["block_id"] for b in blocks],
-                    "moved": [], "removed": [], "unchanged": []}},
+                    "moved": [], "removed": [], "unchanged": []}, "schedule_confirmation": confirmation},
             "algorithm_version": "sol-known-valid-fixture-v1", "policy_snapshot": snapshot["user"]["scheduling_policy"],
             "generated_at": stamp(), "committed_plan_id": None, "created_at": stamp(), "updated_at": stamp()}
         self.db.validate("PlanProposal", proposal)
