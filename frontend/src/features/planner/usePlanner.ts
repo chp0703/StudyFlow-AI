@@ -45,6 +45,14 @@ export type PlannerProps = {
   notify?: (message: string) => void
 }
 
+export type PlannerFeedback = {
+  kind: "info" | "clarification" | "error" | "pending" | "success"
+  text: string
+}
+
+export const shouldClearPlannerDraft = (state: OrchestratorReply["state"]) =>
+  state === "AWAITING_APPROVAL" || state === "SUCCEEDED"
+
 export function usePlanner(
   {
     tasks,
@@ -65,6 +73,7 @@ export function usePlanner(
 ) {
   const [input, setInput] = useState("")
   const [reply, setReply] = useState("")
+  const [feedback, setFeedback] = useState<PlannerFeedback | null>(null)
   const [busy, setBusy] = useState(false)
   // Retrying the same message keeps its idempotency key.
   const attempt = useRef<{
@@ -91,6 +100,11 @@ export function usePlanner(
 
       setReply(r.message)
 
+      setFeedback({
+        kind: "pending",
+        text: "Đề xuất đã sẵn sàng. Hãy xem chi tiết rồi chọn Duyệt hoặc Từ chối.",
+      })
+
       if (next && r.action_reference)
         savePending(userId, {
           conversationId,
@@ -100,13 +114,19 @@ export function usePlanner(
       return
     }
 
-    setProposal(null)
-
-    savePending(userId, null)
-
     const questions = r.questions.map((q) => q.message).join(" ")
 
-    setReply(questions ? `${r.message} ${questions}` : r.message)
+    const text = questions ? `${r.message} ${questions}` : r.message
+
+    setFeedback({
+      kind:
+        r.state === "NEEDS_CLARIFICATION"
+          ? "clarification"
+          : r.state === "ERROR" || r.error
+            ? "error"
+            : "info",
+      text,
+    })
 
     if (r.state === "SUCCEEDED") await reload()
   }
@@ -120,13 +140,15 @@ export function usePlanner(
     setBusy(true)
 
     try {
-      await showReply(await api.sendMessage(conversationId, text, key))
+      const response = await api.sendMessage(conversationId, text, key)
+
+      await showReply(response)
 
       attempt.current = null
 
-      setInput("")
+      if (shouldClearPlannerDraft(response.state)) setInput("")
     } catch (e) {
-      setReply(errorText(e))
+      setFeedback({ kind: "error", text: errorText(e) })
 
       // Only a failure that may have reached the server keeps the key for the retry.
 
@@ -147,21 +169,38 @@ export function usePlanner(
 
     const result = runPlannerCommand(text, shown, shownWindows)
 
+    const commandChangedTasks = diffTasks(shown, result.tasks)
+
+    const commandChangedWindows = diffWindows(
+      shownWindows,
+      result.availability,
+    )
+
     const changes = diffTasks(tasks, result.tasks)
 
     const windowChanges = diffWindows(availability, result.availability)
 
-    setInput("")
-
-    if (!changes.length && !windowChanges.length) {
+    if (!commandChangedTasks.length && !commandChangedWindows.length) {
       const next = demoNoOpResult(proposal, result.reply)
       setProposal(next.proposal)
       setReply(next.reply)
-      if (next.notice) showPlannerNotice(next.notice)
+      setFeedback({
+        kind: /cho mình biết|hãy tạo|ví dụ/iu.test(result.reply)
+          ? "clarification"
+          : "error",
+        text: result.reply,
+      })
       return
     }
 
+    setInput("")
+
     setReply(result.reply)
+
+    setFeedback({
+      kind: "pending",
+      text: "Đã tạo bản xem trước. Lịch chỉ thay đổi sau khi bạn duyệt.",
+    })
 
     setProposal({
       id: proposal?.id ?? crypto.randomUUID(),
@@ -204,18 +243,23 @@ export function usePlanner(
         savePending(userId, null)
         await reload()
         setReply("")
+        setFeedback({ kind: "success", text: r.message })
         showPlannerNotice(r.message)
       } else if (decision === "REJECT" && r.state === "SUCCEEDED") {
         setProposal(null)
         savePending(userId, null)
         await reload()
         setReply(r.message)
+        setFeedback({ kind: "info", text: r.message })
       } else {
-        setReply(r.error?.message ?? r.message)
+        setFeedback({
+          kind: "error",
+          text: r.error?.message ?? r.message,
+        })
         await reload()
       }
     } catch (e) {
-      setReply(errorText(e))
+      setFeedback({ kind: "error", text: errorText(e) })
     } finally {
       setBusy(false)
     }
@@ -236,6 +280,8 @@ export function usePlanner(
 
     setReply("")
 
+    setFeedback({ kind: "success", text: "Đã lưu thay đổi vào lịch." })
+
     showPlannerNotice("Đã lưu thay đổi vào lịch.")
   }
 
@@ -245,6 +291,8 @@ export function usePlanner(
     setProposal(null)
 
     setReply("")
+
+    setFeedback({ kind: "info", text: "Đã từ chối đề xuất. Lịch không thay đổi." })
   }
 
   return {
@@ -253,6 +301,7 @@ export function usePlanner(
     setInput,
     reply,
     setReply,
+    feedback,
     shown,
     shownWindows,
     stale,

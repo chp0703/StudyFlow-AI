@@ -47,38 +47,66 @@
   pointer-events: none;
 }
 
-/* Ô yêu cầu nằm trên hàng tiêu đề lịch, giữa tiêu đề và nút điều hướng tuần */
+/* Composer gọn khi nghỉ và mở thêm hướng dẫn khi người dùng tương tác. */
 .planner-heading-action {
   flex: 1;
   min-width: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
   margin-left: 24px;
 }
-.planner-chat-form {
+.planner-command {
   position: relative;
   flex: 1;
-  max-width: 400px;
+  max-width: 460px;
   min-width: 0;
 }
-.planner-chat-form input {
-  width: 100%;
-  min-height: 44px;
-  height: 44px;
-  padding: 0 52px 0 14px;
+.planner-command-form {
+  padding: 5px;
   border: 1px solid var(--color-line);
-  border-radius: 100px;
+  border-radius: 16px;
   background: var(--bg-card);
-  font-size: 13px;
-  color: var(--color-ink);
-  box-shadow: 0 1px 3px rgba(23, 32, 59, 0.03);
+  box-shadow: 0 3px 12px rgba(23, 32, 59, 0.07);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
 }
-.planner-chat-form .button.primary {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+.planner-command-form:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(89, 108, 240, 0.16), 0 8px 24px rgba(23, 32, 59, 0.1);
+}
+.planner-command-label {
+  display: block;
+  padding: 4px 9px 2px;
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+.planner-command-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+.planner-command textarea {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  min-height: 40px;
+  max-height: 112px;
+  padding: 10px 9px;
+  resize: none;
+  overflow-y: auto;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-ink);
+}
+.planner-command textarea:focus-visible { outline: 0; }
+.planner-command textarea:disabled { color: var(--color-muted); cursor: wait; }
+.planner-command-send.button.primary {
+  flex: none;
   width: 44px;
   height: 44px;
   min-height: 44px;
@@ -87,16 +115,71 @@
   display: grid;
   place-items: center;
 }
-.planner-chat-form .button.primary:disabled {
+.planner-command-send.button.primary:disabled {
   background: var(--border);
   color: var(--color-muted);
+  cursor: not-allowed;
 }
+.planner-command-details { padding: 3px 7px 5px; }
+.planner-command-suggestions { display: flex; flex-wrap: wrap; gap: 6px; }
+.planner-command-suggestions button {
+  min-height: 32px;
+  padding: 5px 9px;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.25;
+  cursor: pointer;
+}
+.planner-command-suggestions button:hover { border-color: var(--color-primary); }
+.planner-command-suggestions button:focus-visible,
+.planner-command-send:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.planner-command-help {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 7px;
+  color: var(--color-muted);
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+.planner-command-help span { max-width: 58%; }
+.planner-command-help kbd {
+  padding: 1px 4px;
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  background: var(--color-info-bg);
+  font: inherit;
+  color: var(--color-ink);
+}
+.planner-command-feedback {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.planner-command-feedback svg { flex: none; margin-top: 1px; }
+.planner-command-feedback.is-error,
+.planner-command-feedback.is-clarification {
+  border-color: rgba(184, 116, 18, 0.35);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+.planner-command-feedback.is-success { color: #176b4a; }
+.planner-command-spinner { animation: planner-spin .8s linear infinite; }
+@keyframes planner-spin { to { transform: rotate(360deg); } }
 .planner-heading-action .dashboard-calendar-controls {
   margin-left: auto;
-}
-.planner-chat-form input:focus {
-  outline: 3px solid #dcdffb;
-  border-color: var(--color-primary);
 }
 /* Thẻ lịch có hiệu ứng kính mờ đồng bộ với khung chat trợ lý */
 .planner-calendar {
@@ -762,7 +845,10 @@
   .planner-calendar { flex: none; min-height: 600px; height: min(760px, 85dvh); }
   .planner-calendar .card-heading { flex-wrap: wrap; gap: 8px; }
   .planner-heading-action { flex: 1 1 100%; margin-left: 0; flex-wrap: wrap; gap: 8px; }
-  .planner-chat-form { max-width: none; flex-basis: 100%; }
+  .planner-command { max-width: none; flex-basis: 100%; }
+  .planner-command textarea { font-size: 16px; }
+  .planner-command-help { flex-direction: column; }
+  .planner-command-help span { max-width: none; }
   .planner-heading-action .dashboard-calendar-controls { width: 100%; margin-left: 0; }
   .planner-calendar .dashboard-schedule { min-width: 840px; }
   .task-panel-wrap, .task-panel-wrap .task-panel { width: 100%; }
@@ -770,4 +856,7 @@
   .planner-page.is-tasks-closed .task-panel-wrap { display: none; }
 }
 
-@media (prefers-reduced-motion: reduce) { .planner-page, .task-panel-wrap, .planner-calendar .schedule-event { transition: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .planner-page, .task-panel-wrap, .planner-calendar .schedule-event, .planner-command-form { transition: none; }
+  .planner-command-spinner { animation-duration: 1.6s; }
+}

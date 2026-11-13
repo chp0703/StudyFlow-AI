@@ -66,6 +66,16 @@ test("a no-op command keeps a pending task proposal for explicit approval", () =
   })
 })
 
+test("an invalid command is a no-op against the pending preview", () => {
+  const base: Task[] = []
+  const preview: Task[] = [task(1, "2026-11-20", 9)]
+  const result = runPlannerCommand("không hợp lệ", preview, [])
+
+  assert.deepEqual(diffTasks(preview, result.tasks), [])
+  assert.equal(diffTasks(base, result.tasks).length, 1)
+  assert.match(result.reply, /Ví dụ/)
+})
+
 test("diffWindows reports new, changed and removed windows", async () => {
   const { diffWindows } = await import("./proposal.ts")
   const w = (hour: number, kind: "free" | "busy") => ({

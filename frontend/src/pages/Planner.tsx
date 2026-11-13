@@ -4,6 +4,7 @@ import MonthCalendar from "../features/planner/MonthCalendar"
 import { addMonths } from "../features/planner/monthGrid"
 import ProposalReview from "../features/planner/ProposalReview"
 import CalendarDisplaySettings from "../features/planner/CalendarDisplaySettings"
+import PlannerCommandComposer from "../features/planner/PlannerCommandComposer"
 import {
   DEFAULT_DISPLAY_RANGES,
   type CalendarDisplayRanges,
@@ -15,7 +16,7 @@ import gsap from "gsap"
 
 import { useGSAP } from "@gsap/react"
 
-import { ChevronLeft, ChevronRight, ListTodo, Send, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, ListTodo, X } from "lucide-react"
 
 import Button from "../components/ui/Button"
 
@@ -101,6 +102,7 @@ export default function Planner({
     setInput,
     reply,
     setReply,
+    feedback,
     shown,
     stale,
     send,
@@ -366,7 +368,7 @@ export default function Planner({
   )
   const dateOf = (date: Date) => vietnamDate(date)
 
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   // Nhấn ô trống để bắt đầu lệnh thêm vào khung giờ đó.
 
@@ -415,31 +417,15 @@ export default function Planner({
         title="Lịch"
         action={
           <div className="planner-heading-action">
-            <form
-              className="planner-chat-form"
-              onSubmit={(e) => {
-                e.preventDefault()
-
-                send()
-              }}
-            >
-              <input
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Nhập yêu cầu lịch học"
-                aria-label="Yêu cầu điều chỉnh lịch"
-                disabled={busy}
-              />
-              <Button
-                className="primary"
-                type="submit"
-                aria-label="Gửi yêu cầu"
-                disabled={!input.trim() || busy}
-              >
-                <Send aria-hidden="true" size={14} />
-              </Button>
-            </form>
+            <PlannerCommandComposer
+              input={input}
+              setInput={setInput}
+              send={send}
+              busy={busy}
+              apiMode={apiEnabled}
+              feedback={feedback}
+              textareaRef={inputRef}
+            />
 
             <div className="dashboard-calendar-controls">
               {(["compact", "month", "detail"] as const).map((view) => (
