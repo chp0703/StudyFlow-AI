@@ -483,24 +483,112 @@
 .proposal-entry.is-moved { border-color: var(--color-primary); }
 .proposal-coverage { font-weight: 700; color: var(--color-warning-text) !important; }
 .proposal-issues { color: var(--color-warning-text); }
-.working-time-editor { padding: 8px 20px; border-bottom: 1px solid var(--color-line); max-height: 38vh; overflow-y: auto; flex-shrink: 0; font-size: 13px; }
-.working-time-editor > summary { min-height: 44px; padding-block: 12px; box-sizing: border-box; cursor: pointer; font-weight: 700; }
-.working-time-editor > p { margin: 8px 0; color: var(--color-muted); }
-.working-time-days { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
-.working-time-day { border: 1px solid var(--color-line); border-radius: 10px; padding: 8px; background: var(--bg-card); }
-.working-time-day h3 { margin: 0 0 6px; font-size: 13px; }
-.working-time-day p { margin: 4px 0; color: var(--color-muted); }
-.working-time-day ul { list-style: none; margin: 0 0 6px; padding: 0; }
-.working-time-day li { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-bottom: 5px; }
-.working-time-day .button, .working-time-form .button { min-height: 44px; }
-.working-time-form { display: flex; align-items: end; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding: 10px; border-radius: 10px; background: var(--color-info-bg); }
-.working-time-form > strong { width: 100%; }
-.working-time-form label { display: grid; gap: 3px; }
+/* Compact weekly editor: calendar remains the primary surface. */
+.working-time-editor {
+  flex-shrink: 0;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  margin: 6px 16px 8px;
+  background: rgba(248, 249, 255, .84);
+  font-size: 13px;
+}
+.working-time-summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  min-height: 62px;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-radius: 14px;
+}
+.working-time-summary::-webkit-details-marker { display: none; }
+.working-time-summary:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+.working-time-summary-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  color: var(--color-primary);
+  background: rgba(89, 108, 240, .1);
+  flex-shrink: 0;
+}
+.working-time-summary-copy { min-width: 0; flex: 1; display: grid; gap: 3px; }
+.working-time-summary-copy strong { font-size: 13px; color: var(--color-ink); }
+.working-time-summary-copy small { font-size: 11.5px; color: var(--color-muted); }
+.working-time-summary-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+.working-time-summary-action svg { transition: transform .18s ease; }
+.working-time-editor[open] .working-time-summary-action svg { transform: rotate(180deg); }
+.working-time-editor[open] .working-time-summary { border-bottom: 1px solid var(--color-line); border-radius: 14px 14px 0 0; }
+.working-time-body { padding: 14px; max-height: min(48vh, 440px); overflow-y: auto; }
+.working-time-intro { margin: 0 0 12px; color: var(--color-muted); line-height: 1.5; }
+.working-time-tabs {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.working-time-tab {
+  min-width: 0;
+  min-height: 54px;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--color-muted);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 3px;
+  padding: 6px 2px;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.working-time-tab strong { font-size: 12.5px; color: var(--color-ink); }
+.working-time-tab small { font-size: 10px; }
+.working-time-tab:hover { border-color: var(--color-primary); }
+.working-time-tab.is-active {
+  background: rgba(89,108,240,.1);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.working-time-tab.is-active strong { color: var(--color-primary); }
+.working-time-tab:focus-visible, .working-time-icon-button:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+.working-time-day-panel { border: 1px solid var(--color-line); border-radius: 12px; background: var(--bg-card); padding: 14px; }
+.working-time-day-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.working-time-day-heading h3 { margin: 0 0 2px; font-size: 14px; font-weight: 700; }
+.working-time-day-heading p { margin: 0; color: var(--color-muted); font-size: 12px; }
+.working-time-add { display: inline-flex; align-items: center; gap: 5px; min-height: 40px; white-space: nowrap; }
+.working-time-slots { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+.working-time-slots li {
+  display: flex; align-items: center; gap: 10px; border: 1px solid var(--color-line);
+  border-radius: 10px; padding: 7px 8px 7px 12px; background: rgba(247,248,255,.65);
+}
+.working-time-slot-icon { color: var(--color-primary); display: flex; }
+.working-time-slot-clock { flex: 1; font-weight: 650; font-variant-numeric: tabular-nums; }
+.working-time-slot-actions { display: flex; gap: 6px; }
+.working-time-icon-button { display: grid; place-items: center; width: 40px; min-height: 40px; padding: 0; border-radius: 9px; }
+.working-time-icon-button.is-delete:hover { color: #b42318; border-color: #fda29b; background: #fff4f3; }
+.working-time-empty { margin: 14px 0 0; border: 1px dashed var(--color-line); border-radius: 10px; padding: 17px 12px; color: var(--color-muted); background: rgba(247,248,255,.55); }
+.working-time-form { display: flex; align-items: end; flex-wrap: wrap; gap: 10px; margin-top: 12px; padding: 14px; border-radius: 12px; background: var(--color-info-bg); }
+.working-time-form > strong { flex-basis: 100%; }
+.working-time-form label { display: grid; gap: 5px; font-size: 12px; font-weight: 600; }
 .working-time-form input { min-height: 44px; }
-.working-time-form .working-time-midnight { display: flex; align-items: center; gap: 6px; min-height: 44px; }
+.working-time-form .working-time-midnight { display: flex; align-items: center; gap: 7px; min-height: 44px; }
 .working-time-midnight input { min-height: auto; }
-.working-time-form [role="alert"] { width: 100%; margin: 0; color: var(--color-warning-text); }
-.working-time-note { margin: 0; padding: 4px 20px; font-size: 12px; color: var(--color-muted); }
+.working-time-form [role="alert"] { flex-basis: 100%; margin: 0; color: var(--color-warning-text); }
+.working-time-form-actions { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 8px; }
+.working-time-form-actions .button { min-height: 44px; }
+.working-time-footnote { margin: 12px 0 0; font-size: 11.5px; color: var(--color-muted); line-height: 1.5; }
+.working-time-note { margin: 0 16px 8px; padding: 0; font-size: 11.5px; color: var(--color-muted); }
 .window-segment { position: absolute; left: 3px; right: 3px; z-index: 0; overflow: hidden; border-radius: 3px; padding: 1px 3px; font-size: 10px; line-height: 1.2; font-weight: 600; pointer-events: none; }
 .window-segment.is-free { background: rgba(34, 160, 107, .18); color: #176449; }
 .window-segment.is-busy { background: repeating-linear-gradient(135deg, rgba(120, 130, 160, .24) 0 4px, rgba(120, 130, 160, .10) 4px 8px); color: #384157; }
@@ -509,7 +597,11 @@
   .proposal-bar { flex-wrap: wrap; }
   .proposal-text { flex-basis: calc(100% - 30px); }
   .proposal-bar .button { min-height: 44px; height: auto; }
-  .working-time-editor { max-height: 45vh; padding-inline: 12px; }
+  .working-time-editor { margin-inline: 10px; }
+  .working-time-body { max-height: 54vh; padding: 10px; }
+  .working-time-tabs { gap: 3px; }
+  .working-time-tab { min-height: 52px; }
+  .working-time-tab small { font-size: 9px; }
 }
 .proposal-bar .button {
   min-height: 32px;
@@ -771,4 +863,32 @@
   .task-panel-wrap, .task-panel-wrap .task-panel { width: 100%; }
   .task-panel-wrap { flex: none; height: 280px; }
   .planner-page.is-tasks-closed .task-panel-wrap { display: none; }
+}
+
+/* Planner: tighten chrome and give the week grid visual priority. */
+.planner-calendar .card-heading { padding: 14px 18px 10px; gap: 12px; }
+.planner-calendar .card-heading h2 { font-weight: 700; font-size: 16px; }
+.planner-heading-action { margin-left: 14px; gap: 12px; }
+.planner-chat-form { max-width: 440px; }
+.planner-chat-form input { min-height: 42px; height: 42px; border-radius: 12px; font-size: 13px; }
+.planner-chat-form .button.primary { width: 34px; height: 34px; min-height: 34px; right: 4px; border-radius: 9px; }
+.planner-calendar .calendar-week-label { font-size: 12.5px; font-weight: 650; color: var(--color-ink); }
+.planner-calendar .schedule-row { min-height: 54px; }
+.planner-calendar .schedule-cell { border-top: 1px solid rgba(229,232,244,.5); }
+.planner-calendar .schedule-header { background: var(--bg-card); box-shadow: 0 2px 5px rgba(23,32,59,.03); }
+.planner-legend { padding: 4px 18px 6px; margin-bottom: 3px; gap: 5px 15px; }
+@media (max-width: 800px) {
+  .planner-heading-action { margin-left: 0; }
+  .planner-calendar .card-heading { padding: 12px; }
+  .planner-calendar .schedule-row { min-height: 60px; }
+}
+@media (max-width: 480px) {
+  .working-time-summary { padding: 10px; gap: 9px; }
+  .working-time-summary-action { font-size: 0; }
+  .working-time-summary-action svg { width: 20px; height: 20px; }
+  .working-time-tabs { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .working-time-day-panel { padding: 10px; }
+  .working-time-day-heading { flex-wrap: wrap; }
+  .working-time-form label:not(.working-time-midnight) { flex: 1; min-width: 110px; }
+  .working-time-form label:not(.working-time-midnight) input { width: 100%; }
 }
