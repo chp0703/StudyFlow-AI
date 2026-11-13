@@ -58,3 +58,16 @@
 
 **Ghi chú**
 - Chưa kiểm thử E2E API có đăng nhập vì không có backend và tài khoản thử nghiệm được cấp quyền.
+
+## 2026-11-13 — Planner UI/UX refresh (review branch)
+
+**Mục tiêu:** Giảm tải thị giác trang Planner, ưu tiên lịch tuần và thao tác chỉnh giờ học dễ hiểu hơn mà không thay đổi hành vi duyệt hay API.
+
+**Đã làm**
+- Tạo nhánh `feat/planner-ux-refresh-kent` tách khỏi FE follow-up PR #34.
+- Thay trình sửa bảy cột thành khối gấp gọn, chọn từng ngày, xem danh sách khoảng học và form nhập khi cần; giữ ADD/UPDATE/ARCHIVE cùng Duyệt/Từ chối.
+- Giảm chiều cao phần điều khiển, tinh chỉnh ô lịch, responsive và focus; làm rõ nhãn khoảng tuần và câu hướng dẫn bản demo.
+
+**Kiểm chứng / giới hạn:** Đã review source và phạm vi thay đổi trên GitHub; chưa chạy Node tests, TypeScript, build hoặc browser QA trên máy người dùng. Cần kiểm chứng 390/768/1440 CSS px, keyboard navigation và Demo/API trước khi merge. Không thêm endpoint hoặc tích hợp DeepSeek giả.
+
+**Git:** Không cập nhật PR #34 hay `main`; nhánh UI riêng chờ QA và review.
