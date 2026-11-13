@@ -397,3 +397,22 @@
 
 - Không thay đổi workflow YAML và không chạm cloud Supabase project.
 - `ponytail` chưa được cài trên máy hiện tại; repository cài đặt chính thức đã được ghi trong `AGENTS.md` cho từng thành viên tự bootstrap.
+
+## 2026-11-13 — Làm lại trang đăng nhập và cải tiến trang Học tập
+
+**Mục tiêu:** đưa vào `main` các thay đổi giao diện frontend đã làm dở trong một lần stash, tách khỏi các sửa backend để PR dễ review.
+
+**Đã làm**
+
+- Làm lại trang đăng nhập/đăng ký (`features/auth/LoginPage.tsx`, `styles/auth.css`) và cập nhật logo ngang nền trong suốt (tệp Git LFS).
+- Trang Học tập (`pages/Study.tsx`, `styles/study.css`): làm lại câu trắc nghiệm đã sai, chỉ tính điểm cho lần trả lời đúng đầu tiên.
+- `App.tsx`: đóng hộp thoại tài khoản khi phiên đăng nhập đổi hoặc khi đăng xuất.
+- `styles/assistant.css`: chỉnh khoảng cách tiêu đề và ô nhập ở màn hình trống.
+
+**Kết quả:** PR từ nhánh `feat/frontend-login-study-restyle`; TypeScript (`tsc --noEmit`) sạch và 34 frontend tests pass. Chưa chạy `npm run build` và `npm run format`.
+
+**Ghi chú**
+
+- Chưa kiểm tra bằng trình duyệt thật; cần xem lại trang đăng nhập và trang Học tập trước khi merge.
+- Chưa kiểm tra tệp logo trong LFS có đủ trên máy.
+- Không chồng lấn tệp với PR #32.
