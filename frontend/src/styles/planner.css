@@ -510,6 +510,44 @@
 }
 @media (prefers-reduced-motion: reduce) { .compact-week *, .calendar-view-toggle { transition: none !important; animation: none !important; } }
 
+.month-calendar { min-width: 0; padding: 4px 16px 18px; }
+.main-content:has(.planner-page):has(.month-calendar) { height: auto; min-height: calc(100dvh - 58px); overflow: visible; }
+.planner-page:has(.month-calendar) { flex: 0 0 auto; overflow: visible; }
+.planner-page:has(.month-calendar) .planner-calendar { overflow: visible; }
+.month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--color-line); border-left: 1px solid var(--color-line); }
+.month-weekday { padding: 7px 4px; text-align: center; font-size: 12px; font-weight: 700; color: var(--color-muted); }
+.month-cell { min-width: 0; min-height: 90px; padding: 5px; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
+.month-cell.is-outside { background: var(--color-info-bg); opacity: .65; }
+.month-cell.is-today .month-date { background: var(--color-primary); color: white; }
+.month-cell.is-selected { box-shadow: inset 0 0 0 2px var(--color-primary); }
+.month-date { width: 32px; min-height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--color-ink); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.month-window-dots { margin-left: 2px; color: var(--color-warning-text); font-size: 11px; }
+.month-event-list { display: grid; gap: 3px; }
+.month-event { min-width: 0; width: 100%; display: flex; gap: 3px; border: 0; border-left: 3px solid var(--color-primary); border-radius: 4px; padding: 3px 4px; background: var(--color-info-bg); color: var(--color-ink); font: inherit; font-size: 10px; text-align: left; cursor: pointer; }
+.month-event time { flex: none; font-variant-numeric: tabular-nums; font-weight: 700; }
+.month-event span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.month-event.is-proposed, .month-agenda-event.is-proposed { outline: 1px dashed var(--color-primary); }
+.month-event.is-removed { opacity: .65; text-decoration: line-through; }
+.month-more { justify-self: start; border: 0; background: transparent; color: var(--color-primary); font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+.month-mobile-count { display: none; }
+.month-agenda { margin-top: 12px; padding: 12px; border: 1px solid var(--color-line); border-radius: 12px; }
+.month-agenda-heading { display: flex; align-items: center; justify-content: space-between; }
+.month-agenda-heading h3 { margin: 0 0 8px; font-size: 14px; }
+.month-agenda-heading button { width: 44px; height: 44px; border: 0; background: transparent; color: var(--color-ink); cursor: pointer; }
+.month-agenda-event { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; margin-top: 5px; padding: 6px 8px; border: 0; border-left: 3px solid var(--color-primary); border-radius: 6px; background: var(--color-info-bg); color: var(--color-ink); font: inherit; text-align: left; cursor: pointer; }
+.month-agenda-event time { font-variant-numeric: tabular-nums; font-size: 11px; }
+.month-agenda-event strong { overflow-wrap: anywhere; font-size: 12px; }
+.month-agenda-event small { margin-left: auto; }
+.month-calendar :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+@media (max-width: 800px) {
+  .month-calendar { padding: 4px 10px 14px; }
+  .month-cell { min-height: 64px; padding: 2px; }
+  .month-date { width: 32px; min-height: 32px; }
+  .month-event-list { display: none; }
+  .month-mobile-count { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--color-primary); color: white; font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .month-calendar * { transition: none !important; animation: none !important; } }
+
 /* Thông báo nổi sau khi duyệt thay đổi lịch */
 .planner-notice-wrap {
   position: absolute;

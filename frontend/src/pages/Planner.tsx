@@ -1,5 +1,7 @@
 import WeekCalendar from "../features/planner/WeekCalendar"
 import CompactWeekCalendar from "../features/planner/CompactWeekCalendar"
+import MonthCalendar from "../features/planner/MonthCalendar"
+import { addMonths } from "../features/planner/monthGrid"
 import ProposalReview from "../features/planner/ProposalReview"
 import CalendarDisplaySettings from "../features/planner/CalendarDisplaySettings"
 import {
@@ -141,8 +143,11 @@ export default function Planner({
   )
 
   const [week, setWeek] = useState(0)
-  const [calendarView, setCalendarView] = useState<"compact" | "detail">(
-    "compact",
+  const [calendarView, setCalendarView] =
+    useState<"compact" | "detail" | "month">("compact")
+  const [month, setMonth] = useState(() => vietnamDate().slice(0, 7))
+  const [selectedMonthDate, setSelectedMonthDate] = useState<string | null>(
+    null,
   )
   const [displayRanges, setDisplayRanges] = useState<CalendarDisplayRanges>(
     DEFAULT_DISPLAY_RANGES,
@@ -336,6 +341,25 @@ export default function Planner({
     .reverse()
     .join("/")
   const mondayKey = addCivilDays(todayKey, -todayIndex + week * 7)
+  const chooseView = (view: "compact" | "detail" | "month") => {
+    if (view === "month" && calendarView !== "month") {
+      setMonth(mondayKey.slice(0, 7))
+      setSelectedMonthDate(null)
+    }
+    if (calendarView === "month" && view !== "month") {
+      const date = selectedMonthDate ?? `${month}-01`
+      const monday = addCivilDays(date, -civilWeekday(date))
+      const todayMonday = addCivilDays(todayKey, -todayIndex)
+      setWeek(
+        Math.round(
+          (Date.parse(`${monday}T00:00:00Z`) -
+            Date.parse(`${todayMonday}T00:00:00Z`)) /
+            (7 * 86400000),
+        ),
+      )
+    }
+    setCalendarView(view)
+  }
   const weekDays = Array.from(
     { length: 7 },
     (_, i) => new Date(`${addCivilDays(mondayKey, i)}T12:00:00Z`),
@@ -383,7 +407,7 @@ export default function Planner({
     <div
       ref={pageRef}
       className={`planner-page ${
-        calendarView === "compact" ? "is-compact" : ""
+        calendarView !== "detail" ? "is-compact" : ""
       } ${taskPanelOpen ? "" : "is-tasks-closed"}`}
     >
       <Card
@@ -418,38 +442,62 @@ export default function Planner({
             </form>
 
             <div className="dashboard-calendar-controls">
-              <Button
-                className="secondary calendar-view-toggle"
-                type="button"
-                aria-pressed={calendarView === "detail"}
-                onClick={() =>
-                  setCalendarView(
-                    calendarView === "compact" ? "detail" : "compact",
-                  )
-                }
-              >
-                {calendarView === "compact" ? "Chi tiết giờ" : "Tuần thu gọn"}
-              </Button>
-              <span className="calendar-week-label">{weekLabel}</span>
-              {week !== 0 && (
+              {(["compact", "month", "detail"] as const).map((view) => (
+                <Button
+                  key={view}
+                  className="secondary calendar-view-toggle"
+                  type="button"
+                  aria-pressed={calendarView === view}
+                  onClick={() => chooseView(view)}
+                >
+                  {view === "compact"
+                    ? "Tuần"
+                    : view === "month"
+                      ? "Tháng"
+                      : "Chi tiết giờ"}
+                </Button>
+              ))}
+              <span className="calendar-week-label">
+                {calendarView === "month"
+                  ? `Tháng ${Number(month.slice(5))}/${month.slice(0, 4)}`
+                  : weekLabel}
+              </span>
+              {(calendarView === "month" || week !== 0) && (
                 <Button
                   className="secondary calendar-today-btn"
-                  onClick={() => setWeek(0)}
+                  onClick={() => {
+                    if (calendarView === "month") {
+                      setMonth(todayKey.slice(0, 7))
+                      setSelectedMonthDate(todayKey)
+                    } else setWeek(0)
+                  }}
                 >
                   Hôm nay
                 </Button>
               )}
               <Button
                 className="icon-button"
-                aria-label="Tuần trước"
-                onClick={() => setWeek(week - 1)}
+                aria-label={
+                  calendarView === "month" ? "Tháng trước" : "Tuần trước"
+                }
+                onClick={() => {
+                  if (calendarView === "month") {
+                    setMonth(addMonths(month, -1))
+                    setSelectedMonthDate(null)
+                  } else setWeek(week - 1)
+                }}
               >
                 <ChevronLeft aria-hidden="true" size={18} />
               </Button>
               <Button
                 className="icon-button"
-                aria-label="Tuần sau"
-                onClick={() => setWeek(week + 1)}
+                aria-label={calendarView === "month" ? "Tháng sau" : "Tuần sau"}
+                onClick={() => {
+                  if (calendarView === "month") {
+                    setMonth(addMonths(month, 1))
+                    setSelectedMonthDate(null)
+                  } else setWeek(week + 1)
+                }}
               >
                 <ChevronRight aria-hidden="true" size={18} />
               </Button>
@@ -498,7 +546,11 @@ export default function Planner({
 
           <span className="legend-proposed">Đề xuất</span>
           <span>
-            {weekEmpty ? "Tuần này chưa có việc." : "Chọn giờ để nhập yêu cầu"}
+            {calendarView === "month"
+              ? "Chọn ngày để xem chi tiết"
+              : weekEmpty
+                ? "Tuần này chưa có việc."
+                : "Chọn giờ để nhập yêu cầu"}
           </span>
         </p>
         {calendarView === "compact" ? (
@@ -514,6 +566,19 @@ export default function Planner({
             proposedWindowIds={
               new Set(proposal?.windowChanges.map((change) => change.window.id))
             }
+          />
+        ) : calendarView === "month" ? (
+          <MonthCalendar
+            month={month}
+            todayKey={todayKey}
+            selectedDate={selectedMonthDate}
+            onSelect={setSelectedMonthDate}
+            events={calendarEvents}
+            windows={windows ?? []}
+            availability={
+              apiEnabled ? [] : (proposal?.next.availability ?? availability)
+            }
+            changeOf={changeOf}
           />
         ) : (
           <WeekCalendar

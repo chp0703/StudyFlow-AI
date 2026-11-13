@@ -103,3 +103,18 @@
 
 **Ghi chú**
 - Chưa chạy API E2E có đăng nhập. Vite cảnh báo chunk lớn; test SSR phát cảnh báo WebSocket sandbox nhưng toàn bộ assertion đạt.
+
+## 2026-11-13 — Add responsive Planner month view
+
+**Mục tiêu:** Bổ sung lịch tháng dễ đọc mà vẫn giữ lịch tuần thu gọn và timeline chi tiết.
+
+**Đã làm**
+- Thêm lưới tháng bắt đầu từ thứ Hai, đủ 4–6 hàng, ngày ngoài tháng, sự kiện đúng phút và màu từ dữ liệu hiện có; mở agenda khi chọn ngày hoặc nút `+N lịch khác`.
+- Hiển thị trạng thái Rảnh/Bận chỉ để xem trong ô ngày và các khoảng giờ chính xác trong agenda; giữ đề xuất khác với lịch đã xác nhận.
+- Thêm điều hướng Tháng/Tuần/Chi tiết giờ; chọn ngày ở Tháng rồi về Tuần sẽ mở tuần tương ứng. Chuyển chế độ không ghi dữ liệu hay gọi API.
+- Kiểm tra trực tiếp 390×844, 768×1024, 1440×900: lịch tháng, điều hướng, agenda, chuyển chế độ, phím Escape và không tràn ngang; sửa lỗi agenda bị cắt bởi khung nội dung.
+
+**Kết quả:** Nhánh `fix/planner-followup-leader-spec-kent`; 52/52 Node tests, TypeScript, Vite build, `npm run format` và `git diff --check` đạt. Chỉ tạo commit cục bộ, chưa push hoặc mở PR.
+
+**Ghi chú**
+- Chưa chạy API E2E có đăng nhập. Vite cảnh báo bundle trên 500 kB; test SSR phát cảnh báo WebSocket sandbox nhưng toàn bộ assertion đạt.
