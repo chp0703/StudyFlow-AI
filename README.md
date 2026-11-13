@@ -67,15 +67,15 @@ Screens captured from the frontend running in demo mode (no login, in-memory dat
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 19, Vite 8, TypeScript (strict), Tailwind CSS v4, GSAP, lucide-react |
-| Backend | FastAPI (Python 3.11+), deterministic scheduler, chat/NLU layer |
-| Auth & Database | Supabase Auth, Postgres (SECURITY DEFINER functions, append-only migrations) |
-| AI | DeepSeek for language understanding; model output is treated as untrusted data and normalized on the server |
-| Contracts | OpenAPI and JSON Schema in `contracts/` |
-| Testing | `node --test`, Python `unittest`, pgTAP |
-| CI | GitHub Actions (`database-tests.yml`, `f1-backend-tests.yml`) |
+| Layer           | Technology                                                                                                  |
+| --------------- | ----------------------------------------------------------------------------------------------------------- |
+| Frontend        | React 19, Vite 8, TypeScript, Tailwind CSS, GSAP, lucide-react                                              |
+| Backend         | FastAPI, deterministic scheduler, chat/NLU layer                                                            |
+| Auth & Database | Supabase Auth, Postgres                                                                                     |
+| AI              | DeepSeek for language understanding; model output is treated as untrusted data and normalized on the server |
+| Contracts       | OpenAPI and JSON Schema                                                                                     |
+| Testing         | `node --test`, Python `unittest`, pgTAP                                                                     |
+| CI              | GitHub Actions                                                                                              |
 
 ---
 
@@ -136,13 +136,13 @@ The backend reads its settings (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `DEE
 
 Run frontend commands from `frontend/`:
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start the Vite dev server |
-| `npm run build` | Build the production bundle |
-| `npm run preview` | Preview the production build locally |
-| `npm run format` | Format the source with oxfmt |
-| `npx tsc --noEmit` | Type-check the project |
+| Command            | Description                          |
+| ------------------ | ------------------------------------ |
+| `npm run dev`      | Start the Vite dev server            |
+| `npm run build`    | Build the production bundle          |
+| `npm run preview`  | Preview the production build locally |
+| `npm run format`   | Format the source with oxfmt         |
+| `npx tsc --noEmit` | Type-check the project               |
 
 ---
 
@@ -170,12 +170,12 @@ worklogs/    # Team implementation logs
 
 The app is a single page; navigation is driven by the left sidebar, which can be collapsed.
 
-| Page | Label | Description |
-|---|---|---|
-| Home | Trang chủ | Assistant chat, new conversation and history, plus today's task, deadline and study-time summary |
-| Planner | Lập kế hoạch | Weekly calendar, task list, working-time editor and proposal review |
-| Study | Học tập | Multiple-choice practice, study materials and AI Q&A prototype |
-| Login | — | Supabase email login, shown only in API mode |
+| Page    | Label        | Description                                                                                      |
+| ------- | ------------ | ------------------------------------------------------------------------------------------------ |
+| Home    | Trang chủ    | Assistant chat, new conversation and history, plus today's task, deadline and study-time summary |
+| Planner | Lập kế hoạch | Weekly calendar, task list, working-time editor and proposal review                              |
+| Study   | Học tập      | Multiple-choice practice, study materials and AI Q&A prototype                                   |
+| Login   | —            | Supabase email login, shown only in API mode                                                     |
 
 ---
 
@@ -193,15 +193,15 @@ The app is a single page; navigation is driven by the left sidebar, which can be
 
 The API exposes the eight Planner endpoints declared in `contracts/openapi.yaml`. Authentication uses Supabase JWTs, and database access goes through signed RPC envelopes.
 
-| Endpoint | Purpose |
-|---|---|
-| `POST /v1/messages` | Send a chat message to the assistant |
-| `/v1/actions`, `/v1/actions/{action_id}/review` | Prepare and review a pending action |
-| `POST /v1/decisions` | Approve or reject a pending action |
-| `/v1/tasks` | List tasks |
-| `/v1/time-windows` | List working-time windows |
-| `/v1/preferences` | Read planner preferences |
-| `/v1/plans` | Read the confirmed plan |
+| Endpoint                                        | Purpose                              |
+| ----------------------------------------------- | ------------------------------------ |
+| `POST /v1/messages`                             | Send a chat message to the assistant |
+| `/v1/actions`, `/v1/actions/{action_id}/review` | Prepare and review a pending action  |
+| `POST /v1/decisions`                            | Approve or reject a pending action   |
+| `/v1/tasks`                                     | List tasks                           |
+| `/v1/time-windows`                              | List working-time windows            |
+| `/v1/preferences`                               | Read planner preferences             |
+| `/v1/plans`                                     | Read the confirmed plan              |
 
 The frontend never talks to Postgres directly except for Supabase Auth; all data goes through the API. The technical `F1` identifiers remain for compatibility with the implemented Planner contract.
 
