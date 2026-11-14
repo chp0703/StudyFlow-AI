@@ -164,9 +164,7 @@ export default function ProposalReview({
             <Check aria-hidden="true" size={14} /> Duyệt
           </Button>
         </div>
-      ) : (
-        reply && <p className="planner-reply">{reply}</p>
-      )}
+      ) : null}
     </div>
   )
 }

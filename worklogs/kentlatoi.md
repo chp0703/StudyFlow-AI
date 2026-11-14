@@ -133,3 +133,20 @@
 
 **Ghi chú**
 - API E2E có đăng nhập bị chặn vì không có backend/tài khoản thử nghiệm được cấp quyền. Vite cảnh báo bundle trên 500 kB; test SSR phát cảnh báo WebSocket sandbox nhưng toàn bộ assertion đạt.
+
+## 2026-11-14 — Final Planner UX audit
+
+**Mục tiêu:** Audit FE-01–FE-06 và toàn bộ hành trình Planner trước khi giao bản cuối vào PR #40.
+
+**Đã làm**
+- So sánh với `origin/main`, kiểm tra phạm vi chỉ gồm frontend/tài liệu/worklog và preview tích hợp; ghi nhận `App.tsx` cùng thay đổi nhưng tự merge được theo three-way preview.
+- Sửa phản hồi lệnh sai bị lặp giữa composer và vùng proposal; thêm test render hồi quy để proposal review không hiển thị phản hồi thường.
+- Sửa hook GSAP dùng ref không tồn tại ở Tuần/Tháng và selector rỗng; scope vào trang luôn mount, chỉ animate phần tử thật. Phiên trình duyệt mới không còn console warning/error.
+- Xác minh Tuần/Tháng/Chi tiết giờ, Free/Busy với Busy precedence, proposal không mất sau lệnh sai, Duyệt, FE-03 hide/reveal, draft đa dòng, focus bàn phím và không tràn ngang.
+- Browser QA: 390×844 và 1440×900 CSS px chính xác; công cụ làm tròn target tablet thành 767×1024 CSS px. Ảnh chỉ được chụp trong phiên audit, không commit hoặc upload.
+
+**Kết quả:** 57/57 Node tests đạt; `npx tsc --noEmit`, `npm run build`, `npm run format` và `git diff --check` đạt. Vite build còn cảnh báo chunk 634.30 kB (>500 kB); test SSR còn cảnh báo WebSocket sandbox nhưng không làm hỏng assertion.
+
+**Giới hạn**
+- API E2E có đăng nhập vẫn BLOCKED vì không có backend/tài khoản thử nghiệm được cấp quyền. FE-01 persistence và FE-06 upload/extraction còn phụ thuộc backend/contract; không có tuyên bố giả trong frontend.
+- Chưa mô phỏng dark mode, largest-text hoặc bàn phím ảo thiết bị thật; đã kiểm tra focus ring, nhãn/role, reduced-motion CSS và keyboard flow trong browser desktop.

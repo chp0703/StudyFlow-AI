@@ -185,6 +185,8 @@ export default function Planner({
 
   const calendarRef = useRef<HTMLDivElement>(null)
 
+  const pageRef = useRef<HTMLDivElement>(null)
+
   const prevWeek = useRef(0)
 
   const source = apiEnabled ? events : tasks
@@ -199,8 +201,12 @@ export default function Planner({
 
       prevWeek.current = week
 
-      if (dir) {
-        gsap.from(".schedule-day, .schedule-event", {
+      const targets = pageRef.current?.querySelectorAll(
+        ".schedule-day, .schedule-event",
+      )
+
+      if (dir && targets?.length) {
+        gsap.from(targets, {
           x: dir * 28,
 
           opacity: 0,
@@ -214,7 +220,7 @@ export default function Planner({
       }
     },
 
-    { scope: calendarRef, dependencies: [week] },
+    { scope: pageRef, dependencies: [week] },
   )
 
   // Sự kiện agent vừa thêm hoặc dời hiện bật lên để người dùng dễ nhận ra thay đổi.
@@ -223,21 +229,27 @@ export default function Planner({
     () => {
       const before = new Map(prevTasks.current.map((t) => [t.id, t]))
 
-      const changed = source
+      const changed = new Set(
+        source
 
-        .filter((t) => {
-          const old = before.get(t.id)
+          .filter((t) => {
+            const old = before.get(t.id)
 
-          return !old || old.date !== t.date || old.hour !== t.hour
-        })
+            return !old || old.date !== t.date || old.hour !== t.hour
+          })
 
-        .map((t) => `[data-task-id="${t.id}"]`)
+          .map((t) => t.id),
+      )
+
+      const targets = Array.from(
+        pageRef.current?.querySelectorAll<HTMLElement>("[data-task-id]") ?? [],
+      ).filter((element) => changed.has(element.dataset.taskId ?? ""))
 
       prevTasks.current = source
 
-      if (changed.length) {
+      if (targets.length) {
         gsap.fromTo(
-          changed.join(","),
+          targets,
 
           { scale: 0.85, opacity: 0.3 },
 
@@ -256,12 +268,10 @@ export default function Planner({
       }
     },
 
-    { scope: calendarRef, dependencies: [source] },
+    { scope: pageRef, dependencies: [source] },
   )
 
   // GSAP điều khiển khung công việc vì reduced-motion vô hiệu hóa CSS transition.
-
-  const pageRef = useRef<HTMLDivElement>(null)
 
   const panelSeen = useRef(taskPanelOpen)
 
@@ -285,10 +295,14 @@ export default function Planner({
 
       const opts = { duration: 0.4, ease: "power3.inOut", clearProps: "all" }
 
-      gsap.fromTo(".task-panel-wrap", from, { ...to, ...opts })
+      const panel = pageRef.current?.querySelector(".task-panel-wrap")
+
+      if (!panel || !pageRef.current) return
+
+      gsap.fromTo(panel, from, { ...to, ...opts })
 
       gsap.fromTo(
-        ".planner-page",
+        pageRef.current,
 
         { columnGap: taskPanelOpen ? 0 : 8 },
 
@@ -303,9 +317,11 @@ export default function Planner({
 
   useGSAP(
     () => {
-      if (proposal)
+      const targets = pageRef.current?.querySelectorAll(".is-proposed")
+
+      if (proposal && targets?.length)
         gsap.fromTo(
-          ".is-proposed",
+          targets,
 
           { scale: 0.9, opacity: 0.4 },
 
@@ -323,7 +339,7 @@ export default function Planner({
         )
     },
 
-    { scope: calendarRef, dependencies: [proposal] },
+    { scope: pageRef, dependencies: [proposal] },
   )
 
   // Phản hồi thông thường (lỗi hoặc không thay đổi) tự mờ đi; đề xuất giữ lại đến khi có quyết định.
