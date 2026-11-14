@@ -508,6 +508,7 @@
 .proposal-entry.is-added, .proposal-entry.is-scheduled { border-color: var(--color-primary); background: var(--color-info-bg); }
 .proposal-entry.is-moved { border-color: var(--color-primary); }
 .proposal-coverage { font-weight: 700; color: var(--color-warning-text) !important; }
+.proposal-approval-error { font-weight: 700; color: var(--color-warning-text) !important; }
 .proposal-issues { color: var(--color-warning-text); }
 /* Display ranges are local presentation state, never scheduler availability. */
 .calendar-display-settings { position: relative; padding: 0 20px 4px; }

@@ -382,6 +382,7 @@ export default function App() {
         const next = proposalFromReply(reply, {
           tasks: server.tasks,
           events: server.events,
+          windows: server.windows,
           availability: server.availability,
           revision: server.revision,
         })

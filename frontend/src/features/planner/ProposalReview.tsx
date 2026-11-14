@@ -1,7 +1,7 @@
 import { Check, Sparkles, X } from "lucide-react"
 import Button from "../../components/ui/Button"
 import type { Proposal } from "../../types/planner"
-import { describeChanges } from "./proposal"
+import { approvalBlocked, describeChanges } from "./proposal"
 
 type Props = {
   proposal: Proposal | null
@@ -46,6 +46,7 @@ export default function ProposalReview({
     removed: "Xóa",
     unchanged: "Giữ nguyên",
   }
+  const blocked = approvalBlocked(proposal, stale)
 
   return (
     <div className="planner-status" role="status" aria-live="polite">
@@ -76,6 +77,11 @@ export default function ProposalReview({
                 ? "Lịch đã thay đổi từ lúc tạo đề xuất (STALE). Hãy từ chối và tạo lại."
                 : reply || proposal.reply}
             </span>
+            {proposal.server?.approvalError && (
+              <span className="proposal-approval-error" role="alert">
+                {proposal.server.approvalError}
+              </span>
+            )}
             {proposal.server?.coverage === "PARTIAL" && (
               <span className="proposal-coverage">
                 Lịch học mới chỉ xếp được một phần công việc.
@@ -159,7 +165,7 @@ export default function ProposalReview({
           <Button
             className="primary proposal-approve"
             onClick={approve}
-            disabled={stale || busy}
+            disabled={blocked || busy}
           >
             <Check aria-hidden="true" size={14} /> Duyệt
           </Button>

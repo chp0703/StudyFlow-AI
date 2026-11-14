@@ -3,6 +3,7 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import {
   expandWindows,
+  formatTimeWindow,
   mapTasksAndEvents,
   proposalFromReply,
   summarize,
@@ -13,6 +14,7 @@ import type {
   ApiTimeWindow,
   OrchestratorReply,
   PlanProposal,
+  ActionPresentation,
 } from "./types.ts"
 
 const example = (name: string) =>
@@ -122,7 +124,7 @@ const win = (over: Partial<ApiTimeWindow>): ApiTimeWindow => ({
   weekday: 1,
   start_time: "09:00",
   end_time: "11:00",
-  valid_from: null,
+  valid_from: "2026-11-01",
   valid_until: null,
   archived_at: null,
   ...over,
@@ -347,4 +349,167 @@ test("an archived weekly interval review names the exact existing interval", () 
     label: "Sẽ xóa",
     value: "Thứ 2 hằng tuần, 09:00–11:00",
   })
+})
+
+const windowPresentation = (
+  change_type: "ADD" | "UPDATE" | "ARCHIVE",
+  window: Partial<ApiTimeWindow> | null,
+  window_id: string | null = "w",
+  operation = "set_availability",
+): ActionPresentation => ({
+  kind: "ACTION_PRESENTATION",
+  pending_action: {
+    intent: "SET_AVAILABILITY",
+    state: "AWAITING_APPROVAL",
+    action_id: "a",
+  },
+  candidate: null,
+  proposal: null,
+  normalized_command: {
+    operation,
+    arguments: {
+      change_type,
+      window_id,
+      expected_window_version: change_type === "ADD" ? null : 1,
+      window,
+    },
+  },
+  effective_policy: null,
+})
+
+const windowInput = (over: Partial<ApiTimeWindow>) => {
+  const { window_id, version, archived_at, ...input } = win(over)
+  void window_id
+  void version
+  void archived_at
+  return input
+}
+
+const restoredWindowProposal = (
+  presentation: ActionPresentation,
+  windows: ApiTimeWindow[],
+) => {
+  const body = reply(presentation)
+  body.action_reference = {
+    ...body.action_reference!,
+    target_type: "PENDING_ACTION",
+    target_id: "a",
+  }
+  const reference = structuredClone(body.action_reference)
+  const restored = proposalFromReply(body, {
+    tasks: [],
+    events: [],
+    windows,
+    availability: [],
+    revision: 3,
+  })!
+  assert.deepEqual(restored.server?.reference, reference)
+  assert.equal(restored.server?.reference, body.action_reference)
+  return restored
+}
+
+test("restored weekly UPDATE and ARCHIVE show the authoritative old target", () => {
+  const existing = win({})
+  const proposed = windowInput({ start_time: "10:00", end_time: "12:00" })
+  const update = restoredWindowProposal(
+    windowPresentation("UPDATE", proposed),
+    [existing],
+  )
+  assert.deepEqual(update.server?.details.slice(1), [
+    { label: "Thời gian cũ", value: "Thứ 2 hằng tuần, 09:00–11:00" },
+    { label: "Thời gian mới", value: "Thứ 2 hằng tuần, 10:00–12:00" },
+  ])
+  assert.equal(update.server?.approvalError, undefined)
+
+  const archive = restoredWindowProposal(windowPresentation("ARCHIVE", null), [
+    existing,
+  ])
+  assert.deepEqual(archive.server?.details[1], {
+    label: "Sẽ xóa",
+    value: "Thứ 2 hằng tuần, 09:00–11:00",
+  })
+  assert.equal(archive.server?.approvalError, undefined)
+})
+
+test("restored one-off UPDATE and ARCHIVE use Vietnam civil date and clock", () => {
+  const existing = win({
+    recurrence: "NONE",
+    weekday: null,
+    start_time: null,
+    end_time: null,
+    start_at: "2026-11-09T02:15:00Z",
+    end_at: "2026-11-09T03:30:00Z",
+  })
+  const proposed = windowInput({
+    recurrence: "NONE",
+    weekday: null,
+    start_time: null,
+    end_time: null,
+    start_at: "2026-11-09T04:00:00Z",
+    end_at: "2026-11-09T05:00:00Z",
+  })
+  assert.equal(formatTimeWindow(existing), "09/11/2026, 09:15–10:30")
+  const update = restoredWindowProposal(
+    windowPresentation("UPDATE", proposed),
+    [existing],
+  )
+  assert.deepEqual(update.server?.details.slice(1), [
+    { label: "Thời gian cũ", value: "09/11/2026, 09:15–10:30" },
+    { label: "Thời gian mới", value: "09/11/2026, 11:00–12:00" },
+  ])
+  assert.equal(update.server?.approvalError, undefined)
+
+  const archive = restoredWindowProposal(windowPresentation("ARCHIVE", null), [
+    existing,
+  ])
+  assert.equal(archive.server?.details[1]?.value, "09/11/2026, 09:15–10:30")
+  assert.equal(archive.server?.approvalError, undefined)
+})
+
+test("missing TimeWindow identity, record, or valid fields fails closed", () => {
+  const existing = win({})
+  const malformed = windowInput({ end_time: null })
+  const cases = [
+    restoredWindowProposal(
+      windowPresentation("UPDATE", windowInput({}), null),
+      [existing],
+    ),
+    restoredWindowProposal(windowPresentation("ARCHIVE", null, "missing"), [
+      existing,
+    ]),
+    restoredWindowProposal(windowPresentation("UPDATE", malformed), [existing]),
+  ]
+  for (const proposal of cases) {
+    assert.match(proposal.server?.approvalError ?? "", /Duyệt đã bị khóa/)
+    const text = JSON.stringify(proposal.server?.details)
+    assert.doesNotMatch(text, /null–null|undefined|Invalid Date|\?/)
+  }
+})
+
+test("valid task and plan proposals remain approvable", () => {
+  const taskBody = example("OrchestratorReply.json") as OrchestratorReply
+  const taskProposal = proposalFromReply(taskBody, {
+    tasks: [],
+    events: [],
+    windows: [],
+    availability: [],
+    revision: 0,
+  })!
+  assert.equal(taskProposal.server?.approvalError, undefined)
+
+  const planProposal = proposalFromReply(
+    reply({
+      ...windowPresentation("ARCHIVE", null),
+      normalized_command: null,
+      proposal: proposal(),
+    }),
+    {
+      tasks: [mapTasksAndEvents([task()], []).tasks[0]],
+      events: [],
+      windows: [],
+      availability: [],
+      revision: 4,
+    },
+  )!
+  assert.equal(planProposal.server?.approvalError, undefined)
 })

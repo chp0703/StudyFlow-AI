@@ -1,6 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import {
+  approvalBlocked,
   demoNoOpResult,
   describeChanges,
   diffTasks,
@@ -64,6 +65,39 @@ test("a no-op command keeps a pending task proposal for explicit approval", () =
     reply: response,
     notice: null,
   })
+})
+
+test("unsupported free-time commands keep the pending proposal intact", () => {
+  const pending = {
+    id: "task",
+    createdAt: 0,
+    baseRevision: 0,
+    changes: [{ kind: "added" as const, task: task(1) }],
+    windowChanges: [],
+    issues: [],
+    reply: "Đề xuất thêm công việc",
+    next: { tasks: [task(1)], availability: [] },
+  } satisfies Proposal
+  for (const command of ["rảnh hôm nay từ 9h đến 12h", "xóa rảnh hôm nay"]) {
+    const response = runPlannerCommand(
+      command,
+      pending.next.tasks,
+      pending.next.availability,
+    )
+    assert.deepEqual(response.tasks, pending.next.tasks)
+    assert.deepEqual(response.availability, pending.next.availability)
+    assert.equal(demoNoOpResult(pending, response.reply).proposal, pending)
+  }
+})
+
+test("unresolved server proposals are blocked independently of stale state", () => {
+  const unresolved = {
+    baseRevision: 1,
+    server: { approvalError: "Không thể xác minh" },
+  } as Proposal
+  assert.equal(approvalBlocked(unresolved, false), true)
+  assert.equal(approvalBlocked({ baseRevision: 1 } as Proposal, false), false)
+  assert.equal(approvalBlocked({ baseRevision: 1 } as Proposal, true), true)
 })
 
 test("an invalid command is a no-op against the pending preview", () => {

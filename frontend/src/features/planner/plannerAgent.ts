@@ -43,7 +43,7 @@ const WEEKDAY_WORDS: Record<string, number> = {
 const DAY_RE =
   /hôm nay|ngày mai|thứ (2|3|4|5|6|7|hai|ba|tư|năm|sáu|bảy)|chủ nhật|\bcn\b/u
 
-const DATE_RE = /(\d{1,2})\/(\d{1,2})/u
+const DATE_RE = /(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/u
 
 const TIME_RE = /(\d{1,2})(?::([0-5]\d)|\s*(?:h|giờ))/u
 
@@ -87,15 +87,16 @@ function parseWhen(text: string): Parsed {
   const explicit = DATE_RE.exec(rest)
 
   if (explicit) {
-    // dd/mm: dùng năm nay; chuyển sang năm sau nếu ngày đó đã qua.
+    // dd/mm dùng năm nay (hoặc năm sau nếu đã qua); dd/mm/yyyy giữ đúng năm.
 
-    const year = Number(current.slice(0, 4))
+    const explicitYear = explicit[3] ? Number(explicit[3]) : null
+    const year = explicitYear ?? Number(current.slice(0, 4))
     const candidate = addCivilDays(
       `${year}-${explicit[2].padStart(2, "0")}-${explicit[1].padStart(2, "0")}`,
       0,
     )
     date =
-      candidate < current
+      !explicitYear && candidate < current
         ? addCivilDays(
             `${year + 1}-${explicit[2].padStart(2, "0")}-${explicit[1].padStart(2, "0")}`,
             0,
@@ -217,34 +218,24 @@ export function runPlannerCommand(
       ? `Lịch chỉ xếp từ ${label(FIRST_HOUR)} đến ${label(LAST_HOUR)}.`
       : ""
 
-  // Khung giờ: "rảnh thứ 6 từ 9h đến 12h", "bận ngày mai lúc 14h", "xóa rảnh/bận thứ 6".
-
-  // Chỉ cảnh báo mềm: ưu tiên giờ rảnh đã khai báo trong ngày nhưng vẫn cho phép các giờ khác.
-
-  const outsideFree = (date: string, hour: number) => {
-    const free = availability.filter(
-      (w) => w.date === date && w.kind === "free",
+  // FE-03 chỉ điều khiển trục hiển thị; Demo không nhận lệnh ghi giờ rảnh.
+  if (/^(?:xóa|bỏ)?\s*rảnh(?:\s|$)/u.test(text))
+    return unchanged(
+      "Bản demo không hỗ trợ khai báo hoặc xóa giờ rảnh. Tùy chỉnh giờ hiển thị chỉ áp dụng cho trục thời gian trong Chi tiết giờ.",
     )
 
-    return free.length && !free.some((w) => w.hour === hour)
-      ? " (ngoài khung giờ rảnh bạn khai báo)"
-      : ""
-  }
-
-  let m = /^(xóa|bỏ)?\s*(rảnh|bận)\s+(.+)$/u.exec(text)
+  let m = /^(xóa|bỏ)?\s*bận\s+(.+)$/u.exec(text)
 
   if (m) {
-    const kind = m[2] === "rảnh" ? "free" : "busy"
+    const { date } = parseWhen(m[2])
 
-    const { date } = parseWhen(m[3])
-
-    const hours = parseHours(m[3])
+    const hours = parseHours(m[2])
 
     if (!date)
-      return unchanged("Cho mình biết ngày. Ví dụ: rảnh thứ 6 từ 9h đến 12h.")
+      return unchanged("Cho mình biết ngày. Ví dụ: bận thứ 6 từ 9h đến 12h.")
 
     if (!m[1] && !hours.length)
-      return unchanged("Cho mình biết giờ. Ví dụ: rảnh thứ 6 từ 9h đến 12h.")
+      return unchanged("Cho mình biết giờ. Ví dụ: bận thứ 6 từ 9h đến 12h.")
 
     const range = hours.length
       ? hours
@@ -259,16 +250,25 @@ export function runPlannerCommand(
 
     const ids = new Set(range.map((h) => windowId(date, h)))
 
-    const kept = availability.filter((w) => !ids.has(w.id))
+    const removing = Boolean(m[1])
 
-    const next = m[1]
+    const kept = availability.filter(
+      (w) => !ids.has(w.id) || (removing && w.kind !== "busy"),
+    )
+
+    const next = removing
       ? kept
       : [
           ...kept,
 
           ...range.map(
             (hour) =>
-              ({ id: windowId(date, hour), date, hour, kind }) as TimeWindow,
+              ({
+                id: windowId(date, hour),
+                date,
+                hour,
+                kind: "busy",
+              }) as TimeWindow,
           ),
         ]
 
@@ -277,9 +277,9 @@ export function runPlannerCommand(
 
       availability: next,
 
-      reply: m[1]
+      reply: removing
         ? `Đã bỏ khung giờ đã khai báo ngày ${vnDate(date)}.`
-        : `Đã đánh dấu ${range.length} giờ ${m[2]} ngày ${vnDate(date)}.`,
+        : `Đã đánh dấu ${range.length} giờ bận ngày ${vnDate(date)}.`,
     }
   }
 
@@ -319,20 +319,12 @@ export function runPlannerCommand(
       for (let i = 0; i <= daysUntil(task.deadline) && !slot; i++) {
         const date = addCivilDays(vietnamDate(), i)
 
-        const free = availability.filter(
-          (w) => w.date === date && w.kind === "free",
-        )
-
         for (
           let h = i === 0 ? Number(vietnamClock().slice(0, 2)) + 1 : FIRST_HOUR;
           h <= LAST_HOUR;
           h++
         )
-          if (
-            h >= FIRST_HOUR &&
-            !taken(date, h) &&
-            (!free.length || free.some((w) => w.hour === h))
-          ) {
+          if (h >= FIRST_HOUR && !taken(date, h)) {
             slot = { date, hour: h }
 
             break
@@ -466,7 +458,7 @@ export function runPlannerCommand(
 
       availability,
 
-      reply: `Đã thêm "${title}" lúc ${timeRange(slot, minute).split(" – ")[0]}${moved}${outsideFree(date, slot)}.`,
+      reply: `Đã thêm "${title}" lúc ${timeRange(slot, minute).split(" – ")[0]}${moved}.`,
     }
   }
 

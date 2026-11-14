@@ -34,7 +34,7 @@ export default function WeekCalendar({
   availability: TimeWindow[]
   proposedWindowIds: Set<string>
   changeOf: Map<Task["id"], TaskChange["kind"]>
-  prefill: (date: Date, hour: number) => void
+  prefill: (date: Date, minuteOfDay: number) => void
   nowHour: number
   nowMinutes: number
 }) {
@@ -132,7 +132,7 @@ export default function WeekCalendar({
                         height: Math.min(60, to - minute) * pxPerMinute,
                       }}
                       aria-label={`${weekdayNames[day]} ${dateKey} lúc ${timeLabel(minute)}; nhập yêu cầu lịch học`}
-                      onClick={() => prefill(date, Math.floor(minute / 60))}
+                      onClick={() => prefill(date, minute)}
                     >
                       <span>{timeLabel(minute)}</span>
                       {index === 0 && minute % 60 !== 0 && (

@@ -2,7 +2,13 @@ import { useRef, useState, type Dispatch, type SetStateAction } from "react"
 import type { Task } from "../../types/task"
 import type { Proposal, TimeWindow } from "../../types/planner"
 import { runPlannerCommand } from "./plannerAgent"
-import { demoNoOpResult, diffTasks, diffWindows, isStale } from "./proposal"
+import {
+  approvalBlocked,
+  demoNoOpResult,
+  diffTasks,
+  diffWindows,
+  isStale,
+} from "./proposal"
 import { api } from "../../api"
 
 import { apiEnabled } from "../../api/config"
@@ -222,7 +228,12 @@ export function usePlanner(
   }
 
   const decideOnServer = async (decision: "APPROVE" | "REJECT") => {
-    if (!proposal?.server || busy || (stale && decision === "APPROVE")) return
+    if (
+      !proposal?.server ||
+      busy ||
+      (decision === "APPROVE" && approvalBlocked(proposal, stale))
+    )
+      return
 
     setBusy(true)
 

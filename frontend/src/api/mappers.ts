@@ -204,6 +204,8 @@ export function proposalFromReply(
     taskIds: [] as string[],
   }
 
+  if (summary.approvalError) server.approvalError = summary.approvalError
+
   const plan = presentation.proposal
 
   if (plan) {
@@ -324,6 +326,8 @@ export type Summary = {
   title: string
 
   details: DetailRow[]
+
+  approvalError?: string
 }
 
 export type DetailRow = {
@@ -350,50 +354,116 @@ const WEEKDAYS = [
   "Chủ nhật",
 ]
 
+const VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh"
+
+const clockMinutes = (value: string) => {
+  const match = /^(\d{2}):(\d{2})$/u.exec(value)
+  if (!match) return null
+  const hour = Number(match[1])
+  const minute = Number(match[2])
+  if (minute > 59 || hour > 24 || (hour === 24 && minute !== 0)) return null
+  return hour * 60 + minute
+}
+
+const instantParts = (date: Date) => {
+  if (!Number.isFinite(date.getTime())) return null
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: VIETNAM_TIME_ZONE,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(date)
+      .map((part) => [part.type, part.value]),
+  )
+  return {
+    date: `${parts.day}/${parts.month}/${parts.year}`,
+    time: `${parts.hour}:${parts.minute}`,
+  }
+}
+
+export function formatTimeWindow(window: Partial<ApiTimeWindow>) {
+  if (window.recurrence === "WEEKLY") {
+    const start = window.start_time ? clockMinutes(window.start_time) : null
+    const end = window.end_time ? clockMinutes(window.end_time) : null
+    if (
+      !Number.isInteger(window.weekday) ||
+      (window.weekday ?? 0) < 1 ||
+      (window.weekday ?? 0) > 7 ||
+      start === null ||
+      end === null ||
+      start >= end
+    )
+      return null
+    return `${WEEKDAYS[window.weekday!]!} hằng tuần, ${window.start_time}–${window.end_time}`
+  }
+
+  if (window.recurrence !== "NONE" || !window.start_at || !window.end_at)
+    return null
+  const startDate = new Date(window.start_at)
+  const endDate = new Date(window.end_at)
+  const start = instantParts(startDate)
+  const end = instantParts(endDate)
+  if (!start || !end || startDate >= endDate) return null
+  return start.date === end.date
+    ? `${start.date}, ${start.time}–${end.time}`
+    : `${start.date} ${start.time}–${end.date} ${end.time}`
+}
+
+const isWindowCommand = (operation: string) =>
+  operation === "set_availability" || operation === "set_busy_interval"
+
+const WINDOW_APPROVAL_ERROR =
+  "Không thể xác minh đầy đủ khung giờ bị ảnh hưởng. Bạn có thể từ chối và tạo lại yêu cầu; Duyệt đã bị khóa."
+
 function windowDetails(
   args: Record<string, unknown>,
   windows: ApiTimeWindow[],
-): DetailRow[] {
+  operation: string,
+): Pick<Summary, "details" | "approvalError"> {
   const w = (args.window ?? {}) as Partial<ApiTimeWindow>
+  const targetId =
+    typeof args.window_id === "string" && args.window_id ? args.window_id : null
+  const previous = targetId
+    ? windows.find((item) => item.window_id === targetId)
+    : undefined
+  const previousText = previous ? formatTimeWindow(previous) : null
+  const proposedText = args.window ? formatTimeWindow(w) : null
+  const changeType = args.change_type
+  const expectedKind =
+    operation === "set_busy_interval" ? "BUSY" : "AVAILABILITY"
+  const needsPrevious = changeType === "UPDATE" || changeType === "ARCHIVE"
+  const needsProposed = changeType === "ADD" || changeType === "UPDATE"
+  const invalid =
+    !["ADD", "UPDATE", "ARCHIVE"].includes(String(changeType)) ||
+    (needsPrevious &&
+      (!targetId ||
+        !previous ||
+        !previousText ||
+        previous.kind !== expectedKind)) ||
+    (needsProposed && (!proposedText || w.kind !== expectedKind))
 
-  const previous = windows.find((item) => item.window_id === args.window_id)
-
-  const when =
-    w.recurrence === "WEEKLY"
-      ? `${WEEKDAYS[w.weekday ?? 0] ?? ""} hằng tuần, ${w.start_time}–${w.end_time}`
-      : `${
-          w.start_at
-            ? new Date(w.start_at).toLocaleString("vi-VN", {
-                timeZone: "Asia/Ho_Chi_Minh",
-              })
-            : "?"
-        } – ${
-          w.end_at
-            ? new Date(w.end_at).toLocaleString("vi-VN", {
-                timeZone: "Asia/Ho_Chi_Minh",
-              })
-            : "?"
-        }`
-
-  const rows = [
-    { label: "Loại", value: w.kind === "BUSY" ? "Giờ bận" : "Thời gian học" },
-
+  const details: DetailRow[] = [
     {
-      label: args.change_type === "ARCHIVE" ? "Sẽ xóa" : "Thời gian mới",
-      value:
-        args.change_type === "ARCHIVE" && previous
-          ? `${WEEKDAYS[previous.weekday ?? 0] ?? ""} hằng tuần, ${previous.start_time}–${previous.end_time}`
-          : when,
+      label: "Loại",
+      value: expectedKind === "BUSY" ? "Giờ bận" : "Thời gian học",
     },
   ]
+  if (changeType === "UPDATE" && previousText)
+    details.push({ label: "Thời gian cũ", value: previousText })
+  if (changeType === "ARCHIVE" && previousText)
+    details.push({ label: "Sẽ xóa", value: previousText })
+  if (changeType !== "ARCHIVE" && proposedText)
+    details.push({ label: "Thời gian mới", value: proposedText })
 
-  if (args.change_type === "UPDATE" && previous)
-    rows.splice(1, 0, {
-      label: "Thời gian cũ",
-      value: `${WEEKDAYS[previous.weekday ?? 0] ?? ""} hằng tuần, ${previous.start_time}–${previous.end_time}`,
-    })
-
-  return rows
+  return {
+    details,
+    ...(invalid ? { approvalError: WINDOW_APPROVAL_ERROR } : {}),
+  }
 }
 
 // Title and rows describing what an approval would do, from the server-issued presentation.
@@ -467,7 +537,12 @@ export function summarize(
       ),
     }
 
-  if (command)
+  if (command && isWindowCommand(command.operation)) {
+    const windowSummary = windowDetails(
+      command.arguments,
+      windows,
+      command.operation,
+    )
     return {
       title: `${
         command.arguments.change_type === "ARCHIVE"
@@ -479,7 +554,14 @@ export function summarize(
         command.operation === "set_busy_interval" ? "giờ bận" : "thời gian học"
       }`,
 
-      details: windowDetails(command.arguments, windows),
+      ...windowSummary,
+    }
+  }
+
+  if (command)
+    return {
+      title: "Thao tác đang chờ",
+      details: [],
     }
 
   return { title: "Thao tác đang chờ", details: [] }

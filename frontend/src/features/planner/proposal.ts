@@ -65,6 +65,9 @@ export function diffWindows(
 export const isStale = (proposal: Proposal, revision: number) =>
   proposal.baseRevision !== revision
 
+export const approvalBlocked = (proposal: Proposal | null, stale: boolean) =>
+  Boolean(stale || proposal?.server?.approvalError)
+
 export const demoNoOpResult = (proposal: Proposal | null, response: string) =>
   proposal && (proposal.changes.length > 0 || proposal.windowChanges.length > 0)
     ? { proposal, reply: proposal.reply, notice: response }

@@ -35,3 +35,14 @@ Detailed Time (WeekCalendar) is unaffected because it does not render `.compact-
 - API E2E with an authenticated backend is **BLOCKED** because no authorized test account/backend was available. Screenshots were captured in the local audit session only; they were not committed or uploaded.
 
 The branch does not copy unrelated `origin/main` work. The latest `origin/main` also changes `frontend/src/App.tsx`; a three-way integration preview auto-merges the independent hunks, but this overlap remains a reviewer integration-risk checkpoint.
+
+## FE Lead review blockers — PR #40 (2026-11-14)
+
+| Finding | Root cause | Fix and regression evidence | Status |
+| --- | --- | --- | --- |
+| Obsolete Demo `rảnh` interaction | The legacy combined `rảnh|bận` parser still wrote Demo availability and the scheduler still treated Free as an input. | Demo rejects add/remove `rảnh` truthfully without changing tasks, availability or an existing proposal. Busy operations and read-only Free/Busy rendering remain. `plannerAgent.test.ts`, `proposal.test.ts`. | **PASS** |
+| TimeWindow confirmation trust boundary | Reload restoration omitted `server.windows`; the mapper formatted every previous target as WEEKLY and allowed unresolved summaries. | Restore passes authoritative windows. One formatter covers WEEKLY/NONE in `Asia/Ho_Chi_Minh`; UPDATE shows old/new and ARCHIVE shows the exact target. Missing IDs/records or malformed intervals produce a Vietnamese warning and block Approve in both UI and handler while preserving Reject and the original ActionReference. Task/plan proposals remain unaffected. `mappers.test.ts`, `ProposalReview.test.ts`, `proposal.test.ts`. | **PASS (authenticated API E2E not run)** |
+| Exact clicked minute | Detailed Time reduced `minuteOfDay` to an integer hour before prefill. | Callback now carries `minuteOfDay`; Demo composer receives `HH:mm`, focus and cursor placement remain, and no submit occurs. Tests cover 08:00, 09:15, 10:30, 16:45, next-week navigation and the Nov/Dec boundary. `WeekCalendar.test.ts`. | **PASS** |
+| Display Settings relevance | The FE-03 control mounted in all views although only Detailed Time consumed ranges. | The control mounts only for `detail`; seven ranges stay in parent state across view switches and remain presentation-only. `calendarDisplay.test.ts`. | **PASS** |
+
+Current readiness: all four review findings have focused automated coverage. Final verification is 67/67 Node tests plus TypeScript, Vite build, formatter and `git diff --check`; browser QA passed at 1440×900, 390×844 and tablet-class 767×1024 CSS px with no horizontal page overflow or console warning/error. Authenticated API restoration remains unavailable without an authorized backend session. The separate 180-minute Demo scheduler issue remains out of scope.

@@ -85,6 +85,8 @@ export type Proposal = {
       value: string
     }>
 
+    approvalError?: string
+
     // Tasks touched by the proposal (calendar events are keyed by block id, the task list by task id).
 
     taskIds: string[]

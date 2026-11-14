@@ -3,6 +3,7 @@ import assert from "node:assert/strict"
 import {
   DEFAULT_DISPLAY_RANGES,
   displayRangeError,
+  displaySettingsVisible,
   eventPosition,
   type CalendarDisplayRanges,
 } from "./calendarDisplay.ts"
@@ -51,4 +52,10 @@ test("hiding and revealing a 09:15 event never changes its record or scheduler r
     runPlannerCommand("lập kế hoạch", []),
     runPlannerCommand("lập kế hoạch", []),
   )
+})
+
+test("display settings are available only in Detailed Time", () => {
+  assert.equal(displaySettingsVisible("compact"), false)
+  assert.equal(displaySettingsVisible("month"), false)
+  assert.equal(displaySettingsVisible("detail"), true)
 })

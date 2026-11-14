@@ -5,8 +5,10 @@ import { addMonths } from "../features/planner/monthGrid"
 import ProposalReview from "../features/planner/ProposalReview"
 import CalendarDisplaySettings from "../features/planner/CalendarDisplaySettings"
 import PlannerCommandComposer from "../features/planner/PlannerCommandComposer"
+import { prefillPlannerCommand } from "../features/planner/plannerPrefill"
 import {
   DEFAULT_DISPLAY_RANGES,
+  displaySettingsVisible,
   type CalendarDisplayRanges,
 } from "../features/planner/calendarDisplay"
 import { usePlanner, type PlannerProps } from "../features/planner/usePlanner"
@@ -388,25 +390,14 @@ export default function Planner({
 
   // Nhấn ô trống để bắt đầu lệnh thêm vào khung giờ đó.
 
-  const prefill = (date: Date, hour: number) => {
-    const [, month, day] = dateOf(date).split("-")
-    const d = `${Number(day)}/${Number(month)}`
-
-    const text = apiEnabled
-      ? `Thêm công việc hạn ngày ${d}, làm khoảng 60 phút`
-      : `thêm  lúc ${hour}h ngày ${d}`
-
-    setInput(text)
-
-    requestAnimationFrame(() => {
-      inputRef.current?.focus()
-
-      inputRef.current?.setSelectionRange(
-        apiEnabled ? text.length : 5,
-        apiEnabled ? text.length : 5,
-      )
-    })
-  }
+  const prefill = (date: Date, minuteOfDay: number) =>
+    prefillPlannerCommand(
+      date,
+      minuteOfDay,
+      apiEnabled,
+      setInput,
+      inputRef.current,
+    )
 
   const changeOf = new Map(proposal?.changes.map((c) => [c.task.id, c.kind]))
 
@@ -539,10 +530,12 @@ export default function Planner({
           approve={approve}
           reject={reject}
         />
-        <CalendarDisplaySettings
-          ranges={displayRanges}
-          onChange={setDisplayRanges}
-        />
+        {displaySettingsVisible(calendarView) && (
+          <CalendarDisplaySettings
+            ranges={displayRanges}
+            onChange={setDisplayRanges}
+          />
+        )}
         <p className="planner-legend" aria-label="Chú thích">
           <span className="legend-confirmed">Đã xác nhận</span>
 

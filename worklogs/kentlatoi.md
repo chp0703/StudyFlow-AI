@@ -172,3 +172,21 @@
 - Chrome remote debugging không khả dụng trong môi trường sandbox nên browser QA tự động bị giới hạn; đã xác minh thủ công qua phân tích CSS tĩnh (9/9 checks) và kiểm tra logic cascade. Người dùng cần mở ứng dụng trên trình duyệt để xác nhận trực quan tại ba viewport.
 - Vấn đề lập lịch 180 phút và các vấn đề Round 2 chưa được xử lý trong hotfix này.
 - API E2E có đăng nhập vẫn BLOCKED.
+
+## 2026-11-14 — Resolve PR #40 FE Lead review blockers
+
+**Mục tiêu:** Sửa bốn finding trong review `CHANGES_REQUESTED` của FE Lead mà không đổi contract/backend và giữ nguyên hotfix cuộn Tuần thu gọn.
+
+**Đã làm**
+- Bỏ tương tác ghi `rảnh` khỏi Demo; phản hồi rõ ràng, giữ tasks/availability/proposal, loại Free khỏi scheduler input và giữ thao tác Busy cùng Free/Busy read-only.
+- Truyền `server.windows` khi restore pending action; dùng một formatter WEEKLY/NONE theo `Asia/Ho_Chi_Minh`. UPDATE hiện cũ/mới, ARCHIVE hiện đúng target; thiếu ID/record hoặc thời gian lỗi sẽ cảnh báo và khóa Duyệt ở UI lẫn handler, không tạo lại ActionReference và không chặn proposal task/plan hợp lệ.
+- Truyền `minuteOfDay` từ Detailed Time đến composer; prefill giữ `HH:mm` và `dd/mm/yyyy`, focus/cursor, không auto-submit. Bổ sung test giờ tròn/phút lẻ, đổi tuần và biên tháng/năm.
+- Chỉ mount `CalendarDisplaySettings` trong Chi tiết giờ; state bảy ngày giữ ở `Planner`, không gọi API hoặc đổi dữ liệu/proposal/revision.
+- Cập nhật `frontend/DESIGN.md` và `frontend/PLANNER_REQUIREMENTS_TRACE.md`, giữ nguyên lịch sử audit trước đó.
+
+**Kết quả:** Nhánh `fix/planner-followup-leader-spec-kent`; 67/67 Node tests đạt, `npx tsc --noEmit`, `npm run build`, `npm run format`, `git diff --check` đạt. Browser QA đạt ở 1440×900, 390×844 và 767×1024 CSS px (công cụ làm tròn target tablet 768): Tuần/Tháng/Chi tiết giờ không tràn ngang, settings đúng view và giữ cấu hình, click 09:15 điền đúng ngày/giờ, lệnh `rảnh` không làm mất proposal, agenda dài cuộn tới đáy, không có console warning/error.
+
+**Giới hạn**
+- Pending TimeWindow restore/decision với API có đăng nhập chưa chạy vì không có backend và tài khoản thử nghiệm được cấp quyền; trust boundary được kiểm tra bằng fixture contract và rendered-component tests.
+- Vite vẫn cảnh báo bundle JS 635.90 kB (>500 kB); Vite SSR tests vẫn in cảnh báo WebSocket bind của sandbox nhưng toàn bộ assertion đạt.
+- Vấn đề Demo scheduler 180 phút nằm ngoài scope và chưa thay đổi.

@@ -30,14 +30,22 @@ test("rejects missing info and out-of-range hours", () => {
   assert.match(runPlannerCommand("hello", []).reply, /lệnh/)
 })
 
-test("sets, replaces and clears availability; busy hours are skipped", () => {
+test("free-time commands are read-only while busy operations remain supported", () => {
   const day = toIsoDate(today)
-  let r = runPlannerCommand("rảnh hôm nay từ 9h đến 12h", [])
-  assert.equal(r.availability.length, 3)
-  assert.ok(r.availability.every((w) => w.kind === "free" && w.date === day))
+  const existing = [
+    { id: `${day}-9`, date: day, hour: 9, kind: "free" as const },
+  ]
+  const free = runPlannerCommand("rảnh hôm nay từ 9h đến 12h", [], existing)
+  assert.equal(free.availability, existing)
+  assert.deepEqual(free.tasks, [])
+  assert.match(free.reply, /không hỗ trợ.*giờ rảnh/iu)
 
-  r = runPlannerCommand("bận hôm nay lúc 10h", [], r.availability)
-  assert.equal(r.availability.length, 3)
+  const cleared = runPlannerCommand("xóa rảnh hôm nay", [], existing)
+  assert.equal(cleared.availability, existing)
+  assert.match(cleared.reply, /Chi tiết giờ/)
+
+  let r = runPlannerCommand("bận hôm nay lúc 10h", [], existing)
+  assert.equal(r.availability.length, 2)
   assert.equal(r.availability.find((w) => w.hour === 10)?.kind, "busy")
 
   const added = runPlannerCommand(
@@ -47,20 +55,19 @@ test("sets, replaces and clears availability; busy hours are skipped", () => {
   )
   assert.equal(added.tasks[0].hour, 11)
 
-  const out = runPlannerCommand(
-    "thêm Ôn bài hôm nay lúc 15h",
-    [],
-    r.availability,
-  )
-  assert.match(out.reply, /ngoài khung giờ rảnh/)
-
-  r = runPlannerCommand("xóa rảnh hôm nay", [], r.availability)
-  assert.equal(r.availability.length, 0)
+  r = runPlannerCommand("xóa bận hôm nay", [], r.availability)
+  assert.deepEqual(r.availability, existing)
 })
 
 test("parses dd/mm dates", () => {
   const r = runPlannerCommand("thêm Ôn bài lúc 9h ngày 5/11", [])
   assert.match(r.tasks[0]?.date ?? "", /-11-05$/)
+})
+
+test("an explicit prefill year preserves a past calendar date", () => {
+  const result = runPlannerCommand("thêm Ôn bài lúc 09:15 ngày 9/11/2026", [])
+  assert.equal(result.tasks[0]?.date, "2026-11-09")
+  assert.equal(result.tasks[0]?.minute, 15)
 })
 
 test("creates an unscheduled task with deadline and effort", () => {

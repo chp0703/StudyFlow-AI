@@ -4,6 +4,9 @@ export interface CalendarDisplayRange {
 }
 export type CalendarDisplayRanges = readonly [CalendarDisplayRange, CalendarDisplayRange, CalendarDisplayRange, CalendarDisplayRange, CalendarDisplayRange, CalendarDisplayRange, CalendarDisplayRange]
 
+export const displaySettingsVisible = (view: "compact" | "detail" | "month") =>
+  view === "detail"
+
 export const DEFAULT_DISPLAY_RANGES: CalendarDisplayRanges = [
   { start: "08:00", end: "18:00" },
   { start: "08:00", end: "18:00" },
