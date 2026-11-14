@@ -1,5 +1,5 @@
 import {
-  useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent,
@@ -9,6 +9,7 @@ import { CircleAlert, Info, LoaderCircle, Send, Sparkles } from "lucide-react"
 import Button from "../../components/ui/Button"
 import type { PlannerFeedback } from "./usePlanner"
 import { composerKeyAction } from "./composerKeyboard"
+import { resizePlannerComposer } from "./composerTextarea"
 
 const DEMO_SUGGESTIONS = [
   "tạo công việc Báo cáo hạn 20/11 3 giờ",
@@ -61,13 +62,13 @@ export default function PlannerCommandComposer({
   feedback: PlannerFeedback | null
   textareaRef: RefObject<HTMLTextAreaElement | null>
 }) {
-  const [expanded, setExpanded] = useState(Boolean(input))
+  const [expanded, setExpanded] = useState(false)
   const composing = useRef(false)
   const suggestions = apiMode ? API_SUGGESTIONS : DEMO_SUGGESTIONS
 
-  useEffect(() => {
-    if (input) setExpanded(true)
-  }, [input])
+  useLayoutEffect(() => {
+    if (textareaRef.current) resizePlannerComposer(textareaRef.current)
+  }, [input, textareaRef])
 
   const submit = () => {
     if (!input.trim() || busy) return
@@ -96,6 +97,11 @@ export default function PlannerCommandComposer({
     <div className={`planner-command${expanded ? " is-expanded" : ""}`}>
       <form
         className="planner-command-form"
+        onFocus={() => setExpanded(true)}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null))
+            setExpanded(false)
+        }}
         onSubmit={(event) => {
           event.preventDefault()
           submit()
@@ -112,12 +118,11 @@ export default function PlannerCommandComposer({
             id="planner-command-input"
             ref={textareaRef}
             value={input}
-            rows={expanded ? 3 : 1}
+            rows={1}
             placeholder="Bạn muốn điều chỉnh lịch thế nào?"
             aria-describedby={feedback ? "planner-command-feedback" : undefined}
             aria-expanded={expanded}
             disabled={busy}
-            onFocus={() => setExpanded(true)}
             onChange={(event) => setInput(event.target.value)}
             onCompositionStart={() => {
               composing.current = true

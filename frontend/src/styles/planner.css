@@ -47,7 +47,7 @@
   pointer-events: none;
 }
 
-/* Composer gọn khi nghỉ và mở thêm hướng dẫn khi người dùng tương tác. */
+/* Composer giữ một hàng mặc định, textarea chỉ cao thêm khi nội dung cần. */
 .planner-heading-action {
   flex: 1;
   min-width: 0;
@@ -95,7 +95,7 @@
   max-height: 112px;
   padding: 10px 9px;
   resize: none;
-  overflow-y: auto;
+  overflow-y: hidden;
   border: 0;
   border-radius: 11px;
   background: transparent;
