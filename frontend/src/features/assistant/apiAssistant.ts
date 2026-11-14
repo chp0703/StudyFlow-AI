@@ -27,13 +27,12 @@ const INTENTS: IntentCandidate[] = [
 ]
 
 // A card the user can approve or cancel: what the server says it will do, plus the reference to send back.
-export function proposalFromReply(reply: OrchestratorReply): ActionProposal | null {
+export function proposalFromReply(
+  reply: OrchestratorReply,
+): ActionProposal | null {
   const presentation = reply.result?.data as ActionPresentation | undefined
 
-  if (
-    !reply.action_reference ||
-    presentation?.kind !== "ACTION_PRESENTATION"
-  )
+  if (!reply.action_reference || presentation?.kind !== "ACTION_PRESENTATION")
     return null
 
   const { title, details } = summarize(presentation)
@@ -63,9 +62,15 @@ function listing(reply: OrchestratorReply): string {
 
   const lines = data.items
     .slice(0, 5)
-    .map((t) => `• ${t.title} — hạn ${t.deadline_date ?? t.deadline_at.slice(0, 10)}`)
+    .map(
+      (t) =>
+        `• ${t.title} — hạn ${t.deadline_date ?? t.deadline_at.slice(0, 10)}`,
+    )
 
-  const more = data.items.length > 5 ? `\n… và ${data.items.length - 5} công việc khác.` : ""
+  const more =
+    data.items.length > 5
+      ? `\n… và ${data.items.length - 5} công việc khác.`
+      : ""
 
   return `\n${lines.join("\n")}${more}`
 }
@@ -91,7 +96,10 @@ export function replyToMessage(reply: OrchestratorReply): Draft {
 
       category: "CLARIFICATION",
 
-      text: [reply.message, ...reply.questions.map((q) => `• ${q.message}`)].join("\n"),
+      text: [
+        reply.message,
+        ...reply.questions.map((q) => `• ${q.message}`),
+      ].join("\n"),
     }
 
   if (reply.state === "ERROR" || reply.error)
@@ -102,7 +110,10 @@ export function replyToMessage(reply: OrchestratorReply): Draft {
 
       text: reply.message,
 
-      error: { code: reply.error?.code ?? "INTERNAL_ERROR", detail: reply.message },
+      error: {
+        code: reply.error?.code ?? "INTERNAL_ERROR",
+        detail: reply.message,
+      },
     }
 
   return {

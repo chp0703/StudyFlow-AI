@@ -171,10 +171,7 @@ export function usePlanner(
 
     const commandChangedTasks = diffTasks(shown, result.tasks)
 
-    const commandChangedWindows = diffWindows(
-      shownWindows,
-      result.availability,
-    )
+    const commandChangedWindows = diffWindows(shownWindows, result.availability)
 
     const changes = diffTasks(tasks, result.tasks)
 
@@ -292,7 +289,10 @@ export function usePlanner(
 
     setReply("")
 
-    setFeedback({ kind: "info", text: "Đã từ chối đề xuất. Lịch không thay đổi." })
+    setFeedback({
+      kind: "info",
+      text: "Đã từ chối đề xuất. Lịch không thay đổi.",
+    })
   }
 
   return {

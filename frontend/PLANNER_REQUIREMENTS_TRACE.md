@@ -11,6 +11,20 @@ Leader requirements are supplied in the correction brief. `frontend-demo-follow-
 | FE-05 | Sticky Vietnam weekday/date header | Detailed Time retains one sticky weekday/date header inside its horizontal timeline region. | **VERIFIED** | Browser computed style: `position: sticky; top: 0`; 390, tablet-class and 1440 QA. |
 | FE-06 | Real server upload/extraction with confirmation | Attachments remain display-only in Demo and disabled in API mode; no uploaded/read/extracted claim is shown. | **BLOCKED / safe frontend behavior verified** | `assistantService.test.ts` attachment assertion and UI copy review; no upload/extraction backend exists in the current contract. |
 
+## Hotfix Round 1 — Compact Week Agenda Scroll (2026-11-14)
+
+**Root cause:** `.main-content:has(.planner-page)` imposed `height: calc(100dvh - 58px)` with `overflow: hidden` propagating down through `.planner-page` and `.planner-calendar`, both also `overflow: hidden`. `.compact-week` had `overflow: auto` but was sized by `flex: 0 0 auto`, meaning its intrinsic height exceeded the fixed viewport budget and was silently clipped by the ancestor `overflow: hidden` chain. The `.compact-agenda` was rendered but unreachable by scroll.
+
+**Fix:** Added `:has(.compact-week)` selector overrides (mirroring the existing Month View pattern) in `frontend/src/styles/planner.css`:
+- `.main-content:has(.planner-page):has(.compact-week)` → `height: auto; min-height: calc(100dvh - 58px); overflow: visible`
+- `.planner-page:has(.compact-week)` → `flex: 0 0 auto; overflow: visible`
+- `.planner-calendar` inside → `overflow: visible`
+- `.compact-week` inside → `overflow: visible`
+
+Detailed Time (WeekCalendar) is unaffected because it does not render `.compact-week`; its `overflow: hidden` chain and internal timeline scroll are preserved. Month View is unaffected because its existing `:has(.month-calendar)` override already fires. Mobile `@media (max-width: 800px)` updated to `overflow-x: hidden; overflow-y: visible` for `.compact-week`.
+
+**Verification:** 57/57 Node tests, `npx tsc --noEmit`, `npm run build`, `npm run format`, `git diff --check` all pass. Browser QA performed at 390×844, 768×1024, 1440×900.
+
 ## Final UX audit evidence
 
 - Calendar views: Compact Week remains default; Month uses a Monday-first 4–6-row grid; Detailed Time keeps exact-minute placement, per-weekday ranges and sticky dates.

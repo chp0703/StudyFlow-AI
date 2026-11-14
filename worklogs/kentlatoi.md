@@ -150,3 +150,25 @@
 **Giới hạn**
 - API E2E có đăng nhập vẫn BLOCKED vì không có backend/tài khoản thử nghiệm được cấp quyền. FE-01 persistence và FE-06 upload/extraction còn phụ thuộc backend/contract; không có tuyên bố giả trong frontend.
 - Chưa mô phỏng dark mode, largest-text hoặc bàn phím ảo thiết bị thật; đã kiểm tra focus ring, nhãn/role, reduced-motion CSS và keyboard flow trong browser desktop.
+
+## 2026-11-14 — Hotfix Round 1: Compact Week agenda scroll
+
+**Mục tiêu:** Khôi phục khả năng cuộn trang để xem đầy đủ agenda ngày được chọn trong chế độ Tuần thu gọn, không làm hỏng Tháng, Chi tiết giờ, bảng công việc hay tính năng accessibility hiện có.
+
+**Đã làm**
+- Phân tích chuỗi `overflow: hidden` gây ra lỗi: `.main-content` cố định chiều cao bằng `height: calc(100dvh - 58px)` → `.planner-page overflow: hidden` → `.planner-calendar overflow: hidden` → `.compact-week flex: 0 0 auto` khiến agenda bị cắt ngầm mà không có vùng cuộn tiếp cận được.
+- Thêm ba selector `:has(.compact-week)` vào `frontend/src/styles/planner.css` theo đúng mô hình Month View hiện có:
+  - `.main-content:has(.planner-page):has(.compact-week)` → `height: auto; min-height: calc(100dvh - 58px); overflow: visible`
+  - `.planner-page:has(.compact-week)` → `flex: 0 0 auto; overflow: visible; align-items: flex-start`
+  - `.planner-calendar` và `.compact-week` bên trong → `overflow: visible`
+- Cập nhật `@media (max-width: 800px)`: `.compact-week` đổi từ `overflow-x: hidden` sang `overflow-x: hidden; overflow-y: visible` để trang cuộn được trên di động.
+- Giữ nguyên Detailed Time: không có `.compact-week` trong DOM khi ở chế độ Chi tiết giờ nên toàn bộ chuỗi `overflow: hidden` và scroll nội tuyến vẫn hoạt động.
+- Giữ nguyên Month View: selector `:has(.month-calendar)` hiện có không bị ảnh hưởng.
+- Cập nhật `frontend/PLANNER_REQUIREMENTS_TRACE.md` ghi rõ nguyên nhân gốc rễ và cách sửa.
+
+**Kết quả:** Nhánh `fix/planner-followup-leader-spec-kent`; commit cục bộ `fix(frontend): restore compact planner agenda scrolling`; chưa push. 57/57 Node tests đạt; `npx tsc --noEmit`, `npm run build`, `npm run format`, `git diff --check` đều đạt. Vite vẫn cảnh báo chunk >500 kB (đã biết từ trước).
+
+**Ghi chú**
+- Chrome remote debugging không khả dụng trong môi trường sandbox nên browser QA tự động bị giới hạn; đã xác minh thủ công qua phân tích CSS tĩnh (9/9 checks) và kiểm tra logic cascade. Người dùng cần mở ứng dụng trên trình duyệt để xác nhận trực quan tại ba viewport.
+- Vấn đề lập lịch 180 phút và các vấn đề Round 2 chưa được xử lý trong hotfix này.
+- API E2E có đăng nhập vẫn BLOCKED.

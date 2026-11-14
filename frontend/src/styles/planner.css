@@ -586,15 +586,34 @@
 .compact-agenda .compact-event { margin-top: 6px; }
 .compact-event-detail { display: grid; gap: 4px; margin-top: 10px; padding: 10px; border-radius: 8px; background: var(--color-info-bg); font-size: 12px; }
 .compact-event-detail p { margin: 0; }
-.planner-page.is-compact { align-items: flex-start; }
-.planner-page.is-compact .planner-calendar { flex: 1; }
-.planner-page.is-compact .compact-week { flex: 0 0 auto; }
+/* Chế độ Tuần thu gọn — cuộn trang tự nhiên, không nhốt agenda vào viewport.
+   Giống Month View: ghi đè chiều cao cố định và overflow để trang có thể cuộn.
+   KHÔNG áp dụng cho Detailed Time (WeekCalendar) — chế độ đó giữ scroll riêng bên trong. */
+.main-content:has(.planner-page):has(.compact-week) {
+  height: auto;
+  min-height: calc(100dvh - 58px);
+  overflow: visible;
+}
+.planner-page:has(.compact-week) {
+  flex: 0 0 auto;
+  overflow: visible;
+  align-items: flex-start;
+}
+.planner-page:has(.compact-week) .planner-calendar {
+  flex: 1;
+  overflow: visible;
+}
+/* compact-week mở rộng theo nội dung; cuộn trang lo phần còn lại */
+.planner-page:has(.compact-week) .compact-week {
+  overflow: visible;
+}
+/* Task panel neo cố định bên phải, cuộn nội dung riêng bên trong */
 .planner-page.is-compact .task-panel-wrap { height: 470px; }
 .compact-week :focus-visible, .calendar-view-toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 @media (max-width: 800px) {
   .planner-page.is-compact .planner-calendar { flex: none; align-self: stretch; width: 100%; max-width: 100%; min-height: 0; height: auto; box-sizing: border-box; }
   .planner-page.is-compact .task-panel-wrap { height: 280px; }
-  .compact-week { overflow-x: hidden; }
+  .compact-week { overflow-x: hidden; overflow-y: visible; }
   .compact-days { display: flex; gap: 6px; overflow-x: auto; padding: 3px 2px 10px; }
   .compact-day { flex: 0 0 72px; }
   .compact-day-select { align-items: center; padding: 6px; }
