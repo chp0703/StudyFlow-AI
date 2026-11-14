@@ -23,13 +23,16 @@ const example = (name: string) =>
     ),
   )
 
-// Local-time helper: the mappers show times in the browser zone, so fixtures are built in it too.
+// Contract instants are explicit; display values always use Vietnam time.
 const at = (y: number, m: number, d: number, h = 0, min = 0) =>
-  new Date(y, m - 1, d, h, min).toISOString()
+  new Date(
+    `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}T${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}:00+07:00`,
+  ).toISOString()
 
 const task = (over: Partial<ApiTask> = {}): ApiTask => ({
   task_id: "t1",
   title: "Ôn OOP",
+  description: "Đọc chương 3",
   course_label: "OOP",
   deadline_at: at(2026, 11, 20),
   deadline_precision: "DATE",
@@ -73,7 +76,7 @@ test("a task maps to the list shape; a scheduled one gets its first block as slo
   assert.deepEqual(tasks[0], {
     id: "t1",
     title: "Ôn OOP",
-    course: "OOP",
+    description: "Đọc chương 3",
     time: "09:00–10:30",
     done: false,
     effort: 120,
@@ -84,7 +87,6 @@ test("a task maps to the list shape; a scheduled one gets its first block as slo
   })
   assert.equal(tasks[1].done, true)
   assert.equal(tasks[1].date, undefined)
-  assert.equal(tasks[1].course, "")
   assert.deepEqual(
     events.map((e) => [e.id, e.title, e.date, e.hour, e.time, e.effort]),
     [
@@ -94,7 +96,7 @@ test("a task maps to the list shape; a scheduled one gets its first block as slo
   )
 })
 
-test("a DATETIME deadline uses the local date of the instant", () => {
+test("a DATETIME deadline uses the Vietnam date of the instant", () => {
   const { tasks } = mapTasksAndEvents(
     [
       task({
@@ -110,6 +112,7 @@ test("a DATETIME deadline uses the local date of the instant", () => {
 
 const win = (over: Partial<ApiTimeWindow>): ApiTimeWindow => ({
   window_id: "w",
+  version: 1,
   kind: "AVAILABILITY",
   label: null,
   recurrence: "WEEKLY",
@@ -126,7 +129,7 @@ const win = (over: Partial<ApiTimeWindow>): ApiTimeWindow => ({
 })
 
 test("weekly windows expand to hour cells, clipped to the grid, honouring validity", () => {
-  const monday = new Date(2026, 10, 9) // Mon 9 Nov 2026
+  const monday = new Date("2026-11-09T12:00:00Z") // Mon 9 Nov 2026
   const cells = expandWindows([win({ valid_from: "2026-11-01" })], monday, 8)
   assert.deepEqual(
     cells.map((c) => c.id),
@@ -150,7 +153,7 @@ test("weekly windows expand to hour cells, clipped to the grid, honouring validi
 })
 
 test("a one-off busy interval overrides availability on the same hour", () => {
-  const monday = new Date(2026, 10, 9)
+  const monday = new Date("2026-11-09T12:00:00Z")
   const busy = win({
     window_id: "b",
     kind: "BUSY",
@@ -171,6 +174,22 @@ test("a one-off busy interval overrides availability on the same hour", () => {
   )
 })
 
+test("partial working intervals do not become complete legacy hour cells", () => {
+  const monday = new Date("2026-11-09T12:00:00Z")
+  assert.deepEqual(
+    expandWindows([win({ start_time: "08:15", end_time: "09:45" })], monday, 1),
+    [],
+  )
+  assert.deepEqual(
+    expandWindows(
+      [win({ start_time: "08:15", end_time: "10:00" })],
+      monday,
+      1,
+    ).map((cell) => cell.hour),
+    [9],
+  )
+})
+
 const proposal = (
   over: Partial<PlanProposal["payload"]> = {},
 ): PlanProposal => ({
@@ -180,6 +199,16 @@ const proposal = (
   base_plan_version: null,
   base_schedule_revision: 4,
   payload: {
+    task_summaries: [
+      {
+        task_id: "t1",
+        remaining_minutes: 120,
+        retained_future_minutes: 0,
+        newly_scheduled_minutes: 60,
+        unallocated_minutes: 60,
+        reason_codes: ["INSUFFICIENT_AVAILABILITY"],
+      },
+    ],
     study_blocks: [
       block("n1", at(2026, 11, 11, 9), at(2026, 11, 11, 10)),
       block("keep", at(2026, 11, 9, 9), at(2026, 11, 9, 10)),
@@ -251,6 +280,9 @@ test("a plan proposal becomes a calendar preview with added and removed events",
   assert.deepEqual(result.server?.taskIds, ["t1"])
   assert.equal(result.server?.reference.target_type, "PLAN_PROPOSAL")
   assert.equal(result.issues[0].message, "Thiếu thời gian")
+  assert.deepEqual(result.server?.unscheduled, [
+    { title: "Ôn OOP", minutes: 60, reasons: ["INSUFFICIENT_AVAILABILITY"] },
+  ])
 })
 
 test("the contract's task-confirmation example summarises into rows and a calendar-neutral proposal", () => {
@@ -284,4 +316,35 @@ test("a reply without a presentation has no proposal", () => {
     }),
     null,
   )
+})
+
+test("an archived weekly interval review names the exact existing interval", () => {
+  const summary = summarize(
+    {
+      kind: "ACTION_PRESENTATION",
+      pending_action: {
+        intent: "SET_AVAILABILITY",
+        state: "AWAITING_APPROVAL",
+        action_id: "a",
+      },
+      candidate: null,
+      proposal: null,
+      normalized_command: {
+        operation: "set_availability",
+        arguments: {
+          change_type: "ARCHIVE",
+          window_id: "w",
+          expected_window_version: 1,
+          window: null,
+        },
+      },
+      effective_policy: null,
+    },
+    [win({})],
+  )
+  assert.equal(summary.title, "Xóa thời gian học")
+  assert.deepEqual(summary.details[1], {
+    label: "Sẽ xóa",
+    value: "Thứ 2 hằng tuần, 09:00–11:00",
+  })
 })

@@ -84,7 +84,6 @@ test("plans unscheduled tasks deterministically and reports what does not fit", 
     ({
       id: String(id),
       title: `T${id}`,
-      course: "",
       time: "",
       done: false,
       effort: 60,
@@ -102,4 +101,23 @@ test("plans unscheduled tasks deterministically and reports what does not fit", 
     a.issues?.map((i) => i.taskId),
     ["3"],
   )
+})
+
+test("preserves a requested non-round demo start exactly", () => {
+  const result = runPlannerCommand("thêm Ôn bài hôm nay lúc 09:15", [])
+  assert.equal(result.tasks[0].time, "09:15 – 10:15")
+  assert.equal(result.tasks[0].minute, 15)
+  assert.equal(result.tasks[0].priority, 0.5)
+  assert.match(result.reply, /09:15/)
+  const conflict = runPlannerCommand(
+    "thêm Bài khác hôm nay lúc 09:15",
+    result.tasks,
+  )
+  assert.equal(conflict.tasks.length, 1)
+  assert.match(conflict.reply, /09:15/)
+  const overlap = runPlannerCommand(
+    "thêm Việc khác hôm nay lúc 10h",
+    result.tasks,
+  )
+  assert.equal(overlap.tasks[1].hour, 11)
 })

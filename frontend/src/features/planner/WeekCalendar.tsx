@@ -1,36 +1,43 @@
 import type { RefObject } from "react"
 import type { Task } from "../../types/task"
 import type { TaskChange, TimeWindow } from "../../types/planner"
+import type { CalendarDisplayRanges } from "./calendarDisplay"
+import { displayMinutes, eventPosition } from "./calendarDisplay"
+import type { ApiTimeWindow } from "../../api/types"
+import { visibleSegments } from "./workingTime"
 
-type Props = {
-  calendarRef: RefObject<HTMLDivElement | null>
-  weekDays: Date[]
-  week: number
-  todayIndex: number
-  hours: number[]
-  eventAt: (date: Date, hour: number) => Task | undefined
-  windowAt: (date: Date, hour: number) => TimeWindow | undefined
-  proposedWindows: Set<string>
-  prefill: (date: Date, hour: number) => void
-  changeOf: Map<Task["id"], TaskChange["kind"]>
-  nowHour: number
-  nowMinutes: number
-}
+const weekdayNames = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
+const pxPerMinute = 0.8
 
 export default function WeekCalendar({
   calendarRef,
   weekDays,
   week,
   todayIndex,
-  hours,
-  eventAt,
-  windowAt,
-  proposedWindows,
-  prefill,
+  ranges,
+  events,
+  windows,
+  availability,
+  proposedWindowIds,
   changeOf,
+  prefill,
   nowHour,
   nowMinutes,
-}: Props) {
+}: {
+  calendarRef: RefObject<HTMLDivElement | null>
+  weekDays: Date[]
+  week: number
+  todayIndex: number
+  ranges: CalendarDisplayRanges
+  events: Task[]
+  windows: ApiTimeWindow[]
+  availability: TimeWindow[]
+  proposedWindowIds: Set<string>
+  changeOf: Map<Task["id"], TaskChange["kind"]>
+  prefill: (date: Date, hour: number) => void
+  nowHour: number
+  nowMinutes: number
+}) {
   return (
     <div
       ref={calendarRef}
@@ -41,79 +48,160 @@ export default function WeekCalendar({
     >
       <div className="dashboard-schedule">
         <div className="schedule-header">
-          <span className="schedule-header-time" aria-hidden="true" />
-          {weekDays.map((_, i) => (
-            <span
-              key={i}
+          {weekDays.map((date, day) => (
+            <div
+              key={day}
               className={`schedule-day ${
-                week === 0 && i === todayIndex ? "is-today" : ""
+                week === 0 && day === todayIndex ? "is-today" : ""
               }`}
             >
-              <strong>{["T2", "T3", "T4", "T5", "T6", "T7", "CN"][i]}</strong>
-            </span>
+              <strong>{weekdayNames[day]}</strong>
+              <span>{`${String(date.getUTCDate()).padStart(2, "0")}/${String(date.getUTCMonth() + 1).padStart(2, "0")}`}</span>
+            </div>
           ))}
         </div>
-        {hours.map((hour) => (
-          <div className="schedule-row" key={hour}>
-            <span className="schedule-hour" aria-hidden="true">
-              {`${String(hour).padStart(2, "0")}:00`}
-            </span>
-            {weekDays.map((d, day) => {
-              const event = eventAt(d, hour)
-
-              const win = windowAt(d, hour)
-
-              return (
+        <div className="schedule-columns">
+          {weekDays.map((date, day) => {
+            const range = ranges[day]
+            const from = displayMinutes(range.start)
+            const to = displayMinutes(range.end)
+            const dateKey = date.toISOString().slice(0, 10)
+            const ticks = [
+              from,
+              ...Array.from(
+                { length: Math.ceil((to - from) / 60) - 1 },
+                (_, i) => from + (i + 1) * 60,
+              ),
+            ]
+            const timeLabel = (minutes: number) =>
+              `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
+            const dayEvents = events.filter((event) => event.date === dateKey)
+            const now = nowHour * 60 + nowMinutes
+            const segments = visibleSegments(
+              dateKey,
+              from,
+              to,
+              windows,
+              availability,
+            )
+            return (
+              <section
+                key={dateKey}
+                className={`schedule-day-column ${
+                  week === 0 && day === todayIndex ? "today-column" : ""
+                }`}
+                aria-label={`${weekdayNames[day]} ${dateKey}, hiển thị ${range.start} đến ${range.end}`}
+              >
                 <div
-                  className={`schedule-cell ${
-                    week === 0 && day === todayIndex ? "today-column" : ""
-                  } ${win ? `is-${win.kind}` : ""} ${
-                    win && proposedWindows.has(win.id) ? "is-proposed" : ""
-                  }`}
-                  key={day}
-                  onClick={event ? undefined : () => prefill(d, hour)}
+                  className="schedule-time-grid"
+                  style={{ height: (to - from) * pxPerMinute }}
                 >
-                  {win && (
-                    <span className="window-tag">
-                      {win.kind === "free" ? "Rảnh" : "Bận"}
-                    </span>
-                  )}
-                  {event && (
+                  {segments.map((segment) => (
                     <div
-                      className={`schedule-event study priority-${
-                        { Cao: "high", Thấp: "low" }[event.priority] ?? "mid"
-                      } ${event.done ? "is-done" : ""} ${
-                        changeOf.get(event.id) === "removed"
-                          ? "is-removed"
-                          : changeOf.has(event.id)
-                            ? "is-proposed"
-                            : ""
+                      key={`${segment.start}-${segment.end}-${segment.kind}`}
+                      className={`calendar-window is-${segment.kind}${
+                        proposedWindowIds.has(
+                          `${dateKey}-${Math.floor(segment.start / 60)}`,
+                        )
+                          ? " is-proposed-window"
+                          : ""
                       }`}
-                      data-task-id={event.id}
-                      title={`${event.title} · ${event.time}`}
+                      role="img"
+                      aria-label={`${
+                        segment.kind === "busy" ? "Bận" : "Rảnh"
+                      } ${timeLabel(segment.start)}–${timeLabel(segment.end)}`}
+                      style={{
+                        top: (segment.start - from) * pxPerMinute,
+                        height: (segment.end - segment.start) * pxPerMinute,
+                      }}
                     >
-                      <strong>{event.title}</strong>
-                      <small>
-                        {event.time}
-                        {changeOf.get(event.id) === "removed"
-                          ? " · Sẽ xóa"
-                          : changeOf.has(event.id)
-                            ? " · Đề xuất"
-                            : ""}
-                      </small>
+                      {segment.end - segment.start >= 30
+                        ? `${
+                            segment.kind === "busy" ? "Bận" : "Rảnh"
+                          } ${timeLabel(segment.start)}–${timeLabel(segment.end)}`
+                        : ""}
                     </div>
-                  )}
-                  {week === 0 && day === todayIndex && hour === nowHour && (
-                    <i
-                      className="now-line"
-                      style={{ top: `${(nowMinutes / 60) * 100}%` }}
-                    />
-                  )}
+                  ))}
+                  {ticks.map((minute, index) => (
+                    <button
+                      key={minute}
+                      type="button"
+                      className="schedule-time-slot"
+                      style={{
+                        top: (minute - from) * pxPerMinute,
+                        height: Math.min(60, to - minute) * pxPerMinute,
+                      }}
+                      aria-label={`${weekdayNames[day]} ${dateKey} lúc ${timeLabel(minute)}; nhập yêu cầu lịch học`}
+                      onClick={() => prefill(date, Math.floor(minute / 60))}
+                    >
+                      <span>{timeLabel(minute)}</span>
+                      {index === 0 && minute % 60 !== 0 && (
+                        <span className="schedule-range-start">Bắt đầu</span>
+                      )}
+                    </button>
+                  ))}
+                  {dayEvents.map((event) => {
+                    const start =
+                      event.time.match(/\d{2}:\d{2}/)?.[0] ??
+                      `${String(event.hour ?? 0).padStart(2, "0")}:00`
+                    const position = eventPosition(start, range)
+                    if (!position) return null
+                    const duration = Math.min(
+                      event.effort,
+                      position.visibleMinutes,
+                    )
+                    return (
+                      <div
+                        key={event.id}
+                        className={`schedule-event priority-${
+                          event.priority === 1 || event.priority === "Cao"
+                            ? "high"
+                            : event.priority === 0.1 ||
+                                event.priority === "Thấp"
+                              ? "low"
+                              : "mid"
+                        } ${event.done ? "is-done" : ""} ${
+                          changeOf.get(event.id) === "removed"
+                            ? "is-removed"
+                            : changeOf.has(event.id)
+                              ? "is-proposed"
+                              : ""
+                        }`}
+                        data-task-id={event.id}
+                        style={{
+                          top: position.top * pxPerMinute,
+                          height: Math.max(28, duration * pxPerMinute),
+                        }}
+                        title={`${event.title} · ${event.time}`}
+                        tabIndex={0}
+                      >
+                        <strong>{event.title}</strong>
+                        <small>
+                          {event.time}
+                          {changeOf.get(event.id) === "removed"
+                            ? " · Sẽ xóa"
+                            : changeOf.has(event.id)
+                              ? " · Đề xuất"
+                              : ""}
+                        </small>
+                      </div>
+                    )
+                  })}
+                  {week === 0 &&
+                    day === todayIndex &&
+                    now >= from &&
+                    now < to && (
+                      <i
+                        className="now-line"
+                        aria-label={`Bây giờ ${timeLabel(now)}`}
+                        style={{ top: (now - from) * pxPerMinute }}
+                      />
+                    )}
                 </div>
-              )
-            })}
-          </div>
-        ))}
+              </section>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

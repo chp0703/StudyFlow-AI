@@ -18,7 +18,11 @@ export function diffTasks(base: Task[], next: Task[]): TaskChange[] {
     const old = before.get(task.id)
 
     if (!old) changes.push({ kind: "added", task })
-    else if (old.date !== task.date || old.hour !== task.hour)
+    else if (
+      old.date !== task.date ||
+      old.hour !== task.hour ||
+      old.minute !== task.minute
+    )
       changes.push({
         kind: old.date ? "moved" : "scheduled",
 
@@ -60,6 +64,11 @@ export function diffWindows(
 
 export const isStale = (proposal: Proposal, revision: number) =>
   proposal.baseRevision !== revision
+
+export const demoNoOpResult = (proposal: Proposal | null, response: string) =>
+  proposal && (proposal.changes.length > 0 || proposal.windowChanges.length > 0)
+    ? { proposal, reply: proposal.reply, notice: response }
+    : { proposal: null, reply: response, notice: null }
 
 export function describeChanges(
   changes: TaskChange[],

@@ -141,32 +141,15 @@ export default function Assistant({
           ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
           : `${Math.max(1, Math.round(file.size / 1024))} KB`
 
-      if (isImg) {
-        const reader = new FileReader()
-        reader.onload = () => {
-          setAttachedFiles((prev) => [
-            ...prev,
-            {
-              id: crypto.randomUUID(),
-              name: file.name,
-              size: sizeStr,
-              type: "image",
-              dataUrl: String(reader.result || ""),
-            },
-          ])
-        }
-        reader.readAsDataURL(file)
-      } else {
-        setAttachedFiles((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            name: file.name,
-            size: sizeStr,
-            type: "file",
-          },
-        ])
-      }
+      setAttachedFiles((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          name: file.name,
+          size: sizeStr,
+          type: isImg ? "image" : "file",
+        },
+      ])
     })
   }
 
@@ -500,7 +483,7 @@ export default function Assistant({
       text:
         text ||
         (currentAttachments.length > 0
-          ? `Đã gửi ${currentAttachments.length} tệp đính kèm.`
+          ? `Đã chọn ${currentAttachments.length} tệp để hiển thị (chưa tải lên).`
           : ""),
       ...(currentAttachments.length > 0
         ? { attachments: currentAttachments }
@@ -571,10 +554,7 @@ export default function Assistant({
 
     const missing =
       scenario === "task"
-        ? !draft.title.trim() ||
-          !draft.course.trim() ||
-          !draft.deadline ||
-          !draft.duration
+        ? !draft.title.trim() || !draft.deadline || !draft.duration
         : scenario === "plan"
           ? !draft.title.trim() || !draft.deadline || !draft.availability.trim()
           : !draft.block.trim() || !draft.target
@@ -609,8 +589,6 @@ export default function Assistant({
             details: [
               { label: "Công việc", value: draft.title.trim() },
 
-              { label: "Môn học", value: draft.course.trim() },
-
               { label: "Hạn", value: draft.deadline },
 
               { label: "Thời lượng", value: `${draft.duration} phút` },
@@ -632,7 +610,7 @@ export default function Assistant({
 
                 { label: "Hạn", value: draft.deadline },
 
-                { label: "Thời gian rảnh", value: draft.availability.trim() },
+                { label: "Thời gian học", value: draft.availability.trim() },
               ],
             }
           : {
@@ -674,10 +652,10 @@ export default function Assistant({
   // API mode: the message goes to the server; its reply (question, approval card, result or error) is the answer.
 
   const attempt = useRef<{
- key: string
- text: string
- id: string
-} | null>(null)
+    key: string
+    text: string
+    id: string
+  } | null>(null)
 
   function appendAssistant(
     conversationId: string,
@@ -963,15 +941,6 @@ export default function Assistant({
           {scenario === "task" && (
             <>
               {field("title", "Tên công việc *", "text", "Ví dụ: Làm bài OOP")}
-              {field(
-                "course",
-
-                "Môn học *",
-
-                "text",
-
-                "Ví dụ: Lập trình hướng đối tượng",
-              )}
               {field("deadline", "Hạn hoàn thành *", "date")}
               {field("duration", "Thời lượng dự kiến (phút) *", "number", "60")}
             </>

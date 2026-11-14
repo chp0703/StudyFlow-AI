@@ -183,7 +183,7 @@ const MESSAGES: Record<string, string> = {
 
   IDEMPOTENCY_CONFLICT: "Yêu cầu này đã được gửi với nội dung khác.",
 
-  TIME_CONFLICT: "Các khối học bị trùng giờ.",
+  TIME_CONFLICT: "Lịch học bị trùng giờ.",
 
   UNSUPPORTED_OPERATION: "Yêu cầu này chưa được hỗ trợ.",
 

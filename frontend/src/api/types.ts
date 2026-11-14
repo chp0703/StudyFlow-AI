@@ -5,6 +5,8 @@ export type ApiTask = {
 
   title: string
 
+  description: string | null
+
   course_label: string | null
 
   deadline_at: string
@@ -24,6 +26,8 @@ export type ApiTask = {
 
 export type ApiTimeWindow = {
   window_id: string
+
+  version: number
 
   kind: "AVAILABILITY" | "BUSY"
 
@@ -115,6 +119,15 @@ export type PlanProposal = {
 
   payload: {
     study_blocks: ApiBlock[]
+
+    task_summaries: {
+      task_id: string
+      remaining_minutes: number
+      retained_future_minutes: number
+      newly_scheduled_minutes: number
+      unallocated_minutes: number
+      reason_codes: string[]
+    }[]
 
     coverage: "FULL" | "PARTIAL"
 

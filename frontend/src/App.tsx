@@ -97,7 +97,7 @@ export default function App() {
 
   const { session, loading: sessionLoading } = useSession()
 
-  const server = useServerData(apiEnabled && !!session)
+  const server = useServerData(apiEnabled && !!session, session?.user.id)
 
   const [demoTasks, setTasks] = useState<Task[]>([])
 
@@ -569,6 +569,7 @@ export default function App() {
         </div>
         {page === "Planner" && (
           <Planner
+            windows={apiEnabled ? server.windows : []}
             tasks={tasks}
             events={apiEnabled ? server.events : tasks}
             userId={session?.user.id ?? "demo"}

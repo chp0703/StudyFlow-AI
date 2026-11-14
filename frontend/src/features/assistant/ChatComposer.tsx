@@ -76,7 +76,6 @@ export default function ChatComposer({
           type="file"
           className="sr-only"
           aria-label="Đính kèm ảnh hoặc tệp"
-          accept="image/*,.pdf,.doc,.docx,.txt"
           multiple
           onChange={handleFileAttach}
         />

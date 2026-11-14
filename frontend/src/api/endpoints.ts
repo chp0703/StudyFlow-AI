@@ -72,6 +72,26 @@ export function createEndpoints(client: ApiClient) {
         idempotencyKey: key,
       }),
 
+    prepareAvailability: (
+      conversationId: string,
+      arguments_: {
+        change_type: "ADD" | "UPDATE" | "ARCHIVE"
+        window_id: string | null
+        expected_window_version: number | null
+        window: Omit<ApiTimeWindow, "window_id" | "version" | "archived_at"> | null
+      },
+      key?: string,
+    ) =>
+      client.request<OrchestratorReply>("POST", "/v1/actions", {
+        body: {
+          schema_version: SCHEMA,
+          conversation_id: conversationId,
+          operation: "set_availability",
+          arguments: arguments_,
+        },
+        idempotencyKey: key,
+      }),
+
     decide: (
       conversationId: string,
       reference: ActionReference,
