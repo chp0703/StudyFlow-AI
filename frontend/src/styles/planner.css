@@ -76,6 +76,7 @@
 }
 .planner-command-label {
   display: block;
+  margin: 0;
   padding: 4px 9px 2px;
   color: var(--color-muted);
   font-size: 11px;
@@ -146,7 +147,8 @@
   font-size: 10.5px;
   line-height: 1.4;
 }
-.planner-command-help span { max-width: 58%; }
+.planner-command-help > span { max-width: 58%; }
+.planner-command-shortcuts { text-align: right; }
 .planner-command-help kbd {
   padding: 1px 4px;
   border: 1px solid var(--color-line);
@@ -180,6 +182,15 @@
 @keyframes planner-spin { to { transform: rotate(360deg); } }
 .planner-heading-action .dashboard-calendar-controls {
   margin-left: auto;
+}
+.planner-heading-action:has(.planner-command.is-expanded) { flex-wrap: wrap; }
+.planner-heading-action:has(.planner-command.is-expanded) .planner-command {
+  flex-basis: 100%;
+  max-width: none;
+}
+.planner-heading-action:has(.planner-command.is-expanded) .dashboard-calendar-controls {
+  width: 100%;
+  justify-content: flex-end;
 }
 /* Thẻ lịch có hiệu ứng kính mờ đồng bộ với khung chat trợ lý */
 .planner-calendar {
@@ -848,7 +859,8 @@
   .planner-command { max-width: none; flex-basis: 100%; }
   .planner-command textarea { font-size: 16px; }
   .planner-command-help { flex-direction: column; }
-  .planner-command-help span { max-width: none; }
+  .planner-command-help > span { max-width: none; }
+  .planner-command-shortcuts { text-align: left; }
   .planner-heading-action .dashboard-calendar-controls { width: 100%; margin-left: 0; }
   .planner-calendar .dashboard-schedule { min-width: 840px; }
   .task-panel-wrap, .task-panel-wrap .task-panel { width: 100%; }

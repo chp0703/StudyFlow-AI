@@ -8,6 +8,7 @@ import {
 import { CircleAlert, Info, LoaderCircle, Send, Sparkles } from "lucide-react"
 import Button from "../../components/ui/Button"
 import type { PlannerFeedback } from "./usePlanner"
+import { composerKeyAction } from "./composerKeyboard"
 
 const DEMO_SUGGESTIONS = [
   "tạo công việc Báo cáo hạn 20/11 3 giờ",
@@ -19,25 +20,6 @@ const API_SUGGESTIONS = [
   "Tạo công việc Báo cáo hạn 20/11 khoảng 3 giờ",
   "Lập kế hoạch cho các công việc chưa xếp",
 ]
-
-export function composerKeyAction({
-  key,
-  shiftKey,
-  isComposing,
-  busy,
-  hasText,
-}: {
-  key: string
-  shiftKey: boolean
-  isComposing: boolean
-  busy: boolean
-  hasText: boolean
-}) {
-  if (key === "Escape" && !hasText) return "collapse"
-  if (key === "Enter" && !shiftKey && !isComposing && !busy && hasText)
-    return "submit"
-  return "none"
-}
 
 function Feedback({ feedback }: { feedback: PlannerFeedback }) {
   const Icon =
@@ -119,7 +101,10 @@ export default function PlannerCommandComposer({
           submit()
         }}
       >
-        <label className={expanded ? "planner-command-label" : "sr-only"} htmlFor="planner-command-input">
+        <label
+          className={expanded ? "planner-command-label" : "sr-only"}
+          htmlFor="planner-command-input"
+        >
           Điều chỉnh lịch bằng lệnh
         </label>
         <div className="planner-command-input-row">
@@ -149,7 +134,11 @@ export default function PlannerCommandComposer({
             disabled={!input.trim() || busy}
           >
             {busy ? (
-              <LoaderCircle className="planner-command-spinner" size={18} aria-hidden="true" />
+              <LoaderCircle
+                className="planner-command-spinner"
+                size={18}
+                aria-hidden="true"
+              />
             ) : (
               <Send size={18} aria-hidden="true" />
             )}
@@ -157,7 +146,10 @@ export default function PlannerCommandComposer({
         </div>
         {expanded && (
           <div className="planner-command-details">
-            <div className="planner-command-suggestions" aria-label="Lệnh gợi ý">
+            <div
+              className="planner-command-suggestions"
+              aria-label="Lệnh gợi ý"
+            >
               {suggestions.map((suggestion) => (
                 <button
                   type="button"
@@ -183,7 +175,10 @@ export default function PlannerCommandComposer({
                   ? "Gửi qua máy chủ StudyFlow; mọi thay đổi vẫn cần bạn duyệt."
                   : "Bản demo dùng bộ phân tích lệnh cục bộ, chưa kết nối AI."}
               </span>
-              <kbd>Enter</kbd> gửi · <kbd>Shift</kbd>+<kbd>Enter</kbd> xuống dòng
+              <span className="planner-command-shortcuts">
+                <kbd>Enter</kbd> gửi · <kbd>Shift</kbd>+<kbd>Enter</kbd> xuống
+                dòng
+              </span>
             </div>
           </div>
         )}

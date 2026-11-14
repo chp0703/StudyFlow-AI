@@ -37,7 +37,10 @@ test("composer renders compact and expanded truthful states", async () => {
       }),
     )
     assert.match(expanded, /rows="3"/)
-    assert.match(expanded, /Bản demo dùng bộ phân tích lệnh cục bộ, chưa kết nối AI/)
+    assert.match(
+      expanded,
+      /Bản demo dùng bộ phân tích lệnh cục bộ, chưa kết nối AI/,
+    )
     assert.match(expanded, /tạo công việc Báo cáo hạn 20\/11 3 giờ/)
     assert.match(expanded, /role="alert"/)
     assert.match(expanded, /Cho mình biết ngày/)
@@ -65,7 +68,7 @@ test("composer keyboard behavior protects newlines, IME and duplicate sends", as
   })
   try {
     const { composerKeyAction } = await server.ssrLoadModule(
-      "/src/features/planner/PlannerCommandComposer.tsx",
+      "/src/features/planner/composerKeyboard.ts",
     )
     const action = (overrides: Record<string, unknown> = {}) =>
       composerKeyAction({

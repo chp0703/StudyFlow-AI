@@ -118,3 +118,18 @@
 
 **Ghi chú**
 - Chưa chạy API E2E có đăng nhập. Vite cảnh báo bundle trên 500 kB; test SSR phát cảnh báo WebSocket sandbox nhưng toàn bộ assertion đạt.
+
+## 2026-11-14 — Improve Planner command composer
+
+**Mục tiêu:** Thay ô lệnh một dòng bằng composer gọn, dễ phục hồi lỗi và dùng được bằng bàn phím trên mọi chế độ lịch.
+
+**Đã làm**
+- Thêm `PlannerCommandComposer`: thu gọn 56px khi nghỉ, textarea nhiều dòng khi focus, gợi ý đúng khả năng Demo/API, Enter gửi, Shift+Enter xuống dòng, bảo vệ IME và chặn gửi trùng khi đang xử lý.
+- Đưa phản hồi làm rõ/lỗi/trạng thái gần composer; giữ proposal, ActionReference và draft khi lệnh sai hoặc API lỗi; chỉ báo đã lưu sau kết quả COMMITTED hoặc thao tác Duyệt trong Demo.
+- Giữ prefill từ timeline, draft khi chuyển Tuần/Tháng/Chi tiết giờ và luồng Duyệt/Từ chối; sửa no-op trên proposal để không hiểu nhầm bản xem trước cũ là thay đổi mới.
+- QA trình duyệt ở 390×844, 768×1024 và 1440×900: gợi ý, multiline, focus, Escape, proposal, responsive và không tràn ngang.
+
+**Kết quả:** Nhánh `fix/planner-followup-leader-spec-kent`; 56/56 Node tests, TypeScript, Vite build, `npm run format` và `git diff --check` đạt.
+
+**Ghi chú**
+- API E2E có đăng nhập bị chặn vì không có backend/tài khoản thử nghiệm được cấp quyền. Vite cảnh báo bundle trên 500 kB; test SSR phát cảnh báo WebSocket sandbox nhưng toàn bộ assertion đạt.
