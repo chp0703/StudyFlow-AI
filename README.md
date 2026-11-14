@@ -251,9 +251,8 @@ python -B -m unittest discover -s supabase/tests_concurrency -v
 
 ## Design Reference
 
-Brand assets are documented in [`frontend/public/brand/README.md`](frontend/public/brand/README.md). The README screenshots use a [MacBook Pro 14 realistic mockup](https://www.figma.com/design/bgsV8lwhK0jsmzPYjWGvod/MacBook-Pro-14-%E2%80%94-Realistic-Mockup--Community-?node-id=7-245).
-
-Further documentation: [docs index](docs/README.md), [product requirements](docs/product/requirements.md), [feature map](docs/features/README.md) and [contracts](contracts/README.md).
+- The UI follows the [StudyFlow AI Dashboard Design](https://www.figma.com/make/9nSuvhSGMbvZNmqNdmMxTE/StudyFlow-AI-Dashboard-Design) in Figma Make.
+- The README screenshots use a [MacBook Pro 14 realistic mockup](https://www.figma.com/design/bgsV8lwhK0jsmzPYjWGvod/MacBook-Pro-14-%E2%80%94-Realistic-Mockup--Community-?node-id=7-245).
 
 ---
 
