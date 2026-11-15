@@ -1,17 +1,31 @@
 import WeekCalendar from "../features/planner/WeekCalendar"
+
 import CompactWeekCalendar from "../features/planner/CompactWeekCalendar"
+
 import MonthCalendar from "../features/planner/MonthCalendar"
+
 import { addMonths } from "../features/planner/monthGrid"
+
 import ProposalReview from "../features/planner/ProposalReview"
+
 import CalendarDisplaySettings from "../features/planner/CalendarDisplaySettings"
+
 import PlannerCommandComposer from "../features/planner/PlannerCommandComposer"
+
 import { prefillPlannerCommand } from "../features/planner/plannerPrefill"
+
 import {
+  CALENDAR_VIEWS,
+  DEFAULT_CALENDAR_VIEW,
   DEFAULT_DISPLAY_RANGES,
+  calendarViewLabel,
   displaySettingsVisible,
   type CalendarDisplayRanges,
+  type CalendarView,
 } from "../features/planner/calendarDisplay"
+
 import { usePlanner, type PlannerProps } from "../features/planner/usePlanner"
+
 import { useEffect, useRef, useState } from "react"
 
 import gsap from "gsap"
@@ -33,6 +47,7 @@ import type { Task } from "../types/task"
 import {
   addCivilDays,
   civilWeekday,
+  formatWeekRange,
   vietnamClock,
   vietnamDate,
 } from "../utils/date"
@@ -100,32 +115,55 @@ export default function Planner({
 
   const {
     busy,
+
     input,
+
     setInput,
+
     reply,
+
     setReply,
+
     feedback,
+
     shown,
+
     stale,
+
     send,
+
     approve,
+
     reject,
   } = usePlanner(
     {
       tasks,
+
       events,
+
       windows,
+
       userId,
+
       conversationId,
+
       reload,
+
       setTasks,
+
       availability,
+
       setAvailability,
+
       proposal,
+
       setProposal,
+
       revision,
+
       setRevision,
     },
+
     showPlannerNotice,
   )
 
@@ -147,24 +185,33 @@ export default function Planner({
   )
 
   const [week, setWeek] = useState(0)
-  const [calendarView, setCalendarView] =
-    useState<"compact" | "detail" | "month">("compact")
+
+  const [calendarView, setCalendarView] = useState<CalendarView>(
+    DEFAULT_CALENDAR_VIEW,
+  )
+
   const [month, setMonth] = useState(() => vietnamDate().slice(0, 7))
+
   const [selectedMonthDate, setSelectedMonthDate] = useState<string | null>(
     null,
   )
+
   const [displayRanges, setDisplayRanges] = useState<CalendarDisplayRanges>(
     DEFAULT_DISPLAY_RANGES,
   )
+
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000)
+
     return () => window.clearInterval(timer)
   }, [])
 
   const todayKey = vietnamDate(now)
+
   const todayIndex = civilWeekday(todayKey)
+
   const [nowHour, nowMinutes] = vietnamClock(now).split(":").map(Number)
 
   const [taskPanelOpen, setTaskPanelOpen] = useState(() => {
@@ -356,20 +403,24 @@ export default function Planner({
 
   // Ngày hôm nay dịch theo số tuần nguyên để theo đúng tuần đang xem.
 
-  const weekLabel = addCivilDays(todayKey, week * 7)
-    .split("-")
-    .reverse()
-    .join("/")
   const mondayKey = addCivilDays(todayKey, -todayIndex + week * 7)
-  const chooseView = (view: "compact" | "detail" | "month") => {
+
+  const weekLabel = formatWeekRange(mondayKey)
+
+  const chooseView = (view: CalendarView) => {
     if (view === "month" && calendarView !== "month") {
       setMonth(mondayKey.slice(0, 7))
+
       setSelectedMonthDate(null)
     }
+
     if (calendarView === "month" && view !== "month") {
       const date = selectedMonthDate ?? `${month}-01`
+
       const monday = addCivilDays(date, -civilWeekday(date))
+
       const todayMonday = addCivilDays(todayKey, -todayIndex)
+
       setWeek(
         Math.round(
           (Date.parse(`${monday}T00:00:00Z`) -
@@ -378,12 +429,16 @@ export default function Planner({
         ),
       )
     }
+
     setCalendarView(view)
   }
+
   const weekDays = Array.from(
     { length: 7 },
+
     (_, i) => new Date(`${addCivilDays(mondayKey, i)}T12:00:00Z`),
   )
+
   const dateOf = (date: Date) => vietnamDate(date)
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -393,9 +448,13 @@ export default function Planner({
   const prefill = (date: Date, minuteOfDay: number) =>
     prefillPlannerCommand(
       date,
+
       minuteOfDay,
+
       apiEnabled,
+
       setInput,
+
       inputRef.current,
     )
 
@@ -403,10 +462,14 @@ export default function Planner({
 
   const calendarEvents = [
     ...shown,
+
     ...(proposal?.changes
+
       .filter((change) => change.kind === "removed")
+
       .map((change) => change.task) ?? []),
   ]
+
   const weekEmpty = !calendarEvents.some(
     (event) =>
       event.date && weekDays.some((date) => dateOf(date) === event.date),
@@ -435,7 +498,7 @@ export default function Planner({
             />
 
             <div className="dashboard-calendar-controls">
-              {(["compact", "month", "detail"] as const).map((view) => (
+              {CALENDAR_VIEWS.map((view) => (
                 <Button
                   key={view}
                   className="secondary calendar-view-toggle"
@@ -443,11 +506,7 @@ export default function Planner({
                   aria-pressed={calendarView === view}
                   onClick={() => chooseView(view)}
                 >
-                  {view === "compact"
-                    ? "Tuần"
-                    : view === "month"
-                      ? "Tháng"
-                      : "Chi tiết giờ"}
+                  {calendarViewLabel(view)}
                 </Button>
               ))}
               <span className="calendar-week-label">
@@ -461,6 +520,7 @@ export default function Planner({
                   onClick={() => {
                     if (calendarView === "month") {
                       setMonth(todayKey.slice(0, 7))
+
                       setSelectedMonthDate(todayKey)
                     } else setWeek(0)
                   }}
@@ -476,6 +536,7 @@ export default function Planner({
                 onClick={() => {
                   if (calendarView === "month") {
                     setMonth(addMonths(month, -1))
+
                     setSelectedMonthDate(null)
                   } else setWeek(week - 1)
                 }}
@@ -488,6 +549,7 @@ export default function Planner({
                 onClick={() => {
                   if (calendarView === "month") {
                     setMonth(addMonths(month, 1))
+
                     setSelectedMonthDate(null)
                   } else setWeek(week + 1)
                 }}
@@ -541,11 +603,11 @@ export default function Planner({
 
           <span className="legend-proposed">Đề xuất</span>
           <span>
-            {calendarView === "month"
-              ? "Chọn ngày để xem chi tiết"
-              : weekEmpty
-                ? "Tuần này chưa có việc."
-                : "Chọn giờ để nhập yêu cầu"}
+            {weekEmpty
+              ? "Tuần này chưa có việc."
+              : calendarView === "detail"
+                ? "Chọn giờ để nhập yêu cầu"
+                : "Chọn ngày để xem chi tiết"}
           </span>
         </p>
         {calendarView === "compact" ? (

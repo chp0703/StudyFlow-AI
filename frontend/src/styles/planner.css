@@ -3,6 +3,7 @@
   height: calc(100dvh - 58px);
   display: flex;
   flex-direction: column;
+  container-type: inline-size;
   padding: 8px 0 16px;
   box-sizing: border-box;
 }
@@ -225,7 +226,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: auto;
 }
 .planner-calendar .dashboard-schedule {
   flex: 1;
@@ -891,4 +892,54 @@
 @media (prefers-reduced-motion: reduce) {
   .planner-page, .task-panel-wrap, .planner-calendar .schedule-event, .planner-command-form { transition: none; }
   .planner-command-spinner { animation-duration: 1.6s; }
+}
+
+/* Use the Planner's available width, not the operating system, for laptop layouts. */
+@container (max-width: 1050px) {
+  .planner-page {
+    flex-direction: column;
+    gap: 12px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  .planner-calendar {
+    flex: none;
+    width: 100%;
+    min-height: 600px;
+    height: min(720px, 80dvh);
+    box-sizing: border-box;
+  }
+  .planner-page.is-compact .planner-calendar {
+    min-height: 0;
+    height: auto;
+  }
+  .planner-heading-action {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: 12px;
+  }
+  .planner-command {
+    flex-basis: 100%;
+    max-width: none;
+  }
+  .planner-calendar .dashboard-calendar-controls {
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+  .task-panel-wrap,
+  .task-panel-wrap .task-panel {
+    width: 100%;
+  }
+  .task-panel-wrap {
+    flex: none;
+    height: 280px;
+  }
+  .planner-page.is-compact .task-panel-wrap {
+    height: 280px;
+  }
+  .planner-page.is-tasks-closed .task-panel-wrap {
+    display: none;
+  }
 }

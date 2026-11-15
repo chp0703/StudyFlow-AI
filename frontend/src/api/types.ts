@@ -7,7 +7,9 @@ export type ApiTask = {
 
   description: string | null
 
-  course_label: string | null
+  start_at: string
+
+  available_from_at: string | null
 
   deadline_at: string
 
@@ -15,11 +17,15 @@ export type ApiTask = {
 
   deadline_date: string | null
 
+  deadline_timezone: "Asia/Ho_Chi_Minh"
+
   estimated_minutes: number
 
   remaining_minutes: number
 
-  priority: "LOW" | "NORMAL" | "HIGH"
+  priority: 0.1 | 0.5 | 1
+
+  color: string
 
   status: "TODO" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
 }
@@ -122,10 +128,15 @@ export type PlanProposal = {
 
     task_summaries: {
       task_id: string
+
       remaining_minutes: number
+
       retained_future_minutes: number
+
       newly_scheduled_minutes: number
+
       unallocated_minutes: number
+
       reason_codes: string[]
     }[]
 
@@ -220,30 +231,61 @@ export type ListResult<T,> = {
 }
 
 // Optional BE-04 extension 1.0.0. Source content is draft data, never approval.
+
 export type IngestionSource = {
   ingestion_version: "1.0.0"
+
   source_id: string
+
   user_id: string
+
   conversation_id: string
+
   filename: string
+
   mime_type: string
+
   size_bytes: number
+
   sha256: string
+
   status: "UPLOADED" | "EXTRACTING" | "READY" | "FAILED"
+
   lease_version: number
+
   created_at: string
+
   extraction: {
     parser: "document-v1" | "vision-v1" | "calendar-v1"
+
     model: string | null
+
     prompt_version: "be04-1"
+
     extracted_at: string
-    usage: { input_tokens: number; output_tokens: number }
+
+    usage: {
+      input_tokens: number
+
+      output_tokens: number
+    }
+
     intents: Array<{
       intent: "CREATE_TASK" | "SET_BUSY_INTERVAL"
+
       slots: Record<string, unknown>
+
       raw_expressions: Record<string, string>
-      ambiguities: Array<{ code: string; message: string; field: string | null }>
+
+      ambiguities: Array<{
+        code: string
+
+        message: string
+
+        field: string | null
+      }>
     }>
   } | null
+
   error_code: "INVALID_PARAMETER" | "SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | null
 }

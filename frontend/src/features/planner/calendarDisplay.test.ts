@@ -1,61 +1,104 @@
 import test from "node:test"
+
 import assert from "node:assert/strict"
+
 import {
+  CALENDAR_VIEWS,
+  DEFAULT_CALENDAR_VIEW,
   DEFAULT_DISPLAY_RANGES,
+  calendarViewLabel,
   displayRangeError,
   displaySettingsVisible,
   eventPosition,
   type CalendarDisplayRanges,
 } from "./calendarDisplay.ts"
+
 import { runPlannerCommand } from "./plannerAgent.ts"
+
 import { addCivilDays, vietnamDate } from "../../utils/date.ts"
 
 test("seven days can display distinct ranges without changing another day", () => {
   const ranges = DEFAULT_DISPLAY_RANGES.map((_, day) => ({
     start: `${String(day + 6).padStart(2, "0")}:00`,
+
     end: `${String(day + 15).padStart(2, "0")}:00`,
   })) as unknown as CalendarDisplayRanges
+
   const changed = ranges.map((range, day) =>
     day === 0 ? { start: "09:00", end: "22:00" } : range,
   ) as unknown as CalendarDisplayRanges
+
   assert.deepEqual(changed[0], { start: "09:00", end: "22:00" })
+
   assert.deepEqual(changed[1], ranges[1])
+
   assert.equal(new Set(changed.map((range) => range.end)).size, 7)
+
   assert.ok(changed.every((range) => !displayRangeError(range)))
 })
 
 test("rejects invalid, zero and reversed ranges; accepts midnight end", () => {
   assert.match(displayRangeError({ start: "9:00", end: "22:00" }), /HH:mm/)
+
   assert.match(displayRangeError({ start: "09:00", end: "09:00" }), /sau/)
+
   assert.match(displayRangeError({ start: "22:00", end: "09:00" }), /sau/)
+
   assert.equal(displayRangeError({ start: "00:00", end: "24:00" }), "")
 })
 
 test("hiding and revealing a 09:15 event never changes its record or scheduler result", () => {
   const event = {
     id: "1",
+
     date: "2026-11-16",
+
     time: "09:15–10:15",
+
     title: "Ôn bài",
   }
+
   const before = structuredClone(event)
+
   assert.equal(
     eventPosition(event.time, { start: "10:00", end: "22:00" }),
+
     null,
   )
+
   assert.deepEqual(
     eventPosition(event.time, { start: "09:00", end: "22:00" }),
+
     { top: 15, visibleMinutes: 765 },
   )
+
   assert.deepEqual(event, before)
+
   assert.deepEqual(
     runPlannerCommand("lập kế hoạch", []),
+
     runPlannerCommand("lập kế hoạch", []),
   )
 })
 
-test("display settings are available only in Detailed Time", () => {
+test("display settings are available only in the time-axis Week view", () => {
   assert.equal(displaySettingsVisible("compact"), false)
+
   assert.equal(displaySettingsVisible("month"), false)
+
   assert.equal(displaySettingsVisible("detail"), true)
+})
+
+test("the time-axis week is the default and compact view is named overview", () => {
+  assert.equal(DEFAULT_CALENDAR_VIEW, "detail")
+
+  assert.deepEqual(CALENDAR_VIEWS, ["detail", "compact", "month"])
+
+  assert.deepEqual(CALENDAR_VIEWS.map(calendarViewLabel), [
+    "Tuần",
+
+    "Tổng quan",
+
+    "Tháng",
+  ])
 })
