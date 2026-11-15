@@ -1,14 +1,10 @@
 import WeekCalendar from "../features/planner/WeekCalendar"
 
-import CompactWeekCalendar from "../features/planner/CompactWeekCalendar"
-
 import MonthCalendar from "../features/planner/MonthCalendar"
 
 import { addMonths } from "../features/planner/monthGrid"
 
 import ProposalReview from "../features/planner/ProposalReview"
-
-import CalendarDisplaySettings from "../features/planner/CalendarDisplaySettings"
 
 import PlannerCommandComposer from "../features/planner/PlannerCommandComposer"
 
@@ -126,11 +122,17 @@ export default function Planner({
 
     feedback,
 
+    clarification,
+
     shown,
 
     stale,
 
     send,
+
+    submitClarification,
+
+    dismissClarification,
 
     approve,
 
@@ -478,9 +480,9 @@ export default function Planner({
   return (
     <div
       ref={pageRef}
-      className={`planner-page ${
-        calendarView !== "detail" ? "is-compact" : ""
-      } ${taskPanelOpen ? "" : "is-tasks-closed"}`}
+      className={`planner-page ${calendarView === "month" ? "is-month" : ""} ${
+        taskPanelOpen ? "" : "is-tasks-closed"
+      }`}
     >
       <Card
         className="dashboard-calendar planner-calendar"
@@ -494,6 +496,9 @@ export default function Planner({
               busy={busy}
               apiMode={apiEnabled}
               feedback={feedback}
+              clarification={clarification}
+              onDismissClarification={dismissClarification}
+              onSubmitClarification={submitClarification}
               textareaRef={inputRef}
             />
 
@@ -592,12 +597,6 @@ export default function Planner({
           approve={approve}
           reject={reject}
         />
-        {displaySettingsVisible(calendarView) && (
-          <CalendarDisplaySettings
-            ranges={displayRanges}
-            onChange={setDisplayRanges}
-          />
-        )}
         <p className="planner-legend" aria-label="Chú thích">
           <span className="legend-confirmed">Đã xác nhận</span>
 
@@ -605,26 +604,12 @@ export default function Planner({
           <span>
             {weekEmpty
               ? "Tuần này chưa có việc."
-              : calendarView === "detail"
-                ? "Chọn giờ để nhập yêu cầu"
-                : "Chọn ngày để xem chi tiết"}
+              : calendarView === "month"
+                ? "Chọn ngày để xem chi tiết"
+                : "Chọn giờ để nhập yêu cầu"}
           </span>
         </p>
-        {calendarView === "compact" ? (
-          <CompactWeekCalendar
-            weekDays={weekDays}
-            todayKey={todayKey}
-            events={calendarEvents}
-            windows={windows ?? []}
-            availability={
-              apiEnabled ? [] : (proposal?.next.availability ?? availability)
-            }
-            changeOf={changeOf}
-            proposedWindowIds={
-              new Set(proposal?.windowChanges.map((change) => change.window.id))
-            }
-          />
-        ) : calendarView === "month" ? (
+        {calendarView === "month" ? (
           <MonthCalendar
             month={month}
             todayKey={todayKey}
@@ -644,6 +629,11 @@ export default function Planner({
             week={week}
             todayIndex={todayIndex}
             ranges={displayRanges}
+            onRangesChange={
+              displaySettingsVisible(calendarView)
+                ? setDisplayRanges
+                : undefined
+            }
             events={calendarEvents}
             windows={windows ?? []}
             availability={

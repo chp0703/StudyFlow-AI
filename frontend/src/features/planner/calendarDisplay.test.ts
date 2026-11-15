@@ -82,23 +82,15 @@ test("hiding and revealing a 09:15 event never changes its record or scheduler r
 })
 
 test("display settings are available only in the time-axis Week view", () => {
-  assert.equal(displaySettingsVisible("compact"), false)
-
   assert.equal(displaySettingsVisible("month"), false)
 
   assert.equal(displaySettingsVisible("detail"), true)
 })
 
-test("the time-axis week is the default and compact view is named overview", () => {
+test("the time-axis week is the default alongside the month view", () => {
   assert.equal(DEFAULT_CALENDAR_VIEW, "detail")
 
-  assert.deepEqual(CALENDAR_VIEWS, ["detail", "compact", "month"])
+  assert.deepEqual(CALENDAR_VIEWS, ["detail", "month"])
 
-  assert.deepEqual(CALENDAR_VIEWS.map(calendarViewLabel), [
-    "Tuần",
-
-    "Tổng quan",
-
-    "Tháng",
-  ])
+  assert.deepEqual(CALENDAR_VIEWS.map(calendarViewLabel), ["Tuần", "Tháng"])
 })

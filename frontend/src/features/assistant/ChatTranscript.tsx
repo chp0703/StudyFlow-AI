@@ -1,5 +1,7 @@
 import type { ReactNode, RefObject } from "react"
+
 import { ArrowRight, Check, FileText, Sparkles, X } from "lucide-react"
+
 import type {
   ApprovalStatus,
   AssistantScenario,
@@ -8,25 +10,49 @@ import type {
 
 type Props = {
   apiEnabled: boolean
+
   thinking: boolean
+
   messages: ChatMessage[]
+
   transcriptRef: RefObject<HTMLDivElement | null>
+
   shouldScroll: RefObject<boolean>
+
   activeClarification: string | null | undefined
-  clarificationForm: (scenario: AssistantScenario) => ReactNode
+
+  clarificationForm: (
+    scenario: AssistantScenario,
+
+    entry: ChatMessage,
+  ) => ReactNode
+
+  renderApiClarification?: (entry: ChatMessage) => ReactNode
+
   onOpenPlanner: () => void
+
   decide: (id: string, status: ApprovalStatus) => void
 }
 
 export default function ChatTranscript({
   apiEnabled,
+
   thinking,
+
   messages,
+
   transcriptRef,
+
   shouldScroll,
+
   activeClarification,
+
   clarificationForm,
+
+  renderApiClarification,
+
   onOpenPlanner,
+
   decide,
 }: Props) {
   return (
@@ -110,9 +136,12 @@ export default function ChatTranscript({
                 )}
                 <p>{entry.text}</p>
                 {entry.category === "CLARIFICATION" &&
-                  entry.scenario &&
                   entry.id === activeClarification &&
-                  clarificationForm(entry.scenario)}
+                  (entry.scenario
+                    ? clarificationForm(entry.scenario, entry)
+                    : entry.clarification
+                      ? renderApiClarification?.(entry)
+                      : null)}
                 {entry.scenario === "view" && (
                   <button
                     className="button secondary assistant-inline-action"

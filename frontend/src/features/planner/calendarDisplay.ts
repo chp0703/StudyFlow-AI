@@ -6,20 +6,14 @@ export interface CalendarDisplayRange {
 
 export type CalendarDisplayRanges = readonly [CalendarDisplayRange, CalendarDisplayRange, CalendarDisplayRange, CalendarDisplayRange, CalendarDisplayRange, CalendarDisplayRange, CalendarDisplayRange]
 
-export type CalendarView = "compact" | "detail" | "month"
+export type CalendarView = "detail" | "month"
 
 export const DEFAULT_CALENDAR_VIEW: CalendarView = "detail"
 
-export const CALENDAR_VIEWS: readonly CalendarView[] = [
-  "detail",
-
-  "compact",
-
-  "month",
-]
+export const CALENDAR_VIEWS: readonly CalendarView[] = ["detail", "month"]
 
 export const calendarViewLabel = (view: CalendarView) =>
-  view === "detail" ? "Tuần" : view === "compact" ? "Tổng quan" : "Tháng"
+  view === "detail" ? "Tuần" : "Tháng"
 
 export const displaySettingsVisible = (view: CalendarView) => view === "detail"
 

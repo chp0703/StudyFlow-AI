@@ -3,11 +3,26 @@ import type { Task } from "../../types/task"
 import type { TaskChange, TimeWindow } from "../../types/planner"
 import type { CalendarDisplayRanges } from "./calendarDisplay"
 import { displayMinutes, eventPosition } from "./calendarDisplay"
+import CalendarDisplaySettings from "./CalendarDisplaySettings"
 import type { ApiTimeWindow } from "../../api/types"
 import { visibleSegments } from "./workingTime"
 
 const weekdayNames = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
 const pxPerMinute = 0.8
+
+const timeLabel = (minutes: number) =>
+  `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
+
+const buildTicks = (from: number, to: number) =>
+  to <= from
+    ? []
+    : [
+        from,
+        ...Array.from(
+          { length: Math.max(0, Math.ceil((to - from) / 60) - 1) },
+          (_, i) => from + (i + 1) * 60,
+        ),
+      ]
 
 export default function WeekCalendar({
   calendarRef,
@@ -15,6 +30,7 @@ export default function WeekCalendar({
   week,
   todayIndex,
   ranges,
+  onRangesChange,
   events,
   windows,
   availability,
@@ -29,6 +45,7 @@ export default function WeekCalendar({
   week: number
   todayIndex: number
   ranges: CalendarDisplayRanges
+  onRangesChange?: (ranges: CalendarDisplayRanges) => void
   events: Task[]
   windows: ApiTimeWindow[]
   availability: TimeWindow[]
@@ -38,6 +55,13 @@ export default function WeekCalendar({
   nowHour: number
   nowMinutes: number
 }) {
+  const gridFrom = Math.min(
+    ...ranges.map((range) => displayMinutes(range.start)),
+  )
+  const gridTo = Math.max(...ranges.map((range) => displayMinutes(range.end)))
+  const gridHeight = Math.max(60, (gridTo - gridFrom) * pxPerMinute)
+  const axisTicks = buildTicks(gridFrom, gridTo)
+
   return (
     <div
       ref={calendarRef}
@@ -48,6 +72,14 @@ export default function WeekCalendar({
     >
       <div className="dashboard-schedule">
         <div className="schedule-header">
+          <div className="schedule-time-corner">
+            {onRangesChange && (
+              <CalendarDisplaySettings
+                ranges={ranges}
+                onChange={onRangesChange}
+              />
+            )}
+          </div>
           {weekDays.map((date, day) => (
             <div
               key={day}
@@ -61,20 +93,30 @@ export default function WeekCalendar({
           ))}
         </div>
         <div className="schedule-columns">
+          <div
+            className="schedule-time-column"
+            aria-hidden="true"
+            style={{ height: gridHeight }}
+          >
+            {axisTicks.map((minute) => (
+              <span
+                key={minute}
+                className="schedule-time-label"
+                style={{
+                  top: (minute - gridFrom) * pxPerMinute,
+                  height: Math.min(60, gridTo - minute) * pxPerMinute,
+                }}
+              >
+                {timeLabel(minute)}
+              </span>
+            ))}
+          </div>
           {weekDays.map((date, day) => {
             const range = ranges[day]
             const from = displayMinutes(range.start)
             const to = displayMinutes(range.end)
             const dateKey = date.toISOString().slice(0, 10)
-            const ticks = [
-              from,
-              ...Array.from(
-                { length: Math.ceil((to - from) / 60) - 1 },
-                (_, i) => from + (i + 1) * 60,
-              ),
-            ]
-            const timeLabel = (minutes: number) =>
-              `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
+            const ticks = buildTicks(from, to)
             const dayEvents = events.filter((event) => event.date === dateKey)
             const now = nowHour * 60 + nowMinutes
             const segments = visibleSegments(
@@ -94,7 +136,7 @@ export default function WeekCalendar({
               >
                 <div
                   className="schedule-time-grid"
-                  style={{ height: (to - from) * pxPerMinute }}
+                  style={{ height: gridHeight }}
                 >
                   {segments.map((segment) => (
                     <div
@@ -111,7 +153,7 @@ export default function WeekCalendar({
                         segment.kind === "busy" ? "Bận" : "Rảnh"
                       } ${timeLabel(segment.start)}–${timeLabel(segment.end)}`}
                       style={{
-                        top: (segment.start - from) * pxPerMinute,
+                        top: (segment.start - gridFrom) * pxPerMinute,
                         height: (segment.end - segment.start) * pxPerMinute,
                       }}
                     >
@@ -122,23 +164,18 @@ export default function WeekCalendar({
                         : ""}
                     </div>
                   ))}
-                  {ticks.map((minute, index) => (
+                  {ticks.map((minute) => (
                     <button
                       key={minute}
                       type="button"
                       className="schedule-time-slot"
                       style={{
-                        top: (minute - from) * pxPerMinute,
+                        top: (minute - gridFrom) * pxPerMinute,
                         height: Math.min(60, to - minute) * pxPerMinute,
                       }}
                       aria-label={`${weekdayNames[day]} ${dateKey} lúc ${timeLabel(minute)}; nhập yêu cầu lịch học`}
                       onClick={() => prefill(date, minute)}
-                    >
-                      <span>{timeLabel(minute)}</span>
-                      {index === 0 && minute % 60 !== 0 && (
-                        <span className="schedule-range-start">Bắt đầu</span>
-                      )}
-                    </button>
+                    />
                   ))}
                   {dayEvents.map((event) => {
                     const start =
@@ -169,7 +206,7 @@ export default function WeekCalendar({
                         }`}
                         data-task-id={event.id}
                         style={{
-                          top: position.top * pxPerMinute,
+                          top: (from - gridFrom + position.top) * pxPerMinute,
                           height: Math.max(28, duration * pxPerMinute),
                         }}
                         title={`${event.title} · ${event.time}`}
@@ -194,7 +231,7 @@ export default function WeekCalendar({
                       <i
                         className="now-line"
                         aria-label={`Bây giờ ${timeLabel(now)}`}
-                        style={{ top: (now - from) * pxPerMinute }}
+                        style={{ top: (now - gridFrom) * pxPerMinute }}
                       />
                     )}
                 </div>

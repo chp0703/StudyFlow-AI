@@ -5,20 +5,32 @@ import {
   type KeyboardEvent,
   type RefObject,
 } from "react"
+
 import { CircleAlert, Info, LoaderCircle, Send, Sparkles } from "lucide-react"
+
 import Button from "../../components/ui/Button"
+
 import type { PlannerFeedback } from "./usePlanner"
+
+import type { PlannerClarification } from "./clarification"
+
+import PlannerClarificationPopup from "./PlannerClarificationPopup"
+
 import { composerKeyAction } from "./composerKeyboard"
+
 import { resizePlannerComposer } from "./composerTextarea"
 
 const DEMO_SUGGESTIONS = [
   "tạo công việc Báo cáo hạn 20/11 3 giờ",
+
   "lập kế hoạch",
+
   "thêm Ôn giải tích thứ 3 lúc 9h",
 ]
 
 const API_SUGGESTIONS = [
   "Tạo công việc Báo cáo hạn 20/11 khoảng 3 giờ",
+
   "Lập kế hoạch cho các công việc chưa xếp",
 ]
 
@@ -29,6 +41,7 @@ function Feedback({ feedback }: { feedback: PlannerFeedback }) {
       : feedback.kind === "pending"
         ? Sparkles
         : Info
+
   return (
     <div
       id="planner-command-feedback"
@@ -47,23 +60,49 @@ function Feedback({ feedback }: { feedback: PlannerFeedback }) {
 
 export default function PlannerCommandComposer({
   input,
+
   setInput,
+
   send,
+
   busy,
+
   apiMode,
+
   feedback,
+
+  clarification = null,
+
+  onDismissClarification,
+
+  onSubmitClarification,
+
   textareaRef,
 }: {
   input: string
+
   setInput: (value: string) => void
+
   send: () => void
+
   busy: boolean
+
   apiMode: boolean
+
   feedback: PlannerFeedback | null
+
+  clarification?: PlannerClarification | null
+
+  onDismissClarification?: () => void
+
+  onSubmitClarification?: (followUpText: string) => void
+
   textareaRef: RefObject<HTMLTextAreaElement | null>
 }) {
   const [expanded, setExpanded] = useState(false)
+
   const composing = useRef(false)
+
   const suggestions = apiMode ? API_SUGGESTIONS : DEMO_SUGGESTIONS
 
   useLayoutEffect(() => {
@@ -72,23 +111,32 @@ export default function PlannerCommandComposer({
 
   const submit = () => {
     if (!input.trim() || busy) return
+
     send()
   }
 
   const keyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     const action = composerKeyAction({
       key: event.key,
+
       shiftKey: event.shiftKey,
+
       isComposing: composing.current || event.nativeEvent.isComposing,
+
       busy,
+
       hasText: Boolean(input.trim()),
     })
+
     if (action === "submit") {
       event.preventDefault()
+
       submit()
     } else if (action === "collapse") {
       event.preventDefault()
+
       setExpanded(false)
+
       event.currentTarget.blur()
     }
   }
@@ -104,6 +152,7 @@ export default function PlannerCommandComposer({
         }}
         onSubmit={(event) => {
           event.preventDefault()
+
           submit()
         }}
       >
@@ -161,10 +210,13 @@ export default function PlannerCommandComposer({
                   key={suggestion}
                   onClick={() => {
                     setInput(suggestion)
+
                     requestAnimationFrame(() => {
                       textareaRef.current?.focus()
+
                       textareaRef.current?.setSelectionRange(
                         suggestion.length,
+
                         suggestion.length,
                       )
                     })
@@ -188,7 +240,17 @@ export default function PlannerCommandComposer({
           </div>
         )}
       </form>
-      {feedback && <Feedback feedback={feedback} />}
+      {clarification && onDismissClarification && onSubmitClarification && (
+        <PlannerClarificationPopup
+          clarification={clarification}
+          busy={busy}
+          onDismiss={onDismissClarification}
+          onSubmit={onSubmitClarification}
+        />
+      )}
+      {feedback && !(clarification && feedback.kind === "clarification") && (
+        <Feedback feedback={feedback} />
+      )}
     </div>
   )
 }

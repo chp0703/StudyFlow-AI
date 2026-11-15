@@ -1,26 +1,35 @@
 import { useState } from "react"
+
 import { Settings2 } from "lucide-react"
+
 import type { CalendarDisplayRanges } from "./calendarDisplay"
+
 import { displayRangeError } from "./calendarDisplay"
 
 const days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"]
 
 export default function CalendarDisplaySettings({
   ranges,
+
   onChange,
 }: {
   ranges: CalendarDisplayRanges
+
   onChange: (ranges: CalendarDisplayRanges) => void
 }) {
   const [open, setOpen] = useState(false)
+
   const [draft, setDraft] = useState<CalendarDisplayRanges>(ranges)
+
   const [errors, setErrors] = useState<string[]>(Array(7).fill(""))
 
   const update = (day: number, field: "start" | "end", value: string) => {
     const next = draft.map((range, index) =>
       index === day ? { ...range, [field]: value } : range,
     ) as unknown as CalendarDisplayRanges
+
     setDraft(next)
+
     setErrors((previous) =>
       previous.map((error, index) => (index === day ? "" : error)),
     )
@@ -28,9 +37,13 @@ export default function CalendarDisplaySettings({
 
   const save = () => {
     const nextErrors = draft.map(displayRangeError)
+
     setErrors(nextErrors)
+
     if (nextErrors.some(Boolean)) return
+
     onChange(draft)
+
     setOpen(false)
   }
 
@@ -39,15 +52,19 @@ export default function CalendarDisplaySettings({
       <button
         className="calendar-settings-toggle"
         type="button"
+        aria-label="Tùy chỉnh giờ hiển thị"
+        title="Tùy chỉnh giờ hiển thị"
         aria-expanded={open}
         aria-controls="calendar-display-panel"
         onClick={() => {
           setDraft(ranges)
+
           setErrors(Array(7).fill(""))
+
           setOpen(!open)
         }}
       >
-        <Settings2 size={16} aria-hidden="true" /> Tùy chỉnh giờ hiển thị
+        <Settings2 size={16} aria-hidden="true" />
       </button>
       {open && (
         <div
