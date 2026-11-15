@@ -8,6 +8,8 @@ import type {
 
 import { FIRST_HOUR, LAST_HOUR } from "../features/planner/plannerAgent.ts"
 
+import { hourSegments } from "../features/planner/workingTime.ts"
+
 import type {
   PlannerIssue,
   Proposal,
@@ -17,30 +19,16 @@ import type {
 
 import type { Task } from "../types/task.ts"
 
-import { toIsoDate } from "../utils/date.ts"
-
-// Times are shown in the browser's local zone; the backend default zone is Asia/Ho_Chi_Minh.
-
-const PRIORITY: Record<ApiTask["priority"], string> = {
-  HIGH: "Cao",
-
-  NORMAL: "Trung bình",
-
-  LOW: "Thấp",
-}
-
-const pad = (n: number) => String(n).padStart(2, "0")
-
-const clock = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`
+import { addCivilDays, vietnamClock, vietnamDate } from "../utils/date.ts"
 
 export const blockLabel = (block: Pick<ApiBlock, "start_at" | "end_at">) =>
-  `${clock(new Date(block.start_at))}–${clock(new Date(block.end_at))}`
+  `${vietnamClock(new Date(block.start_at))}–${vietnamClock(new Date(block.end_at))}`
 
 const minutesBetween = (a: string, b: string) =>
   Math.round((new Date(b).getTime() - new Date(a).getTime()) / 60000)
 
 export function deadlineDate(task: ApiTask): string {
-  return task.deadline_date ?? toIsoDate(new Date(task.deadline_at))
+  return task.deadline_date ?? vietnamDate(new Date(task.deadline_at))
 }
 
 // A task for the list. Its first block (if any) gives the "confirmed" calendar slot.
@@ -53,7 +41,7 @@ export function mapTask(task: ApiTask, firstBlock?: ApiBlock): Task {
 
     title: task.title,
 
-    course: task.course_label ?? "",
+    description: task.description,
 
     time: firstBlock ? blockLabel(firstBlock) : "",
 
@@ -61,11 +49,19 @@ export function mapTask(task: ApiTask, firstBlock?: ApiBlock): Task {
 
     effort: task.estimated_minutes,
 
-    priority: PRIORITY[task.priority] ?? PRIORITY.NORMAL,
+    priority: task.priority,
+
+    color: task.color,
 
     deadline: deadlineDate(task),
 
-    ...(start ? { date: toIsoDate(start), hour: start.getHours() } : {}),
+    ...(start
+      ? {
+          date: vietnamDate(start),
+
+          hour: Number(vietnamClock(start).slice(0, 2)),
+        }
+      : {}),
   }
 }
 
@@ -79,7 +75,7 @@ export function blockEvent(block: ApiBlock, task: Task | undefined): Task {
 
     title: task?.title ?? "Công việc",
 
-    course: task?.course ?? "",
+    description: task?.description,
 
     time: blockLabel(block),
 
@@ -87,13 +83,15 @@ export function blockEvent(block: ApiBlock, task: Task | undefined): Task {
 
     effort: minutesBetween(block.start_at, block.end_at),
 
-    priority: task?.priority ?? PRIORITY.NORMAL,
+    priority: task?.priority ?? 0.5,
 
-    deadline: task?.deadline ?? toIsoDate(start),
+    color: task?.color,
 
-    date: toIsoDate(start),
+    deadline: task?.deadline ?? vietnamDate(start),
 
-    hour: start.getHours(),
+    date: vietnamDate(start),
+
+    hour: Number(vietnamClock(start).slice(0, 2)),
   }
 }
 
@@ -126,13 +124,7 @@ export function mapTasksAndEvents(
   }
 }
 
-const toMinutes = (hhmm: string) => {
-  const [h, m] = hhmm.split(":").map(Number)
-
-  return h * 60 + m
-}
-
-// Free/busy cells (one per grid hour) for `days` days from `from`. Busy wins over free on the same hour.
+// Legacy hour-cell adapter. The calendar renders exact source intervals separately.
 
 export function expandWindows(
   windows: ApiTimeWindow[],
@@ -144,52 +136,24 @@ export function expandWindows(
   const cells = new Map<string, TimeWindow>()
 
   for (let i = 0; i < days; i++) {
-    const day = new Date(
-      from.getFullYear(),
-
-      from.getMonth(),
-
-      from.getDate() + i,
-    )
-
-    const date = toIsoDate(day)
-
-    const weekday = day.getDay() || 7
+    const date = addCivilDays(vietnamDate(from), i)
 
     for (let hour = FIRST_HOUR; hour <= LAST_HOUR; hour++) {
-      const cellStart = new Date(
-        day.getFullYear(),
+      const segments = hourSegments(date, hour, windows)
 
-        day.getMonth(),
+      const kind = segments.some((segment) => segment.kind === "busy")
+        ? "busy"
+        : segments.length === 1 &&
+            segments[0].kind === "free" &&
+            segments[0].start === hour * 60 &&
+            segments[0].end === (hour + 1) * 60
+          ? "free"
+          : null
 
-        day.getDate(),
-
-        hour,
-      )
-
-      const cellEnd = new Date(cellStart.getTime() + 3600000)
-
-      for (const w of windows) {
-        if (w.archived_at) continue
-
-        const hit =
-          w.recurrence === "WEEKLY"
-            ? w.weekday === weekday &&
-              (!w.valid_from || date >= w.valid_from) &&
-              (!w.valid_until || date <= w.valid_until) &&
-              toMinutes(w.start_time ?? "00:00") < (hour + 1) * 60 &&
-              toMinutes(w.end_time ?? "00:00") > hour * 60
-            : new Date(w.start_at ?? 0) < cellEnd &&
-              new Date(w.end_at ?? 0) > cellStart
-
-        if (!hit) continue
-
-        const kind = w.kind === "BUSY" ? "busy" : "free"
-
+      if (kind) {
         const id = `${date}-${hour}`
 
-        if (cells.get(id)?.kind !== "busy")
-          cells.set(id, { id, date, hour, kind })
+        cells.set(id, { id, date, hour, kind })
       }
     }
   }
@@ -209,6 +173,8 @@ export function proposalFromReply(
 
     events: Task[]
 
+    windows?: ApiTimeWindow[]
+
     availability: TimeWindow[]
 
     revision: number
@@ -225,9 +191,9 @@ export function proposalFromReply(
   )
     return null
 
-  const summary = summarize(presentation)
+  const summary = summarize(presentation, ctx.windows)
 
-  const server = {
+  const server: NonNullable<Proposal["server"]> = {
     reference,
 
     title: summary.title,
@@ -237,7 +203,15 @@ export function proposalFromReply(
     taskIds: [] as string[],
   }
 
+  if (summary.approvalError) server.approvalError = summary.approvalError
+
   const plan = presentation.proposal
+
+  if (plan) {
+    server.coverage = plan.payload.coverage
+
+    server.unchangedBlockIds = plan.payload.plan_diff.unchanged
+  }
 
   if (!plan)
     return {
@@ -261,6 +235,18 @@ export function proposalFromReply(
     }
 
   const byId = new Map(ctx.tasks.map((t) => [t.id, t]))
+
+  server.unscheduled = plan.payload.task_summaries
+
+    .filter((item) => item.unallocated_minutes > 0)
+
+    .map((item) => ({
+      title: byId.get(item.task_id)?.title ?? "Công việc",
+
+      minutes: item.unallocated_minutes,
+
+      reasons: item.reason_codes,
+    }))
 
   const nextEvents = plan.payload.study_blocks.map((b) =>
     blockEvent(b, byId.get(b.task_id)),
@@ -344,6 +330,8 @@ export type Summary = {
   title: string
 
   details: DetailRow[]
+
+  approvalError?: string
 }
 
 export type DetailRow = {
@@ -370,26 +358,166 @@ const WEEKDAYS = [
   "Chủ nhật",
 ]
 
-function windowDetails(args: Record<string, unknown>): DetailRow[] {
+const VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh"
+
+const clockMinutes = (value: string) => {
+  const match = /^(\d{2}):(\d{2})$/u.exec(value)
+
+  if (!match) return null
+
+  const hour = Number(match[1])
+
+  const minute = Number(match[2])
+
+  if (minute > 59 || hour > 24 || (hour === 24 && minute !== 0)) return null
+
+  return hour * 60 + minute
+}
+
+const instantParts = (date: Date) => {
+  if (!Number.isFinite(date.getTime())) return null
+
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: VIETNAM_TIME_ZONE,
+
+      year: "numeric",
+
+      month: "2-digit",
+
+      day: "2-digit",
+
+      hour: "2-digit",
+
+      minute: "2-digit",
+
+      hourCycle: "h23",
+    })
+
+      .formatToParts(date)
+
+      .map((part) => [part.type, part.value]),
+  )
+
+  return {
+    date: `${parts.day}/${parts.month}/${parts.year}`,
+
+    time: `${parts.hour}:${parts.minute}`,
+  }
+}
+
+export function formatTimeWindow(window: Partial<ApiTimeWindow>) {
+  if (window.recurrence === "WEEKLY") {
+    const start = window.start_time ? clockMinutes(window.start_time) : null
+
+    const end = window.end_time ? clockMinutes(window.end_time) : null
+
+    if (
+      !Number.isInteger(window.weekday) ||
+      (window.weekday ?? 0) < 1 ||
+      (window.weekday ?? 0) > 7 ||
+      start === null ||
+      end === null ||
+      start >= end
+    )
+      return null
+
+    return `${WEEKDAYS[window.weekday!]!} hằng tuần, ${window.start_time}–${window.end_time}`
+  }
+
+  if (window.recurrence !== "NONE" || !window.start_at || !window.end_at)
+    return null
+
+  const startDate = new Date(window.start_at)
+
+  const endDate = new Date(window.end_at)
+
+  const start = instantParts(startDate)
+
+  const end = instantParts(endDate)
+
+  if (!start || !end || startDate >= endDate) return null
+
+  return start.date === end.date
+    ? `${start.date}, ${start.time}–${end.time}`
+    : `${start.date} ${start.time}–${end.date} ${end.time}`
+}
+
+const isWindowCommand = (operation: string) =>
+  operation === "set_availability" || operation === "set_busy_interval"
+
+const WINDOW_APPROVAL_ERROR =
+  "Không thể xác minh đầy đủ khung giờ bị ảnh hưởng. Bạn có thể từ chối và tạo lại yêu cầu; Duyệt đã bị khóa."
+
+function windowDetails(
+  args: Record<string, unknown>,
+
+  windows: ApiTimeWindow[],
+
+  operation: string,
+): Pick<Summary, "details" | "approvalError"> {
   const w = (args.window ?? {}) as Partial<ApiTimeWindow>
 
-  const when =
-    w.recurrence === "WEEKLY"
-      ? `${WEEKDAYS[w.weekday ?? 0] ?? ""} hằng tuần, ${w.start_time}–${w.end_time}`
-      : `${w.start_at ? new Date(w.start_at).toLocaleString("vi-VN") : "?"} – ${
-          w.end_at ? new Date(w.end_at).toLocaleString("vi-VN") : "?"
-        }`
+  const targetId =
+    typeof args.window_id === "string" && args.window_id ? args.window_id : null
 
-  return [
-    { label: "Loại", value: w.kind === "BUSY" ? "Giờ bận" : "Giờ rảnh" },
+  const previous = targetId
+    ? windows.find((item) => item.window_id === targetId)
+    : undefined
 
-    { label: "Thời gian", value: when },
+  const previousText = previous ? formatTimeWindow(previous) : null
+
+  const proposedText = args.window ? formatTimeWindow(w) : null
+
+  const changeType = args.change_type
+
+  const expectedKind =
+    operation === "set_busy_interval" ? "BUSY" : "AVAILABILITY"
+
+  const needsPrevious = changeType === "UPDATE" || changeType === "ARCHIVE"
+
+  const needsProposed = changeType === "ADD" || changeType === "UPDATE"
+
+  const invalid =
+    !["ADD", "UPDATE", "ARCHIVE"].includes(String(changeType)) ||
+    (needsPrevious &&
+      (!targetId ||
+        !previous ||
+        !previousText ||
+        previous.kind !== expectedKind)) ||
+    (needsProposed && (!proposedText || w.kind !== expectedKind))
+
+  const details: DetailRow[] = [
+    {
+      label: "Loại",
+
+      value: expectedKind === "BUSY" ? "Giờ bận" : "Thời gian học",
+    },
   ]
+
+  if (changeType === "UPDATE" && previousText)
+    details.push({ label: "Thời gian cũ", value: previousText })
+
+  if (changeType === "ARCHIVE" && previousText)
+    details.push({ label: "Sẽ xóa", value: previousText })
+
+  if (changeType !== "ARCHIVE" && proposedText)
+    details.push({ label: "Thời gian mới", value: proposedText })
+
+  return {
+    details,
+
+    ...(invalid ? { approvalError: WINDOW_APPROVAL_ERROR } : {}),
+  }
 }
 
 // Title and rows describing what an approval would do, from the server-issued presentation.
 
-export function summarize(p: ActionPresentation): Summary {
+export function summarize(
+  p: ActionPresentation,
+
+  windows: ApiTimeWindow[] = [],
+): Summary {
   if (p.proposal) {
     const diff = p.proposal.payload.plan_diff
 
@@ -398,7 +526,7 @@ export function summarize(p: ActionPresentation): Summary {
 
       details: [
         {
-          label: "Khối học",
+          label: "Lịch học",
 
           value: String(p.proposal.payload.study_blocks.length),
         },
@@ -421,16 +549,35 @@ export function summarize(p: ActionPresentation): Summary {
   if (p.candidate) {
     const s = p.candidate.slots as Record<string, string | number | null>
 
+    const start =
+      typeof s.start_at === "string" ? instantParts(new Date(s.start_at)) : null
+
+    const deadline =
+      typeof s.deadline_date === "string"
+        ? s.deadline_date.split("-").reverse().join("/")
+        : typeof s.deadline_at === "string"
+          ? instantParts(new Date(s.deadline_at))
+          : null
+
     return {
       title: `Thêm công việc: ${s.title ?? ""}`,
 
       details: [
-        { label: "Môn học", value: String(s.course_label ?? "Chưa có") },
+        {
+          label: "Bắt đầu",
+
+          value: start ? `${start.date}, ${start.time}` : "Chưa có",
+        },
 
         {
           label: "Hạn nộp",
 
-          value: String(s.deadline_date ?? s.deadline_at ?? "Chưa có"),
+          value:
+            typeof deadline === "string"
+              ? deadline
+              : deadline
+                ? `${deadline.date}, ${deadline.time}`
+                : "Chưa có",
         },
 
         {
@@ -441,7 +588,15 @@ export function summarize(p: ActionPresentation): Summary {
             : "Chưa có",
         },
 
-        { label: "Ưu tiên", value: String(s.priority ?? "NORMAL") },
+        { label: "Ưu tiên", value: String(s.priority ?? 0.5) },
+
+        { label: "Màu", value: String(s.color ?? "#596CF0") },
+
+        {
+          label: "Mô tả",
+
+          value: String(s.description ?? "Không có"),
+        },
       ],
     }
   }
@@ -457,14 +612,35 @@ export function summarize(p: ActionPresentation): Summary {
       ),
     }
 
+  if (command && isWindowCommand(command.operation)) {
+    const windowSummary = windowDetails(
+      command.arguments,
+
+      windows,
+
+      command.operation,
+    )
+
+    return {
+      title: `${
+        command.arguments.change_type === "ARCHIVE"
+          ? "Xóa"
+          : command.arguments.change_type === "UPDATE"
+            ? "Sửa"
+            : "Thêm"
+      } ${
+        command.operation === "set_busy_interval" ? "giờ bận" : "thời gian học"
+      }`,
+
+      ...windowSummary,
+    }
+  }
+
   if (command)
     return {
-      title:
-        command.operation === "set_busy_interval"
-          ? "Thêm giờ bận"
-          : "Thêm giờ rảnh",
+      title: "Thao tác đang chờ",
 
-      details: windowDetails(command.arguments),
+      details: [],
     }
 
   return { title: "Thao tác đang chờ", details: [] }

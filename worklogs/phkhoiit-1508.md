@@ -416,3 +416,34 @@
 - Chưa kiểm tra bằng trình duyệt thật; cần xem lại trang đăng nhập và trang Học tập trước khi merge.
 - Chưa kiểm tra tệp logo trong LFS có đủ trên máy.
 - Không chồng lấn tệp với PR #32.
+
+## 2026-11-15 — Đồng bộ main và hoàn thiện Planner follow-up
+
+**Mục tiêu:** đưa backend/contract mới nhất vào PR #40, khôi phục build frontend và làm cho lịch hiển thị đúng ngữ nghĩa trên desktop, laptop và mobile.
+
+**Đã làm**
+
+- Merge `main`, giữ đầy đủ API ingestion và Planner; đồng bộ task mapper với `start_at`, priority số, color và description.
+- Bổ sung helper resize composer, đổi lịch trục thời gian thành view **Tuần** mặc định, agenda thu gọn thành **Tổng quan**, và hiển thị đúng khoảng Thứ 2–Chủ nhật.
+- Thêm layout theo chiều rộng vùng Planner; task panel chuyển xuống dưới khi hẹp, chỉ time-grid cuộn ngang.
+- Cập nhật test và tài liệu Planner theo schema/view mới.
+
+**Kết quả:** nhánh `fix/planner-followup-leader-spec-kent`; 71 frontend tests, TypeScript, production build, contract checker và generated schema check pass. Browser QA pass ở 1440×900, 1024×768 và 390×844, không có page overflow ngang.
+
+**Ghi chú**
+
+- Bundle frontend vẫn có cảnh báo chunk trên 500 kB; attachment UI vẫn display-only dù backend ingestion đã có.
+- Chưa chạy authenticated ingestion/TimeWindow E2E hoặc Supabase reset; không chạm cloud project.
+
+## 2026-11-15 — Tinh chỉnh lịch tuần Planner và form bổ sung thông tin công việc
+
+**Mục tiêu:** đơn giản hóa giao diện lịch tuần Planner (1 cột giờ bên trái, nút cài đặt giờ dạng icon) và thay cảnh báo thiếu thông tin bằng popup/form đầy đủ trường công việc tự điền sẵn từ prompt trên cả Planner và Trang chủ.
+
+**Đã làm**
+
+- Lịch tuần Planner (`features/planner/WeekCalendar.tsx`, `CalendarDisplaySettings.tsx`, `pages/Planner.tsx`, `styles/planner.css`): giữ một cột giờ duy nhất bên trái, đưa cài đặt giờ hiển thị thành nút icon ở góc trên trái trục giờ, bỏ `CompactWeekCalendar` và các tài liệu nháp dư.
+- Popup bổ sung thông tin Planner (`features/planner/clarification.ts`, `TaskClarificationFields.tsx`, `PlannerClarificationPopup.tsx`, `PlannerCommandComposer.tsx`, `usePlanner.ts`): mở popup bên phải ô nhập lệnh khi `NEEDS_CLARIFICATION` hoặc thiếu thông tin demo, hiển thị đủ các trường công việc (tên, thời gian bắt đầu, hạn, thời lượng, mức ưu tiên, màu sắc, mô tả), tự điền sẵn thông tin đã có trong prompt và cho phép chỉnh sửa.
+- Trang chủ (`features/assistant/AssistantTaskClarificationForm.tsx`, `Assistant.tsx`, `ChatTranscript.tsx`, `apiAssistant.ts`, `types/assistant.ts`): áp dụng form đầy đủ trường công việc tự điền sẵn cho cả API mode (`NEEDS_CLARIFICATION`) và demo mode.
+- Bổ sung và cập nhật test (`clarification.test.ts`, `WeekCalendar.test.ts`, `apiAssistant.test.ts`).
+
+**Kết quả:** nhánh `fix/planner-followup-leader-spec-kent`; `contracts/check_contract.py` và `generate_contract_schema_migration.py --check` pass; frontend `tsc --noEmit`, `vite build` và 75/75 Node tests pass; `supabase db reset`, `supabase test db` (16 files, 504 tests) và backend pytest (176 unit/acceptance + 16 integration = 192 tests) pass.

@@ -1,13 +1,19 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { describeChanges, diffTasks, isStale } from "./proposal.ts"
+import {
+  approvalBlocked,
+  demoNoOpResult,
+  describeChanges,
+  diffTasks,
+  isStale,
+} from "./proposal.ts"
+import { runPlannerCommand } from "./plannerAgent.ts"
 import type { Task } from "../../types/task.ts"
 import type { Proposal } from "../../types/planner.ts"
 
 const task = (id: number, date?: string, hour?: number): Task => ({
   id: String(id),
   title: `T${id}`,
-  course: "c",
   time: "",
   done: false,
   effort: 60,
@@ -37,6 +43,71 @@ test("a proposal is stale once the schedule revision moved on", () => {
   const p = { baseRevision: 2 } as Proposal
   assert.equal(isStale(p, 2), false)
   assert.equal(isStale(p, 3), true)
+})
+
+test("a no-op command keeps a pending task proposal for explicit approval", () => {
+  const pending = {
+    id: "task",
+    createdAt: 0,
+    baseRevision: 0,
+    changes: [{ kind: "added" as const, task: task(1) }],
+    windowChanges: [],
+    issues: [],
+    reply: "Đề xuất thêm công việc",
+    next: { tasks: [task(1)], availability: [] },
+  } satisfies Proposal
+  const response = runPlannerCommand("không hợp lệ", [], []).reply
+  const result = demoNoOpResult(pending, response)
+  assert.equal(result.proposal, pending)
+  assert.equal(result.notice, response)
+  assert.deepEqual(demoNoOpResult(null, response), {
+    proposal: null,
+    reply: response,
+    notice: null,
+  })
+})
+
+test("unsupported free-time commands keep the pending proposal intact", () => {
+  const pending = {
+    id: "task",
+    createdAt: 0,
+    baseRevision: 0,
+    changes: [{ kind: "added" as const, task: task(1) }],
+    windowChanges: [],
+    issues: [],
+    reply: "Đề xuất thêm công việc",
+    next: { tasks: [task(1)], availability: [] },
+  } satisfies Proposal
+  for (const command of ["rảnh hôm nay từ 9h đến 12h", "xóa rảnh hôm nay"]) {
+    const response = runPlannerCommand(
+      command,
+      pending.next.tasks,
+      pending.next.availability,
+    )
+    assert.deepEqual(response.tasks, pending.next.tasks)
+    assert.deepEqual(response.availability, pending.next.availability)
+    assert.equal(demoNoOpResult(pending, response.reply).proposal, pending)
+  }
+})
+
+test("unresolved server proposals are blocked independently of stale state", () => {
+  const unresolved = {
+    baseRevision: 1,
+    server: { approvalError: "Không thể xác minh" },
+  } as Proposal
+  assert.equal(approvalBlocked(unresolved, false), true)
+  assert.equal(approvalBlocked({ baseRevision: 1 } as Proposal, false), false)
+  assert.equal(approvalBlocked({ baseRevision: 1 } as Proposal, true), true)
+})
+
+test("an invalid command is a no-op against the pending preview", () => {
+  const base: Task[] = []
+  const preview: Task[] = [task(1, "2026-11-20", 9)]
+  const result = runPlannerCommand("không hợp lệ", preview, [])
+
+  assert.deepEqual(diffTasks(preview, result.tasks), [])
+  assert.equal(diffTasks(base, result.tasks).length, 1)
+  assert.match(result.reply, /Ví dụ/)
 })
 
 test("diffWindows reports new, changed and removed windows", async () => {

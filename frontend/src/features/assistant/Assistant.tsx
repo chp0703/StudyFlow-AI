@@ -1,7 +1,11 @@
 import ChatComposer from "./ChatComposer"
+
 import ChatTranscript from "./ChatTranscript"
+
 import ConversationSidebar, { type ConfirmAction } from "./ConversationSidebar"
+
 import { useConversationHistory } from "./useConversationHistory"
+
 import {
   useEffect,
   useRef,
@@ -26,6 +30,15 @@ import { api } from "../../api"
 import { apiEnabled } from "../../api/config"
 
 import { errorToMessage, replyToMessage } from "./apiAssistant"
+
+import AssistantTaskClarificationForm from "./AssistantTaskClarificationForm"
+
+import {
+  TASK_COLOR_OPTIONS,
+  TASK_PRIORITY_OPTIONS,
+  isTaskClarification,
+  type ClarificationDraftValues,
+} from "../planner/clarification"
 
 import type {
   ActionProposal,
@@ -65,15 +78,24 @@ export default function Assistant({
   onServerChange?: () => void
 }) {
   const [thinking, setThinking] = useState(false)
+
   const {
     conversations,
+
     setConversations,
+
     activeId,
+
     setActiveId,
+
     hydrated,
+
     storageMode,
+
     storageError,
+
     clearHistory,
+
     patchActive,
   } = useConversationHistory()
 
@@ -136,47 +158,37 @@ export default function Assistant({
 
     fileList.forEach((file) => {
       const isImg = file.type.startsWith("image/")
+
       const sizeStr =
         file.size > 1024 * 1024
           ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
           : `${Math.max(1, Math.round(file.size / 1024))} KB`
 
-      if (isImg) {
-        const reader = new FileReader()
-        reader.onload = () => {
-          setAttachedFiles((prev) => [
-            ...prev,
-            {
-              id: crypto.randomUUID(),
-              name: file.name,
-              size: sizeStr,
-              type: "image",
-              dataUrl: String(reader.result || ""),
-            },
-          ])
-        }
-        reader.readAsDataURL(file)
-      } else {
-        setAttachedFiles((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            name: file.name,
-            size: sizeStr,
-            type: "file",
-          },
-        ])
-      }
+      setAttachedFiles((prev) => [
+        ...prev,
+
+        {
+          id: crypto.randomUUID(),
+
+          name: file.name,
+
+          size: sizeStr,
+
+          type: isImg ? "image" : "file",
+        },
+      ])
     })
   }
 
   const handleFileAttach = (e: ChangeEvent<HTMLInputElement>) => {
     processFiles(Array.from(e.target.files || []))
+
     e.target.value = ""
   }
 
   const handlePaste = (e: ClipboardEvent<HTMLTextAreaElement>) => {
     const items = Array.from(e.clipboardData.files || [])
+
     if (items.length > 0) {
       processFiles(items)
     }
@@ -184,8 +196,11 @@ export default function Assistant({
 
   const handleDrop = (e: DragEvent<HTMLFormElement>) => {
     e.preventDefault()
+
     setIsDragging(false)
+
     const items = Array.from(e.dataTransfer.files || [])
+
     if (items.length > 0) {
       processFiles(items)
     }
@@ -496,12 +511,15 @@ export default function Assistant({
 
     const user = message({
       role: "user",
+
       category: "MESSAGE",
+
       text:
         text ||
         (currentAttachments.length > 0
-          ? `Đã gửi ${currentAttachments.length} tệp đính kèm.`
+          ? `Đã chọn ${currentAttachments.length} tệp để hiển thị (chưa tải lên).`
           : ""),
+
       ...(currentAttachments.length > 0
         ? { attachments: currentAttachments }
         : {}),
@@ -571,10 +589,7 @@ export default function Assistant({
 
     const missing =
       scenario === "task"
-        ? !draft.title.trim() ||
-          !draft.course.trim() ||
-          !draft.deadline ||
-          !draft.duration
+        ? !draft.title.trim() || !draft.deadline || !draft.duration
         : scenario === "plan"
           ? !draft.title.trim() || !draft.deadline || !draft.availability.trim()
           : !draft.block.trim() || !draft.target
@@ -609,8 +624,6 @@ export default function Assistant({
             details: [
               { label: "Công việc", value: draft.title.trim() },
 
-              { label: "Môn học", value: draft.course.trim() },
-
               { label: "Hạn", value: draft.deadline },
 
               { label: "Thời lượng", value: `${draft.duration} phút` },
@@ -632,7 +645,7 @@ export default function Assistant({
 
                 { label: "Hạn", value: draft.deadline },
 
-                { label: "Thời gian rảnh", value: draft.availability.trim() },
+                { label: "Thời gian học", value: draft.availability.trim() },
               ],
             }
           : {
@@ -674,13 +687,16 @@ export default function Assistant({
   // API mode: the message goes to the server; its reply (question, approval card, result or error) is the answer.
 
   const attempt = useRef<{
- key: string
- text: string
- id: string
-} | null>(null)
+    key: string
+
+    text: string
+
+    id: string
+  } | null>(null)
 
   function appendAssistant(
     conversationId: string,
+
     item: ReturnType<typeof message>,
   ) {
     setConversations((current) =>
@@ -729,7 +745,7 @@ export default function Assistant({
 
       attempt.current = null
 
-      appendAssistant(starting.id, message(replyToMessage(reply)))
+      appendAssistant(starting.id, message(replyToMessage(reply, text)))
 
       if (reply.state === "SUCCEEDED") onServerChange?.()
     } catch (error) {
@@ -741,6 +757,7 @@ export default function Assistant({
 
   async function decideApi(
     entry: ChatMessage,
+
     status: ActionProposal["status"],
   ) {
     const reference = entry.proposal?.reference
@@ -754,9 +771,12 @@ export default function Assistant({
     try {
       if (status === "awaiting_approval") {
         // After a reload the stored card is only a reference; the server rebuilds what it would do.
+
         const reply = await api.reviewAction(
           conversationId,
+
           reference.action_id,
+
           reference.action_version,
         )
 
@@ -776,7 +796,9 @@ export default function Assistant({
 
       const reply = await api.decide(
         conversationId,
+
         reference,
+
         status === "cancelled" ? "REJECT" : "APPROVE",
       )
 
@@ -785,7 +807,9 @@ export default function Assistant({
           conversation.id === conversationId
             ? setProposalStatus(
                 conversation,
+
                 entry.id,
+
                 status === "cancelled" ? "cancelled" : "approved",
               )
             : conversation,
@@ -950,8 +974,130 @@ export default function Assistant({
     )
   }
 
-  function clarificationForm(scenario: AssistantScenario) {
+  function promptBefore(entry: ChatMessage): string {
+    const idx = messages.findIndex((item) => item.id === entry.id)
+
+    if (idx <= 0) return ""
+
+    for (let i = idx - 1; i >= 0; i--) {
+      if (messages[i].role === "user") return messages[i].text
+    }
+
+    return ""
+  }
+
+  function submitDemoTaskDraft(values: ClarificationDraftValues) {
+    if (!active) return
+
+    const details: ActionProposal["details"] = [
+      { label: "Công việc", value: (values.title ?? "").trim() },
+    ]
+
+    if (values["start_at.date"] && values["start_at.time"]) {
+      details.push({
+        label: "Bắt đầu",
+
+        value: `${values["start_at.date"]} ${values["start_at.time"]}`,
+      })
+    }
+
+    if (values.deadline_date) {
+      details.push({ label: "Hạn", value: values.deadline_date })
+    }
+
+    if (values.estimated_minutes) {
+      details.push({
+        label: "Thời lượng",
+
+        value: `${values.estimated_minutes} phút`,
+      })
+    }
+
+    const priorityLabel = TASK_PRIORITY_OPTIONS.find(
+      (p) => p.value === values.priority,
+    )?.label
+
+    if (priorityLabel) {
+      details.push({ label: "Mức ưu tiên", value: priorityLabel })
+    }
+
+    const colorLabel = TASK_COLOR_OPTIONS.find((c) => c.value === values.color)
+      ?.label
+
+    if (colorLabel) {
+      details.push({ label: "Màu sắc", value: colorLabel })
+    }
+
+    if ((values.description ?? "").trim()) {
+      details.push({ label: "Mô tả", value: values.description.trim() })
+    }
+
+    const proposal: ActionProposal = {
+      intent: "CREATE_TASK",
+
+      title: "Bản nháp công việc",
+
+      status: "awaiting_approval",
+
+      caveat:
+        "Chưa lưu công việc; hạn và thời lượng do bạn nhập, chưa được kiểm tra với lịch thực tế.",
+
+      details,
+    }
+
+    const proposed = message({
+      role: "assistant",
+
+      category: "PROPOSAL",
+
+      scenario: "task",
+
+      intent: proposal.intent,
+
+      validation: "valid_demo_draft",
+
+      text: "Kiểm tra thông tin bạn đã nhập. Xác nhận ở đây chỉ ghi nhận thao tác trong bản mẫu.",
+
+      proposal,
+    })
+
+    patchActive((conversation) => appendMessages(conversation, [proposed]))
+  }
+
+  function renderApiClarification(entry: ChatMessage) {
+    if (
+      !entry.clarification ||
+      !isTaskClarification(entry.clarification.questions)
+    )
+      return null
+
+    return (
+      <AssistantTaskClarificationForm
+        mode="api"
+        originalPrompt={entry.clarification.originalPrompt}
+        questions={entry.clarification.questions}
+        busy={thinking}
+        onSubmitApi={(followUpText) => void sendApi(followUpText)}
+      />
+    )
+  }
+
+  function clarificationForm(
+    scenario: AssistantScenario,
+
+    entry?: ChatMessage,
+  ) {
     if (scenario === "view") return null
+
+    if (scenario === "task") {
+      return (
+        <AssistantTaskClarificationForm
+          mode="demo"
+          originalPrompt={entry ? promptBefore(entry) : ""}
+          onSubmitDemo={submitDemoTaskDraft}
+        />
+      )
+    }
 
     return (
       <form
@@ -960,22 +1106,6 @@ export default function Assistant({
         noValidate
       >
         <div className="assistant-field-grid">
-          {scenario === "task" && (
-            <>
-              {field("title", "Tên công việc *", "text", "Ví dụ: Làm bài OOP")}
-              {field(
-                "course",
-
-                "Môn học *",
-
-                "text",
-
-                "Ví dụ: Lập trình hướng đối tượng",
-              )}
-              {field("deadline", "Hạn hoàn thành *", "date")}
-              {field("duration", "Thời lượng dự kiến (phút) *", "number", "60")}
-            </>
-          )}
           {scenario === "plan" && (
             <>
               {field(
@@ -1119,6 +1249,7 @@ export default function Assistant({
             shouldScroll={shouldScroll}
             activeClarification={activeClarification}
             clarificationForm={clarificationForm}
+            renderApiClarification={renderApiClarification}
             onOpenPlanner={onOpenPlanner}
             decide={decide}
             apiEnabled={apiEnabled}

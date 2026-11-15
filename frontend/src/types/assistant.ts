@@ -1,4 +1,4 @@
-import type { ActionReference } from "../api/types"
+import type { ActionReference, Question } from "../api/types"
 
 export type IntentCandidate = "SEARCH_TASKS" | "SET_BUSY_INTERVAL" | "SET_SCHEDULING_PREFERENCES" | "CREATE_TASK" | "UPDATE_TASK" | "DELETE_TASK" | "SET_AVAILABILITY" | "GENERATE_STUDY_PLAN" | "RESCHEDULE_STUDY_BLOCK" | "GET_STUDY_PLAN" | "CREATE_STUDY_BLOCK"
 
@@ -62,6 +62,12 @@ export type ChatMessage = {
   validation?: ValidationState
 
   proposal?: ActionProposal
+
+  clarification?: {
+    originalPrompt: string
+
+    questions: Question[]
+  }
 
   error?: {
     code: string

@@ -2,7 +2,13 @@ import type { PlannerIssue, TimeWindow } from "../../types/planner.ts"
 
 import type { Task } from "../../types/task.ts"
 
-import { daysUntil, toIsoDate, today } from "../../utils/date.ts"
+import {
+  addCivilDays,
+  civilWeekday,
+  daysUntil,
+  vietnamClock,
+  vietnamDate,
+} from "../../utils/date.ts"
 
 export const FIRST_HOUR = 8
 
@@ -37,24 +43,29 @@ const WEEKDAY_WORDS: Record<string, number> = {
 const DAY_RE =
   /hôm nay|ngày mai|thứ (2|3|4|5|6|7|hai|ba|tư|năm|sáu|bảy)|chủ nhật|\bcn\b/u
 
-const DATE_RE = /(\d{1,2})\/(\d{1,2})/u
+const DATE_RE = /(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/u
 
-const TIME_RE = /(\d{1,2})\s*(?:h|giờ|:\d{2})/u
+const TIME_RE = /(\d{1,2})(?::([0-5]\d)|\s*(?:h|giờ))/u
 
 type Parsed = {
   date?: string
 
   hour?: number
 
+  minute?: number
+
   rest: string
 }
 
 function parseWhen(text: string): Parsed {
+  const current = vietnamDate()
   let rest = text
 
   let date: string | undefined
 
   let hour: number | undefined
+
+  let minute: number | undefined
 
   const day = DAY_RE.exec(rest)
 
@@ -63,16 +74,12 @@ function parseWhen(text: string): Parsed {
 
     if (day[0] === "ngày mai") offset = 1
     else if (day[0] !== "hôm nay") {
-      const dow = day[1] ? WEEKDAY_WORDS[day[1]] : 0
+      const dow = day[1] ? WEEKDAY_WORDS[day[1]] - 1 : 6
 
-      offset = (dow - today.getDay() + 7) % 7
+      offset = (dow - civilWeekday(current) + 7) % 7
     }
 
-    const d = new Date(today)
-
-    d.setDate(d.getDate() + offset)
-
-    date = toIsoDate(d)
+    date = addCivilDays(current, offset)
 
     rest = rest.replace(day[0], " ")
   }
@@ -80,20 +87,21 @@ function parseWhen(text: string): Parsed {
   const explicit = DATE_RE.exec(rest)
 
   if (explicit) {
-    // dd/mm: dùng năm nay; chuyển sang năm sau nếu ngày đó đã qua.
+    // dd/mm dùng năm nay (hoặc năm sau nếu đã qua); dd/mm/yyyy giữ đúng năm.
 
-    const d = new Date(
-      today.getFullYear(),
-
-      Number(explicit[2]) - 1,
-
-      Number(explicit[1]),
+    const explicitYear = explicit[3] ? Number(explicit[3]) : null
+    const year = explicitYear ?? Number(current.slice(0, 4))
+    const candidate = addCivilDays(
+      `${year}-${explicit[2].padStart(2, "0")}-${explicit[1].padStart(2, "0")}`,
+      0,
     )
-
-    if (d < new Date(today.getFullYear(), today.getMonth(), today.getDate()))
-      d.setFullYear(d.getFullYear() + 1)
-
-    date = toIsoDate(d)
+    date =
+      !explicitYear && candidate < current
+        ? addCivilDays(
+            `${year + 1}-${explicit[2].padStart(2, "0")}-${explicit[1].padStart(2, "0")}`,
+            0,
+          )
+        : candidate
 
     rest = rest.replace(explicit[0], " ")
   }
@@ -102,6 +110,7 @@ function parseWhen(text: string): Parsed {
 
   if (time) {
     hour = Number(time[1])
+    minute = Number(time[2] ?? 0)
 
     rest = rest.replace(time[0], " ")
   }
@@ -114,12 +123,17 @@ function parseWhen(text: string): Parsed {
 
     .trim()
 
-  return { date, hour, rest }
+  return { date, hour, minute, rest }
 }
 
 const label = (hour: number) => `${String(hour).padStart(2, "0")}:00`
 
-const timeRange = (hour: number) => `${label(hour)} – ${label(hour + 1)}`
+const timeRange = (hour: number, minute = 0) => {
+  const start = hour * 60 + minute
+  const fmt = (value: number) =>
+    `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`
+  return `${fmt(start)} – ${fmt(start + 60)}`
+}
 
 type PlannerCommandResult = {
   tasks: Task[]
@@ -169,16 +183,26 @@ export function runPlannerCommand(
 
   const unchanged = (reply: string) => ({ tasks, availability, reply })
 
-  const isBusy = (date: string, hour: number) =>
-    availability.some((w) => w.id === windowId(date, hour) && w.kind === "busy")
+  const slotTaken = (date: string, start: number, ignoreId?: string) =>
+    availability.some(
+      (window) =>
+        window.kind === "busy" &&
+        window.date === date &&
+        start < window.hour * 60 + 60 &&
+        start + 60 > window.hour * 60,
+    ) ||
+    tasks.some(
+      (task) =>
+        task.id !== ignoreId &&
+        task.date === date &&
+        task.hour !== undefined &&
+        start < task.hour * 60 + (task.minute ?? 0) + 60 &&
+        start + 60 > task.hour * 60 + (task.minute ?? 0),
+    )
 
   const freeHour = (date: string, from: number, ignoreId?: string) => {
     for (let h = from; h <= LAST_HOUR; h++)
-      if (
-        !isBusy(date, h) &&
-        !tasks.some((t) => t.id !== ignoreId && t.date === date && t.hour === h)
-      )
-        return h
+      if (!slotTaken(date, h * 60, ignoreId)) return h
   }
 
   const findTask = (name: string) => {
@@ -194,34 +218,24 @@ export function runPlannerCommand(
       ? `Lịch chỉ xếp từ ${label(FIRST_HOUR)} đến ${label(LAST_HOUR)}.`
       : ""
 
-  // Khung giờ: "rảnh thứ 6 từ 9h đến 12h", "bận ngày mai lúc 14h", "xóa rảnh/bận thứ 6".
-
-  // Chỉ cảnh báo mềm: ưu tiên giờ rảnh đã khai báo trong ngày nhưng vẫn cho phép các giờ khác.
-
-  const outsideFree = (date: string, hour: number) => {
-    const free = availability.filter(
-      (w) => w.date === date && w.kind === "free",
+  // FE-03 chỉ điều khiển trục hiển thị; Demo không nhận lệnh ghi giờ rảnh.
+  if (/^(?:xóa|bỏ)?\s*rảnh(?:\s|$)/u.test(text))
+    return unchanged(
+      "Bản demo không hỗ trợ khai báo hoặc xóa giờ rảnh. Tùy chỉnh giờ hiển thị chỉ áp dụng cho trục thời gian trong Chi tiết giờ.",
     )
 
-    return free.length && !free.some((w) => w.hour === hour)
-      ? " (ngoài khung giờ rảnh bạn khai báo)"
-      : ""
-  }
-
-  let m = /^(xóa|bỏ)?\s*(rảnh|bận)\s+(.+)$/u.exec(text)
+  let m = /^(xóa|bỏ)?\s*bận\s+(.+)$/u.exec(text)
 
   if (m) {
-    const kind = m[2] === "rảnh" ? "free" : "busy"
+    const { date } = parseWhen(m[2])
 
-    const { date } = parseWhen(m[3])
-
-    const hours = parseHours(m[3])
+    const hours = parseHours(m[2])
 
     if (!date)
-      return unchanged("Cho mình biết ngày. Ví dụ: rảnh thứ 6 từ 9h đến 12h.")
+      return unchanged("Cho mình biết ngày. Ví dụ: bận thứ 6 từ 9h đến 12h.")
 
     if (!m[1] && !hours.length)
-      return unchanged("Cho mình biết giờ. Ví dụ: rảnh thứ 6 từ 9h đến 12h.")
+      return unchanged("Cho mình biết giờ. Ví dụ: bận thứ 6 từ 9h đến 12h.")
 
     const range = hours.length
       ? hours
@@ -236,16 +250,25 @@ export function runPlannerCommand(
 
     const ids = new Set(range.map((h) => windowId(date, h)))
 
-    const kept = availability.filter((w) => !ids.has(w.id))
+    const removing = Boolean(m[1])
 
-    const next = m[1]
+    const kept = availability.filter(
+      (w) => !ids.has(w.id) || (removing && w.kind !== "busy"),
+    )
+
+    const next = removing
       ? kept
       : [
           ...kept,
 
           ...range.map(
             (hour) =>
-              ({ id: windowId(date, hour), date, hour, kind }) as TimeWindow,
+              ({
+                id: windowId(date, hour),
+                date,
+                hour,
+                kind: "busy",
+              }) as TimeWindow,
           ),
         ]
 
@@ -254,9 +277,9 @@ export function runPlannerCommand(
 
       availability: next,
 
-      reply: m[1]
+      reply: removing
         ? `Đã bỏ khung giờ đã khai báo ngày ${vnDate(date)}.`
-        : `Đã đánh dấu ${range.length} giờ ${m[2]} ngày ${vnDate(date)}.`,
+        : `Đã đánh dấu ${range.length} giờ bận ngày ${vnDate(date)}.`,
     }
   }
 
@@ -265,7 +288,8 @@ export function runPlannerCommand(
   // Lập lịch xác định: xếp việc chưa có lịch theo deadline rồi độ ưu tiên, mỗi việc một block 60 phút.
 
   if (/^(?:lập kế hoạch|xếp lịch|tự xếp)/u.test(text)) {
-    const rank = (p: string) => ({ Cao: 0, Thấp: 2 })[p] ?? 1
+    const rank = (p: Task["priority"]) =>
+      p === 1 || p === "Cao" ? 0 : p === 0.1 || p === "Thấp" ? 2 : 1
 
     const todo = tasks
 
@@ -286,34 +310,21 @@ export function runPlannerCommand(
     const issues: PlannerIssue[] = []
 
     const taken = (date: string, hour: number) =>
-      isBusy(date, hour) ||
-      tasks.some((t) => t.date === date && t.hour === hour) ||
+      slotTaken(date, hour * 60) ||
       [...placed.values()].some((t) => t.date === date && t.hour === hour)
 
     for (const task of todo) {
       let slot: Slot | undefined
 
       for (let i = 0; i <= daysUntil(task.deadline) && !slot; i++) {
-        const d = new Date(today)
-
-        d.setDate(d.getDate() + i)
-
-        const date = toIsoDate(d)
-
-        const free = availability.filter(
-          (w) => w.date === date && w.kind === "free",
-        )
+        const date = addCivilDays(vietnamDate(), i)
 
         for (
-          let h = i === 0 ? new Date().getHours() + 1 : FIRST_HOUR;
+          let h = i === 0 ? Number(vietnamClock().slice(0, 2)) + 1 : FIRST_HOUR;
           h <= LAST_HOUR;
           h++
         )
-          if (
-            h >= FIRST_HOUR &&
-            !taken(date, h) &&
-            (!free.length || free.some((w) => w.hour === h))
-          ) {
+          if (h >= FIRST_HOUR && !taken(date, h)) {
             slot = { date, hour: h }
 
             break
@@ -368,15 +379,13 @@ export function runPlannerCommand(
 
       title,
 
-      course: "Chưa phân loại",
-
       time: "Chưa xếp",
 
       done: false,
 
       effort: effortMatch ? Number(effortMatch[1]) * 60 : 60,
 
-      priority: "Trung bình",
+      priority: 0.5,
 
       deadline: date,
     }
@@ -395,7 +404,7 @@ export function runPlannerCommand(
   m = /^(?:thêm|tạo|lên lịch|đặt)\s+(.+)$/u.exec(text)
 
   if (m) {
-    const { date, hour, rest } = parseWhen(m[1])
+    const { date, hour, minute, rest } = parseWhen(m[1])
 
     if (!rest || !date || hour === undefined)
       return unchanged(
@@ -404,6 +413,10 @@ export function runPlannerCommand(
 
     if (outOfRange(hour)) return unchanged(outOfRange(hour))
 
+    if (minute && slotTaken(date, hour * 60 + minute))
+      return unchanged(
+        `Không thể đặt đúng ${label(hour).slice(0, 2)}:${String(minute).padStart(2, "0")}; giờ này đang bận.`,
+      )
     const slot = freeHour(date, hour)
 
     if (slot === undefined)
@@ -418,15 +431,15 @@ export function runPlannerCommand(
 
       title,
 
-      course: "Chưa phân loại",
+      time: timeRange(slot, minute),
 
-      time: timeRange(slot),
+      minute,
 
       done: false,
 
       effort: 60,
 
-      priority: "Trung bình",
+      priority: 0.5,
 
       deadline: date,
 
@@ -445,7 +458,7 @@ export function runPlannerCommand(
 
       availability,
 
-      reply: `Đã thêm "${title}" lúc ${label(slot)}${moved}${outsideFree(date, slot)}.`,
+      reply: `Đã thêm "${title}" lúc ${timeRange(slot, minute).split(" – ")[0]}${moved}.`,
     }
   }
 
@@ -459,7 +472,7 @@ export function runPlannerCommand(
         `Mình không tìm thấy đúng một công việc tên "${m[1].trim()}".`,
       )
 
-    const { date, hour } = parseWhen(m[2])
+    const { date, hour, minute } = parseWhen(m[2])
 
     const newDate = date ?? task.date
 
@@ -472,6 +485,11 @@ export function runPlannerCommand(
 
     if (outOfRange(newHour)) return unchanged(outOfRange(newHour))
 
+    if (
+      (minute ?? task.minute) &&
+      slotTaken(newDate, newHour * 60 + (minute ?? task.minute ?? 0), task.id)
+    )
+      return unchanged("Giờ được yêu cầu đang bận; hãy chọn giờ khác.")
     const slot = freeHour(newDate, newHour, task.id)
 
     if (slot === undefined)
@@ -484,7 +502,9 @@ export function runPlannerCommand(
 
       hour: slot,
 
-      time: timeRange(slot),
+      time: timeRange(slot, minute ?? task.minute),
+
+      minute: minute ?? task.minute,
 
       deadline: newDate > task.deadline ? newDate : task.deadline,
     }
@@ -494,7 +514,7 @@ export function runPlannerCommand(
 
       availability,
 
-      reply: `Đã dời "${task.title}" sang ${label(slot)}.`,
+      reply: `Đã dời "${task.title}" sang ${timeRange(slot, minute ?? task.minute).split(" – ")[0]}.`,
     }
   }
 
