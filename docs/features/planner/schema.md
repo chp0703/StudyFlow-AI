@@ -243,15 +243,24 @@ task_summaries: TaskSchedulingSummary[]
 coverage: FULL | PARTIAL | NONE | NO_CHANGE
 warnings: Issue[]
 plan_diff: {added: UUID[], moved: UUID[], removed: UUID[], unchanged: UUID[]}
+schedule_confirmation: ScheduleConfirmation
 ```
 
 ProposedStudyBlock có block_id/user_id/task_id/start_at/end_at/is_locked; chưa có plan_id vì snapshot chưa commit. ID block mới do service cấp sau khi nhận kết quả engine.
+
+`ScheduleConfirmation` là DTO do server sinh, gắn với đúng `proposal_id`, `proposal_version` và `base_schedule_revision`. DTO chứa:
+
+- `entries`: toàn bộ lịch sau thay đổi;
+- `added`, `changed {before, after}` và `removed` dạng entry hiển thị đầy đủ, không chỉ có ID;
+- `warnings` và `unscheduled_work` cho mọi task còn phút chưa xếp.
+
+Mỗi entry có `block_id`, `task_id`, `task_name`, `date` theo `Asia/Ho_Chi_Minh`, `start_at`, `end_at`, `duration_minutes` và `color`. `unscheduled_work` có task ID/tên/màu, số phút chưa xếp và reason codes. Các timestamp vẫn là instant RFC3339; `date` chỉ là giá trị hiển thị đã dẫn xuất theo múi giờ sản phẩm.
 
 Chỉ tái phân bổ block tương lai chưa khóa, thuộc task được chọn, nằm trọn trong horizon. Giữ block lịch sử, block khóa, block ngoài horizon, block giao ranh horizon và block của task không được chọn. Chúng vẫn xuất hiện trong snapshot kết quả; không được xóa vì không nằm trong đầu ra engine.
 
 Block đang diễn ra: chặn tái phân bổ task liên quan và yêu cầu làm rõ tiến độ trước, tránh tính toàn bộ duration là công việc chưa làm hoặc đã làm. Đây là giới hạn áp dụng trong giai đoạn hiện tại.
 
-Payload đã hiển thị để duyệt phải được cố định. Chỉnh nội dung tạo proposal mới; không sửa ngầm cùng ID/version. Việc status đổi không được thay nội dung được duyệt.
+Payload và ScheduleConfirmation đã hiển thị để duyệt phải được cố định. Chỉnh nội dung tạo proposal mới; không sửa ngầm cùng ID/version. Việc status đổi không được thay nội dung được duyệt.
 
 Proposal mới có version=1. Đổi generation_scope, payload, policy_snapshot hoặc dữ liệu nền để sinh lịch khác phải tạo proposal_id mới; version được giữ như trường ràng buộc contract, không dùng để ghi đè payload. Proposal chỉ có committed_plan_id khác null khi status=APPROVED.
 

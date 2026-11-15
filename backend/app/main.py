@@ -14,6 +14,7 @@ from .clients.rpc import RpcClient
 from .core.config import Settings
 from .core.security import JwtVerifier
 from .nlu.extractor import DeepSeekExtractor, UnavailableExtractor
+from .ingestion.service import SourceExtractor
 
 
 def create_app(settings: Settings | None = None, *, rpc_transport: httpx.BaseTransport | None = None,
@@ -25,7 +26,8 @@ def create_app(settings: Settings | None = None, *, rpc_transport: httpx.BaseTra
     if extractor is None:
         extractor = (DeepSeekExtractor(settings.deepseek_base_url, settings.deepseek_api_key, settings.deepseek_model, llm_transport)
                      if settings.deepseek_api_key else UnavailableExtractor())
-    api = Api(settings, RpcClient(settings, rpc_transport, clock), JwtVerifier(settings, jwks_transport, clock), clock, extractor)
+    api = Api(settings, RpcClient(settings, rpc_transport, clock), JwtVerifier(settings, jwks_transport, clock), clock, extractor,
+              SourceExtractor(settings.deepseek_base_url, settings.deepseek_api_key, settings.ingestion_model, llm_transport))
     app.state.llm_transport = llm_transport  # được dùng ở bước trích xuất
     api.register(app)
 
