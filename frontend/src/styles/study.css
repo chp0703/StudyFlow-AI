@@ -414,6 +414,39 @@
   gap: 8px;
 }
 
+.quiz-popup-retry-btn {
+  height: 36px;
+  min-height: 36px;
+  font-size: 13px;
+  gap: 6px;
+  padding: 0 14px;
+  background: white;
+  border-color: #fbcfe8;
+  color: #db2777;
+}
+
+.quiz-popup-retry-btn:hover {
+  background: #fdf2f8;
+  border-color: #f472b6;
+  color: #be185d;
+}
+
+.quiz-retry-btn {
+  height: 36px;
+  min-height: 36px;
+  font-size: 13px;
+  gap: 6px;
+  padding: 0 12px;
+  border-color: #fbcfe8;
+  color: #db2777;
+}
+
+.quiz-retry-btn:hover {
+  background: #fdf2f8;
+  border-color: #f472b6;
+  color: #be185d;
+}
+
 .quiz-popup-next-btn {
   min-width: 140px;
   height: 36px;

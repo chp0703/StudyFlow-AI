@@ -190,3 +190,16 @@
 - Pending TimeWindow restore/decision với API có đăng nhập chưa chạy vì không có backend và tài khoản thử nghiệm được cấp quyền; trust boundary được kiểm tra bằng fixture contract và rendered-component tests.
 - Vite vẫn cảnh báo bundle JS 635.90 kB (>500 kB); Vite SSR tests vẫn in cảnh báo WebSocket bind của sandbox nhưng toàn bộ assertion đạt.
 - Vấn đề Demo scheduler 180 phút nằm ngoài scope và chưa thay đổi.
+
+## 2026-11-15 — Merge main into PR #40
+
+**Mục tiêu:** Giải quyết xung đột merge của PR #40 mà vẫn giữ chức năng Planner và thay đổi mới từ main.
+
+**Đã làm**
+- Merge `origin/main` vào `fix/planner-followup-leader-spec-kent`; giải quyết một hunk trong `frontend/src/App.tsx` bằng cách giữ `server.windows` khi dựng lại pending proposal, cùng phần đóng modal khi session đổi và khi đăng xuất từ main.
+- Giữ các thay đổi frontend khác từ cả hai nhánh; xóa dòng trống cuối `frontend/src/styles/auth.css` để diff sạch.
+
+**Kết quả:** PR #40; 68/68 Node tests đạt, `npx tsc --noEmit` và `npm run build` đạt. Build còn cảnh báo bundle JS >500 kB.
+
+**Ghi chú**
+- Chưa chạy API E2E có đăng nhập vì không có backend/tài khoản thử nghiệm.
