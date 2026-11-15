@@ -74,7 +74,7 @@
     {
      "intent": "CREATE_TASK",
      "slots": {
-      "priority": "HIGH",
+      "priority": 1,
       "deadline_date": "2026-11-09"
      }
     }
@@ -86,7 +86,7 @@
     {
      "intent": "CREATE_TASK",
      "slots": {
-      "priority": "LOW",
+      "priority": 0.1,
       "deadline_date": "2026-11-30",
       "estimated_minutes": 180
      }

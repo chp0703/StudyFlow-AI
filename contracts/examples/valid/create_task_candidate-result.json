@@ -11,14 +11,15 @@
     "slots": {
       "title": "Ôn tích phân",
       "description": null,
-      "course_label": "Giải tích",
+      "start_at": "2026-11-06T08:00:00Z",
       "available_from_at": null,
       "deadline_at": "2026-11-06T17:00:00Z",
       "deadline_precision": "DATE",
       "deadline_date": "2026-11-06",
       "deadline_timezone": "Asia/Ho_Chi_Minh",
       "estimated_minutes": 60,
-      "priority": "NORMAL"
+      "priority": 0.5,
+      "color": "#596CF0"
     },
     "raw_expressions": {
       "deadline": "hết ngày 06/11"

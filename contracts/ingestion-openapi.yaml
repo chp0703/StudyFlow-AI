@@ -1,0 +1,361 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "StudyFlow Source Ingestion",
+    "version": "1.0.0",
+    "description": "Additive BE-04 extension. JWT required; sources are untrusted and every domain write requires /v1/decisions."
+  },
+  "security": [
+    {
+      "SupabaseBearer": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "SupabaseBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/v1/sources": {
+      "post": {
+        "operationId": "upload_source",
+        "summary": "upload source",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private source/result; no task, busy interval or plan has been committed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/IngestionSourceResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/f1.schema.json#/$defs/SourceUploadRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sources/{source_id}": {
+      "get": {
+        "operationId": "get_source",
+        "summary": "get source",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "conversation_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private source/result; no task, busy interval or plan has been committed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/IngestionSourceResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sources/{source_id}/extract": {
+      "post": {
+        "operationId": "extract_source",
+        "summary": "extract source",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private source/result; no task, busy interval or plan has been committed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/IngestionSourceResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Safe error without source contents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/f1.schema.json#/$defs/SourceExtractRequest"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

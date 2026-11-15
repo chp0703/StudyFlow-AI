@@ -18,7 +18,7 @@ SCHEMA_VERSION = "1.1"
 # Thao tác chỉ đọc không mang chứng thực; database cũng phân loại chúng là thao tác đọc.
 READ_OPERATIONS = frozenset({
     "search_tasks", "get_study_plan", "list_time_windows", "get_scheduling_context", "lookup_operation_result",
-    "get_workflow_context", "get_workflow_continuation",
+    "get_workflow_context", "get_workflow_continuation", "get_ingestion_source",
 })
 
 

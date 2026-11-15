@@ -307,5 +307,50 @@
   ],
   "internal_result_envelope": "Internal RPCs return {schema_version, request_id, outcome: READ or COMMITTED, data: data_schema, error:null, warnings:Issue[]} or ErrorResult. persist_plan_proposal uses generate_study_planResult unchanged.",
   "rpc_argument_name": "p_request",
-  "rpc_envelope_schema": "RpcRequest"
+  "rpc_envelope_schema": "RpcRequest",
+  "extensions": {
+    "ingestion": {
+      "version": "1.0.0",
+      "openapi": "ingestion-openapi.yaml",
+      "internal_interfaces": [
+        {
+          "rpc": "store_ingestion_source",
+          "arguments_schema": "StoreSourceArguments",
+          "data_schema": "IngestionSource",
+          "result_schema": "IngestionSourceResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "get_ingestion_source",
+          "arguments_schema": "SourceLookupArguments",
+          "data_schema": "IngestionSource",
+          "result_schema": "IngestionSourceResult",
+          "read_only": true,
+          "attestation_required": false,
+          "llm_callable": false
+        },
+        {
+          "rpc": "claim_source_extraction",
+          "arguments_schema": "SourceLookupArguments",
+          "data_schema": "SourceClaimData",
+          "result_schema": "SourceClaimResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "complete_source_extraction",
+          "arguments_schema": "CompleteSourceExtractionArguments",
+          "data_schema": "IngestionSource",
+          "result_schema": "IngestionSourceResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        }
+      ],
+      "source_ids": "Optional UserMessage/RecordSourceMessageArguments source_ids; same-owner, same-conversation, READY only; never authorizes writes."
+    }
+  }
 }

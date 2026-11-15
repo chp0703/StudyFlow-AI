@@ -42,7 +42,7 @@
         "version": 1,
         "title": "OOP",
         "description": null,
-        "course_label": null,
+        "start_at": "2026-11-05T08:00:00+07:00",
         "available_from_at": null,
         "deadline_at": "2026-11-05T09:00:00+07:00",
         "deadline_precision": "DATETIME",
@@ -50,7 +50,8 @@
         "deadline_timezone": "Asia/Ho_Chi_Minh",
         "estimated_minutes": 60,
         "remaining_minutes": 60,
-        "priority": "NORMAL",
+        "priority": 0.5,
+        "color": "#596CF0",
         "status": "TODO",
         "confirmed_at": "2026-11-05T08:00:00+07:00",
         "created_at": "2026-11-05T08:00:00+07:00",
@@ -77,7 +78,7 @@
             "version": 1,
             "title": "OOP",
             "description": null,
-            "course_label": null,
+            "start_at": "2026-11-05T08:00:00+07:00",
             "available_from_at": null,
             "deadline_at": "2026-11-05T09:00:00+07:00",
             "deadline_precision": "DATETIME",
@@ -85,7 +86,8 @@
             "deadline_timezone": "Asia/Ho_Chi_Minh",
             "estimated_minutes": 60,
             "remaining_minutes": 60,
-            "priority": "NORMAL",
+            "priority": 0.5,
+            "color": "#596CF0",
             "status": "TODO",
             "confirmed_at": "2026-11-05T08:00:00+07:00",
             "created_at": "2026-11-05T08:00:00+07:00",
@@ -223,6 +225,25 @@
             "moved": [],
             "removed": [],
             "unchanged": []
+          },
+          "schedule_confirmation": {
+            "proposal_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+            "proposal_version": 1,
+            "base_schedule_revision": 0,
+            "entries": [],
+            "added": [],
+            "changed": [],
+            "removed": [],
+            "warnings": [],
+            "unscheduled_work": [
+              {
+                "task_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+                "task_name": "Công việc c732",
+                "color": "#596CF0",
+                "unscheduled_minutes": 60,
+                "reason_codes": []
+              }
+            ]
           }
         },
         "algorithm_version": "1",
@@ -321,6 +342,25 @@
             "moved": [],
             "removed": [],
             "unchanged": []
+          },
+          "schedule_confirmation": {
+            "proposal_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+            "proposal_version": 1,
+            "base_schedule_revision": 0,
+            "entries": [],
+            "added": [],
+            "changed": [],
+            "removed": [],
+            "warnings": [],
+            "unscheduled_work": [
+              {
+                "task_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+                "task_name": "Công việc c732",
+                "color": "#596CF0",
+                "unscheduled_minutes": 60,
+                "reason_codes": []
+              }
+            ]
           }
         },
         "algorithm_version": "1",
@@ -387,7 +427,7 @@
         "version": 1,
         "title": "OOP",
         "description": null,
-        "course_label": null,
+        "start_at": "2026-11-05T08:00:00+07:00",
         "available_from_at": null,
         "deadline_at": "2026-11-05T09:00:00+07:00",
         "deadline_precision": "DATETIME",
@@ -395,7 +435,8 @@
         "deadline_timezone": "Asia/Ho_Chi_Minh",
         "estimated_minutes": 60,
         "remaining_minutes": 60,
-        "priority": "NORMAL",
+        "priority": 0.5,
+        "color": "#596CF0",
         "status": "TODO",
         "confirmed_at": "2026-11-05T08:00:00+07:00",
         "created_at": "2026-11-05T08:00:00+07:00",
@@ -526,6 +567,25 @@
             "moved": [],
             "removed": [],
             "unchanged": []
+          },
+          "schedule_confirmation": {
+            "proposal_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+            "proposal_version": 1,
+            "base_schedule_revision": 0,
+            "entries": [],
+            "added": [],
+            "changed": [],
+            "removed": [],
+            "warnings": [],
+            "unscheduled_work": [
+              {
+                "task_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
+                "task_name": "Công việc c732",
+                "color": "#596CF0",
+                "unscheduled_minutes": 60,
+                "reason_codes": []
+              }
+            ]
           }
         },
         "algorithm_version": "1",

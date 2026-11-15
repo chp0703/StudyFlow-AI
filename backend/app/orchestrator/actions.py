@@ -11,12 +11,15 @@ from ..nlu.extractor import Extractor
 from .chat import ChatProcessor
 from .workflow_ports import Clock, RpcCall, WorkflowError
 from .workflow_shared import (
-    AWAITING, DONE_TEXT, FORM_TEXT, INTENT, POLICY_DEFAULT, Terminal, _ok, deadline_instant, reply,
+    AWAITING, DONE_TEXT, FORM_TEXT, INTENT, POLICY_DEFAULT, PRODUCT_TIMEZONE,
+    Terminal, _ok, deadline_instant, end_instant_from_start, reply,
 )
 
 
 class ActionProcessor:
-    def __init__(self, rpc: RpcCall, clock: Clock, extractor: Extractor, timezone: str):
+    def __init__(self, rpc: RpcCall, clock: Clock, extractor: Extractor, timezone: str = PRODUCT_TIMEZONE):
+        if timezone != PRODUCT_TIMEZONE:
+            raise ValueError(f"timezone must be {PRODUCT_TIMEZONE}")
         self.rpc, self.clock = rpc, clock
         self.chat = ChatProcessor(self, extractor, clock=clock, timezone=timezone)
 
@@ -80,8 +83,26 @@ class ActionProcessor:
     @staticmethod
     def normalize_slots(raw: dict) -> dict:
         slots = dict(raw)
+        slots.pop("course_label", None)
+        if type(slots.get("priority")) is float and slots["priority"] == 1.0:
+            slots["priority"] = 1
+        if slots.get("deadline_timezone") is None:
+            slots["deadline_timezone"] = PRODUCT_TIMEZONE
+        if slots.get("deadline_precision") is None and slots.get("deadline_date") is not None:
+            slots["deadline_precision"] = "DATE"
         if slots.get("deadline_precision") == "DATE" and slots.get("deadline_at") is None:
             slots["deadline_at"] = deadline_instant(slots)
+        if slots.get("start_at") is not None:
+            if slots.get("available_from_at") is None:
+                slots["available_from_at"] = slots["start_at"]
+            if slots.get("deadline_precision") is None:
+                slots["deadline_precision"] = "DATETIME"
+            if (
+                slots.get("deadline_precision") == "DATETIME"
+                and slots.get("deadline_at") is None
+                and slots.get("estimated_minutes") is not None
+            ):
+                slots["deadline_at"] = end_instant_from_start(slots["start_at"], slots["estimated_minutes"])
         return slots
 
     @staticmethod
@@ -107,7 +128,8 @@ class ActionProcessor:
             command = None if missing else {"schema_version": "1.1", "operation": "confirm_task", "arguments": {
                 "candidate_id": candidate["candidate_id"], "expected_candidate_version": candidate["version"]}}
             presentation = {"kind": "ACTION_PRESENTATION", "pending_action": pending, "candidate": candidate,
-                            "proposal": None, "normalized_command": command, "effective_policy": None}
+                            "proposal": None, "normalized_command": command, "effective_policy": None,
+                            "schedule_confirmation": None}
             target = ("TASK_CANDIDATE", candidate["candidate_id"], candidate["version"])
         else:
             command = {"schema_version": "1.1", "operation": operation, "arguments": arguments}
@@ -115,7 +137,7 @@ class ActionProcessor:
             pending = self.pending_shell(ctx, action_id, conversation, INTENT[operation], "AWAITING_APPROVAL",
                                          candidate_id=None, draft=arguments, missing=[])
             presentation = {"kind": "ACTION_PRESENTATION", "pending_action": pending, "candidate": None, "proposal": None,
-                            "normalized_command": command, "effective_policy": policy}
+                            "normalized_command": command, "effective_policy": policy, "schedule_confirmation": None}
             target = ("PENDING_ACTION", action_id, 1)
         stored = self.step(ctx, "prepare_pending_action", {"presentation": presentation, "expected_action_version": None},
                            conversation_id=conversation, idempotency_key=child_key(key, f"prepare{tag}"),
@@ -147,7 +169,8 @@ class ActionProcessor:
             "proposal_id": proposal["proposal_id"], "expected_proposal_version": proposal["version"],
             "expected_plan_version": proposal["base_plan_version"]}}
         presentation = {"kind": "ACTION_PRESENTATION", "pending_action": pending, "candidate": None, "proposal": proposal,
-                        "normalized_command": command, "effective_policy": proposal["policy_snapshot"]}
+                        "normalized_command": command, "effective_policy": proposal["policy_snapshot"],
+                        "schedule_confirmation": proposal["payload"]["schedule_confirmation"]}
         stored = self.step(ctx, "prepare_pending_action", {"presentation": presentation, "expected_action_version": None},
                            conversation_id=conversation, idempotency_key=child_key(key, f"prepare{tag}"),
                            message_id=message_id)["data"]
@@ -166,11 +189,14 @@ class ActionProcessor:
         ask = []
         if not (slots.get("title") or "").strip():
             ask.append(("title", "Tên công việc là gì?"))
-        if slots.get("deadline_precision") not in ("DATE", "DATETIME") or slots.get("deadline_at") is None \
-                or (slots["deadline_precision"] == "DATE" and slots.get("deadline_date") is None):
+        if not slots.get("start_at"):
+            ask.append(("start_at", "Thời gian bắt đầu là khi nào?"))
+        if slots.get("deadline_precision") == "DATE" and (
+            slots.get("deadline_date") is None or slots.get("deadline_at") is None
+        ):
+            ask.append(("deadline_date", "Hạn nộp là ngày nào?"))
+        elif slots.get("deadline_precision") == "DATETIME" and slots.get("deadline_at") is None:
             ask.append(("deadline_at", "Hạn nộp là khi nào?"))
-        if not slots.get("deadline_timezone"):
-            ask.append(("deadline_timezone", "Hạn nộp tính theo múi giờ nào?"))
         if slots.get("estimated_minutes") is None:
             ask.append(("estimated_minutes", "Bạn dự kiến cần bao nhiêu phút?"))
         return [{"field": field, "message": message, "choices": []} for field, message in ask]
@@ -189,7 +215,8 @@ class ActionProcessor:
         last = (action["last_presentation"] or {}).get("presentation") or {}
         presentation = {"kind": "ACTION_PRESENTATION", "pending_action": pending, "candidate": action["candidate"],
                         "proposal": action["proposal"], "normalized_command": last.get("normalized_command"),
-                        "effective_policy": last.get("effective_policy")}
+                        "effective_policy": last.get("effective_policy"),
+                        "schedule_confirmation": last.get("schedule_confirmation")}
         stored = self.step(ctx, "review_pending_action", {
             "action_id": action_id, "expected_action_version": body["expected_action_version"], "presentation": presentation},
             conversation_id=conversation, idempotency_key=child_key(key, "review"), message_id=receipt["message_id"])["data"]
@@ -257,7 +284,7 @@ class ActionProcessor:
                               message_id=receipt["message_id"])["data"]
         # Contract không có tool result "cancelled", nên hiển thị thao tác đã hủy bằng presentation riêng.
         presentation = {"kind": "ACTION_PRESENTATION", "pending_action": cancelled, "candidate": None, "proposal": None,
-                        "normalized_command": None, "effective_policy": None}
+                        "normalized_command": None, "effective_policy": None, "schedule_confirmation": None}
         done = reply(ctx.request_id, "SUCCEEDED", "Đã hủy thao tác. Không có dữ liệu nào được lưu.",
                      result=_ok(ctx.request_id, "DRAFTED", presentation))
         return 200, self.chat.resume(ctx, receipt, key, conversation, ref, None, None, True, done) or done
