@@ -45,6 +45,16 @@ class DeepSeekExtractorTests(unittest.TestCase):
             with self.subTest(content=content), self.assertRaises(ExtractionError):
                 self.run_extract(answer(content))
 
+    def test_string_ambiguities_become_issues_but_blank_ones_are_still_rejected(self):
+        def with_notes(notes):
+            return json.dumps({"intents": [{"intent": "UNKNOWN", "slots": {}, "raw_expressions": {}, "ambiguities": notes}]})
+
+        got = self.run_extract(answer(with_notes(["không rõ"])))
+        self.assertEqual(got["intents"][0]["ambiguities"],
+                         [{"code": "AMBIGUOUS", "message": "không rõ", "field": None, "details": {}}])
+        with self.assertRaises(ExtractionError):
+            self.run_extract(answer(with_notes(["  "])))
+
     def test_transport_failures_are_unavailable_not_extraction_errors(self):
         def boom(request):
             raise httpx.ConnectError("down")
