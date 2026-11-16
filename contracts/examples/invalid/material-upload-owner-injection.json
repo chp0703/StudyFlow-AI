@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.1",
+  "conversation_id": "00000000-0000-4000-8000-000000000003",
+  "user_id": "00000000-0000-4000-8000-000000000001",
+  "filename": "tai_lieu.pdf",
+  "mime_type": "application/pdf",
+  "content_base64": "aGk=",
+  "topics": [
+    "Xác suất"
+  ]
+}
