@@ -1,8 +1,9 @@
 {
- "description": "40 Vietnamese messages for the production extractor; pass = intent sequence and listed slots both match.",
+ "description": "Development set of 40 Vietnamese messages; pass = intent sequence and listed slot assertions match.",
+ "scoring_mode": "assertions",
  "now": "2026-11-05T10:00:00+07:00",
  "timezone": "Asia/Ho_Chi_Minh",
- "pass_threshold": 38,
+ "minimum_rate": 0.95,
  "cases": [
   {
    "text": "Thêm bài tập OOP hạn thứ 6 tuần sau, làm khoảng 2 tiếng",

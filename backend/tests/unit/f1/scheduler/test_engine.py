@@ -138,6 +138,16 @@ class SchedulingEngineTests(unittest.TestCase):
         self.assertTrue(metrics.deterministic)
         self.assertEqual(first, generate_schedule(ctx))
         self.assertEqual(0, metrics.hard_constraint_violations)
+        self.assertLessEqual(metrics.latency_p50_ms, metrics.latency_p95_ms)
+        self.assertLessEqual(metrics.latency_p95_ms, metrics.latency_p99_ms)
+        self.assertEqual(5, len(metrics.latency_samples_ms))
+
+    def test_evaluation_ratio_is_bounded_for_invalid_retained_work(self) -> None:
+        item = task(131, remaining=30)
+        retained = (block(1310, item.task_id, dt(4, 8), dt(4, 9)),)
+        _, metrics = evaluate_context(context((item,), retained=retained), repetitions=1)
+        self.assertEqual(1.0, metrics.scheduled_ratio)
+        self.assertGreater(metrics.hard_constraint_violations, 0)
 
     def test_exact_start_at_is_preserved_in_generated_blocks(self) -> None:
         item = task(140, remaining=60, start_at=dt(4, 9, 30), deadline=dt(4, 10, 30), priority=Priority.HIGH)
