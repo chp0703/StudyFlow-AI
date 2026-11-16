@@ -55,7 +55,7 @@ The 50/200-task workloads intentionally exceed available capacity. The 200-task 
 
 CP-SAT proved `OPTIMAL` for all 100 subset workloads at clean commit `eb9362b`. Greedy matched the maximum completed-task count (`coverage gap = 0`) but had a mean priority-score gap of 7.96% and a worst gap of 60%. This is evidence about the declared restricted subset, not global scheduler optimality. Full per-seed statuses and solver metadata are in `results/scheduler-quality.json`.
 
-Candidate NLU SHA-256: `86c84628df2c9c8ed5d65153f63b6932b6f3068f13117d020ce9a6eb6f7a9d93`. Approver and approval date are pending.
+Held-out NLU SHA-256: `86c84628df2c9c8ed5d65153f63b6932b6f3068f13117d020ce9a6eb6f7a9d93`, approved by `phkhoiit-1508` on `2026-11-16`. This exact dataset is frozen for its first live evaluation.
 
 ## References
 
