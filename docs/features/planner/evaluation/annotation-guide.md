@@ -21,4 +21,10 @@ Approval statement:
 
 Record approver, date and frozen SHA-256 in the live result artifact. Do not place names inside the dataset itself.
 
-Current candidate SHA-256: `86c84628df2c9c8ed5d65153f63b6932b6f3068f13117d020ce9a6eb6f7a9d93`. This is not a frozen approval hash until the human reviewer accepts the labels.
+## Approval record
+
+- Approver: `phkhoiit-1508`
+- Approved: `2026-11-16`
+- Frozen SHA-256: `86c84628df2c9c8ed5d65153f63b6932b6f3068f13117d020ce9a6eb6f7a9d93`
+
+This exact dataset is approved for one-shot held-out evaluation. Any label, prompt or scorer change after observing live results requires a new held-out set for subsequent claims.
