@@ -192,12 +192,24 @@ export type ActionPresentation = {
   } | null
 
   effective_policy: Record<string, unknown> | null
+
+  question_drafts?: QuestionDraftBatchData | null
 }
 
 export type ToolResult = {
   outcome: string
 
   data: unknown
+
+  warnings?: {
+    code: string
+
+    message: string
+
+    field: string | null
+
+    details: Record<string, unknown>
+  }[]
 }
 
 export type ApiErrorBody = {
@@ -404,6 +416,12 @@ export type QuestionDraft = {
   created_at: string
 
   updated_at: string
+}
+
+export type QuestionDraftBatchData = {
+  items: QuestionDraft[]
+
+  source_chunks?: MaterialChunk[]
 }
 
 export type QuizAttempt = {

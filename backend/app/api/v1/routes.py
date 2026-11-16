@@ -22,6 +22,7 @@ from ...orchestrator.workflow_ports import WorkflowError
 from ...ingestion.service import SourceExtractor
 from ...ingestion.workflow import SourceOperations
 from ...assessment.materials import MaterialOperations, MAX_BYTES as MATERIAL_MAX_BYTES
+from ...assessment.questions import AssessmentQuestionOperations, DeepSeekQuestionGenerator
 
 log = logging.getLogger("studyflow.api")
 _KEY = re.compile(r"^[A-Za-z0-9._:-]{16,128}$")
@@ -44,11 +45,29 @@ def _int(value: str, name: str) -> int:
 
 
 class Api:
-    def __init__(self, settings: Settings, rpc: RpcClient, verifier: JwtVerifier, clock, extractor, source_extractor=None):
+    def __init__(self, settings: Settings, rpc: RpcClient, verifier: JwtVerifier, clock, extractor, source_extractor=None,
+                 question_generator=None):
         self.settings, self.rpc_client, self.verifier, self.clock = settings, rpc, verifier, clock
         self.extractor = extractor
-        self.processor = ActionProcessor(self)
         self.materials = MaterialOperations(self.rpc, clock)
+        self.questions = AssessmentQuestionOperations(
+            self.rpc,
+            self.materials,
+            clock,
+            question_generator or DeepSeekQuestionGenerator(
+                settings.deepseek_base_url,
+                settings.deepseek_api_key,
+                settings.deepseek_model,
+                None,
+                timeout_seconds=settings.question_model_timeout_seconds,
+                max_tokens=settings.question_max_tokens,
+                max_input_chars=settings.question_max_input_chars,
+                max_context_chunks=settings.question_max_context_chunks,
+                max_response_bytes=settings.question_max_response_bytes,
+            ),
+            max_context_chunks=settings.question_max_context_chunks,
+        )
+        self.processor = ActionProcessor(self)
         self.sources = SourceOperations(self.rpc, source_extractor or SourceExtractor(
             settings.deepseek_base_url, settings.deepseek_api_key, settings.ingestion_model), clock)
 
@@ -239,6 +258,22 @@ class Api:
         result = await run_in_threadpool(self.materials.get, ctx, material_id, query.get('conversation_id'))
         return self.result_response(result, ctx)
 
+    async def post_assessment_drafts(self, request: Request, ctx: Ctx):
+        return await self.post_pipeline(request, ctx, "generate_question_drafts", "GenerateQuestionDraftsRequest")
+
+    async def get_assessment_questions(self, request: Request, ctx: Ctx):
+        q = self._query(request, {"material_id", "topic", "status", "page_size", "cursor"})
+        args = {
+            "material_id": q.get("material_id"),
+            "topic": q.get("topic"),
+            "status": q.get("status"),
+            "page_size": _int(q["page_size"], "page_size") if "page_size" in q else 50,
+            "cursor": q.get("cursor"),
+        }
+        self.validated("ListQuestionsArguments", args)
+        result = await run_in_threadpool(self.questions.list_questions, ctx, args)
+        return self.result_response(result, ctx)
+
     # ----------------------------------------------------------------- đăng ký endpoint
     def register(self, app: FastAPI) -> None:
         routes = [
@@ -250,6 +285,8 @@ class Api:
             ("POST", "/v1/sources/{source_id}/extract", self.post_extract_source),
             ("POST", "/v1/assessment/materials", self.post_materials),
             ("GET", "/v1/assessment/materials/{material_id}", self.get_material),
+            ("POST", "/v1/assessment/drafts", self.post_assessment_drafts),
+            ("GET", "/v1/assessment/questions", self.get_assessment_questions),
         ]
         for method, path, handler in routes:
             app.add_api_route(path, self._wrap(handler, post=method == "POST"), methods=[method],

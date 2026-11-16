@@ -129,6 +129,67 @@ class AssessmentContractTests(unittest.TestCase):
             " ".join(validate_instance(DEFS, "RevisionRecommendation", bad_rec)),
         )
 
+    def test_f2_b3_b4_pending_action_tool_result_command_and_receipt_contracts(self) -> None:
+        presentation = read_json("examples/valid/QuestionDraftActionPresentation.json")
+        self.assertEqual(validate_instance(DEFS, "ActionPresentation", presentation), [])
+
+        # Existing F1 ActionPresentation payloads without question_drafts stay valid.
+        f1_action = read_json("examples/valid/PendingAction.json")
+        f1_presentation = {
+            "kind": "ACTION_PRESENTATION",
+            "pending_action": f1_action,
+            "candidate": None,
+            "proposal": None,
+            "normalized_command": None,
+            "effective_policy": None,
+            "schedule_confirmation": None,
+        }
+        self.assertEqual(validate_instance(DEFS, "ActionPresentation", f1_presentation), [])
+
+        batch_data = presentation["question_drafts"]
+        for outcome in ("DRAFTED", "COMMITTED", "REJECTED"):
+            tool_result = {
+                "schema_version": "1.1",
+                "request_id": "req-b3-b4-1",
+                "outcome": outcome,
+                "data": batch_data,
+                "error": None,
+                "warnings": [],
+            }
+            self.assertEqual(validate_instance(DEFS, "ToolResult", tool_result), [])
+
+        list_result = {
+            "schema_version": "1.1",
+            "request_id": "req-b3-b4-2",
+            "outcome": "READ",
+            "data": {"items": batch_data["items"], "next_cursor": None},
+            "error": None,
+            "warnings": [],
+        }
+        self.assertEqual(validate_instance(DEFS, "ToolResult", list_result), [])
+
+        self.assertTrue(
+            contract.is_valid(
+                "LookupOperationResultArguments",
+                {
+                    "operation": "create_question_drafts",
+                    "idempotency_key": "b3-b4-idempotency-key",
+                    "request_fingerprint": "0" * 64,
+                },
+            )
+        )
+        self.assertTrue(
+            contract.is_valid(
+                "ClaimApiReceiptArguments",
+                {
+                    "http_operation": "generate_question_drafts",
+                    "idempotency_key": "b3-b4-idempotency-key",
+                    "request_fingerprint": "0" * 64,
+                    "conversation_id": CONV,
+                },
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

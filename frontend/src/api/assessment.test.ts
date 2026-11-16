@@ -2,7 +2,9 @@ import assert from "node:assert/strict"
 import test from "node:test"
 
 import { createEndpoints } from "./endpoints.ts"
-import type { ApiClient, RequestOptions } from "./client.ts"
+import { createApiClient, type ApiClient, type RequestOptions } from "./client.ts"
+
+import type { ActionPresentation } from "./types.ts"
 
 function fixture() {
   const calls: Array<{ method: string; path: string; options: RequestOptions }> = []
@@ -112,4 +114,113 @@ test("assessment attempt, response, stats, and recommendation endpoints match B1
     suggested_minutes: 60,
     priority: 1,
   })
+})
+
+test("createApiClient supports idempotent PUT requests and question_drafts presentations", async () => {
+  const seen: Array<{ url: string; method?: string; headers?: unknown }> = []
+
+  const client = createApiClient({
+    baseUrl: "http://localhost:8000",
+
+    getToken: async () => "tok-1",
+
+    fetchImpl: async (url, init) => {
+      seen.push({
+        url: String(url),
+        method: init?.method,
+        headers: init?.headers,
+      })
+
+      return new Response(JSON.stringify({ data: { ok: true } }), {
+        status: 200,
+      })
+    },
+  })
+
+  const endpoints = createEndpoints(client)
+
+  await endpoints.saveQuizResponse("att-1", "q-1", "A", "idem-put-00000001")
+
+  assert.equal(seen[0].method, "PUT")
+
+  assert.equal(
+    (seen[0].headers as Record<string, string>)["Idempotency-Key"],
+    "idem-put-00000001",
+  )
+
+  const presentation: ActionPresentation = {
+    kind: "ACTION_PRESENTATION",
+
+    pending_action: {
+      intent: "VERIFY_QUESTION_DRAFTS",
+      state: "AWAITING_APPROVAL",
+      action_id: "act-1",
+    },
+
+    candidate: null,
+
+    proposal: null,
+
+    normalized_command: null,
+
+    effective_policy: null,
+
+    question_drafts: { items: [], source_chunks: [] },
+  }
+
+  assert.equal(presentation.question_drafts?.items.length, 0)
+})
+
+test("generateQuestionDrafts never auto-retries on 503 or network error", async () => {
+  for (const mode of ["503", "network"] as const) {
+    let fetchCount = 0
+
+    const client = createApiClient({
+      baseUrl: "http://localhost:8000",
+
+      retryDelayMs: 0,
+
+      getToken: async () => "tok-1",
+
+      fetchImpl: async () => {
+        fetchCount += 1
+
+        if (mode === "network") {
+          throw new Error("timeout")
+        }
+
+        return new Response(
+          JSON.stringify({
+            error: {
+              code: "SERVICE_UNAVAILABLE",
+              message: "down",
+              field: null,
+              retryable: true,
+            },
+          }),
+
+          { status: 503 },
+        )
+      },
+    })
+
+    const endpoints = createEndpoints(client)
+
+    await assert.rejects(() =>
+      endpoints.generateQuestionDrafts(
+        "conv-1",
+        "mat-1",
+        "Kỳ vọng",
+        "MCQ",
+        3,
+        "idem-draft-noretry-1",
+      ),
+    )
+
+    assert.equal(
+      fetchCount,
+      1,
+      `generateQuestionDrafts must make exactly 1 fetch on ${mode}`,
+    )
+  }
 })

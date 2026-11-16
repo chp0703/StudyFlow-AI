@@ -675,6 +675,17 @@
       "file": "examples/invalid/material-upload-owner-injection.json",
       "schema": "MaterialUploadRequest",
       "valid": false
+    },
+    {
+      "file": "examples/valid/QuestionDraftActionPresentation.json",
+      "schema": "ActionPresentation",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/question-draft-presentation-owner-mismatch.json",
+      "schema": "ActionPresentation",
+      "valid": false,
+      "expected_error": "presented question_drafts must match pending action owner and conversation"
     }
   ]
 }

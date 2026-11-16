@@ -27,6 +27,11 @@ class Settings:
     default_locale: str = "vi-VN"
     rpc_timeout_seconds: float = 10.0
     max_body_bytes: int = 64 * 1024
+    question_model_timeout_seconds: float = 30.0
+    question_max_tokens: int = 2048
+    question_max_input_chars: int = 24000
+    question_max_context_chunks: int = 12
+    question_max_response_bytes: int = 128 * 1024
 
     def __post_init__(self):
         if not self.supabase_url.startswith(("https://", "http://127.0.0.1", "http://localhost")):
@@ -37,6 +42,16 @@ class Settings:
             raise ValueError("rpc_signing_secret_base64 must decode to at least 32 bytes")
         if self.default_timezone != PRODUCT_TIMEZONE:
             raise ValueError(f"default_timezone must be {PRODUCT_TIMEZONE}")
+        if not (0 < self.question_model_timeout_seconds <= 120.0):
+            raise ValueError("question_model_timeout_seconds must be within (0, 120]")
+        if not (256 <= self.question_max_tokens <= 8192):
+            raise ValueError("question_max_tokens must be between 256 and 8192")
+        if not (1000 <= self.question_max_input_chars <= 100000):
+            raise ValueError("question_max_input_chars must be between 1000 and 100000")
+        if not (1 <= self.question_max_context_chunks <= 20):
+            raise ValueError("question_max_context_chunks must be between 1 and 20")
+        if not (4096 <= self.question_max_response_bytes <= 1024 * 1024):
+            raise ValueError("question_max_response_bytes must be between 4096 and 1048576")
 
     @property
     def signing_secret(self) -> bytes:
@@ -65,4 +80,9 @@ class Settings:
             deepseek_model=env.get("DEEPSEEK_MODEL", "deepseek-chat"),
             ingestion_model=env.get("INGESTION_MODEL", "deepseek-flash"),
             cors_origins=origins,
+            question_model_timeout_seconds=float(env.get("QUESTION_MODEL_TIMEOUT_SECONDS", "30.0")),
+            question_max_tokens=int(env.get("QUESTION_MAX_TOKENS", "2048")),
+            question_max_input_chars=int(env.get("QUESTION_MAX_INPUT_CHARS", "24000")),
+            question_max_context_chunks=int(env.get("QUESTION_MAX_CONTEXT_CHUNKS", "12")),
+            question_max_response_bytes=int(env.get("QUESTION_MAX_RESPONSE_BYTES", str(128 * 1024))),
         )

@@ -384,6 +384,16 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Invalid query filter or cursor.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
           }
         }
       }
