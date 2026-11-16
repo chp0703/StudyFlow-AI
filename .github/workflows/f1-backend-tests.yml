@@ -32,6 +32,7 @@ jobs:
             command: |
               python -B -m unittest discover -s backend/tests/acceptance_api_sol -p test_http_contract.py -v
               python -B -m unittest discover -s backend/tests/acceptance_api_sol -p test_ingestion_http.py -v
+              python -B -m unittest discover -s backend/tests/acceptance_api_sol -p test_material_http.py -v
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

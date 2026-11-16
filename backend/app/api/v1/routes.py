@@ -21,6 +21,7 @@ from .workflow import ActionProcessor
 from ...orchestrator.workflow_ports import WorkflowError
 from ...ingestion.service import SourceExtractor
 from ...ingestion.workflow import SourceOperations
+from ...assessment.materials import MaterialOperations, MAX_BYTES as MATERIAL_MAX_BYTES
 
 log = logging.getLogger("studyflow.api")
 _KEY = re.compile(r"^[A-Za-z0-9._:-]{16,128}$")
@@ -47,6 +48,7 @@ class Api:
         self.settings, self.rpc_client, self.verifier, self.clock = settings, rpc, verifier, clock
         self.extractor = extractor
         self.processor = ActionProcessor(self)
+        self.materials = MaterialOperations(self.rpc, clock)
         self.sources = SourceOperations(self.rpc, source_extractor or SourceExtractor(
             settings.deepseek_base_url, settings.deepseek_api_key, settings.ingestion_model), clock)
 
@@ -221,6 +223,22 @@ class Api:
         result = await run_in_threadpool(self.sources.extract, ctx, request.headers['idempotency-key'], source_id, body['conversation_id'])
         return respond(result, 200, ctx.request_id, post=True, replayed=result['outcome'] == 'READ')
 
+    async def post_materials(self, request: Request, ctx: Ctx):
+        body = await self.read_json(request, max_bytes=4 * ((MATERIAL_MAX_BYTES + 2) // 3) + 65536)
+        self.validated('MaterialUploadRequest', body)
+        result = await run_in_threadpool(self.materials.upload, ctx, request.headers['idempotency-key'], body)
+        return respond(result, 200, ctx.request_id, post=True, replayed=result['outcome'] == 'READ')
+
+    async def get_material(self, request: Request, ctx: Ctx):
+        query = self._query(request, {'conversation_id'})
+        material_id = request.path_params['material_id']
+        try:
+            material_id = str(UUID(material_id))
+        except ValueError:
+            raise ApiError('INVALID_PARAMETER', 'material_id must be a UUID.', status=400, field='material_id') from None
+        result = await run_in_threadpool(self.materials.get, ctx, material_id, query.get('conversation_id'))
+        return self.result_response(result, ctx)
+
     # ----------------------------------------------------------------- đăng ký endpoint
     def register(self, app: FastAPI) -> None:
         routes = [
@@ -230,6 +248,8 @@ class Api:
             ("POST", "/v1/actions/{action_id}/review", self.post_review), ("POST", "/v1/decisions", self.post_decisions),
             ("POST", "/v1/sources", self.post_sources), ("GET", "/v1/sources/{source_id}", self.get_source),
             ("POST", "/v1/sources/{source_id}/extract", self.post_extract_source),
+            ("POST", "/v1/assessment/materials", self.post_materials),
+            ("GET", "/v1/assessment/materials/{material_id}", self.get_material),
         ]
         for method, path, handler in routes:
             app.add_api_route(path, self._wrap(handler, post=method == "POST"), methods=[method],
