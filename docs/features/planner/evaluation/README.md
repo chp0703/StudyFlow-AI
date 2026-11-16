@@ -13,6 +13,7 @@ This directory keeps the evaluation protocol, human-review material and machine-
 | SCH-C01 | Hard-constraint violations | 0 |
 | SCH-C02 | Determinism for identical input | 100% |
 | SCH-Q01 | Coverage optimality gap against CP-SAT on the declared subset | Observational |
+| SCH-Q02 | Priority-score gap when greedy and CP-SAT complete the same task count | Observational |
 | PERF-01 | Scheduler p50/p95/p99 nearest-rank latency after warm-up | Observational; no production SLO yet |
 
 The development set uses partial assertions and must not be called exact match. The candidate set is strict after documented equivalences: missing SEARCH_TASKS `query`/`status_filter` equals `null`/`[]`, and optional display-only `window.label` is ignored. Other extra slots are false positives. `raw_expressions` is excluded from semantic scoring; model output must still pass the contract. A 95/100 point estimate has a Wilson lower bound near 88.8%, so it must not be described as proof that population accuracy is at least 95%.
