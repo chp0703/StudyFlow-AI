@@ -2,7 +2,7 @@ name: F1 backend verification
 
 on:
   push:
-    branches: [feat/f1-mvp-intergration, feat/be-04-source-ingestion]
+    branches: [feat/f1-mvp-intergration, feat/be-04-source-ingestion, feat/f2-be02-material-store-retrieval]
   pull_request:
     branches: [main, feat/f1-mvp-intergration]
   workflow_dispatch:
