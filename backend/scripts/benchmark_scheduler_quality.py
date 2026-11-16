@@ -58,7 +58,7 @@ def _overlaps(left: Interval, right: Interval) -> bool:
     return to_utc(left.start_at) < to_utc(right.end_at) and to_utc(right.start_at) < to_utc(left.end_at)
 
 
-def optimal_solution(context: SchedulingContext, time_limit_seconds: float = 30.0) -> dict:
+def optimal_solution(context: SchedulingContext, time_limit_seconds: float = 300.0) -> dict:
     from ortools.sat.python import cp_model
 
     model = cp_model.CpModel()
@@ -93,7 +93,7 @@ def optimal_solution(context: SchedulingContext, time_limit_seconds: float = 30.
     solver.parameters.max_time_in_seconds = time_limit_seconds
     status = solver.Solve(model)
     if status != cp_model.OPTIMAL:
-        raise RuntimeError("CP-SAT did not prove the evaluation workload optimal")
+        raise RuntimeError(f"CP-SAT did not prove the evaluation workload optimal: {solver.StatusName(status)}")
     selected = [(index, weight) for value, index, _, _, weight in placements if solver.Value(value)]
     return {"status": "OPTIMAL", "completed": len(selected),
             "priority_score": sum(weight for _, weight in selected),
@@ -125,7 +125,10 @@ def evaluate(cases: int, seed: int, time_limit_seconds: float = 30.0) -> dict:
         completed_ids = {summary.task_id for summary in result.task_summaries if summary.unallocated_minutes == 0}
         greedy = len(completed_ids)
         greedy_priority = sum(int(task.priority.value * 10) for task in context.tasks if task.task_id in completed_ids)
-        optimum = optimal_solution(context, time_limit_seconds)
+        try:
+            optimum = optimal_solution(context, time_limit_seconds)
+        except RuntimeError as exc:
+            raise RuntimeError(f"seed {seed + offset}: {exc}") from exc
         records.append({"seed": seed + offset, "tasks": len(context.tasks), "greedy_completed": greedy,
                         "greedy_priority_score": greedy_priority, "optimal_completed": optimum["completed"],
                         "optimal_priority_score": optimum["priority_score"], "solver_status": optimum["status"],
@@ -146,7 +149,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--cases", type=int, default=100)
     parser.add_argument("--seed", type=int, default=20261116)
-    parser.add_argument("--time-limit", type=float, default=30.0)
+    parser.add_argument("--time-limit", type=float, default=300.0)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.cases < 1 or args.time_limit <= 0:
