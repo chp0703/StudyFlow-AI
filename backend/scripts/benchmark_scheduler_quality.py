@@ -135,12 +135,19 @@ def evaluate(cases: int, seed: int, time_limit_seconds: float = 30.0) -> dict:
                         "solver_wall_time_seconds": optimum["solver_wall_time_seconds"],
                         "coverage_gap": (optimum["completed"] - greedy) / optimum["completed"]
                         if optimum["completed"] else 0.0})
+        records[-1]["priority_score_gap"] = (
+            (optimum["priority_score"] - greedy_priority) / optimum["priority_score"]
+            if greedy == optimum["completed"] and optimum["priority_score"] else None)
+    priority_gaps = [record["priority_score_gap"] for record in records
+                     if record["priority_score_gap"] is not None]
     return {"schema_version": "1.1", "metadata": metadata(time_limit_seconds),
             "subset": "60-minute tasks on a 5-minute grid with tight deadlines, priority, busy windows, daily limits and breaks; no retained or exact-start blocks",
             "objective": "maximize completed tasks, then priority score", "seed": seed, "case_count": cases,
             "records": records,
             "mean_coverage_gap": sum(record["coverage_gap"] for record in records) / len(records),
             "worst_coverage_gap": max(record["coverage_gap"] for record in records),
+            "mean_priority_score_gap": sum(priority_gaps) / len(priority_gaps) if priority_gaps else None,
+            "worst_priority_score_gap": max(priority_gaps) if priority_gaps else None,
             "greedy_never_exceeds_optimum": all(record["greedy_completed"] <= record["optimal_completed"]
                                                 for record in records)}
 
