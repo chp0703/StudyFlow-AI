@@ -35,6 +35,7 @@ class MaterialLocalSupabase(unittest.TestCase):
 
     def test_upload_replay_after_restart_and_source_grounded_search(self):
         f, body, key = self.fixture, self.body(), f'b2-upload-{uuid4().hex}'
+        body['conversation_id'] = body['conversation_id'].upper()
         with f.client() as app:
             uploaded = f.post(app, '/v1/assessment/materials', body, key=key)
             self.assertEqual(uploaded.status_code, 200, uploaded.text)
@@ -49,7 +50,7 @@ class MaterialLocalSupabase(unittest.TestCase):
             self.assertEqual(again.json()['data'], data)
             conflict = f.post(restarted, '/v1/assessment/materials', {**body, 'topics': ['Chủ đề khác']}, key=key)
             self.assertEqual(conflict.status_code, 409, conflict.text)
-            fetched = restarted.get('/v1/assessment/materials/' + material_id, headers=f.auth('a'),
+            fetched = restarted.get('/v1/assessment/materials/' + material_id.upper(), headers=f.auth('a'),
                                     params={'conversation_id': body['conversation_id']})
             self.assertEqual(fetched.status_code, 200, fetched.text)
             self.assertEqual(fetched.json()['data'], data)
@@ -59,6 +60,19 @@ class MaterialLocalSupabase(unittest.TestCase):
         with psycopg.connect(os.environ['F1_DB_TEST_DSN']) as db:
             count = db.execute('select count(*) from app_private.material_chunks where material_id=%s', (material_id,)).fetchone()[0]
             self.assertEqual(count, len(data['chunks']))
+
+    def test_term_at_chunk_boundary_remains_searchable(self):
+        f = self.fixture
+        body = self.body('a ' * 999 + ' TCP truyền dữ liệu tin cậy.')
+        with f.client() as app:
+            uploaded = f.post(app, '/v1/assessment/materials', body)
+            self.assertEqual(uploaded.status_code, 200, uploaded.text)
+            data = uploaded.json()['data']
+        found = self.search(data['material']['material_id'].upper())
+        self.assertEqual(found['outcome'], 'READ', found)
+        self.assertTrue(found['data']['items'])
+        self.assertTrue(all('TCP' in c['text'] for c in found['data']['items']))
+        self.assertEqual(found['data']['items'][0]['page'], 1)
 
     def test_cross_user_and_wrong_conversation_return_same_404(self):
         f, body = self.fixture, self.body()

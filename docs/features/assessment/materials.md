@@ -16,6 +16,8 @@ truy xuất; sinh/duyệt câu hỏi, làm bài, chấm điểm và thống kê 
 - Xử lý đồng bộ, không gọi DeepSeek. Chỉ trả `READY` sau khi material và toàn bộ
   chunk đã lưu trong cùng transaction. Lỗi parse không để lại material/chunk dở dang.
 - Lưu văn bản, SHA-256, metadata và số trang nguồn; không lưu bytes gốc.
+  Chunk tối đa 2.000 ký tự, ưu tiên điểm cắt whitespace để giữ từ khóa; token
+  liên tục dài hơn ngưỡng vẫn bị cắt cứng. UUID đầu vào được chuẩn hóa chữ thường.
 - `GET /v1/assessment/materials/{material_id}?conversation_id=...` trả
   `AssessmentMaterialDetailResult` với `data.material` và `data.chunks`.
 - ID người dùng lấy từ JWT. Sai owner/cuộc hội thoại trả 404 giống ID không tồn tại.
@@ -59,5 +61,6 @@ trang top-1. Kết quả này không đại diện tài liệu thực tế, câu
 hay truy vấn không dấu; cấu hình `simple` không cung cấp semantic retrieval.
 
 `backend/tests/integration/test_material_local_supabase.py` kiểm tra HTTP/JWT/
-signed RPC/database thật, restart/replay, cross-user và nguồn chứa chỉ dẫn.
+signed RPC/database thật, restart/replay, UUID viết hoa, từ khóa ở biên chunk,
+cross-user và nguồn chứa chỉ dẫn.
 Chỉ chạy với local Supabase và các biến `F1_LOCAL_*`, `F1_DB_TEST_DSN` của CI.

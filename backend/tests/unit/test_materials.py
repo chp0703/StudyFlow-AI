@@ -4,6 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import patch
+from uuid import UUID
 
 from pypdf import PdfReader, PdfWriter
 
@@ -58,6 +59,20 @@ class MaterialParsingTests(unittest.TestCase):
         with self.assertRaises(WorkflowError):
             read_document(pdf_pages(21), 'application/pdf')
 
+    def test_chunk_boundary_keeps_search_terms_whole(self):
+        text = 'a ' * 999 + ' TCP truyền dữ liệu tin cậy'
+        chunks = self.prepare(upload_body(text))['chunks']
+        self.assertEqual(''.join(c['text'] for c in chunks), text)
+        self.assertTrue(any('TCP' in c['text'] for c in chunks))
+        self.assertTrue(all(len(c['text']) <= 2000 for c in chunks))
+
+    def test_long_token_and_whitespace_boundaries_still_terminate_with_bounded_chunks(self):
+        for text in ('x' * 6001, 'a\n' * 1001 + 'DNS', 'a\t' * 1001 + 'TCP', 'a' + ' ' * 4000 + 'DNS'):
+            with self.subTest(size=len(text)):
+                chunks = self.prepare(upload_body(text))['chunks']
+                self.assertTrue(all(len(c['text']) <= 2000 for c in chunks))
+                self.assertEqual(''.join(c['text'] for c in chunks).split(), text.split())
+
     def test_material_limits_do_not_raise_f1_limits(self):
         self.assertEqual(self.prepare(upload_body('x' * 200000))['char_count'], 200000)
         with self.assertRaises(WorkflowError):
@@ -85,6 +100,30 @@ class MaterialParsingTests(unittest.TestCase):
 
 
 class MaterialOperationsTests(unittest.TestCase):
+    def test_uppercase_UUIDs_use_same_material_for_upload_read_and_search(self):
+        from backend.app.assessment.materials import MaterialOperations
+        args = MaterialParsingTests().prepare()
+        material = {k: v for k, v in args.items() if k != 'chunks'}
+        material.update(assessment_version='1.0.0', user_id=USER, status='READY', error_code=None,
+                        created_at='2026-11-16T09:00:00Z', updated_at='2026-11-16T09:00:00Z')
+        def rpc(ctx, operation, arguments, **kwargs):
+            if operation == 'search_material_chunks':
+                data = {'material_id': material['material_id'], 'items': args['chunks']}
+            else:
+                data = {'material': material, 'chunks': args['chunks']}
+            return {'schema_version': '1.1', 'request_id': ctx.request_id,
+                    'outcome': 'COMMITTED' if operation == 'store_assessment_material' else 'READ',
+                    'data': data, 'error': None, 'warnings': []}
+        service = MaterialOperations(rpc, lambda: NOW)
+        ctx = SimpleNamespace(user_id=USER, request_id='test')
+        with patch('backend.app.assessment.materials.uuid5', return_value=UUID(material['material_id'])):
+            operations = [lambda: service.upload(ctx, 'material-upload-key-0001', {**upload_body(), 'conversation_id': CONVERSATION.upper()}),
+                          lambda: service.get(ctx, material['material_id'].upper(), CONVERSATION.upper()),
+                          lambda: service.search(ctx, material['material_id'].upper(), query='TCP')]
+            for operation in operations:
+                with self.subTest(operation=operation):
+                    self.assertIsNone(operation()['error'])
+
     def test_upload_calls_only_signed_store_and_stable_ids(self):
         from backend.app.assessment.materials import MaterialOperations
         calls = []
