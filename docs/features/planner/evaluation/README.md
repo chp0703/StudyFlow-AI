@@ -22,7 +22,7 @@ The development set uses partial assertions and must not be called exact match. 
 ```powershell
 python -m pip install -r backend/requirements-evaluation.txt
 python -B backend/scripts/benchmark_f1.py --repetitions 1000 --warmups 10 --output docs/features/planner/evaluation/results/offline.json
-python -B backend/scripts/benchmark_scheduler_quality.py --cases 100 --seed 20261116 --output docs/features/planner/evaluation/results/scheduler-quality.json
+python -B backend/scripts/benchmark_scheduler_quality.py --cases 100 --seed 20261116 --time-limit 300 --output docs/features/planner/evaluation/results/scheduler-quality.json
 
 # After human approval and loading .env into the current process without printing it:
 python -B backend/scripts/benchmark_f1.py --nlu-only --nlu-runs 5 --nlu-dataset backend/tests/fixtures/nlu_eval_vi.json --output docs/features/planner/evaluation/results/nlu-development.json
