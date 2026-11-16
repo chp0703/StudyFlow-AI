@@ -43,7 +43,19 @@ Live evaluation is run only after the labels in `nlu_heldout_vi.json` are approv
 
 ## Results
 
-Results are intentionally absent until the implementation is committed, the worktree is clean and the benchmarks are rerun. Performance reports must state that the 50/200-task workloads exceed available capacity. A bimodal latency distribution must be reported as such and rerun on an otherwise idle machine; it must not be summarized as an algorithm property without investigation.
+Offline evidence was generated from clean commits; NLU remains `NOT_RUN` pending human approval.
+
+| Scheduler workload | Scheduled ratio | Mean | p50 | p95 | p99 |
+|---|---:|---:|---:|---:|---:|
+| 10 tasks / 3 days | 1.00 | 2.681 ms | 2.428 ms | 3.877 ms | 6.801 ms |
+| 50 tasks / 7 days | 0.56 | 37.726 ms | 35.247 ms | 52.350 ms | 61.399 ms |
+| 200 tasks / 14 days | 0.28 | 501.009 ms | 368.405 ms | 889.539 ms | 961.711 ms |
+
+The 50/200-task workloads intentionally exceed available capacity. The 200-task local distribution is wide; no cause or production SLO is inferred from it. `results/offline.json` records commit `bbcd1d5`, `git_dirty=false`, 1,000 samples per workload and sample hashes.
+
+CP-SAT proved `OPTIMAL` for all 100 subset workloads at clean commit `eb9362b`. Greedy matched the maximum completed-task count (`coverage gap = 0`) but had a mean priority-score gap of 7.96% and a worst gap of 60%. This is evidence about the declared restricted subset, not global scheduler optimality. Full per-seed statuses and solver metadata are in `results/scheduler-quality.json`.
+
+Candidate NLU SHA-256: `86c84628df2c9c8ed5d65153f63b6932b6f3068f13117d020ce9a6eb6f7a9d93`. Approver and approval date are pending.
 
 ## References
 

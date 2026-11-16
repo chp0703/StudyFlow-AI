@@ -20,3 +20,5 @@ Approval statement:
 > I reviewed all 100 labels against this guide. The dataset may be frozen and used once as a held-out evaluation set. I understand that changing the prompt from its results makes this set development data for future iterations.
 
 Record approver, date and frozen SHA-256 in the live result artifact. Do not place names inside the dataset itself.
+
+Current candidate SHA-256: `86c84628df2c9c8ed5d65153f63b6932b6f3068f13117d020ce9a6eb6f7a9d93`. This is not a frozen approval hash until the human reviewer accepts the labels.
