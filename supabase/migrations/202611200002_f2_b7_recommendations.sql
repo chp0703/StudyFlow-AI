@@ -111,7 +111,7 @@ begin
   if v_valid is null or v_valid <= 0 or v_err is null or v_err <= 0 or v_err > v_valid then
     raise exception 'Invalid evidence counts' using errcode = '23514';
   end if;
-  if v_rate is null or v_rate <> (v_err::numeric / v_valid::numeric) then
+  if v_rate is null or abs(v_rate - (v_err::numeric / v_valid::numeric)) > 1e-12 then
     raise exception 'Invalid evidence error_rate' using errcode = '23514';
   end if;
   if coalesce(new.confidence_limit ->> 'level', '') <> 'LOW' then
@@ -183,6 +183,49 @@ $$;
 
 alter function app_private.revision_source_chunks(uuid, jsonb) owner to sf_rpc_owner;
 revoke all on function app_private.revision_source_chunks(uuid, jsonb) from public, anon, authenticated;
+
+-- B7 snapshot ratios round-trip through Python JSON floats; other number rules stay unchanged.
+create or replace function app_private.canonical_json(p_value jsonb) returns text
+language plpgsql immutable set search_path = '' as $$
+declare
+    v_type text := jsonb_typeof(p_value);
+    v_text text;
+begin
+    if v_type = 'null' then
+        return 'null';
+    elsif v_type = 'boolean' then
+        return p_value::text;
+    elsif v_type = 'number' then
+        v_text := p_value::text;
+        if v_text !~ '^-?(0|[1-9][0-9]{0,15})$' or abs(v_text::numeric) > 9007199254740991 then
+            raise exception using errcode = '22023',
+                message = 'canonical JSON accepts only safe integers';
+        end if;
+        return v_text;
+    elsif v_type = 'string' then
+        return to_jsonb(p_value #>> '{}')::text;
+    elsif v_type = 'array' then
+        return '[' || coalesce((select string_agg(app_private.canonical_json(e.value), ',' order by e.ord)
+                                from jsonb_array_elements(p_value) with ordinality e(value, ord)), '') || ']';
+    end if;
+    return '{' || coalesce((select string_agg(
+        to_jsonb(e.key)::text || ':' ||
+        case
+            when e.key = 'priority' and jsonb_typeof(e.value) = 'number' and e.value::text in ('0.1', '0.5')
+                then e.value::text
+            when e.key = 'score_percent' and jsonb_typeof(e.value) = 'number'
+                 and e.value::numeric >= 0 and e.value::numeric <= 100
+                 and e.value::text ~ '^(0|[1-9][0-9]{0,2})(\.[0-9]{1,2})?$'
+                then e.value::text
+            when e.key = 'error_rate' and jsonb_typeof(e.value) = 'number'
+                 and e.value::numeric >= 0 and e.value::numeric <= 1
+                 and e.value::text ~ '^(0|1)(\.[0-9]{1,24})?$'
+                then e.value::text
+            else app_private.canonical_json(e.value)
+        end,
+        ',' order by convert_to(e.key, 'UTF8'))
+        from jsonb_each(p_value) e), '') || '}';
+end $$;
 
 -- 3. Extend presentation_digest, store_presentation, claim_api_receipt, and api_request_receipts constraint
 create or replace function app_private.presentation_digest(p_action app_private.pending_actions, p_target_type text,
@@ -582,7 +625,8 @@ begin
   v_evidence := jsonb_build_object(
     'valid_response_count', v_valid_count,
     'error_count', v_error_count,
-    'error_rate', v_error_rate,
+    -- Store the wire float representation so Python review round trips preserve the snapshot.
+    'error_rate', to_jsonb(v_error_count::double precision / v_valid_count::double precision),
     'chunk_ids', v_chunk_ids,
     'attempt_ids', v_attempt_ids
   );

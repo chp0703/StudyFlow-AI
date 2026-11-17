@@ -51,3 +51,9 @@ Sinh câu hỏi từ tài liệu B2, cho người dùng xem câu hỏi và ngu�
 - Thêm patch task nguyên tử có action/candidate version, giữ bằng chứng và giới hạn độ tin cậy; chưa đủ thông tin trả NEEDS_CLARIFICATION, đủ mới phát reference xác nhận F1.
 - Đồng bộ client patch/version, tài liệu/OpenAPI; thêm pgTAP security và 5 integration case DB thật (toàn luồng, thiếu dữ liệu, giới hạn 50 lượt/nguồn, race, mất phản hồi). Thêm CI upgrade B6->B7.
 - Local: 132 unit, 72 HTTP acceptance, 82 frontend test, TypeScript/build, contract checker và generator --check PASS. Integration B7 cần CI local Supabase; host không có Docker.
+
+## 2026-11-18 — F2 B7: sửa lỗi integration và JSON ratio
+
+- CI cf3827f: migrations, pgTAP, clean/upgrade và B6->B7 upgrade PASS; integration phát hiện canonical_json B5 chỉ nhận 4 chữ số thập phân và fixture bulk chưa đặt omitted_count ban đầu.
+- B7 lưu error_rate theo biểu diễn JSON float, nới riêng canonical error_rate tới 24 chữ số có chặn [0,1], so sánh invariant với sai số 1e-12; thêm test 1/3 qua review và pgTAP canonical. Sửa fixture theo bất biến B5, không đổi B5 runtime.
+- Loại bỏ formatting ngoài phạm vi trong endpoints.ts; TypeScript PASS. Đang chạy lại CI để xác minh B7 đầy đủ.

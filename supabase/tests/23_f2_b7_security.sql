@@ -1,5 +1,5 @@
 begin;
-select plan(9);
+select plan(10);
 select has_table('app_private','revision_recommendations','B7 recommendations are durable');
 select ok((select relrowsecurity and relforcerowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='app_private' and c.relname='revision_recommendations'),'B7 FORCE RLS enabled');
 select ok(not has_table_privilege('authenticated','app_private.revision_recommendations','SELECT'),'B7 clients cannot read tables directly');
@@ -9,5 +9,6 @@ select ok(not has_function_privilege('anon','app_api.decide_revision_recommendat
 select ok(has_function_privilege('authenticated','app_api.decide_revision_recommendation(jsonb)','EXECUTE'),'B7 authenticated callers can reach signed decision boundary');
 select ok(not app_private.rpc_is_read('create_revision_recommendation'),'B7 creation requires write attestation');
 select ok(not app_private.rpc_is_read('decide_revision_recommendation'),'B7 decisions require write attestation');
+select is(app_private.canonical_json('{"error_rate":0.3333333333333333}'::jsonb), '{"error_rate":0.3333333333333333}', 'B7 fractional ratios remain signable without rounding the evidence to four places');
 select * from finish();
 rollback;

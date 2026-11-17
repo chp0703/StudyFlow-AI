@@ -111,10 +111,10 @@ class RevisionLocalTests(unittest.TestCase):
             with psycopg.connect(os.environ['F1_DB_TEST_DSN'],autocommit=True) as db:
                 for _ in range(51):
                     aid=str(uuid4());ids.append(aid)
-                    db.execute("insert into app_private.quiz_attempts(attempt_id,user_id,material_id,origin,question_ids,total_questions) values(%s,%s,%s,'MANUAL',%s,%s)",(aid,uid,body['material_id'],Jsonb(qids),len(qids)))
+                    db.execute("insert into app_private.quiz_attempts(attempt_id,user_id,material_id,origin,question_ids,total_questions,omitted_count) values(%s,%s,%s,'MANUAL',%s,%s,%s)",(aid,uid,body['material_id'],Jsonb(qids),len(qids),len(qids)))
                     for qid in qids:
                         db.execute("insert into app_private.quiz_responses(response_id,user_id,attempt_id,question_id,selected_option_id,validity,is_correct,graded_at) values(%s,%s,%s,%s,'B','VALID',false,'2026-11-18T00:00:00Z')",(str(uuid4()),uid,aid,qid))
-                    db.execute("update app_private.quiz_attempts set status='SUBMITTED',valid_response_count=%s,incorrect_count=%s,score_percent=0,submitted_at='2026-11-18T00:00:00Z' where attempt_id=%s",(len(qids),len(qids),aid))
+                    db.execute("update app_private.quiz_attempts set status='SUBMITTED',valid_response_count=%s,incorrect_count=%s,omitted_count=0,score_percent=0,submitted_at='2026-11-18T00:00:00Z' where attempt_id=%s",(len(qids),len(qids),aid))
             made=self.ok(self.f.post(app,'/v1/assessment/recommendations',body));rec=made['result']['data']['revision_recommendation'];e=rec['evidence']
             self.assertEqual(e['attempt_ids'],sorted(ids,reverse=True)[:50]);self.assertEqual((e['valid_response_count'],e['error_count'],e['error_rate']),(300,300,1))
             self.assertEqual(e['chunk_ids'],[c['chunk_id'] for c in sorted(chunks[:60],key=lambda c:(c['page'],c['chunk_index'],c['chunk_id']))[:50]])
@@ -153,3 +153,15 @@ class RevisionLocalTests(unittest.TestCase):
         with self.client() as app:
             restored=self.ok(self.f.post(app,'/v1/assessment/recommendations',body,key=key));self.assertEqual(restored['state'],'AWAITING_APPROVAL')
         with psycopg.connect(os.environ['F1_DB_TEST_DSN']) as db:self.assertEqual(db.execute('select count(*) from app_private.revision_recommendations where material_id=%s',(body['material_id'],)).fetchone()[0],1)
+
+
+    def test_fractional_error_rate_survives_review_wire_round_trip(self):
+        with self.client() as app:
+            body,qids,_=self.fixture(app)
+            for choice in ('B','A','A'): self.submit(app,body,qids,choice)
+            made=self.ok(self.f.post(app,'/v1/assessment/recommendations',body));ref=made['action_reference']
+            rate=made['result']['data']['revision_recommendation']['evidence']['error_rate']
+            self.assertAlmostEqual(rate,1/3)
+            reviewed=self.ok(self.f.post(app,f"/v1/actions/{ref['action_id']}/review",dict(schema_version='1.1',conversation_id=body['conversation_id'],expected_action_version=ref['action_version'])))
+            self.assertEqual(reviewed['result']['data']['revision_recommendation']['evidence']['error_rate'],rate)
+            self.ok(self.decide(app,body,reviewed['action_reference'],'REJECT'))
