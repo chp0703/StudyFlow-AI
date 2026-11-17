@@ -25,3 +25,16 @@ Sinh câu hỏi từ tài liệu B2, cho người dùng xem câu hỏi và ngu�
 - Supabase/pgTAP, integration và concurrency đang chờ workflow GitHub xác minh vì máy thiếu Docker/WSL.
 - Chưa kiểm tra DeepSeek thật vì chưa có API key. Kiểm thử model dùng transport giả lập.
 - Đã chạy formatter trên các file frontend thay đổi. Bản oxfmt hiện tại làm hỏng type inline, đã khôi phục phần format ngoài phạm vi và sửa cú pháp, sau đó TypeScript/test/build đạt.
+
+## 2026-11-18 — F2 B7: tạo gợi ý ôn tập có bằng chứng
+
+**Mục tiêu:** tạo gợi ý từ tối đa 50 lượt hợp lệ gần nhất và chờ duyệt trước khi bàn giao F1.
+
+**Đã làm**
+- Thêm contract, migration/RPC tạo recommendation, snapshot bằng chứng, FORCE RLS và presentation digest; giữ migration lịch sử.
+- Nối endpoint vào durable receipts; đồng bộ client types/mapper. agy sinh code, Codex review và sửa các sai lệch interface/helper.
+- Thêm 6 unit test độc lập cho orchestration, lỗi/retry/reference và cặp trường patch/version.
+
+**Kết quả:** nhánh `feat/f2-b7-revision-recommendations`; contract checker 189 definitions/126 fixtures và 6 test B7 PASS. Baseline B6: 124 unit, 72 HTTP, 37 scheduler và 80 frontend test PASS; typecheck/build PASS.
+
+**Ghi chú:** phần duyệt/bàn giao và patch task còn tiếp tục; chưa chạy DB trên host vì thiếu Docker. CI local Supabase sẽ kiểm tra migration/RPC; chưa công bố B7 hoàn tất.

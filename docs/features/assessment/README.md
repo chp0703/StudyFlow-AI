@@ -42,3 +42,13 @@ This feature owns source-grounded question preparation, verified answer keys, qu
   - Only `POST /v1/decisions` with the unchanged `ActionReference` (`target_type="PENDING_ACTION"`) and UI attestation (`source="UI"`, `source_message_id=null`) can transition a batch from `DRAFT` to `VERIFIED` (`APPROVE`) or `REJECTED` (`REJECT`); chat approval is rejected.
   - Finalized (`VERIFIED`/`REJECTED`) rows and question content are immutable via DB triggers; deletes are blocked.
   - PostgreSQL/pgTAP and HTTP integration tests run against local Supabase, including concurrent decisions and recovery after a persisted batch loses its HTTP response. Live DeepSeek verification requires API credentials.
+
+## Revision recommendations (B7)
+
+`POST /v1/assessment/recommendations` creates a durable review action from the latest
+50 submitted attempts containing valid graded responses for the selected material/topic.
+Counts are calculated before joining source links; citations include at most 50 distinct
+chunks from incorrect answers. This window can differ from B6 lifetime statistics.
+The immutable snapshot always reports LOW confidence and its sample/coverage limits;
+minutes and priority are user choices. No eligible responses or no observed errors
+returns 422 without a recommendation. Creation does not change Planner workload.

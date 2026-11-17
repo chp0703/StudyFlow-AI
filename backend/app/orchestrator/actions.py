@@ -18,11 +18,12 @@ from .workflow_shared import (
 
 class ActionProcessor:
     def __init__(self, rpc: RpcCall, clock: Clock, extractor: Extractor, timezone: str = PRODUCT_TIMEZONE, *,
-                 questions=None):
+                 questions=None, recommendations=None):
         if timezone != PRODUCT_TIMEZONE:
             raise ValueError(f"timezone must be {PRODUCT_TIMEZONE}")
         self.rpc, self.clock = rpc, clock
         self.questions_ops = questions
+        self.recommendations_ops = recommendations
         self.chat = ChatProcessor(self, extractor, clock=clock, timezone=timezone)
 
     def step(self, ctx, operation: str, arguments: dict, **kwargs) -> dict:
@@ -40,6 +41,10 @@ class ActionProcessor:
             return self.chat.handle_message(ctx, receipt, key, body)
         if http_operation == "prepare_action":
             return self.prepare(ctx, receipt, key, body)
+        if http_operation == "create_revision_recommendation":
+            if self.recommendations_ops is None:
+                raise Terminal("UNSUPPORTED_OPERATION", "Revision recommendations are not configured.")
+            return self.recommendations_ops.create(ctx, receipt, key, body)
         if http_operation == "generate_question_drafts":
             if self.questions_ops is None:
                 raise Terminal("UNSUPPORTED_OPERATION", "Question draft generation is not configured.")
@@ -225,6 +230,9 @@ class ActionProcessor:
                         "schedule_confirmation": last.get("schedule_confirmation")}
         if last.get("question_drafts") is not None:
             presentation["question_drafts"] = last["question_drafts"]
+        for field in ("revision_recommendation", "revision_source_chunks"):
+            if field in last:
+                presentation[field] = last[field]
         stored = self.step(ctx, "review_pending_action", {
             "action_id": action_id, "expected_action_version": body["expected_action_version"], "presentation": presentation},
             conversation_id=conversation, idempotency_key=child_key(key, "review"), message_id=receipt["message_id"])["data"]

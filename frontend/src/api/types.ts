@@ -194,6 +194,10 @@ export type ActionPresentation = {
   effective_policy: Record<string, unknown> | null
 
   question_drafts?: QuestionDraftBatchData | null
+
+  revision_recommendation?: RevisionRecommendation | null
+
+  revision_source_chunks?: MaterialChunk[] | null
 }
 
 export type ToolResult = {
