@@ -27,7 +27,7 @@ create table if not exists app_private.revision_recommendations (
     or (status in ('PROPOSED', 'REJECTED') and candidate_id is null)
   ),
   foreign key (user_id, material_id) references app_private.materials(user_id, material_id),
-  foreign key (user_id, conversation_id) references app_private.conversations(user_id, conversation_id),
+  foreign key (user_id, conversation_id) references app_private.conversation_records(user_id, conversation_id),
   foreign key (user_id, pending_action_id) references app_private.pending_actions(user_id, action_id),
   foreign key (user_id, candidate_id) references app_private.task_candidates(user_id, candidate_id)
 );
@@ -726,4 +726,3 @@ $$;
 alter function app_api.create_revision_recommendation(jsonb) owner to sf_rpc_owner;
 revoke all on function app_api.create_revision_recommendation(jsonb) from public, anon;
 grant execute on function app_api.create_revision_recommendation(jsonb) to authenticated;
-

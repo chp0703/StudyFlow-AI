@@ -38,3 +38,5 @@ Sinh câu hỏi từ tài liệu B2, cho người dùng xem câu hỏi và ngu�
 **Kết quả:** nhánh `feat/f2-b7-revision-recommendations`; contract checker 189 definitions/126 fixtures và 6 test B7 PASS. Baseline B6: 124 unit, 72 HTTP, 37 scheduler và 80 frontend test PASS; typecheck/build PASS.
 
 **Ghi chú:** phần duyệt/bàn giao và patch task còn tiếp tục; chưa chạy DB trên host vì thiếu Docker. CI local Supabase sẽ kiểm tra migration/RPC; chưa công bố B7 hoàn tất.
+
+- CI lần đầu phát hiện FK dùng sai tên bảng conversation; sửa sang conversation_records theo schema B2. Contract job PASS; DB chưa PASS, đang chạy lại.
