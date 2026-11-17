@@ -63,3 +63,5 @@ Sinh câu hỏi từ tài liệu B2, cho người dùng xem câu hỏi và ngu�
 - CI 86ce5d6 PASS: 628 pgTAP assertions, 28 HTTP integration (6 case B7), 6 PostgreSQL concurrency, clean reset và cả upgrade từ B6. Backend CI cf3827f PASS.
 - Bổ sung race patch/confirm, 7 fixture contract B7 (tổng 133), type ApiTaskCandidate đầy đủ để client đọc version; cập nhật tài liệu runtime. Local 132 unit, 82 frontend, TypeScript, checker/generator PASS.
 - Chưa chạy UI F2 vì ngoài phạm vi; B7 không dùng LLM. CI cuối sẽ chạy trên commit bàn giao mới.
+
+- Siết integration: hủy candidate luôn được kiểm tra dù nhánh REJECT thắng race; thêm reference bị sửa và chặn tạo gợi ý khi F1 task đang chờ. Chỉ thay đổi test; CI cuối chạy lại để xác minh đầy đủ.

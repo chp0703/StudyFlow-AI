@@ -71,6 +71,9 @@ class RevisionLocalTests(unittest.TestCase):
         with self.client() as app:
             body,qids,chunks=self.fixture(app);attempt=self.submit(app,body,qids);before=self.snapshot(body)
             key=f'it-{uuid4().hex}';created=self.ok(self.f.post(app,'/v1/assessment/recommendations',body,key=key));ref=created['action_reference']
+            tampered=self.decide(app,body,{**ref,'target_id':str(uuid4())})
+            self.assertEqual(tampered.status_code,409,tampered.text)
+            self.assertEqual(tampered.json()['error']['code'],'APPROVAL_REQUIRED')
             rec=created['result']['data']['revision_recommendation'];self.assertEqual(rec['evidence']['attempt_ids'],[attempt])
             self.assertEqual(rec['evidence']['error_count'],1);self.assertEqual(rec['confidence_limit']['level'],'LOW')
             replay=self.ok(self.f.post(app,'/v1/assessment/recommendations',body,key=key));self.assertEqual(replay['result']['data'],created['result']['data'])
@@ -82,6 +85,9 @@ class RevisionLocalTests(unittest.TestCase):
             self.assertEqual(review['result']['data']['revision_recommendation']['evidence'],rec['evidence'])
             accepted=self.ok(self.decide(app,body,review['action_reference']));self.assertEqual(accepted['state'],'NEEDS_CLARIFICATION')
             pres=accepted['result']['data'];self.assertEqual(pres['revision_recommendation']['status'],'ACCEPTED');self.assertEqual(self.snapshot(body),before)
+            blocked=self.f.post(app,'/v1/assessment/recommendations',body)
+            self.assertEqual(blocked.status_code,409,blocked.text)
+            self.assertEqual(blocked.json()['error']['code'],'ACTION_REVIEW_REQUIRED')
             candidate=pres['candidate'];action=pres['pending_action']
             partial=dict(schema_version='1.1',conversation_id=body['conversation_id'],expected_action_version=action['version'],expected_candidate_version=candidate['version'],candidate_patch={'start_at':'2027-03-01T01:00:00Z'})
             patched=self.ok(self.f.post(app,f"/v1/actions/{action['action_id']}/review",partial));self.assertEqual(patched['state'],'NEEDS_CLARIFICATION')
@@ -131,13 +137,16 @@ class RevisionLocalTests(unittest.TestCase):
         with ThreadPoolExecutor(max_workers=2) as pool:responses=list(pool.map(choose,['APPROVE','REJECT']))
         self.assertEqual(sorted(r.status_code for r in responses),[200,409],[r.text for r in responses]);self.assertEqual(self.snapshot(body),before)
         accepted=next((r.json() for r in responses if r.status_code==200 and r.json()['state']=='NEEDS_CLARIFICATION'),None)
-        if accepted:
-            pres=accepted['result']['data'];a=pres['pending_action'];c=pres['candidate']
-            ref=dict(action_id=a['action_id'],action_version=a['version'],target_type='TASK_CANDIDATE',target_id=c['candidate_id'],target_version=c['version'])
-            with self.client() as app:self.ok(self.decide(app,body,ref,'REJECT'))
-            with psycopg.connect(os.environ['F1_DB_TEST_DSN']) as db:
-                self.assertEqual(db.execute('select status from app_private.revision_recommendations where recommendation_id=%s',(pres['revision_recommendation']['recommendation_id'],)).fetchone()[0],'ACCEPTED')
-                self.assertEqual(db.execute('select status from app_private.task_candidates where candidate_id=%s',(c['candidate_id'],)).fetchone()[0],'CANCELLED')
+        if accepted is None:
+            with self.client() as app:
+                retry=self.ok(self.f.post(app,'/v1/assessment/recommendations',body))
+                accepted=self.ok(self.decide(app,body,retry['action_reference']))
+        pres=accepted['result']['data'];a=pres['pending_action'];c=pres['candidate']
+        ref=dict(action_id=a['action_id'],action_version=a['version'],target_type='TASK_CANDIDATE',target_id=c['candidate_id'],target_version=c['version'])
+        with self.client() as app:self.ok(self.decide(app,body,ref,'REJECT'))
+        with psycopg.connect(os.environ['F1_DB_TEST_DSN']) as db:
+            self.assertEqual(db.execute('select status from app_private.revision_recommendations where recommendation_id=%s',(pres['revision_recommendation']['recommendation_id'],)).fetchone()[0],'ACCEPTED')
+            self.assertEqual(db.execute('select status from app_private.task_candidates where candidate_id=%s',(c['candidate_id'],)).fetchone()[0],'CANCELLED')
 
     def test_lost_rpc_response_retries_from_durable_domain_result(self):
         with self.client() as app:
