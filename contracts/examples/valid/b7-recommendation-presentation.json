@@ -1,0 +1,72 @@
+{
+  "kind": "ACTION_PRESENTATION",
+  "pending_action": {
+    "action_id": "00000000-0000-4000-8000-000000000261",
+    "user_id": "00000000-0000-4000-8000-000000000001",
+    "conversation_id": "00000000-0000-4000-8000-000000000003",
+    "version": 1,
+    "intent": "ACCEPT_REVISION_RECOMMENDATION",
+    "state": "AWAITING_APPROVAL",
+    "requires_review": false,
+    "candidate_id": null,
+    "proposal_id": null,
+    "draft_arguments": {
+      "recommendation_id": "00000000-0000-4000-8000-000000000251"
+    },
+    "missing_fields": [],
+    "ambiguities": [],
+    "depends_on_action_id": null,
+    "created_at": "2026-11-16T08:20:00Z",
+    "updated_at": "2026-11-16T08:20:00Z"
+  },
+  "candidate": null,
+  "proposal": null,
+  "normalized_command": null,
+  "effective_policy": null,
+  "schedule_confirmation": null,
+  "revision_recommendation": {
+    "assessment_version": "1.0.0",
+    "recommendation_id": "00000000-0000-4000-8000-000000000251",
+    "user_id": "00000000-0000-4000-8000-000000000001",
+    "conversation_id": "00000000-0000-4000-8000-000000000003",
+    "material_id": "00000000-0000-4000-8000-000000000201",
+    "topic": "Kỳ vọng và phương sai",
+    "priority": 1,
+    "suggested_minutes": 60,
+    "reason_summary": "Tỷ lệ sai ở chủ đề Kỳ vọng và phương sai là 75% (3/4 câu hợp lệ); cần ôn lại định nghĩa và tính chất ở trang 3.",
+    "evidence": {
+      "attempt_ids": [
+        "00000000-0000-4000-8000-000000000231"
+      ],
+      "chunk_ids": [
+        "00000000-0000-4000-8000-000000000211"
+      ],
+      "valid_response_count": 4,
+      "error_count": 3,
+      "error_rate": 0.75
+    },
+    "confidence_limit": {
+      "level": "LOW",
+      "limitations": [
+        "Cỡ mẫu mới gồm 4 câu trả lời hợp lệ trên 1 lượt làm bài."
+      ]
+    },
+    "pending_action_id": "00000000-0000-4000-8000-000000000261",
+    "candidate_id": null,
+    "status": "PROPOSED",
+    "created_at": "2026-11-16T08:20:00Z",
+    "updated_at": "2026-11-16T08:20:00Z"
+  },
+  "revision_source_chunks": [
+    {
+      "chunk_id": "00000000-0000-4000-8000-000000000211",
+      "material_id": "00000000-0000-4000-8000-000000000201",
+      "user_id": "00000000-0000-4000-8000-000000000001",
+      "page": 3,
+      "topic": "Kỳ vọng và phương sai",
+      "chunk_index": 0,
+      "text": "Kỳ vọng E(X) của biến ngẫu nhiên rời rạc X là tổng có trọng số các giá trị của X theo xác suất tương ứng.",
+      "created_at": "2026-11-16T08:01:00Z"
+    }
+  ]
+}

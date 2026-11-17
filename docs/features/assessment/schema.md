@@ -5,7 +5,7 @@
 | Phiên bản extension | **1.0.0** (`assessment_version: "1.0.0"`) |
 | Tương thích nền tảng | Envelope `schema_version: "1.1"`, RPC wire `contract_version: "1.0.1"` |
 | Feature | **Learning Assessment & Adaptive Revision (F2)** |
-| Trạng thái | **Đặc tả & Contract B1 — sẵn sàng cho B2–B7 và FE mock** |
+| Trạng thái | **Runtime B2–B7 và contract assessment 1.0.0; màn hình F2 chưa triển khai** |
 | Múi giờ chuẩn | `Asia/Ho_Chi_Minh` (API chuẩn hóa UTC `Z` hoặc RFC 3339 có offset) |
 | Đối tượng sử dụng | Database (`app_private`/`app_api`), Backend (`backend/app/assessment/`), Orchestrator, Frontend (`frontend/src/api/`) |
 

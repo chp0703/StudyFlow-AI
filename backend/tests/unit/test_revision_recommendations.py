@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[3]
 def presentation():
     rec = json.loads((ROOT/'contracts/examples/valid/RevisionRecommendation.json').read_text(encoding='utf-8'))
     chunk = json.loads((ROOT/'contracts/examples/valid/MaterialChunk.json').read_text(encoding='utf-8'))
+    rec['evidence']['chunk_ids'] = [chunk['chunk_id']]
     ctx = SimpleNamespace(user_id=rec['user_id'])
     pending = ActionProcessor.pending_shell(ctx, rec['pending_action_id'], rec['conversation_id'],
         'ACCEPT_REVISION_RECOMMENDATION', 'AWAITING_APPROVAL', candidate_id=None,

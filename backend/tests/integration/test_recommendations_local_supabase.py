@@ -165,3 +165,20 @@ class RevisionLocalTests(unittest.TestCase):
             reviewed=self.ok(self.f.post(app,f"/v1/actions/{ref['action_id']}/review",dict(schema_version='1.1',conversation_id=body['conversation_id'],expected_action_version=ref['action_version'])))
             self.assertEqual(reviewed['result']['data']['revision_recommendation']['evidence']['error_rate'],rate)
             self.ok(self.decide(app,body,reviewed['action_reference'],'REJECT'))
+
+    def test_candidate_patch_and_task_approval_race_has_one_winner(self):
+        with self.client() as app:
+            body,qids,_=self.fixture(app);self.submit(app,body,qids)
+            made=self.ok(self.f.post(app,'/v1/assessment/recommendations',body))
+            handed=self.ok(self.decide(app,body,made['action_reference']))['result']['data']
+            a=handed['pending_action'];c=handed['candidate']
+            form=dict(schema_version='1.1',conversation_id=body['conversation_id'],expected_action_version=a['version'],expected_candidate_version=c['version'],candidate_patch=dict(start_at='2027-03-01T01:00:00Z',deadline_at='2027-03-02T01:00:00Z'))
+            ready=self.ok(self.f.post(app,f"/v1/actions/{a['action_id']}/review",form));before=self.snapshot(body)
+            pres=ready['result']['data'];form.update(expected_action_version=pres['pending_action']['version'],expected_candidate_version=pres['candidate']['version'],candidate_patch={'priority':1})
+        def act(kind):
+            with self.client() as app:
+                return self.f.post(app,f"/v1/actions/{a['action_id']}/review",form) if kind=='patch' else self.decide(app,body,ready['action_reference'])
+        with ThreadPoolExecutor(max_workers=2) as pool:responses=list(pool.map(act,['patch','approve']))
+        self.assertEqual(sorted(r.status_code for r in responses),[200,409],[r.text for r in responses])
+        after=self.snapshot(body)
+        self.assertEqual(after[1],before[1]);self.assertIn(after[0]-before[0],(0,1));self.assertEqual(after[2]-before[2],after[0]-before[0])

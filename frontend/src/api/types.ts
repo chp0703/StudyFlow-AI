@@ -181,7 +181,7 @@ export type ActionPresentation = {
 
   pending_action: PendingActionRef
 
-  candidate: { slots: Record<string, unknown> } | null
+  candidate: ApiTaskCandidate | null
 
   proposal: PlanProposal | null
 
@@ -598,4 +598,33 @@ export type CandidateReviewPatch = {
   candidate_patch: CandidateTaskFields
 
   expected_candidate_version: number
+}
+
+export type ApiTaskCandidate = {
+  candidate_id: string
+
+  user_id: string
+
+  conversation_id: string
+
+  version: number
+
+  status: "DRAFT" | "CONFIRMED" | "CANCELLED"
+
+  slots: CandidateTaskFields
+
+  raw_expressions: Record<string, string>
+
+  field_sources: Record<string, {
+    source: "USER_MESSAGE" | "CONFIRMED_CONTEXT" | "SYSTEM_DEFAULT" | "DERIVED"
+    reference: string | null
+  }>
+
+  source_message_id: string
+
+  confirmed_task_id: string | null
+
+  created_at: string
+
+  updated_at: string
 }

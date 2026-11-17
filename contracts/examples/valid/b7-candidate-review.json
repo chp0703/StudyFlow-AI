@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.1",
+  "conversation_id": "00000000-0000-4000-8000-000000000003",
+  "expected_action_version": 1,
+  "candidate_patch": {
+    "deadline_at": "2027-03-02T01:00:00Z"
+  },
+  "expected_candidate_version": 1
+}
