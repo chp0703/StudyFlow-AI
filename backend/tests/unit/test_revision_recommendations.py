@@ -71,3 +71,26 @@ class RevisionRecommendationTests(TestCase):
         self.assertFalse(contract.is_valid('ReviewActionRequest',{**request,'candidate_patch':{'start_at':None}}))
         self.assertFalse(contract.is_valid('ReviewActionRequest',{**request,'expected_candidate_version':1}))
         self.assertTrue(contract.is_valid('ReviewActionRequest',{**request,'candidate_patch':{},'expected_candidate_version':1}))
+
+    def test_approve_hands_off_candidate_without_confirming_task(self):
+        pres=copy.deepcopy(self.pres);r=pres['revision_recommendation'];a=pres['pending_action'];old_action=copy.deepcopy(a)
+        candidate_id='00000000-0000-4000-8000-000000000271'
+        r.update(status='ACCEPTED',candidate_id=candidate_id)
+        a.update(action_id='00000000-0000-4000-8000-000000000299',intent='CREATE_TASK',state='AWAITING_CLARIFICATION',candidate_id=candidate_id,missing_fields=['start_at','deadline_at'])
+        pres['candidate']=dict(candidate_id=candidate_id,user_id=self.ctx.user_id,conversation_id=self.body['conversation_id'],version=1,status='DRAFT',slots={'title':'Ôn tập','estimated_minutes':45},raw_expressions={},field_sources={},source_message_id=self.receipt['message_id'],confirmed_task_id=None,created_at=a['created_at'],updated_at=a['updated_at'])
+        self.rpc.side_effect=lambda *a,**kw:_ok(self.ctx.request_id,'COMMITTED',pres)
+        ref=dict(action_id=old_action['action_id'],action_version=1,target_type='PENDING_ACTION',target_id=old_action['action_id'],target_version=1)
+        body={**self.body,'decision':'APPROVE','action_reference':ref}
+        status,result=self.ops.decide(self.ctx,self.receipt,'b7-decision-key-0001',body,old_action)
+        self.assertEqual((status,result['state']),(200,'NEEDS_CLARIFICATION'));self.assertIsNone(result['action_reference'])
+        self.assertEqual([q['field'] for q in result['questions']],['start_at','deadline_at'])
+        self.assertEqual(self.rpc.call_args.kwargs['action_reference'],ref)
+        self.assertEqual(self.rpc.call_args.kwargs['approval_action']['source'],'UI')
+        self.assertIsNone(self.rpc.call_args.kwargs['approval_action']['source_message_id'])
+
+    def test_reject_returns_final_recommendation_without_candidate(self):
+        pres=copy.deepcopy(self.pres);pres['revision_recommendation']['status']='REJECTED';pres['pending_action'].update(state='CANCELLED',version=2)
+        self.rpc.side_effect=lambda *a,**kw:_ok(self.ctx.request_id,'COMMITTED',pres)
+        a=self.pres['pending_action'];ref=dict(action_id=a['action_id'],action_version=1,target_type='PENDING_ACTION',target_id=a['action_id'],target_version=1)
+        _,result=self.ops.decide(self.ctx,self.receipt,'b7-decision-key-0001',{**self.body,'decision':'REJECT','action_reference':ref},a)
+        self.assertEqual(result['state'],'SUCCEEDED');self.assertIsNone(result['result']['data']['candidate'])

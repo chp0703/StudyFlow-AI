@@ -258,6 +258,8 @@ class ActionProcessor:
             if pending["version"] != ref["action_version"]:
                 raise Terminal("STALE_ENTITY_VERSION", "Thao tác đã thay đổi; hãy tải lại trước khi quyết định.")
         last = (action["last_presentation"] or {}).get("presentation") or {}
+        if pending.get("intent") == "ACCEPT_REVISION_RECOMMENDATION":
+            return self.recommendations_ops.decide(ctx, receipt, key, body, pending)
         if pending.get("intent") == "VERIFY_QUESTION_DRAFTS":
             return self._decide_question_drafts(ctx, receipt, key, conversation, ref, pending, decision)
         command = last.get("normalized_command")

@@ -40,3 +40,8 @@ Sinh câu hỏi từ tài liệu B2, cho người dùng xem câu hỏi và ngu�
 **Ghi chú:** phần duyệt/bàn giao và patch task còn tiếp tục; chưa chạy DB trên host vì thiếu Docker. CI local Supabase sẽ kiểm tra migration/RPC; chưa công bố B7 hoàn tất.
 
 - CI lần đầu phát hiện FK dùng sai tên bảng conversation; sửa sang conversation_records theo schema B2. Contract job PASS; DB chưa PASS, đang chạy lại.
+
+## 2026-11-18 — F2 B7: duyệt và bàn giao task nháp
+
+- Thêm RPC quyết định nguyên tử, UI reference/digest checks, chuyển PROPOSED sang ACCEPTED/REJECTED; nhận gợi ý chỉ tạo candidate và action F1 cần bổ sung thời gian.
+- 8 unit test B7 PASS; CI DB của phần tạo gợi ý tại 8cbdc2b PASS (clean reset, pgTAP, upgrade, integration, concurrency). Test DB cho quyết định và patch tiếp tục được bổ sung.
