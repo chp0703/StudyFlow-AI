@@ -62,22 +62,20 @@ def _make_question(
         "assessment_version": "1.0.0",
         "question_id": qid,
         "user_id": user_id,
+        "conversation_id": CONV_A,
         "material_id": material_id,
+        "version": 1,
         "topic": "Mạng máy tính",
         "question_type": question_type,
         "stem": f"Câu hỏi kiểm tra {qid[-4:]}?",
         "options": options,
         "answer_key": answer_key,
         "explanation": "Giải thích chuẩn từ tài liệu.",
-        "evidence": [
-            {
-                "chunk_id": "00000000-0000-4000-8000-000000000211",
-                "page": 1,
-                "excerpt": "Đoạn trích dẫn chuẩn từ tài liệu.",
-            }
-        ],
+        "source_chunk_ids": ["00000000-0000-4000-8000-000000000211"],
         "status": status,
-        "pending_action_id": "00000000-0000-4000-8000-000000000401",
+        "model": "deepseek-chat",
+        "prompt_version": "f2-question-v1",
+        "verified_at": "2026-11-18T07:05:00.000000Z" if status == "VERIFIED" else None,
         "created_at": "2026-11-18T07:00:00.000000Z",
         "updated_at": "2026-11-18T07:05:00.000000Z",
     }

@@ -32,7 +32,9 @@ def _mcq_question(
         "assessment_version": "1.0.0",
         "question_id": qid,
         "user_id": user_id,
+        "conversation_id": "00000000-0000-4000-8000-000000000003",
         "material_id": material_id,
+        "version": 1,
         "topic": "Mạng máy tính",
         "question_type": "MCQ",
         "stem": "Giao thức nào hướng kết nối ở tầng giao vận?",
@@ -44,15 +46,11 @@ def _mcq_question(
         ],
         "answer_key": answer_key,
         "explanation": "TCP thiết lập kết nối ba bước trước khi truyền dữ liệu.",
-        "evidence": [
-            {
-                "chunk_id": "00000000-0000-4000-8000-000000000201",
-                "page": 1,
-                "excerpt": "TCP là giao thức hướng kết nối và truyền tin cậy.",
-            }
-        ],
+        "source_chunk_ids": ["00000000-0000-4000-8000-000000000201"],
         "status": status,
-        "pending_action_id": "00000000-0000-4000-8000-000000000401",
+        "model": "deepseek-chat",
+        "prompt_version": "f2-question-v1",
+        "verified_at": "2026-11-18T08:05:00.000000Z" if status == "VERIFIED" else None,
         "created_at": "2026-11-18T08:00:00.000000Z",
         "updated_at": "2026-11-18T08:05:00.000000Z",
     }
@@ -70,7 +68,9 @@ def _tf_question(
         "assessment_version": "1.0.0",
         "question_id": qid,
         "user_id": user_id,
+        "conversation_id": "00000000-0000-4000-8000-000000000003",
         "material_id": material_id,
+        "version": 1,
         "topic": "Mạng máy tính",
         "question_type": "TRUE_FALSE",
         "stem": "UDP là giao thức không kết nối.",
@@ -80,15 +80,11 @@ def _tf_question(
         ],
         "answer_key": answer_key,
         "explanation": "UDP gửi từng datagram độc lập không cần thiết lập kết nối.",
-        "evidence": [
-            {
-                "chunk_id": "00000000-0000-4000-8000-000000000202",
-                "page": 2,
-                "excerpt": "UDP truyền datagram không kết nối.",
-            }
-        ],
+        "source_chunk_ids": ["00000000-0000-4000-8000-000000000202"],
         "status": status,
-        "pending_action_id": "00000000-0000-4000-8000-000000000401",
+        "model": "deepseek-chat",
+        "prompt_version": "f2-question-v1",
+        "verified_at": "2026-11-18T08:05:00.000000Z" if status == "VERIFIED" else None,
         "created_at": "2026-11-18T08:00:00.000000Z",
         "updated_at": "2026-11-18T08:05:00.000000Z",
     }

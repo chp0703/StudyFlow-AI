@@ -36,7 +36,7 @@ select ok(
     'anon and authenticated have no direct privileges on quiz_attempts or quiz_responses'
 );
 
--- 2. Seed local test fixtures (2 users, HMAC key, material, DRAFT + VERIFIED + REJECTED questions)
+-- 2. Seed local test fixtures (2 users, HMAC key, material, DRAFT + VERIFIED questions)
 create function pg_temp.b5_seed() returns text
 language plpgsql as $$
 begin
@@ -83,7 +83,7 @@ language sql as $$
                 'request_id', 'b5-req-0001',
                 'message_id', 'b5000000-0000-4000-8000-000000000004',
                 'principal', jsonb_build_object('user_id', p_owner),
-                'received_at', to_char(clock_timestamp() at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
+                'received_at', app_private.iso(clock_timestamp()),
                 'timezone', 'Asia/Ho_Chi_Minh',
                 'locale', 'vi-VN'
             )
@@ -109,8 +109,8 @@ begin
             extensions.digest(convert_to(app_private.canonical_json(p_request - 'attestation'), 'UTF8'), 'sha256'),
             'hex'
         ),
-        'issued_at', to_char(v_stamp at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
-        'expires_at', to_char((v_stamp + interval '60 seconds') at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')
+        'issued_at', app_private.iso(v_stamp),
+        'expires_at', app_private.iso(v_stamp + interval '60 seconds')
     );
     v_payload := rtrim(translate(replace(encode(convert_to(app_private.canonical_json(v_payload_json), 'UTF8'), 'base64'), E'\n', ''), '+/', '-_'), '=');
     return jsonb_set(
@@ -156,6 +156,46 @@ begin
     return v_response;
 end $$;
 
+create function pg_temp.b5_draft(
+    p_qid uuid,
+    p_qtype text default 'MCQ',
+    p_answer text default 'B'
+) returns jsonb
+language sql as $$
+    select jsonb_build_object(
+        'assessment_version', '1.0.0',
+        'question_id', p_qid,
+        'user_id', 'b5000000-0000-4000-8000-000000000001',
+        'conversation_id', 'b5000000-0000-4000-8000-000000000003',
+        'material_id', 'b5000000-0000-4000-8000-000000000101',
+        'version', 1,
+        'topic', 'Mạng máy tính',
+        'question_type', p_qtype,
+        'stem', 'Câu hỏi kiểm tra ' || p_qid::text || '?',
+        'options', case
+            when p_qtype = 'MCQ' then jsonb_build_array(
+                jsonb_build_object('option_id', 'A', 'text', 'UDP'),
+                jsonb_build_object('option_id', 'B', 'text', 'TCP'),
+                jsonb_build_object('option_id', 'C', 'text', 'ICMP'),
+                jsonb_build_object('option_id', 'D', 'text', 'ARP')
+            )
+            else jsonb_build_array(
+                jsonb_build_object('option_id', 'TRUE', 'text', 'Đúng'),
+                jsonb_build_object('option_id', 'FALSE', 'text', 'Sai')
+            )
+        end,
+        'answer_key', p_answer,
+        'explanation', 'Giải thích chuẩn theo trang 1.',
+        'source_chunk_ids', jsonb_build_array('b5000000-0000-4000-8000-000000000201'),
+        'status', 'DRAFT',
+        'model', 'deepseek-chat',
+        'prompt_version', 'f2-question-v1',
+        'verified_at', null,
+        'created_at', '2026-11-18T08:01:00.000000Z',
+        'updated_at', '2026-11-18T08:01:00.000000Z'
+    )
+$$;
+
 -- Store material & verify questions for USER_A
 select is(
     (
@@ -172,7 +212,7 @@ select is(
                         'size_bytes', 120,
                         'sha256', repeat('a', 64),
                         'page_count', 1,
-                        'char_count', 64,
+                        'char_count', length('TCP truyền dữ liệu hướng kết nối, UDP truyền datagram không kết nối.'),
                         'topics', jsonb_build_array('Mạng máy tính'),
                         'chunks', jsonb_build_array(
                             jsonb_build_object(
@@ -197,7 +237,7 @@ select is(
     'store READY material for USER_A'
 );
 
--- Create 3 drafts (Q1, Q2, Q3) in batch 1 and verify Q1, Q2 (leaving Q3 REJECTED), plus batch 2 Q4 left in DRAFT
+-- Create 3 drafts (Q1, Q2, Q3) in batch 1 and verify Q1, Q2, Q3
 select is(
     (
         pg_temp.b5_call(
@@ -209,89 +249,15 @@ select is(
                         'conversation_id', 'b5000000-0000-4000-8000-000000000003',
                         'material_id', 'b5000000-0000-4000-8000-000000000101',
                         'action_id', 'b5000000-0000-4000-8000-000000000401',
+                        'generation_params', jsonb_build_object(
+                            'topic', 'Mạng máy tính',
+                            'question_type', 'MCQ',
+                            'count', 3
+                        ),
                         'drafts', jsonb_build_array(
-                            jsonb_build_object(
-                                'assessment_version', '1.0.0',
-                                'question_id', 'b5000000-0000-4000-8000-000000000301',
-                                'user_id', 'b5000000-0000-4000-8000-000000000001',
-                                'material_id', 'b5000000-0000-4000-8000-000000000101',
-                                'topic', 'Mạng máy tính',
-                                'question_type', 'MCQ',
-                                'stem', 'Giao thức hướng kết nối là gì?',
-                                'options', jsonb_build_array(
-                                    jsonb_build_object('option_id', 'A', 'text', 'UDP'),
-                                    jsonb_build_object('option_id', 'B', 'text', 'TCP'),
-                                    jsonb_build_object('option_id', 'C', 'text', 'ICMP'),
-                                    jsonb_build_object('option_id', 'D', 'text', 'ARP')
-                                ),
-                                'answer_key', 'B',
-                                'explanation', 'TCP hướng kết nối.',
-                                'evidence', jsonb_build_array(
-                                    jsonb_build_object(
-                                        'chunk_id', 'b5000000-0000-4000-8000-000000000201',
-                                        'page', 1,
-                                        'excerpt', 'TCP truyền dữ liệu hướng kết nối'
-                                    )
-                                ),
-                                'status', 'DRAFT',
-                                'pending_action_id', 'b5000000-0000-4000-8000-000000000401',
-                                'created_at', '2026-11-18T08:01:00.000000Z',
-                                'updated_at', '2026-11-18T08:01:00.000000Z'
-                            ),
-                            jsonb_build_object(
-                                'assessment_version', '1.0.0',
-                                'question_id', 'b5000000-0000-4000-8000-000000000302',
-                                'user_id', 'b5000000-0000-4000-8000-000000000001',
-                                'material_id', 'b5000000-0000-4000-8000-000000000101',
-                                'topic', 'Mạng máy tính',
-                                'question_type', 'TRUE_FALSE',
-                                'stem', 'UDP là giao thức không kết nối.',
-                                'options', jsonb_build_array(
-                                    jsonb_build_object('option_id', 'TRUE', 'text', 'Đúng'),
-                                    jsonb_build_object('option_id', 'FALSE', 'text', 'Sai')
-                                ),
-                                'answer_key', 'TRUE',
-                                'explanation', 'UDP truyền datagram không kết nối.',
-                                'evidence', jsonb_build_array(
-                                    jsonb_build_object(
-                                        'chunk_id', 'b5000000-0000-4000-8000-000000000201',
-                                        'page', 1,
-                                        'excerpt', 'UDP truyền datagram không kết nối'
-                                    )
-                                ),
-                                'status', 'DRAFT',
-                                'pending_action_id', 'b5000000-0000-4000-8000-000000000401',
-                                'created_at', '2026-11-18T08:01:00.000000Z',
-                                'updated_at', '2026-11-18T08:01:00.000000Z'
-                            ),
-                            jsonb_build_object(
-                                'assessment_version', '1.0.0',
-                                'question_id', 'b5000000-0000-4000-8000-000000000303',
-                                'user_id', 'b5000000-0000-4000-8000-000000000001',
-                                'material_id', 'b5000000-0000-4000-8000-000000000101',
-                                'topic', 'Mạng máy tính',
-                                'question_type', 'MCQ',
-                                'stem', 'Giao thức nào gửi datagram không kết nối?',
-                                'options', jsonb_build_array(
-                                    jsonb_build_object('option_id', 'A', 'text', 'UDP'),
-                                    jsonb_build_object('option_id', 'B', 'text', 'TCP'),
-                                    jsonb_build_object('option_id', 'C', 'text', 'HTTP'),
-                                    jsonb_build_object('option_id', 'D', 'text', 'FTP')
-                                ),
-                                'answer_key', 'A',
-                                'explanation', 'UDP gửi datagram không kết nối.',
-                                'evidence', jsonb_build_array(
-                                    jsonb_build_object(
-                                        'chunk_id', 'b5000000-0000-4000-8000-000000000201',
-                                        'page', 1,
-                                        'excerpt', 'UDP truyền datagram không kết nối'
-                                    )
-                                ),
-                                'status', 'DRAFT',
-                                'pending_action_id', 'b5000000-0000-4000-8000-000000000401',
-                                'created_at', '2026-11-18T08:01:00.000000Z',
-                                'updated_at', '2026-11-18T08:01:00.000000Z'
-                            )
+                            pg_temp.b5_draft('b5000000-0000-4000-8000-000000000301', 'MCQ', 'B'),
+                            pg_temp.b5_draft('b5000000-0000-4000-8000-000000000302', 'TRUE_FALSE', 'TRUE'),
+                            pg_temp.b5_draft('b5000000-0000-4000-8000-000000000303', 'MCQ', 'A')
                         )
                     ),
                     'b5000000-0000-4000-8000-000000000001',
@@ -364,35 +330,13 @@ select is(
                         'conversation_id', 'b5000000-0000-4000-8000-000000000003',
                         'material_id', 'b5000000-0000-4000-8000-000000000101',
                         'action_id', 'b5000000-0000-4000-8000-000000000402',
+                        'generation_params', jsonb_build_object(
+                            'topic', 'Mạng máy tính',
+                            'question_type', 'MCQ',
+                            'count', 1
+                        ),
                         'drafts', jsonb_build_array(
-                            jsonb_build_object(
-                                'assessment_version', '1.0.0',
-                                'question_id', 'b5000000-0000-4000-8000-000000000304',
-                                'user_id', 'b5000000-0000-4000-8000-000000000001',
-                                'material_id', 'b5000000-0000-4000-8000-000000000101',
-                                'topic', 'Mạng máy tính',
-                                'question_type', 'MCQ',
-                                'stem', 'Câu hỏi nháp chưa xác minh?',
-                                'options', jsonb_build_array(
-                                    jsonb_build_object('option_id', 'A', 'text', 'UDP'),
-                                    jsonb_build_object('option_id', 'B', 'text', 'TCP'),
-                                    jsonb_build_object('option_id', 'C', 'text', 'ICMP'),
-                                    jsonb_build_object('option_id', 'D', 'text', 'ARP')
-                                ),
-                                'answer_key', 'B',
-                                'explanation', 'Giải thích nháp.',
-                                'evidence', jsonb_build_array(
-                                    jsonb_build_object(
-                                        'chunk_id', 'b5000000-0000-4000-8000-000000000201',
-                                        'page', 1,
-                                        'excerpt', 'TCP truyền dữ liệu hướng kết nối'
-                                    )
-                                ),
-                                'status', 'DRAFT',
-                                'pending_action_id', 'b5000000-0000-4000-8000-000000000402',
-                                'created_at', '2026-11-18T08:06:00.000000Z',
-                                'updated_at', '2026-11-18T08:06:00.000000Z'
-                            )
+                            pg_temp.b5_draft('b5000000-0000-4000-8000-000000000304', 'MCQ', 'B')
                         )
                     ),
                     'b5000000-0000-4000-8000-000000000001',
