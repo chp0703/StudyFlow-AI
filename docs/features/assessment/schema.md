@@ -278,7 +278,7 @@ Tất cả các đường dẫn dùng tiền tố `/v1/assessment`, yêu cầu `
 | `save_quiz_response` | `SaveQuizResponseArguments` | `QuizResponse` | `QuizResponseResult` | `false` | `true` |
 | `submit_quiz_attempt` | `SubmitQuizAttemptArguments` | `QuizAttemptSubmissionData` | `QuizAttemptSubmissionResult` | `false` | `true` |
 | `get_topic_stats` | `GetTopicStatsArguments` | `TopicStatsData` | `TopicStatsResult` | `true` | `false` |
-| `create_revision_recommendation` | `CreateRevisionRecommendationArguments` | `RevisionRecommendation` | `RevisionRecommendationResult` | `false` | `true` |
+| `create_revision_recommendation` | `CreateRevisionRecommendationArguments` | `ActionPresentation` | `RevisionRecommendationResult` | `false` | `true` |
 
 ---
 
@@ -293,3 +293,12 @@ Tất cả các đường dẫn dùng tiền tố `/v1/assessment`, yêu cầu `
 | **Backend Handlers** | `backend/app/core/contract.py` (tự động đọc `f1.schema.json`); tương lai: `backend/app/assessment/*`, `backend/app/api/v1/routes.py`, `backend/app/orchestrator/actions.py` | Đã có validator `contract.is_valid(...)` cho mọi schema F2 | B2 (material/chunk), B3–B4 (draft/verify), B5 (attempt/grading), B6 (stats), B7 (recommendation) |
 | **Frontend Types & API Client** | `frontend/src/api/types.ts`, `frontend/src/api/endpoints.ts` | Bổ sung đầy đủ TypeScript DTOs cho F2 `1.0.0` và 9 hàm gọi endpoint `/v1/assessment/*` | FE dùng trực tiếp để mock UI làm bài trắc nghiệm, duyệt câu hỏi và xem thống kê |
 | **Tests** | `backend/tests/unit/test_assessment_contract.py`, `frontend/src/api/assessment.test.ts` | Kiểm tra đóng/mở schema, chống owner injection, kiểm tra bất biến chấm điểm/thống kê và client FE | B2–B7 bổ sung unit tests nghiệp vụ, pgTAP và integration tests |
+
+
+## B7 runtime addendum
+
+The latest implementation is described in README.md. Recommendations use at most
+50 latest eligible submitted attempts, not B6 lifetime totals; source citations are
+capped at 50 distinct wrong-answer chunks. LOW confidence is always used in v1.
+PROPOSED/REJECTED have no candidate; ACCEPTED references a DRAFT/CONFIRMED/CANCELLED
+F1 candidate. Acceptance is a handoff, not task or plan confirmation.

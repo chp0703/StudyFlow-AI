@@ -52,3 +52,27 @@ chunks from incorrect answers. This window can differ from B6 lifetime statistic
 The immutable snapshot always reports LOW confidence and its sample/coverage limits;
 minutes and priority are user choices. No eligible responses or no observed errors
 returns 422 without a recommendation. Creation does not change Planner workload.
+
+
+### Decisions and Planner handoff
+
+`POST /v1/decisions` with the unchanged PENDING_ACTION reference accepts/rejects
+recommendations. Acceptance atomically creates one DRAFT TaskCandidate and a F1
+CREATE_TASK action in AWAITING_CLARIFICATION. It does not save an AcademicTask or
+change the schedule. Rejection creates no candidate. Evidence remains the original
+snapshot even if another quiz is submitted. Cancelling the candidate later leaves
+the recommendation ACCEPTED and the candidate CANCELLED.
+
+To complete that draft, POST `/v1/actions/{action_id}/review` with the existing
+conversation/action version plus both `candidate_patch` (CandidateTaskFields) and
+`expected_candidate_version`. Only fields supplied are merged; null clears a field.
+An explicit date-only deadline is normalized to the next local midnight. Start time
+alone never invents a deadline. Incomplete drafts return NEEDS_CLARIFICATION; complete
+drafts return AWAITING_APPROVAL with a fresh TASK_CANDIDATE reference. Confirm that
+reference separately through `/v1/decisions` to save the task. Planning/plan approval
+remain separate. Ordinary review requests without a patch retain their existing form.
+
+Internal creation arguments contain material/topic, user-selected minutes/priority,
+and stable server IDs. The database generates the evidence and recommendation; the
+result contains ActionPresentation. `decide_revision_recommendation` is a signed,
+non-LLM RPC returning the completed recommendation or F1 draft presentation.

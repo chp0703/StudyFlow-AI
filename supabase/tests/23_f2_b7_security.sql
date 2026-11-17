@@ -1,0 +1,13 @@
+begin;
+select plan(9);
+select has_table('app_private','revision_recommendations','B7 recommendations are durable');
+select ok((select relrowsecurity and relforcerowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='app_private' and c.relname='revision_recommendations'),'B7 FORCE RLS enabled');
+select ok(not has_table_privilege('authenticated','app_private.revision_recommendations','SELECT'),'B7 clients cannot read tables directly');
+select ok(not has_table_privilege('authenticated','app_private.revision_recommendations','INSERT'),'B7 clients cannot inject recommendations');
+select ok(not has_function_privilege('anon','app_api.create_revision_recommendation(jsonb)','EXECUTE'),'B7 creation denies anonymous callers');
+select ok(not has_function_privilege('anon','app_api.decide_revision_recommendation(jsonb)','EXECUTE'),'B7 decisions deny anonymous callers');
+select ok(has_function_privilege('authenticated','app_api.decide_revision_recommendation(jsonb)','EXECUTE'),'B7 authenticated callers can reach signed decision boundary');
+select ok(not app_private.rpc_is_read('create_revision_recommendation'),'B7 creation requires write attestation');
+select ok(not app_private.rpc_is_read('decide_revision_recommendation'),'B7 decisions require write attestation');
+select * from finish();
+rollback;

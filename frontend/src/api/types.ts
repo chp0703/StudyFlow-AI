@@ -569,3 +569,33 @@ export type RevisionRecommendation = {
 
   updated_at: string
 }
+
+export type CandidateTaskFields = {
+  title?: string | null
+
+  description?: string | null
+
+  start_at?: string | null
+
+  available_from_at?: string | null
+
+  deadline_at?: string | null
+
+  deadline_precision?: "DATE" | "DATETIME" | null
+
+  deadline_date?: string | null
+
+  deadline_timezone?: "Asia/Ho_Chi_Minh" | null
+
+  estimated_minutes?: number | null
+
+  priority?: 0.1 | 0.5 | 1 | null
+
+  color?: string | null
+}
+
+export type CandidateReviewPatch = {
+  candidate_patch: CandidateTaskFields
+
+  expected_candidate_version: number
+}

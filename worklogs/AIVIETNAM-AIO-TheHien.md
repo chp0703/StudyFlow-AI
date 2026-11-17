@@ -45,3 +45,9 @@ Sinh câu hỏi từ tài liệu B2, cho người dùng xem câu hỏi và ngu�
 
 - Thêm RPC quyết định nguyên tử, UI reference/digest checks, chuyển PROPOSED sang ACCEPTED/REJECTED; nhận gợi ý chỉ tạo candidate và action F1 cần bổ sung thời gian.
 - 8 unit test B7 PASS; CI DB của phần tạo gợi ý tại 8cbdc2b PASS (clean reset, pgTAP, upgrade, integration, concurrency). Test DB cho quyết định và patch tiếp tục được bổ sung.
+
+## 2026-11-18 — F2 B7: bổ sung task qua review API
+
+- Thêm patch task nguyên tử có action/candidate version, giữ bằng chứng và giới hạn độ tin cậy; chưa đủ thông tin trả NEEDS_CLARIFICATION, đủ mới phát reference xác nhận F1.
+- Đồng bộ client patch/version, tài liệu/OpenAPI; thêm pgTAP security và 5 integration case DB thật (toàn luồng, thiếu dữ liệu, giới hạn 50 lượt/nguồn, race, mất phản hồi). Thêm CI upgrade B6->B7.
+- Local: 132 unit, 72 HTTP acceptance, 82 frontend test, TypeScript/build, contract checker và generator --check PASS. Integration B7 cần CI local Supabase; host không có Docker.

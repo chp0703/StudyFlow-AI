@@ -221,6 +221,22 @@ class ActionProcessor:
         data = self.workflow_context(ctx, conversation, action_id, key, False)
         action = data["selected_action"]
         pending = action["pending_action"]
+        if "candidate_patch" in body:
+            last = (action["last_presentation"] or {}).get("presentation")
+            if last is None:
+                raise Terminal("ENTITY_NOT_FOUND", "Không tìm thấy nội dung task nháp để bổ sung.")
+            self.step(ctx, "record_source_message", {"message": {
+                "message_id": receipt["message_id"], "user_id": ctx.user_id, "conversation_id": conversation,
+                "source": "UI", "role": "USER", "text": "Bổ sung thông tin công việc ôn tập",
+                "received_at": receipt["created_at"]}}, conversation_id=conversation,
+                idempotency_key=child_key(key, "patch-message"), message_id=receipt["message_id"])
+            stored = self.step(ctx, "review_pending_action", {
+                "action_id": action_id, "expected_action_version": body["expected_action_version"],
+                "presentation": last, "candidate_patch": body["candidate_patch"],
+                "expected_candidate_version": body["expected_candidate_version"]},
+                conversation_id=conversation, idempotency_key=child_key(key, "review"),
+                message_id=receipt["message_id"])["data"]
+            return self.candidate_review_reply(ctx, stored)
         if pending["state"] not in AWAITING:
             raise Terminal("STALE_ENTITY_VERSION", "Thao tác này đã kết thúc.")
         last = (action["last_presentation"] or {}).get("presentation") or {}
@@ -237,6 +253,8 @@ class ActionProcessor:
             "action_id": action_id, "expected_action_version": body["expected_action_version"], "presentation": presentation},
             conversation_id=conversation, idempotency_key=child_key(key, "review"), message_id=receipt["message_id"])["data"]
         new = stored["pending_action"]
+        if stored.get("revision_recommendation") is not None and new["missing_fields"]:
+            return self.candidate_review_reply(ctx, stored)
         if stored["candidate"] is not None:
             target = ("TASK_CANDIDATE", stored["candidate"]["candidate_id"], stored["candidate"]["version"])
         elif stored["proposal"] is not None:
@@ -244,6 +262,23 @@ class ActionProcessor:
         else:
             target = ("PENDING_ACTION", new["action_id"], new["version"])
         return 200, self.awaiting_reply(ctx, stored, target)
+
+    def candidate_review_reply(self, ctx, stored):
+        from ..core import contract
+        if not contract.is_valid("ActionPresentation", stored):
+            raise WorkflowError("INTERNAL_ERROR", "Nội dung task nháp không đúng contract.")
+        action = stored["pending_action"]
+        if action["missing_fields"]:
+            prompts = {"title": "Tên công việc là gì?", "estimated_minutes": "Bạn dự kiến cần bao nhiêu phút?",
+                       "start_at": "Bạn muốn bắt đầu khi nào?", "deadline_at": "Bạn muốn hoàn thành trước khi nào?",
+                       "deadline_date": "Hạn hoàn thành là ngày nào?"}
+            questions = [{"field": f, "message": prompts.get(f, f"Cần bổ sung {f}."), "choices": []}
+                         for f in action["missing_fields"]]
+            return 200, reply(ctx.request_id, "NEEDS_CLARIFICATION", "Cần bổ sung thông tin cho task nháp.",
+                              questions=questions, result=_ok(ctx.request_id, "DRAFTED", stored))
+        candidate = stored["candidate"]
+        return 200, self.awaiting_reply(ctx, stored,
+            ("TASK_CANDIDATE", candidate["candidate_id"], candidate["version"]))
 
     def decide(self, ctx, receipt, key, body):
         conversation, ref, decision = body["conversation_id"], body["action_reference"], body["decision"]
