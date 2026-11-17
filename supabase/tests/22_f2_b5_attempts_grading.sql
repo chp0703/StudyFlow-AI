@@ -503,6 +503,21 @@ select is(
     'save_quiz_response persists INVALID response for Q2 with is_correct null'
 );
 
+-- B6: saved but unsubmitted responses are not statistical evidence.
+create function pg_temp.b6_stats(p_material uuid default 'b5000000-0000-4000-8000-000000000101',
+    p_user uuid default 'b5000000-0000-4000-8000-000000000001') returns jsonb
+language sql as $$
+    select pg_temp.b5_call('get_topic_stats',
+        pg_temp.b5_request('get_topic_stats', jsonb_build_object('material_id', p_material), p_user), p_user)
+$$;
+
+select is(pg_temp.b6_stats() #>> '{data,items,0,status}', 'INSUFFICIENT_DATA',
+    'B6 excludes valid saved responses before submission');
+select is(pg_temp.b6_stats() #> '{data,items,0,error_rate}', 'null'::jsonb,
+    'B6 does not interpret missing evidence as zero errors');
+select is(pg_temp.b6_stats() #> '{data,items,0,last_attempt_at}', 'null'::jsonb,
+    'B6 has no last valid attempt before submission');
+
 -- 7. Submit and grade attempt 501 (1 VALID correct, 1 INVALID, 1 OMITTED -> valid_response_count=1, correct=1, incorrect=0, omitted=2, score_percent=100)
 create temporary table b5_submit_res as
 select pg_temp.b5_call(
@@ -601,6 +616,120 @@ select is(
     'STALE_ENTITY_VERSION',
     'save_quiz_response on SUBMITTED attempt fails with STALE_ENTITY_VERSION'
 );
+
+-- B6: aggregate the real B5 fixture, under the authenticated caller's JWT.
+select is(pg_temp.b6_stats() ->> 'outcome', 'READ', 'B6 read needs no write attestation');
+select is(pg_temp.b6_stats() #>> '{data,items,0,valid_response_count}', '1',
+    'B6 excludes INVALID and OMITTED from the denominator');
+select is(pg_temp.b6_stats() #>> '{data,items,0,error_count}', '0', 'B6 correct response is not an error');
+select is((pg_temp.b6_stats() #>> '{data,items,0,error_rate}')::numeric, 0::numeric,
+    'B6 observed zero error rate requires valid evidence');
+select is(pg_temp.b6_stats() #>> '{data,items,0,last_attempt_at}', '2026-11-18T08:30:00.000000Z',
+    'B6 uses submission time of a valid response');
+select is(pg_temp.b6_stats(null) #> '{data,items}', pg_temp.b6_stats() #> '{data,items}',
+    'B6 unfiltered query returns owner material topics');
+select is(pg_temp.b6_stats('b5000000-0000-4000-8000-000000000101',
+    'b5000000-0000-4000-8000-000000000002') #>> '{error,code}', 'ENTITY_NOT_FOUND',
+    'B6 cross-user material fails closed');
+select is(pg_temp.b6_stats('b5000000-0000-4000-8000-000000009999') #>> '{error,code}', 'ENTITY_NOT_FOUND',
+    'B6 nonexistent material has the same error as cross-user material');
+select is(pg_temp.b6_stats(null, 'b5000000-0000-4000-8000-000000000002') #> '{data,items}', '[]'::jsonb,
+    'B6 unfiltered query never exposes other users');
+select ok(not has_function_privilege('anon', 'app_api.get_topic_stats(jsonb)', 'execute'),
+    'B6 anonymous role cannot execute statistics RPC');
+
+-- A second submitted attempt answers Q1 incorrectly. Source links must not multiply responses.
+select is(pg_temp.b5_call('create_quiz_attempt', pg_temp.b5_sign(pg_temp.b5_request(
+    'create_quiz_attempt', jsonb_build_object(
+        'attempt_id', 'b5000000-0000-4000-8000-000000000510',
+        'material_id', 'b5000000-0000-4000-8000-000000000101',
+        'question_ids', jsonb_build_array('b5000000-0000-4000-8000-000000000301'),
+        'origin', 'MANUAL', 'session_outcome_id', null
+    ), p_idem => 'b6-create-wrong-attempt'))) ->> 'outcome', 'COMMITTED', 'B6 create second attempt');
+select is(pg_temp.b5_call('save_quiz_response', pg_temp.b5_sign(pg_temp.b5_request(
+    'save_quiz_response', jsonb_build_object(
+        'attempt_id', 'b5000000-0000-4000-8000-000000000510',
+        'question_id', 'b5000000-0000-4000-8000-000000000301',
+        'selected_option_id', 'A', 'validity', 'VALID'
+    ), p_idem => 'b6-save-wrong-response'))) ->> 'outcome', 'COMMITTED', 'B6 save wrong valid answer');
+
+select is(pg_temp.b5_call('submit_quiz_attempt', pg_temp.b5_sign(pg_temp.b5_request(
+    'submit_quiz_attempt', jsonb_build_object(
+        'attempt_id', 'b5000000-0000-4000-8000-000000000510',
+        'graded_responses', jsonb_build_array(jsonb_build_object(
+            'response_id', 'b5000000-0000-4000-8000-000000000610',
+            'attempt_id', 'b5000000-0000-4000-8000-000000000510',
+            'question_id', 'b5000000-0000-4000-8000-000000000301',
+            'user_id', 'b5000000-0000-4000-8000-000000000001',
+            'selected_option_id', 'A', 'validity', 'VALID', 'is_correct', false,
+            'graded_at', '2026-11-18T08:40:00.000000Z',
+            'created_at', '2026-11-18T08:35:00.000000Z',
+            'updated_at', '2026-11-18T08:40:00.000000Z'
+        )),
+        'valid_response_count', 1, 'correct_count', 0, 'incorrect_count', 1,
+        'omitted_count', 0, 'score_percent', 0, 'submitted_at', '2026-11-18T08:40:00.000000Z'
+    ), p_idem => 'b6-submit-wrong-attempt'))) ->> 'outcome', 'COMMITTED', 'B6 submit wrong valid answer');
+select is(pg_temp.b6_stats() #>> '{data,items,0,valid_response_count}', '2', 'B6 counts across submitted attempts');
+select is(pg_temp.b6_stats() #>> '{data,items,0,error_count}', '1', 'B6 counts only valid incorrect answers as errors');
+select is((pg_temp.b6_stats() #>> '{data,items,0,error_rate}')::numeric, 0.5::numeric, 'B6 error rate is errors divided by valid responses');
+select is(pg_temp.b6_stats() #>> '{data,items,0,last_attempt_at}', '2026-11-18T08:40:00.000000Z', 'B6 latest valid submission wins');
+
+-- Submit only an OMITTED or INVALID response; neither changes the evidence or timestamp.
+create function pg_temp.b6_submit_excluded(p_attempt uuid, p_selected text) returns jsonb
+language plpgsql as $$
+declare
+    v_result jsonb;
+    v_validity text := case when p_selected is null then 'OMITTED' else 'INVALID' end;
+    v_time text := '2026-11-18T08:50:00.000000Z';
+begin
+    v_result := pg_temp.b5_call('create_quiz_attempt', pg_temp.b5_sign(pg_temp.b5_request(
+        'create_quiz_attempt', jsonb_build_object(
+            'attempt_id', p_attempt, 'material_id', 'b5000000-0000-4000-8000-000000000101',
+            'question_ids', jsonb_build_array('b5000000-0000-4000-8000-000000000301'),
+            'origin', 'MANUAL', 'session_outcome_id', null), p_idem => 'b6-create-' || p_attempt)));
+    if v_result ->> 'outcome' <> 'COMMITTED' then return v_result; end if;
+    v_result := pg_temp.b5_call('save_quiz_response', pg_temp.b5_sign(pg_temp.b5_request(
+        'save_quiz_response', jsonb_build_object(
+            'attempt_id', p_attempt, 'question_id', 'b5000000-0000-4000-8000-000000000301',
+            'selected_option_id', p_selected, 'validity', v_validity), p_idem => 'b6-save-' || p_attempt)));
+    if v_result ->> 'outcome' <> 'COMMITTED' then return v_result; end if;
+    return pg_temp.b5_call('submit_quiz_attempt', pg_temp.b5_sign(pg_temp.b5_request(
+        'submit_quiz_attempt', jsonb_build_object(
+            'attempt_id', p_attempt,
+            'graded_responses', jsonb_build_array(jsonb_build_object(
+                'response_id', p_attempt, 'attempt_id', p_attempt,
+                'question_id', 'b5000000-0000-4000-8000-000000000301',
+                'user_id', 'b5000000-0000-4000-8000-000000000001',
+                'selected_option_id', p_selected, 'validity', v_validity, 'is_correct', null,
+                'graded_at', v_time, 'created_at', v_time, 'updated_at', v_time)),
+            'valid_response_count', 0, 'correct_count', 0, 'incorrect_count', 0,
+            'omitted_count', 1, 'score_percent', null, 'submitted_at', v_time
+        ), p_idem => 'b6-submit-' || p_attempt)));
+end $$;
+select is(pg_temp.b6_submit_excluded('b5000000-0000-4000-8000-000000000520', null) ->> 'outcome',
+    'COMMITTED', 'B6 submit all-omitted attempt');
+select is(pg_temp.b6_submit_excluded('b5000000-0000-4000-8000-000000000521', 'Z') ->> 'outcome',
+    'COMMITTED', 'B6 submit all-invalid attempt');
+select is(pg_temp.b6_stats() #>> '{data,items,0,valid_response_count}', '2', 'B6 excluded-only submissions do not increase sample size');
+select is(pg_temp.b6_stats() #>> '{data,items,0,last_attempt_at}', '2026-11-18T08:40:00.000000Z', 'B6 excluded-only submissions do not advance last valid attempt');
+
+-- Same topic in another material remains separate and explicitly has insufficient data.
+select is(pg_temp.b5_call('store_assessment_material', pg_temp.b5_sign(pg_temp.b5_request(
+    'store_assessment_material', jsonb_build_object(
+        'material_id', 'b5000000-0000-4000-8000-000000000102',
+        'conversation_id', 'b5000000-0000-4000-8000-000000000003',
+        'filename', 'mang-2.md', 'mime_type', 'text/markdown', 'size_bytes', 3,
+        'sha256', repeat('b', 64), 'page_count', 1, 'char_count', 3,
+        'topics', jsonb_build_array('Mạng máy tính'), 'chunks', jsonb_build_array(jsonb_build_object(
+            'chunk_id', 'b5000000-0000-4000-8000-000000000202',
+            'material_id', 'b5000000-0000-4000-8000-000000000102',
+            'user_id', 'b5000000-0000-4000-8000-000000000001',
+            'page', 1, 'topic', 'Mạng máy tính', 'chunk_index', 0, 'text', 'TCP',
+            'created_at', '2026-11-18T08:00:00.000000Z'))
+    ), p_idem => 'b6-store-second-material'))) ->> 'outcome', 'COMMITTED', 'B6 store same topic in second material');
+select is(jsonb_array_length(pg_temp.b6_stats(null) #> '{data,items}'), 2, 'B6 does not merge same topic across materials');
+select is(pg_temp.b6_stats('b5000000-0000-4000-8000-000000000102') #>> '{data,items,0,status}',
+    'INSUFFICIENT_DATA', 'B6 never borrows evidence from another material');
 
 select * from finish();
 rollback;

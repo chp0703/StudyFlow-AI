@@ -224,6 +224,21 @@ class AttemptsLocalSupabaseIntegrationTests(unittest.TestCase):
             self.assertEqual(sub_data["attempt"]["omitted_count"], 1)
             self.assertEqual(sub_data["attempt"]["score_percent"], 100)
 
+            # B6 reads persisted grades, including after the backend process restarts.
+            with self._app_with_llm(fake_llm) as fresh_app:
+                stats = fresh_app.get(
+                    "/v1/assessment/topics/stats", params={"material_id": material_id}, headers=f.auth("a")
+                )
+                self.assertEqual(stats.status_code, 200, stats.text)
+                self.assertTrue(contract.is_valid("TopicStatsResult", stats.json()))
+                item = stats.json()["data"]["items"][0]
+                self.assertEqual((item["valid_response_count"], item["error_count"], item["error_rate"]), (1, 0, 0))
+                self.assertEqual(item["status"], "AVAILABLE")
+                foreign = fresh_app.get(
+                    "/v1/assessment/topics/stats", params={"material_id": material_id}, headers=f.auth("b")
+                )
+                self.assertEqual(foreign.status_code, 404, foreign.text)
+
             # Saving response after submit fails with 409
             late_save = self._put(
                 app,

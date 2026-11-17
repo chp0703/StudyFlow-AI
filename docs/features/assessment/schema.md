@@ -198,6 +198,10 @@ last_attempt_at: timestamp?
   - Chỉ tính trên các `QuizResponse` có `validity = VALID` thuộc các `QuizAttempt` đã `SUBMITTED`.
   - Nếu `valid_response_count = 0`: `status` bắt buộc là `INSUFFICIENT_DATA`, `error_count = 0`, `error_rate = null`. Tuyệt đối không suy diễn thành thạo hay trả `error_rate = 0`.
   - Nếu `valid_response_count > 0`: `status` bắt buộc là `AVAILABLE`, `0 <= error_count <= valid_response_count`, và `error_rate = error_count / valid_response_count` (trong đoạn `[0, 1]`).
+  - B6 đọc trực tiếp từ database qua `app_api.get_topic_stats`, không phụ thuộc cache của tiến trình chấm bài. Mỗi cặp `(material_id, topic)` của tài liệu `READY` có một dòng, kể cả khi chưa có bài làm; cùng tên chủ đề ở hai tài liệu không bị gộp.
+  - `last_attempt_at` là `submitted_at` mới nhất có response hợp lệ đã chấm của chủ đề; bằng `null` khi chưa có dữ liệu hợp lệ. Bài chưa nộp và bài chỉ có `OMITTED`/`INVALID` không làm thay đổi mốc này.
+  - `material_id` bị bỏ qua trả tất cả tài liệu của JWT hiện tại; người dùng chưa có tài liệu nhận `items: []`. ID tài liệu không tồn tại hoặc thuộc người khác cùng trả `404 ENTITY_NOT_FOUND`.
+  - Thống kê chỉ mô tả tỷ lệ lỗi quan sát được; `AVAILABLE` không phải mức thành thạo, không sinh gợi ý B7 hay thay đổi Planner.
 
 ### 2.7. `RevisionRecommendation` — Gợi ý ôn tập có bằng chứng (`app_private.revision_recommendations`)
 

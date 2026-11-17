@@ -17,6 +17,14 @@ This feature owns source-grounded question preparation, verified answer keys, qu
 - Contract extension overview (`1.0.0`): [contracts/ASSESSMENT.md](../../../contracts/ASSESSMENT.md)
 - OpenAPI 3.1 specification: [contracts/assessment-openapi.yaml](../../../contracts/assessment-openapi.yaml)
 
+## Topic Statistics (B6)
+
+- `GET /v1/assessment/topics/stats?material_id=<uuid>` uses the existing `TopicStatsResult` contract; omit `material_id` to read all of the caller's materials. Authentication is required; `Idempotency-Key` is not.
+- Migration `202611190001_f2_b6_topic_stats.sql` adds the read-only `app_api.get_topic_stats` RPC. It reads durable grades under the caller's JWT and existing FORCE RLS policies, including after a backend restart.
+- Each ready material/topic has a separate item. Only graded `VALID` responses in `SUBMITTED` attempts against `VERIFIED` questions contribute to counts, error rate and latest valid submission time. Empty evidence returns `INSUFFICIENT_DATA`, zero counts and null rate/time.
+- Missing and foreign material IDs both return `404 ENTITY_NOT_FOUND`. Results describe observed errors without inferring mastery or creating Planner actions.
+- Verification: `backend/tests/unit/test_topic_stats.py`, `backend/tests/acceptance_api_sol/test_topic_stats_http.py`, and B6 assertions in `supabase/tests/22_f2_b5_attempts_grading.sql` and `backend/tests/integration/test_attempts_local_supabase.py`.
+
 ## Question Generation & Verification Bounds (B3 + B4)
 
 - Configuration bounds (`backend/app/core/config.py`):
