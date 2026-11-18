@@ -385,7 +385,7 @@ def main(argv: list[str] | None = None) -> int:
     result = {"offline": cmd_offline, "generate": cmd_generate, "score": cmd_score,
               "retrieval": cmd_retrieval, "retrieval-local": cmd_retrieval_local, "judge": cmd_judge, "vmlu-mqa": cmd_vmlu_mqa}[args.command](args)
     write_json(Path(args.output), result)
-    print(json.dumps({k: v for k, v in result.items() if k not in ("outcomes", "details")}, ensure_ascii=False))
+    print(json.dumps({k: v for k, v in result.items() if k not in ("outcomes", "details")}))  # ASCII-safe console
     return 0
 
 
