@@ -12,6 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA = ROOT / "contracts" / "schemas" / "f1.schema.json"
+# Migrations are append-only: older generated files (e.g. 202611170001_*) stay as history; only TARGET is checked.
 TARGET = ROOT / "supabase" / "migrations" / "202611200001_f2_b5_context_contract_schema.sql"
 
 
