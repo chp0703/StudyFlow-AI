@@ -1,0 +1,110 @@
+.topbar,
+.sidebar {
+  box-shadow: 0 8px 32px -18px #51406d50;
+}
+
+.nav-item.active {
+  background: linear-gradient(105deg, var(--pastel-lavender), #f9f4ff);
+  color: var(--indigo);
+}
+
+.home-layout .assistant-shell {
+  background: var(--bg-card-solid);
+}
+
+.home-layout .assistant-shell.is-empty {
+  background:
+    radial-gradient(ellipse at 52% 37%, #eadcff 0%, transparent 50%),
+    radial-gradient(ellipse at 98% 5%, var(--pastel-blush), transparent 45%),
+    radial-gradient(ellipse at 0 100%, var(--pastel-mint), transparent 45%),
+    #fdfaff;
+}
+
+.assistant-welcome::before {
+  content: "";
+  display: block;
+  width: 62px;
+  height: 62px;
+  margin: 0 auto 18px;
+  border: 1px solid #fff;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 32% 28%, white, transparent 26%),
+    linear-gradient(145deg, #d9c4ff, #ecc3e5 72%, #ffe0c9);
+  box-shadow: 0 10px 25px #674a9733;
+  transform: rotate(-10deg);
+}
+
+@media (max-height: 560px) {
+  .assistant-welcome::before {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 10px;
+    border-radius: 14px;
+  }
+}
+
+.assistant-composer {
+  box-shadow: 0 12px 34px -16px #4d397953;
+}
+
+.from-user .assistant-bubble {
+  background: var(--pastel-lavender);
+  border-color: var(--border);
+}
+
+.summary-blue {
+  --summary-tint: var(--pastel-mint);
+  --summary-ink: #24654e;
+}
+
+.summary-rose {
+  --summary-tint: var(--pastel-blush);
+  --summary-ink: #913555;
+}
+
+.summary-purple {
+  --summary-tint: var(--pastel-lavender);
+  --summary-ink: var(--indigo);
+}
+
+.home-summary .summary-card {
+  background: linear-gradient(115deg, var(--summary-tint), #fff 92%);
+  box-shadow: 0 8px 24px -16px #4d39794d;
+}
+
+.home-summary .summary-icon {
+  background: color-mix(in srgb, var(--summary-tint) 78%, var(--summary-ink));
+  color: var(--summary-ink);
+}
+
+.planner-calendar > .card-heading,
+.study-quiz-card > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-lavender), #fff 85%);
+}
+
+.study-materials-card > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-mint), #fff 85%);
+}
+
+.study-qa-card > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-peach), #fff 85%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .assistant-welcome::before {
+    animation: welcome-float 4.5s ease-in-out 3;
+  }
+
+  @keyframes welcome-float {
+    50% {
+      transform: translateY(-6px) rotate(5deg);
+    }
+  }
+}
+
+@media (forced-colors: active) {
+  .assistant-welcome::before {
+    display: none;
+  }
+}
