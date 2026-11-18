@@ -528,8 +528,9 @@
 - Thêm `_fill_defaults` trong `extractor.py`: server điền `valid_from` (hôm nay) cho lịch lặp và `view=CURRENT` cho GET khi mô hình bỏ sót; thêm test trong `backend/tests/unit/test_extractor.py`.
 - Thêm `backend/tests/fixtures/nlu_heldout2_vi.json` (100 ca) và chạy một lần.
 - Cập nhật `docs/features/planner/evaluation/README.md` (lệnh live, bảng kết quả, giới hạn diễn giải) và ánh xạ priority trong `annotation-guide.md`; lưu kết quả vào `results/nlu-*.json`.
+- Chạy local (Supabase local, backend, frontend) và sửa `backend/app/orchestrator/chat.py`: `operation_for` bù các khóa nullable còn thiếu của cửa sổ rảnh/bận để không bị contract từ chối; thêm `backend/tests/unit/test_chat_window_defaults.py`.
 
-**Kết quả:** nhánh `test/f1-eval-benchmarks`; 97 backend unit test pass. NLU worst-run: dev 1 100%, dev 2 96,8%, held-out 1 70%, held-out 2 93% (hai bộ held-out chưa đạt ngưỡng 95%).
+**Kết quả:** nhánh `test/f1-eval-benchmarks`; 99 backend unit test pass; thử qua API local: "Mỗi thứ sáu bận 7h-9h", "Ngày mai rảnh từ 8h đến 11h" và yêu cầu tối đa 45 phút đều vào hàng chờ xác nhận. NLU worst-run: dev 1 100%, dev 2 96,8%, held-out 1 70%, held-out 2 93% (hai bộ held-out chưa đạt ngưỡng 95%).
 
 **Ghi chú**
 

@@ -252,8 +252,11 @@ class ChatProcessor:
         if kind in ("SET_AVAILABILITY", "SET_BUSY_INTERVAL"):
             operation = INTENT_TO_OPERATION[kind]
             window = dict(slots["window"]) if isinstance(slots.get("window"), dict) else slots.get("window")
-            if isinstance(window, dict) and window.get("timezone") is None:
-                window["timezone"] = PRODUCT_TIMEZONE
+            if isinstance(window, dict):
+                # Contract requires every window key (nullable); the model only returns the ones it has a value for.
+                window = {key: None for key in WINDOW_KEYS} | window
+                if window.get("timezone") is None:
+                    window["timezone"] = PRODUCT_TIMEZONE
             arguments = {"change_type": slots.get("change_type", "ADD"), "window_id": None,
                          "expected_window_version": None, "window": window}
             return operation, arguments if arguments["change_type"] == "ADD" and contract.is_valid(f"{operation}Arguments", arguments) else None
@@ -375,5 +378,7 @@ class ChatProcessor:
         return "Bỏ qua một bước vì bước trước chưa hoàn tất.", None
 
 
+WINDOW_KEYS = ("kind", "label", "recurrence", "timezone", "start_at", "end_at", "weekday",
+               "start_time", "end_time", "valid_from", "valid_until")
 INTENT_TO_OPERATION = {"SET_AVAILABILITY": "set_availability", "SET_BUSY_INTERVAL": "set_busy_interval"}
 _ = (APPROVAL_OPERATIONS, INTENT)
