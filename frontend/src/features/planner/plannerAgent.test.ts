@@ -128,3 +128,21 @@ test("preserves a requested non-round demo start exactly", () => {
   )
   assert.equal(overlap.tasks[1].hour, 11)
 })
+
+test("demo task colors survive creation and automatic scheduling", () => {
+  const result = runPlannerCommand(
+    "tạo công việc Bài tập hạn 31/12/2099, màu #c69214",
+    [],
+  )
+  assert.equal(result.tasks[0].color, "#C69214")
+
+  const scheduled = runPlannerCommand("lập kế hoạch", result.tasks)
+  assert.equal(scheduled.tasks[0].color, "#C69214")
+
+  const direct = runPlannerCommand(
+    "thêm Ôn bài hôm nay lúc 9h, màu #6C5CE7",
+    [],
+  )
+  assert.equal(direct.tasks[0].title, "Ôn bài")
+  assert.equal(direct.tasks[0].color, "#6C5CE7")
+})

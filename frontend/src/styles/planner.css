@@ -325,32 +325,26 @@
   outline-offset: 1px;
   border-color: var(--color-primary);
 }
-.planner-clarification-colors {
+.task-color-picker {
+  display: grid;
+  gap: 4px;
+  margin-block: 4px 8px;
+}
+.task-color-control {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
 }
-.planner-clarification-color {
-  display: inline-grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 2px solid transparent;
-  border-radius: 999px;
-  color: #fff;
-  cursor: pointer;
-  transition: transform 0.14s ease, box-shadow 0.14s ease;
+.task-color-control select {
+  min-width: 0;
 }
-.planner-clarification-color:hover {
-  transform: scale(1.06);
-}
-.planner-clarification-color.is-selected {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-ink);
-}
-.planner-clarification-color:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+.task-color-swatch {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 1px solid var(--color-control);
+  border-radius: 50%;
+  background: var(--color-info-bg);
 }
 .planner-clarification-choices {
   display: flex;

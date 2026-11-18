@@ -14,6 +14,8 @@ import type { PlannerFeedback } from "./usePlanner"
 
 import type { PlannerClarification } from "./clarification"
 
+import TaskColorPicker from "./TaskColorPicker"
+
 import PlannerClarificationPopup from "./PlannerClarificationPopup"
 
 import { composerKeyAction } from "./composerKeyboard"
@@ -83,7 +85,7 @@ export default function PlannerCommandComposer({
 
   setInput: (value: string) => void
 
-  send: () => void
+  send: (color?: string) => void
 
   busy: boolean
 
@@ -100,6 +102,10 @@ export default function PlannerCommandComposer({
   textareaRef: RefObject<HTMLTextAreaElement | null>
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [color, setColor] = useState("")
+  const isTaskCommand = /^(?:tạo|thêm|lên lịch|đặt)(?:\s|$)/iu.test(
+    input.trim(),
+  )
 
   const composing = useRef(false)
 
@@ -112,7 +118,7 @@ export default function PlannerCommandComposer({
   const submit = () => {
     if (!input.trim() || busy) return
 
-    send()
+    send(isTaskCommand ? color || undefined : undefined)
   }
 
   const keyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -200,6 +206,13 @@ export default function PlannerCommandComposer({
         </div>
         {expanded && (
           <div className="planner-command-details">
+            {isTaskCommand && (
+              <TaskColorPicker
+                color={color}
+                onChange={setColor}
+                disabled={busy}
+              />
+            )}
             <div
               className="planner-command-suggestions"
               aria-label="Lệnh gợi ý"

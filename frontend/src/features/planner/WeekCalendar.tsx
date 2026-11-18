@@ -1,4 +1,5 @@
-import type { RefObject } from "react"
+import { TASK_COLOR_OPTIONS } from "./clarification.ts"
+import type { CSSProperties, RefObject } from "react"
 import type { Task } from "../../types/task"
 import type { TaskChange, TimeWindow } from "../../types/planner"
 import type { CalendarDisplayRanges } from "./calendarDisplay"
@@ -187,6 +188,13 @@ export default function WeekCalendar({
                       event.effort,
                       position.visibleMinutes,
                     )
+                    const color =
+                      event.color && /^#[0-9a-f]{6}$/iu.test(event.color)
+                        ? event.color
+                        : undefined
+                    const colorLabel = TASK_COLOR_OPTIONS.find(
+                      (option) => option.value === color?.toUpperCase(),
+                    )?.label
                     return (
                       <div
                         key={event.id}
@@ -205,11 +213,21 @@ export default function WeekCalendar({
                               : ""
                         }`}
                         data-task-id={event.id}
-                        style={{
-                          top: (from - gridFrom + position.top) * pxPerMinute,
-                          height: Math.max(28, duration * pxPerMinute),
-                        }}
-                        title={`${event.title} · ${event.time}`}
+                        style={
+                          {
+                            top: (from - gridFrom + position.top) * pxPerMinute,
+                            height: Math.max(28, duration * pxPerMinute),
+                            ...(color
+                              ? {
+                                  "--evt": color,
+                                  "--evt-bg": `color-mix(in srgb, ${color} 15%, white)`,
+                                }
+                              : {}),
+                          } as CSSProperties
+                        }
+                        title={[event.title, event.time, colorLabel]
+                          .filter(Boolean)
+                          .join(" · ")}
                         tabIndex={0}
                       >
                         <strong>{event.title}</strong>
