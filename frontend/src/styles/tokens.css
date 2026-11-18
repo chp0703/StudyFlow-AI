@@ -2,31 +2,52 @@
 /* StudyFlow AI — Bảng màu và biến thiết kế */
 :root {
   /* Bảng màu yêu cầu */
-  --primary: #202020;
-  --indigo: #111111;
+  --primary: #5846aa;
+  --indigo: #453489;
   --purple: #8b5cf6;
   --pink: #ff6b81;
   --orange: #ff9f43;
   --yellow: #ffe066;
   --teal: #22b8a7;
 
-  --text-primary: #171717;
-  --text-secondary: #555555;
-  --background: #fafafa;
-  --border: #dedede;
+  --text-primary: #27213e;
+  --text-secondary: #615b74;
+  --background: #faf7fc;
+  --border: #e7dff0;
 
-  --gray-light: #f9f9f9;
-  --gray-surface: #ededed;
-  --gray-deep: #e4e4e4;
+  --pastel-coral: #ffdbdb;
+  --pastel-lemon: #fff0b9;
+  --pastel-aqua: #d8f3f1;
+  --pastel-sky: #dceaff;
+  --pastel-periwinkle: #e2e3ff;
+  --pastel-lavender: #eee4ff;
+  --pastel-blush: #fce4ed;
+  --pastel-mint: #dff4e9;
+  --pastel-peach: #ffeddb;
+  --pastel-rainbow: linear-gradient(
+    110deg,
+    var(--pastel-coral),
+    var(--pastel-peach),
+    var(--pastel-lemon),
+    var(--pastel-mint),
+    var(--pastel-aqua),
+    var(--pastel-sky),
+    var(--pastel-periwinkle),
+    var(--pastel-lavender),
+    var(--pastel-blush)
+  );
   --bg-card: rgba(255, 255, 255, 0.94);
   --bg-card-solid: #ffffff;
 
-  --bg-ambient: linear-gradient(135deg, var(--gray-surface), var(--gray-light) 65%, var(--background));
-  --gradient-brand: linear-gradient(115deg, #151515, #444444);
+  --bg-ambient:
+    linear-gradient(#ffffff70, #ffffff70),
+    var(--pastel-rainbow);
+
+  --gradient-brand: linear-gradient(115deg, #4e469d, #663eb0 58%, #913f79);
 
   /* Biến thiết kế StudyFlow ánh xạ theo bảng màu */
   --sf-primary-blue: var(--primary);
-  --sf-sky-blue: #666666;
+  --sf-sky-blue: #7c8df7;
   --sf-deep-navy: var(--text-primary);
   --sf-muted-slate: var(--text-secondary);
   --sf-soft-background: var(--background);
@@ -50,7 +71,7 @@
   --color-control: var(--text-secondary);
   --color-focus: var(--indigo);
   --color-surface: var(--bg-card);
-  --color-info-bg: var(--gray-surface);
+  --color-info-bg: var(--pastel-lavender);
   --color-info-text: var(--indigo);
   --color-warning-bg: #fff8f0;
   --color-warning-text: #b45309;

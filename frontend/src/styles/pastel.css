@@ -1,16 +1,31 @@
 .topbar,
 .sidebar {
-  box-shadow: 0 8px 32px -18px #00000030;
+  box-shadow: 0 8px 32px -18px #51406d50;
 }
 
 .nav-item.active {
-  background: linear-gradient(105deg, var(--gray-surface), #fff);
-  color: var(--indigo);
-  box-shadow: inset 3px 0 0 var(--indigo);
+  background: linear-gradient(105deg, var(--nav-tint), #fff);
+  color: var(--nav-ink);
+  box-shadow: inset 3px 0 0 var(--nav-ink);
 }
 
-.nav-item[data-page] > svg {
-  color: var(--indigo);
+.nav-item > svg {
+  color: var(--nav-ink);
+}
+
+.nav-item[data-page="Assistant"] {
+  --nav-tint: var(--pastel-lavender);
+  --nav-ink: var(--indigo);
+}
+
+.nav-item[data-page="Planner"] {
+  --nav-tint: var(--pastel-sky);
+  --nav-ink: #254c88;
+}
+
+.nav-item[data-page="Study"] {
+  --nav-tint: var(--pastel-mint);
+  --nav-ink: #24654e;
 }
 
 .home-layout .assistant-shell {
@@ -18,7 +33,9 @@
 }
 
 .home-layout .assistant-shell.is-empty {
-  background: radial-gradient(ellipse at center, var(--gray-light), var(--gray-deep));
+  background:
+    radial-gradient(ellipse at center, #ffffffa8, transparent 72%),
+    var(--pastel-rainbow);
 }
 
 .assistant-welcome-logo {
@@ -37,28 +54,57 @@
 }
 
 .assistant-composer {
-  box-shadow: 0 12px 34px -16px #00000038;
+  box-shadow: 0 12px 34px -16px #4d397953;
 }
 
 .from-user .assistant-bubble {
-  background: var(--gray-surface);
+  background: var(--pastel-lavender);
   border-color: var(--border);
 }
 
+.summary-blue {
+  --summary-tint: var(--pastel-sky);
+  --summary-ink: #254c88;
+}
+
+.summary-rose {
+  --summary-tint: var(--pastel-coral);
+  --summary-ink: #913555;
+}
+
+.summary-purple {
+  --summary-tint: var(--pastel-lemon);
+  --summary-ink: #714d17;
+}
+
 .home-summary .summary-card {
-  background: linear-gradient(115deg, var(--gray-surface), #fff 92%);
-  box-shadow: 0 8px 24px -16px #00000030;
+  background: linear-gradient(115deg, var(--summary-tint), #fff 92%);
+  box-shadow: 0 8px 24px -16px #4d39794d;
 }
 
-.home-summary .summary-card .summary-icon {
-  background: var(--gray-deep);
-  color: var(--indigo);
+.home-summary .summary-icon {
+  background: color-mix(in srgb, var(--summary-tint) 78%, var(--summary-ink));
+  color: var(--summary-ink);
 }
 
-.planner-calendar > .card-heading,
-.task-panel > .card-heading,
-.study-card > .card-heading {
-  background: linear-gradient(110deg, var(--gray-surface), #fff 85%);
+.planner-calendar > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-sky), #fff 85%);
+}
+
+.task-panel > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-periwinkle), #fff 85%);
+}
+
+.study-quiz-card > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-lavender), #fff 85%);
+}
+
+.study-materials-card > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-aqua), #fff 85%);
+}
+
+.study-qa-card > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-peach), #fff 85%);
 }
 
 @media (prefers-reduced-motion: no-preference) {
