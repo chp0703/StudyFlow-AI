@@ -2,14 +2,14 @@
 
 StudyFlow AI is a student-controlled learning workspace with three connected features: Intelligent Academic Planner, Learning Assessment & Adaptive Revision, and Daily AI Learning.
 
-The repository currently contains the implemented Planner foundation: React frontend, FastAPI backend, deterministic scheduler, shared contract, Supabase migrations and automated acceptance tests. Assessment and Daily Learning are part of the current product scope; their requirements are defined and their implementation remains pending.
+The repository contains the implemented Planner foundation and Assessment backend: React frontend, FastAPI, deterministic scheduling and grading, shared contracts, Supabase migrations and automated acceptance tests. Daily Learning remains in the documented product scope but is not implemented yet.
 
 ## Product scope
 
 | Feature | Purpose | Status |
 |---|---|---|
 | Intelligent Academic Planner | Tasks, personalized working time, deterministic plans and approval | Foundation implemented |
-| Learning Assessment & Adaptive Revision | Verified quizzes, deterministic grading and revision recommendations | Requirements defined |
+| Learning Assessment & Adaptive Revision | Verified quizzes, deterministic grading and revision recommendations | Backend implemented |
 | Daily AI Learning | Source-grounded explanations, hints and confirmed session outcomes | Requirements defined |
 
 ## Repository map
@@ -60,7 +60,7 @@ uvicorn backend.app.main:create_app --factory --port 8000
 Configure the variables documented in [.env.example](.env.example). Register a local RPC signing key using
 `supabase/scripts/register_dev_key.sql`. Keep signing secrets and API keys outside Git.
 
-The current API exposes the eight Planner endpoints declared in `contracts/openapi.yaml`. Authentication uses Supabase JWTs, database access goes through signed RPC envelopes, and the scheduler remains deterministic. The technical `F1` identifiers remain for compatibility with the implemented Planner contract.
+The API exposes the Planner endpoints in `contracts/openapi.yaml`, source ingestion, and the nine Assessment endpoints in `contracts/assessment-openapi.yaml`. Authentication uses Supabase JWTs, database access goes through signed RPC envelopes, and scheduling and grading remain deterministic. The technical `F1` identifiers remain for compatibility with the Planner contract.
 
 ## Verification
 

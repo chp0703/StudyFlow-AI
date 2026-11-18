@@ -420,6 +420,15 @@
           "llm_callable": false
         },
         {
+          "rpc": "get_quiz_attempt_context",
+          "arguments_schema": "GetQuizAttemptContextArguments",
+          "data_schema": "QuizAttemptContextData",
+          "result_schema": "QuizAttemptContextResult",
+          "read_only": true,
+          "attestation_required": false,
+          "llm_callable": false
+        },
+        {
           "rpc": "save_quiz_response",
           "arguments_schema": "SaveQuizResponseArguments",
           "data_schema": "QuizResponse",
@@ -449,6 +458,15 @@
         {
           "rpc": "create_revision_recommendation",
           "arguments_schema": "CreateRevisionRecommendationArguments",
+          "data_schema": "RevisionRecommendation",
+          "result_schema": "RevisionRecommendationResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "decide_revision_recommendation",
+          "arguments_schema": "DecideRevisionRecommendationArguments",
           "data_schema": "RevisionRecommendation",
           "result_schema": "RevisionRecommendationResult",
           "read_only": false,

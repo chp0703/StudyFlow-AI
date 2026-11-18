@@ -34,7 +34,9 @@
       "enum": [
         "create_question_drafts",
         "verify_question_drafts",
-        "list_questions"
+        "list_questions",
+        "save_quiz_response",
+        "submit_quiz_attempt"
       ]
     },
     "Issue": {
@@ -1942,7 +1944,8 @@
             "SET_SCHEDULING_PREFERENCES",
             "GENERATE_STUDY_PLAN",
             "GET_STUDY_PLAN",
-            "VERIFY_QUESTION_DRAFTS"
+                                                   "VERIFY_QUESTION_DRAFTS",
+                                                   "REVIEW_REVISION_RECOMMENDATION"
           ]
         },
         "state": {
@@ -5072,6 +5075,9 @@
                 },
                 {
                   "$ref": "#/$defs/QuestionDraftBatchData"
+                },
+                {
+                  "$ref": "#/$defs/RevisionRecommendationPresentationData"
                 }
               ]
             },
@@ -5162,6 +5168,9 @@
                 },
                 {
                   "$ref": "#/$defs/QuestionDraftBatchData"
+                },
+                {
+                  "$ref": "#/$defs/RevisionRecommendation"
                 }
               ]
             },
@@ -6520,6 +6529,18 @@
               "$ref": "#/$defs/ToolResult"
             },
             {
+              "$ref": "#/$defs/QuestionDraftBatchResult"
+            },
+            {
+              "$ref": "#/$defs/QuizResponseResult"
+            },
+            {
+              "$ref": "#/$defs/QuizAttemptSubmissionResult"
+            },
+            {
+              "$ref": "#/$defs/RevisionRecommendationResult"
+            },
+            {
               "type": "null"
             }
           ]
@@ -6726,7 +6747,8 @@
             "prepare_action",
             "review_action",
             "submit_decision",
-            "generate_question_drafts"
+            "generate_question_drafts",
+            "create_revision_recommendation"
           ]
         },
         "idempotency_key": {
@@ -6937,7 +6959,8 @@
             "prepare_action",
             "review_action",
             "submit_decision",
-            "generate_question_drafts"
+            "generate_question_drafts",
+            "create_revision_recommendation"
           ]
         },
         "idempotency_key": {
@@ -6973,7 +6996,8 @@
             "prepare_action",
             "review_action",
             "submit_decision",
-            "generate_question_drafts"
+            "generate_question_drafts",
+            "create_revision_recommendation"
           ]
         },
         "idempotency_key": {
@@ -7010,7 +7034,8 @@
             "prepare_action",
             "review_action",
             "submit_decision",
-            "generate_question_drafts"
+            "generate_question_drafts",
+            "create_revision_recommendation"
           ]
         },
         "idempotency_key": {
@@ -7741,7 +7766,8 @@
             "prepare_action",
             "review_action",
             "submit_decision",
-            "generate_question_drafts"
+            "generate_question_drafts",
+            "create_revision_recommendation"
           ]
         },
         "idempotency_key": {
@@ -12890,6 +12916,92 @@
         }
       ]
     },
+    "GetQuizAttemptContextArguments": {
+      "type": "object",
+      "properties": {
+        "attempt_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "attempt_id"
+      ],
+      "additionalProperties": false
+    },
+    "QuizAttemptContextData": {
+      "type": "object",
+      "properties": {
+        "attempt": {
+          "$ref": "#/$defs/QuizAttempt"
+        },
+        "questions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/QuestionDraft"
+          }
+        },
+        "responses": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/QuizResponse"
+          }
+        }
+      },
+      "required": [
+        "attempt",
+        "questions",
+        "responses"
+      ],
+      "additionalProperties": false
+    },
+    "QuizAttemptContextResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "$ref": "#/$defs/QuizAttemptContextData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
     "CreateQuizAttemptArguments": {
       "type": "object",
       "properties": {
@@ -13260,15 +13372,104 @@
         }
       ]
     },
-    "CreateRevisionRecommendationArguments": {
+    "RevisionRecommendationPresentationData": {
       "type": "object",
       "properties": {
         "recommendation": {
           "$ref": "#/$defs/RevisionRecommendation"
+        },
+        "presentation": {
+          "$ref": "#/$defs/ActionPresentation"
         }
       },
       "required": [
-        "recommendation"
+        "recommendation",
+        "presentation"
+      ],
+      "additionalProperties": false
+    },
+    "CreateRevisionRecommendationArguments": {
+      "type": "object",
+      "properties": {
+        "recommendation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "action_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 120
+        },
+        "suggested_minutes": {
+          "type": "integer",
+          "minimum": 15,
+          "maximum": 240
+        },
+        "priority": {
+          "enum": [
+            0.1,
+            0.5,
+            1
+          ]
+        }
+      },
+      "required": [
+        "recommendation_id",
+        "action_id",
+        "conversation_id",
+        "material_id",
+        "topic",
+        "suggested_minutes",
+        "priority"
+      ],
+      "additionalProperties": false
+    },
+    "DecideRevisionRecommendationArguments": {
+      "type": "object",
+      "properties": {
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "recommendation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "action_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expected_action_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "decision": {
+          "enum": [
+            "APPROVE",
+            "REJECT"
+          ]
+        }
+      },
+      "required": [
+        "conversation_id",
+        "recommendation_id",
+        "action_id",
+        "expected_action_version",
+        "decision"
       ],
       "additionalProperties": false
     },

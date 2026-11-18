@@ -239,6 +239,52 @@ class AttemptsLocalSupabaseIntegrationTests(unittest.TestCase):
                 )
                 self.assertEqual(foreign.status_code, 404, foreign.text)
 
+            # B7 derives evidence from durable grading and waits for an explicit decision.
+            wrong_attempt = f.post(
+                app,
+                "/v1/assessment/attempts",
+                {"schema_version": "1.1", "material_id": material_id, "question_ids": [q_ids[1]],
+                 "origin": "MANUAL", "session_outcome_id": None},
+                who="a",
+            )
+            self.assertEqual(wrong_attempt.status_code, 200, wrong_attempt.text)
+            wrong_attempt_id = wrong_attempt.json()["data"]["attempt_id"]
+            wrong_save = self._put(
+                app,
+                f"/v1/assessment/attempts/{wrong_attempt_id}/responses/{q_ids[1]}",
+                {"schema_version": "1.1", "selected_option_id": "B"},
+                who="a",
+            )
+            self.assertEqual(wrong_save.status_code, 200, wrong_save.text)
+            wrong_submit = f.post(
+                app, f"/v1/assessment/attempts/{wrong_attempt_id}/submit", {"schema_version": "1.1"}, who="a"
+            )
+            self.assertEqual(wrong_submit.status_code, 200, wrong_submit.text)
+            self.assertEqual(wrong_submit.json()["data"]["attempt"]["incorrect_count"], 1)
+
+            rec = f.post(
+                app,
+                "/v1/assessment/recommendations",
+                {"schema_version": "1.1", "conversation_id": conv_a, "material_id": material_id,
+                 "topic": "Mạng máy tính", "suggested_minutes": 45, "priority": 1},
+                who="a",
+            )
+            self.assertEqual(rec.status_code, 200, rec.text)
+            self.assertEqual(rec.json()["state"], "AWAITING_APPROVAL")
+            recommendation = rec.json()["result"]["data"]["recommendation"]
+            self.assertEqual(recommendation["status"], "PROPOSED")
+            self.assertEqual(recommendation["evidence"]["error_count"], 1)
+            self.assertIsNone(recommendation["candidate_id"])
+            accepted = f.post(
+                app,
+                "/v1/decisions",
+                {"schema_version": "1.1", "conversation_id": conv_a,
+                 "action_reference": rec.json()["action_reference"], "decision": "APPROVE"},
+                who="a",
+            )
+            self.assertEqual(accepted.status_code, 200, accepted.text)
+            self.assertEqual(accepted.json()["result"]["data"]["status"], "ACCEPTED")
+
             # Saving response after submit fails with 409
             late_save = self._put(
                 app,

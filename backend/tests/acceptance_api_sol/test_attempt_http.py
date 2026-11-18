@@ -206,6 +206,27 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
         with self.lock:
             self.rpc_calls.append((op, copy.deepcopy(env)))
 
+            if op == "lookup_operation_result":
+                existing = self.idempotency.get((uid, args["operation"], args["idempotency_key"]))
+                if existing is not None and existing["fp"] != args["request_fingerprint"]:
+                    return self._rpc_err(req_id, "IDEMPOTENCY_CONFLICT", "Conflicting idempotency key.")
+                stored = None if existing is None else self._rpc_ok(req_id, "COMMITTED", copy.deepcopy(existing["data"])).json()
+                return self._rpc_ok(req_id, "READ", {"result": stored})
+
+            if op == "get_quiz_attempt_context":
+                attempt = self.attempts.get(args["attempt_id"])
+                if attempt is None or attempt["user_id"] != uid:
+                    return self._rpc_err(req_id, "ENTITY_NOT_FOUND", "Attempt not found.")
+                questions = [copy.deepcopy(self.questions[qid]) for qid in attempt["question_ids"]]
+                responses = [
+                    copy.deepcopy(self.responses[(attempt["attempt_id"], qid)])
+                    for qid in attempt["question_ids"]
+                    if (attempt["attempt_id"], qid) in self.responses
+                ]
+                return self._rpc_ok(req_id, "READ", {
+                    "attempt": copy.deepcopy(attempt), "questions": questions, "responses": responses,
+                })
+
             if op == "list_questions":
                 items = [
                     copy.deepcopy(q)
@@ -261,7 +282,10 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
                 return self._rpc_ok(req_id, "COMMITTED", attempt)
 
             if op == "save_quiz_response":
-                fp = contract.sha256_hex(args)
+                fp = contract.sha256_hex({
+                    "schema_version": "1.1", "user_id": uid, "operation": op,
+                    "arguments": args, "decision_binding": None,
+                })
                 existing = self.idempotency.get((uid, op, idem_key))
                 if existing is not None:
                     if existing["fp"] != fp:
@@ -299,7 +323,10 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
                 return self._rpc_ok(req_id, "COMMITTED", resp)
 
             if op == "submit_quiz_attempt":
-                fp = contract.sha256_hex({"attempt_id": args["attempt_id"]})
+                fp = contract.sha256_hex({
+                    "schema_version": "1.1", "user_id": uid, "operation": op,
+                    "arguments": {"attempt_id": args["attempt_id"]}, "decision_binding": None,
+                })
                 existing = self.idempotency.get((uid, op, idem_key))
                 if existing is not None:
                     if existing["fp"] != fp:
@@ -395,7 +422,7 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
             headers=self._headers("resp-save-0000001"),
             json={"schema_version": "1.1", "selected_option_id": "B"},
         )
-        self.assertEqual(s1_replay.status_code, 200)
+        self.assertEqual(s1_replay.status_code, 200, s1_replay.text)
         self.assertEqual(s1_replay.headers.get("Idempotency-Replayed"), "true")
 
         # Save wrong option on Q_VERIFIED_2
@@ -418,11 +445,12 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
         self.assertIsNone(s3.json()["data"]["is_correct"])
 
         # 4. Submit and grade attempt
-        sub = self.client.post(
-            f"/v1/assessment/attempts/{attempt_id}/submit",
-            headers=self._headers("attempt-submit-0001"),
-            json={"schema_version": "1.1"},
-        )
+        with self._new_client() as restarted:
+            sub = restarted.post(
+                f"/v1/assessment/attempts/{attempt_id}/submit",
+                headers=self._headers("attempt-submit-0001"),
+                json={"schema_version": "1.1"},
+            )
         self.assertEqual(sub.status_code, 200)
         self.assertEqual(sub.headers.get("Idempotency-Replayed"), "false")
         sub_body = sub.json()

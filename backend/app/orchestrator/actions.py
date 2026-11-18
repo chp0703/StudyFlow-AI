@@ -18,11 +18,12 @@ from .workflow_shared import (
 
 class ActionProcessor:
     def __init__(self, rpc: RpcCall, clock: Clock, extractor: Extractor, timezone: str = PRODUCT_TIMEZONE, *,
-                 questions=None):
+                 questions=None, recommendations=None):
         if timezone != PRODUCT_TIMEZONE:
             raise ValueError(f"timezone must be {PRODUCT_TIMEZONE}")
         self.rpc, self.clock = rpc, clock
         self.questions_ops = questions
+        self.recommendation_ops = recommendations
         self.chat = ChatProcessor(self, extractor, clock=clock, timezone=timezone)
 
     def step(self, ctx, operation: str, arguments: dict, **kwargs) -> dict:
@@ -44,6 +45,10 @@ class ActionProcessor:
             if self.questions_ops is None:
                 raise Terminal("UNSUPPORTED_OPERATION", "Question draft generation is not configured.")
             return self.questions_ops.generate_drafts(ctx, receipt, key, body)
+        if http_operation == "create_revision_recommendation":
+            if self.recommendation_ops is None:
+                raise Terminal("UNSUPPORTED_OPERATION", "Revision recommendations are not configured.")
+            return self.recommendation_ops.create(ctx, receipt, key, body)
         if http_operation == "submit_decision":
             return self.decide(ctx, receipt, key, body)
         return self.review(ctx, receipt, key, body, path["action_id"])
@@ -252,6 +257,8 @@ class ActionProcessor:
         last = (action["last_presentation"] or {}).get("presentation") or {}
         if pending.get("intent") == "VERIFY_QUESTION_DRAFTS":
             return self._decide_question_drafts(ctx, receipt, key, conversation, ref, pending, decision)
+        if pending.get("intent") == "REVIEW_REVISION_RECOMMENDATION":
+            return self._decide_revision_recommendation(ctx, receipt, key, conversation, ref, pending, decision)
         command = last.get("normalized_command")
         if decision == "REJECT":
             return self.reject(ctx, receipt, key, conversation, ref, action, command)
@@ -335,4 +342,34 @@ class ActionProcessor:
         )
         result = {**result, "request_id": ctx.request_id}
         message = "Đã xác nhận bộ câu hỏi." if decision == "APPROVE" else "Đã từ chối bộ câu hỏi nháp."
+        return 200, reply(ctx.request_id, "SUCCEEDED", message, result=result)
+
+    def _decide_revision_recommendation(self, ctx, receipt, key, conversation, ref, pending, decision):
+        recommendation_id = (pending.get("draft_arguments") or {}).get("recommendation_id")
+        if (not recommendation_id or ref["target_type"] != "PENDING_ACTION"
+                or ref["target_id"] != pending["action_id"] or ref["target_version"] != ref["action_version"]):
+            raise Terminal("APPROVAL_REQUIRED", "Tham chiếu xác nhận gợi ý ôn tập không khớp.")
+        approval = {
+            "approval_action_id": str(uuid4()), "user_id": ctx.user_id, "target_type": "PENDING_ACTION",
+            "target_id": ref["action_id"], "target_version": ref["action_version"], "decision": decision,
+            "source": "UI", "source_message_id": None, "created_at": iso(datetime.now(timezone.utc)),
+        }
+        result = self.step(
+            ctx,
+            "decide_revision_recommendation",
+            {
+                "conversation_id": conversation,
+                "recommendation_id": recommendation_id,
+                "action_id": ref["action_id"],
+                "expected_action_version": ref["action_version"],
+                "decision": decision,
+            },
+            conversation_id=conversation,
+            idempotency_key=child_key(key, "decision"),
+            approval_action=approval,
+            action_reference=ref,
+            message_id=receipt["message_id"],
+        )
+        result = {**result, "request_id": ctx.request_id}
+        message = "Đã chấp nhận gợi ý ôn tập." if decision == "APPROVE" else "Đã từ chối gợi ý ôn tập."
         return 200, reply(ctx.request_id, "SUCCEEDED", message, result=result)

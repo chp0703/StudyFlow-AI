@@ -25,6 +25,7 @@ from ...assessment.materials import MaterialOperations, MAX_BYTES as MATERIAL_MA
 from ...assessment.questions import AssessmentQuestionOperations, DeepSeekQuestionGenerator
 from ...assessment.attempts import QuizAttemptOperations
 from ...assessment.stats import TopicStatsOperations
+from ...assessment.recommendations import RevisionRecommendationOperations
 
 log = logging.getLogger("studyflow.api")
 _KEY = re.compile(r"^[A-Za-z0-9._:-]{16,128}$")
@@ -69,8 +70,9 @@ class Api:
             ),
             max_context_chunks=settings.question_max_context_chunks,
         )
-        self.attempts = QuizAttemptOperations(self.rpc, self.questions, clock)
+        self.attempts = QuizAttemptOperations(self.rpc, clock)
         self.topic_stats = TopicStatsOperations(self.rpc)
+        self.recommendations = RevisionRecommendationOperations(self.rpc)
         self.processor = ActionProcessor(self)
         self.sources = SourceOperations(self.rpc, source_extractor or SourceExtractor(
             settings.deepseek_base_url, settings.deepseek_api_key, settings.ingestion_model), clock)
@@ -320,6 +322,11 @@ class Api:
         result = await run_in_threadpool(self.topic_stats.get, ctx, args)
         return self.result_response(result, ctx)
 
+    async def post_assessment_recommendations(self, request: Request, ctx: Ctx):
+        return await self.post_pipeline(
+            request, ctx, "create_revision_recommendation", "CreateRevisionRecommendationRequest"
+        )
+
     # ----------------------------------------------------------------- đăng ký endpoint
     def register(self, app: FastAPI) -> None:
         routes = [
@@ -337,6 +344,7 @@ class Api:
             ("PUT", "/v1/assessment/attempts/{attempt_id}/responses/{question_id}", self.put_assessment_attempt_response),
             ("POST", "/v1/assessment/attempts/{attempt_id}/submit", self.post_assessment_attempt_submit),
             ("GET", "/v1/assessment/topics/stats", self.get_assessment_topic_stats),
+            ("POST", "/v1/assessment/recommendations", self.post_assessment_recommendations),
         ]
         for method, path, handler in routes:
             app.add_api_route(path, self._wrap(handler, post=method in ("POST", "PUT")), methods=[method],

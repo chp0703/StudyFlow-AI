@@ -447,3 +447,21 @@
 - Bổ sung và cập nhật test (`clarification.test.ts`, `WeekCalendar.test.ts`, `apiAssistant.test.ts`).
 
 **Kết quả:** nhánh `fix/planner-followup-leader-spec-kent`; `contracts/check_contract.py` và `generate_contract_schema_migration.py --check` pass; frontend `tsc --noEmit`, `vite build` và 75/75 Node tests pass; `supabase db reset`, `supabase test db` (16 files, 504 tests) và backend pytest (176 unit/acceptance + 16 integration = 192 tests) pass.
+
+## 2026-11-18 — Hoàn thiện backend Learning Assessment F2
+
+**Mục tiêu:** lấp các khoảng trống về độ bền attempt, an toàn sinh câu hỏi và luồng xác nhận gợi ý ôn tập khi đối chiếu backend F2 với kế hoạch.
+
+**Đã làm**
+
+- Thay state attempt trong bộ nhớ bằng RPC đọc context bền vững; save/submit và idempotency hoạt động sau khi backend restart hoặc chạy nhiều worker.
+- Giới hạn response DeepSeek ngay trong lúc streaming và bổ sung kiểm thử prompt injection cho context tài liệu không tin cậy.
+- Thêm contract, route, orchestration, RPC và migration append-only cho revision recommendation có evidence, confidence limit và quyết định bắt buộc qua `/v1/decisions`.
+- Bổ sung acceptance/integration tests, đưa các HTTP suite F2 vào CI và cập nhật README theo runtime hiện tại.
+
+**Kết quả:** nhánh `fix/f2-backend-completeness`; contract checker pass (192 definitions), generated migration đồng bộ, 129 unit tests, 37 scheduler acceptance tests và các HTTP acceptance suites pass; planner evaluation pass; local Supabase reset thành công, 618 pgTAP tests và F2 attempt/recommendation integration pass.
+
+**Ghi chú**
+
+- Chưa chạy DeepSeek thật vì không sử dụng API key; kiểm thử model dùng transport giả lập.
+- Không chạm cloud Supabase project.

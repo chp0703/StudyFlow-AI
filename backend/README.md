@@ -1,6 +1,6 @@
 # StudyFlow AI backend
 
-The backend is a FastAPI application implementing the eight public Planner endpoints. It verifies Supabase JWTs, coordinates durable workflows, calls signed database RPCs and uses the deterministic scheduler under `app/f1/scheduler/`. The `f1` package name is a compatibility path for the existing Planner implementation; Assessment and Daily Learning are additional product features that are not implemented here yet.
+The backend is a FastAPI application implementing Planner, source ingestion, and the nine Assessment endpoints. It verifies Supabase JWTs, coordinates durable approval workflows, calls signed database RPCs, and uses deterministic scheduling and quiz grading. The `f1` package name remains a compatibility path for the Planner implementation; Daily Learning is not implemented yet.
 
 ## Source ingestion (BE-04)
 
