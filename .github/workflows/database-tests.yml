@@ -6,6 +6,7 @@ on:
       - feat/supabase-database-foundation
       - feat/f1-mvp-intergration
       - feat/be-04-source-ingestion
+      - feat/f2-be02-material-store-retrieval
   pull_request:
     branches:
       - main

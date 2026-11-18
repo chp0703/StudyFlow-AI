@@ -19,6 +19,7 @@ SCHEMA_VERSION = "1.1"
 READ_OPERATIONS = frozenset({
     "search_tasks", "get_study_plan", "list_time_windows", "get_scheduling_context", "lookup_operation_result",
     "get_workflow_context", "get_workflow_continuation", "get_ingestion_source",
+    "get_assessment_material", "search_material_chunks",
 })
 
 
