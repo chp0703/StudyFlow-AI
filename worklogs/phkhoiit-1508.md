@@ -459,9 +459,11 @@
 - Sửa receipt transient để HTTP 429/503 giải phóng lease thay vì cố lưu lỗi mà database chủ động từ chối.
 - Thêm contract, route, orchestration, RPC và migration append-only cho revision recommendation có evidence, confidence limit và quyết định bắt buộc qua `/v1/decisions`.
 - Bổ sung acceptance/integration tests, đưa các HTTP suite F2 vào CI và cập nhật README theo runtime hiện tại.
+- Review PR: replay `create` recommendation sau khi đã quyết định giờ trả `STALE_ENTITY_VERSION` thay vì reference hết hạn (kèm test); ghi chú migration generated append-only.
 
 **Kết quả:** nhánh `fix/f2-backend-completeness`; contract checker pass (192 definitions), generated migration đồng bộ, 130 unit tests, 37 scheduler acceptance tests, 72 API acceptance tests, 22 local integration tests và 6 concurrency tests pass; local Supabase reset thành công và 618 pgTAP tests pass. E2E với DeepSeek thật (`deepseek-flash`) pass từ upload material đến sinh/duyệt câu hỏi, restart backend, chấm điểm, thống kê và duyệt recommendation.
 
 **Ghi chú**
 
 - Không chạm cloud Supabase project.
+- Chưa xử lý (cần quyết định): `priority`/`suggested_minutes` của recommendation do client gửi, chưa suy ra từ evidence; replay trong `save_response` phải load context trước vì fingerprint có `validity`.
