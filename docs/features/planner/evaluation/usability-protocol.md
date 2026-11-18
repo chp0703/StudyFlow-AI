@@ -21,7 +21,7 @@ The facilitator must not coach the participant after reading a task. Start timin
 - Binary task completion using the expected final state.
 - Time-on-task in seconds and observable error count.
 - Whether the participant understood that chat does not itself approve a mutation.
-- Standard ten-item System Usability Scale (SUS), alternating positive and negative statements on a 1–5 scale.
+- Ten-item System Usability Scale (SUS) [Brooke, 1996; README reference 9] with paraphrased English wording, alternating positive and negative statements on a 1–5 scale. Scores are not directly comparable with published SUS benchmarks unless the original or a validated translated wording is used.
 - One open question: “Điều gì trong lịch hoặc bước xác nhận khiến bạn khó hiểu nhất?”
 
 SUS scoring: subtract 1 from odd-item responses, subtract even-item responses from 5, sum and multiply by 2.5. Report raw responses, median, mean and range; do not label a score “good” without naming a comparison source.
