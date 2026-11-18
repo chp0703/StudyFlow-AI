@@ -54,3 +54,18 @@
 **Ghi chú**
 
 - Kiểm thử màu bằng luồng demo và render lịch. Chưa xác minh lưu màu qua API thật.
+
+## 2026-11-18 — Hoàn thiện giao diện và đưa thay đổi vào PR
+
+**Mục tiêu:** đưa giao diện đã chỉnh và tính năng nhãn màu lên nhánh để nhóm xem xét.
+
+**Đã làm**
+
+- Khôi phục nền xanh ngọc và vàng nhạt cùng kiểu ba thẻ tổng quan ban đầu.
+- Giữ logo gốc của StudyFlow AI và nhãn màu công việc trên lịch tuần, lịch tháng.
+
+**Kết quả:** nhánh `style/restore-original-summary-cards`. Build frontend, TypeScript và 81 bài kiểm thử đạt.
+
+**Ghi chú**
+
+- Chưa xác minh lưu nhãn màu qua API thật.
