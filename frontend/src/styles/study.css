@@ -879,3 +879,12 @@
 .doc-notice-close:hover {
   background: var(--border);
 }
+
+.study-assessment-container { display: block; overflow: auto; }
+.study-assessment-container .study-left-col { width: min(100%, 900px); margin: 0 auto; }
+.assessment-stack { display: grid; gap: 12px; margin-block: 16px; }
+.assessment-stack article, .assessment-stack fieldset { border: 1px solid var(--color-line); border-radius: 12px; padding: 16px; }
+.assessment-stack input[type="file"], .assessment-stack input[type="text"] { max-width: 100%; }
+.assessment-option { display: flex; gap: 10px; align-items: center; min-height: 44px; }
+
+.study-assessment-container .study-quiz-card { height: auto; min-height: 100%; flex: none; }

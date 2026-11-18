@@ -42,3 +42,9 @@ This feature owns source-grounded question preparation, verified answer keys, qu
   - Only `POST /v1/decisions` with the unchanged `ActionReference` (`target_type="PENDING_ACTION"`) and UI attestation (`source="UI"`, `source_message_id=null`) can transition a batch from `DRAFT` to `VERIFIED` (`APPROVE`) or `REJECTED` (`REJECT`); chat approval is rejected.
   - Finalized (`VERIFIED`/`REJECTED`) rows and question content are immutable via DB triggers; deletes are blocked.
   - PostgreSQL/pgTAP and HTTP integration tests run against local Supabase, including concurrent decisions and recovery after a persisted batch loses its HTTP response. Live DeepSeek verification requires API credentials.
+
+## Frontend status (F2)
+
+The Study page keeps its in-memory illustrative quiz in Demo Mode. API Mode uses the assessment endpoints for a single material per browser session: upload a TXT/Markdown/PDF file (10 MB maximum), supply one topic (the current B2 handler requires exactly one), review generated drafts and their source pages, decide using the server-issued action reference, take a quiz using only server-listed VERIFIED questions, and read topic stats. Responses are saved before submission. The UI does not retain uploaded content in browser storage.
+
+The versioned contract includes `POST /v1/assessment/recommendations`, but the current backend route registry does not expose it. The frontend therefore shows that recommendation creation is unavailable. Live API and DeepSeek behavior remains to be verified against a configured local backend. There is no material-list or attempt-resume endpoint in the current contract, so the workspace retains those selections only while the page is open.
