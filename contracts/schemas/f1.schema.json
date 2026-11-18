@@ -36,7 +36,9 @@
         "verify_question_drafts",
         "list_questions",
         "create_revision_recommendation",
-        "decide_revision_recommendation"
+        "decide_revision_recommendation",
+        "save_quiz_response",
+        "submit_quiz_attempt"
       ]
     },
     "Issue": {

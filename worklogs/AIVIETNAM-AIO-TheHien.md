@@ -83,3 +83,16 @@ Nhánh `codex/f2-durable-attempts-b7-integration`. Contract và generator đạt
 
 **Ghi chú**  
 Supabase local được xác minh qua workflow CI vì máy phát triển thiếu Docker. Kiểm tra oxfmt báo khác biệt ở năm file API frontend nhập từ PR #49.
+
+## 2026-11-19 — Sửa contract replay phát hiện trên CI #57
+
+**Mục tiêu**  
+Đồng bộ lookup B5 giữa backend, PostgreSQL và bộ test.
+
+**Đã làm**
+
+- Thêm hai thao tác B5 vào enum Assessment, sinh lại migration contract và buộc HTTP mock kiểm tra arguments theo schema thật.
+- Dùng RpcEnvelope cùng schema arguments theo từng Assessment RPC trong harness PostgreSQL, giữ kiểm tra RpcRequest của F1.
+
+**Kết quả**  
+Draft PR #57. Contract checker, generator và 76 HTTP acceptance đều đạt. Chạy lại CI PostgreSQL cho bản sửa.

@@ -98,7 +98,8 @@ class Database:
         self.defs = self.schema["$defs"]
         self.registry = {row["rpc"]: row for row in registry["operations"] if row.get("rpc")}
         self.registry.update({row["rpc"]: row for row in registry["internal_interfaces"]})
-        self.registry.update({row["rpc"]: row for row in registry["extensions"]["assessment"]["internal_interfaces"]})
+        self.assessment_registry = {row["rpc"]: row for row in registry["extensions"]["assessment"]["internal_interfaces"]}
+        self.registry.update(self.assessment_registry)
         self.admin = psycopg.connect(self.dsn, autocommit=True)
         self.key_id = "sol-concurrency-" + uid()
         self.secret = secrets.token_bytes(32)
@@ -137,7 +138,11 @@ class Database:
                 "signature": hmac.new(self.secret, encoded.encode("ascii"), hashlib.sha256).hexdigest()}
         else:
             request["attestation"] = None
-        self.validate("RpcRequest", request, semantic=False)
+        if call.operation in self.assessment_registry:
+            self.validate("RpcEnvelope", request, semantic=False)
+            self.validate(row["arguments_schema"], request["arguments"], semantic=False)
+        else:
+            self.validate("RpcRequest", request, semantic=False)
         return request
 
     def invoke(self, fixture, call, connection=None):

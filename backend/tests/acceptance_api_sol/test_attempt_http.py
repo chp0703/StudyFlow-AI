@@ -236,6 +236,8 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
             self.rpc_calls.append((op, copy.deepcopy(env)))
 
             if op == "lookup_operation_result":
+                if not contract.is_valid("LookupOperationResultArguments", args):
+                    return self._rpc_err(req_id, "INVALID_PARAMETER", "Invalid lookup_operation_result arguments.")
                 existing = self.idempotency.get((uid, args["operation"], args["idempotency_key"]))
                 if existing is not None and existing["fp"] != args["request_fingerprint"]:
                     return self._rpc_err(req_id, "IDEMPOTENCY_CONFLICT", "Conflicting idempotency key.")
