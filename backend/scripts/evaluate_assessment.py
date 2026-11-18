@@ -116,9 +116,23 @@ def build_cases(corpus: dict, split: str, count: int) -> list[dict]:
             for m in corpus["materials"] if m["split"] == split for qt in ("MCQ", "TRUE_FALSE")]
 
 
+SQUAD_TOPIC = "Đọc hiểu"
+
+
+def squad_cases(path: Path, sample: int, seed: int, count: int) -> list[dict]:
+    """Real human-written passages (Vi-SQuAD contexts); the data stays outside the repo."""
+    contexts = sorted({row["context"] for row in json.loads(path.read_text(encoding="utf-8"))["data"]})
+    picked = random.Random(seed).sample(contexts, sample)
+    return [{"case_id": f"SQ{i:03d}:MCQ", "topic": SQUAD_TOPIC, "question_type": "MCQ", "count": count,
+             "chunks": material_chunks({"material_key": f"squad-{i}", "topic": SQUAD_TOPIC, "text": text})}
+            for i, text in enumerate(picked)]
+
+
 def cmd_generate(args) -> dict:
-    dataset_path = Path(args.corpus)
-    dataset = {"cases": build_cases(load_corpus(dataset_path), args.split, args.count)}
+    dataset_path = Path(args.squad or args.corpus)
+    cases = (squad_cases(dataset_path, args.sample, args.seed, args.count) if args.squad
+             else build_cases(load_corpus(dataset_path), args.split, args.count))
+    dataset = {"cases": cases}
     model = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
     generator = DeepSeekQuestionGenerator(os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1"),
                                           os.environ.get("DEEPSEEK_API_KEY", ""), model, None)
@@ -166,7 +180,9 @@ def cmd_generate(args) -> dict:
             writer.writeheader()
             writer.writerows(rows)
     return {"metadata": metadata(corpus=str(dataset_path.as_posix()), corpus_sha256=sha256(dataset_path),
-                                 split=args.split, count=args.count, model=model, prompt_version=PROMPT_VERSION, runs=args.runs),
+                                 split="squad" if args.squad else args.split, count=args.count, model=model,
+                                 squad_sample=args.sample if args.squad else None,
+                                 squad_seed=args.seed if args.squad else None, prompt_version=PROMPT_VERSION, runs=args.runs),
             "QG-01": accepted_total / requested if requested else 0.0, "requested": requested,
             "accepted": accepted_total, "SAFE-01_violating_items": violations,
             "PERF-02_ms": {"p50": nearest_rank(latencies, 0.5), "p95": nearest_rank(latencies, 0.95)}
@@ -236,6 +252,56 @@ def cmd_judge(args) -> dict:
     return {"metadata": metadata(items_sha256=sha256(Path(args.items)), judge_model=model), "rated": len(verdicts)}
 
 
+VMLU_CATEGORY = [(range(1, 22), "STEM"), (range(22, 32), "Social Science"), (range(32, 50), "Humanities"),
+                 (range(50, 59), "Others")]  # subject order as listed on vmlu.ai
+MQA_PROMPT = ("Chỉ đưa ra chữ cái đứng trước câu trả lời đúng (A, B, C, D hoặc E) của câu hỏi trắc nghiệm sau, "
+              "không giải thích.")
+
+
+def mqa_category(item_id: str) -> str:
+    subject = int(item_id.split("-")[0])
+    return next(name for subjects, name in VMLU_CATEGORY if subject in subjects)
+
+
+def cmd_vmlu_mqa(args) -> dict:
+    """VMLU-01: zero-shot model baseline on Vi-MQA (a model-knowledge number, not a StudyFlow quality number)."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    path = Path(args.jsonl)
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    model = args.model or os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
+    url = f'{os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")}/chat/completions'
+    key = os.environ["DEEPSEEK_API_KEY"]
+
+    def ask(http: httpx.Client, row: dict) -> dict:
+        text = "\n".join([row["question"], *row["choices"]])
+        body = {"model": model, "temperature": 0, "max_tokens": 8, "thinking": {"type": "disabled"},
+                "messages": [{"role": "system", "content": MQA_PROMPT}, {"role": "user", "content": text}]}
+        try:
+            reply = http.post(url, headers={"Authorization": f"Bearer {key}"}, json=body)
+            reply.raise_for_status()
+            content = reply.json()["choices"][0]["message"]["content"].strip()
+            letter = next((ch for ch in content.upper() if ch in "ABCDE"), None)
+        except (httpx.HTTPError, KeyError, IndexError, ValueError):
+            letter = None
+        return {"id": row["id"], "category": mqa_category(row["id"]), "predicted": letter,
+                "correct": letter == row["answer"]}
+
+    with httpx.Client(timeout=60) as http, ThreadPoolExecutor(max_workers=8) as pool:
+        outcomes = list(pool.map(lambda r: ask(http, r), rows))
+    by_cat = {}
+    for o in outcomes:
+        by_cat.setdefault(o["category"], []).append(o["correct"])
+    report = {c: {"items": len(v), "accuracy": sum(v) / len(v)} for c, v in sorted(by_cat.items())}
+    ok = sum(o["correct"] for o in outcomes)
+    low, high = ev.wilson_interval(ok, len(outcomes))
+    return {"metadata": metadata(vmlu_file=path.name, vmlu_sha256=sha256(path), model=model, prompt=MQA_PROMPT),
+            "VMLU-01": {"items": len(outcomes), "accuracy": ok / len(outcomes), "wilson_95": [low, high],
+                        "unparsed": sum(1 for o in outcomes if o["predicted"] is None),
+                        "macro_category_avg": sum(r["accuracy"] for r in report.values()) / len(report)},
+            "by_category": report, "outcomes": outcomes}
+
+
 def query_kind(query: str, text: str) -> str:
     if query.isascii() and query.lower() not in text.lower():  # ASCII spelling of a Vietnamese phrase
         return "no_diacritics"
@@ -290,8 +356,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--cases", type=int, default=10000)
     p.add_argument("--seed", type=int, default=20261118)
     p = sub.add_parser("generate")
-    p.add_argument("--corpus", required=True)
-    p.add_argument("--split", choices=("dev", "heldout", "injection"), required=True)
+    p.add_argument("--corpus")
+    p.add_argument("--split", choices=("dev", "heldout", "injection"))
+    p.add_argument("--squad", help="vi_squad_benchmark_question_only.json from vmlu.ai (not in the repo)")
+    p.add_argument("--sample", type=int, default=30)
+    p.add_argument("--seed", type=int, default=20261118)
     p.add_argument("--count", type=int, default=5)
     p.add_argument("--runs", type=int, default=1)
     p.add_argument("--annotation-csv")
@@ -305,13 +374,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--items", required=True)
     p.add_argument("--ratings-csv", required=True)
     p.add_argument("--model")
+    p = sub.add_parser("vmlu-mqa")
+    p.add_argument("--jsonl", required=True, help="Vi-MQA valid.jsonl or dev.jsonl from vmlu.ai (not in the repo)")
+    p.add_argument("--model")
     p = sub.add_parser("retrieval-local")
     p.add_argument("--corpus", required=True)
-    for name in ("offline", "generate", "score", "retrieval", "retrieval-local", "judge"):
+    for name in ("offline", "generate", "score", "retrieval", "retrieval-local", "judge", "vmlu-mqa"):
         sub.choices[name].add_argument("--output", required=True)
     args = parser.parse_args(argv)
     result = {"offline": cmd_offline, "generate": cmd_generate, "score": cmd_score,
-              "retrieval": cmd_retrieval, "retrieval-local": cmd_retrieval_local, "judge": cmd_judge}[args.command](args)
+              "retrieval": cmd_retrieval, "retrieval-local": cmd_retrieval_local, "judge": cmd_judge, "vmlu-mqa": cmd_vmlu_mqa}[args.command](args)
     write_json(Path(args.output), result)
     print(json.dumps({k: v for k, v in result.items() if k not in ("outcomes", "details")}, ensure_ascii=False))
     return 0
