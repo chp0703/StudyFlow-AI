@@ -65,3 +65,21 @@ Sinh câu hỏi từ tài liệu B2, cho người dùng xem câu hỏi và ngu�
 - Chưa chạy UI F2 vì ngoài phạm vi; B7 không dùng LLM. CI cuối sẽ chạy trên commit bàn giao mới.
 
 - Siết integration: hủy candidate luôn được kiểm tra dù nhánh REJECT thắng race; thêm reference bị sửa và chặn tạo gợi ý khi F1 task đang chờ. Chỉ thay đổi test; CI cuối chạy lại để xác minh đầy đủ.
+
+## 2026-11-19 — Tích hợp F2 B7 và bảo toàn kết quả B5
+
+**Mục tiêu**  
+Bàn giao đề xuất ôn tập từ B7 sang Planner và giữ kết quả lưu, nộp bài ổn định qua retry, restart và các worker chạy đồng thời.
+
+**Đã làm**
+
+- Tích hợp B7 từ PR #49. Giữ giới hạn bằng chứng, trình bày lại snapshot và xác nhận riêng cho task nháp F1.
+- Chuyển B5 sang đọc dữ liệu bền vững, gắn version cho câu trả lời và xử lý replay theo kết quả RPC. Chấm lại khi autosave đổi version và đồng nhất làm tròn với PostgreSQL.
+- Áp dụng giới hạn phản hồi DeepSeek và giải phóng receipt khi gặp lỗi 429/503 từ PR #51.
+- Thêm kiểm tra pgTAP, tranh chấp PostgreSQL và upgrade giữ dữ liệu B5 từ schema đã chạy B7.
+
+**Kết quả**  
+Nhánh `codex/f2-durable-attempts-b7-integration`. Contract và generator đạt. Đạt 136 backend unit, 76 HTTP acceptance, 37 scheduler acceptance, 83 frontend test, TypeScript, build và kiểm tra Planner không vi phạm hard constraint.
+
+**Ghi chú**  
+Supabase local được xác minh qua workflow CI vì máy phát triển thiếu Docker. Kiểm tra oxfmt báo khác biệt ở năm file API frontend nhập từ PR #49.
