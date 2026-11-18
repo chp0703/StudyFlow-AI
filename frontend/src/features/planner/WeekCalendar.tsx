@@ -1,3 +1,4 @@
+import { calendarEventColors } from "./calendarEvents"
 import { TASK_COLOR_OPTIONS } from "./clarification.ts"
 import type { CSSProperties, RefObject } from "react"
 import type { Task } from "../../types/task"
@@ -188,12 +189,10 @@ export default function WeekCalendar({
                       event.effort,
                       position.visibleMinutes,
                     )
-                    const color =
-                      event.color && /^#[0-9a-f]{6}$/iu.test(event.color)
-                        ? event.color
-                        : undefined
+                    const colors = calendarEventColors(event.color)
                     const colorLabel = TASK_COLOR_OPTIONS.find(
-                      (option) => option.value === color?.toUpperCase(),
+                      (option) =>
+                        option.value === colors?.["--evt"].toUpperCase(),
                     )?.label
                     return (
                       <div
@@ -217,12 +216,7 @@ export default function WeekCalendar({
                           {
                             top: (from - gridFrom + position.top) * pxPerMinute,
                             height: Math.max(28, duration * pxPerMinute),
-                            ...(color
-                              ? {
-                                  "--evt": color,
-                                  "--evt-bg": `color-mix(in srgb, ${color} 15%, white)`,
-                                }
-                              : {}),
+                            ...colors,
                           } as CSSProperties
                         }
                         title={[event.title, event.time, colorLabel]

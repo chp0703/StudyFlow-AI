@@ -103,6 +103,7 @@ test("calendar renders Free/Busy and proposals behind exact-time events", async 
 
     assert.match(html, /is-proposed-window/)
     assert.match(html, /--evt:#6c5ce7/)
+    assert.match(html, /--evt-ink:color-mix\(in srgb, #6c5ce7 45%, black\)/)
     assert.match(html, /Tím · Ôn tập/)
 
     assert.match(html, /data-task-id="task"[^>]*top:60px/)
