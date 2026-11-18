@@ -15,35 +15,14 @@
   --background: #faf7fc;
   --border: #e7dff0;
 
-  --pastel-coral: #ffdbdb;
-  --pastel-lemon: #fff0b9;
-  --pastel-aqua: #d8f3f1;
-  --pastel-sky: #dceaff;
-  --pastel-periwinkle: #e2e3ff;
-  --pastel-lavender: #eee4ff;
-  --pastel-blush: #fce4ed;
-  --pastel-mint: #dff4e9;
-  --pastel-peach: #ffeddb;
-  --pastel-rainbow: linear-gradient(
-    110deg,
-    var(--pastel-coral),
-    var(--pastel-peach),
-    var(--pastel-lemon),
-    var(--pastel-mint),
-    var(--pastel-aqua),
-    var(--pastel-sky),
-    var(--pastel-periwinkle),
-    var(--pastel-lavender),
-    var(--pastel-blush)
-  );
+  --lavender-light: #f6f0fd;
+  --pastel-lavender: #eee4fa;
+  --lavender-deep: #e5d5f6;
   --bg-card: rgba(255, 255, 255, 0.94);
   --bg-card-solid: #ffffff;
 
-  --bg-ambient:
-    linear-gradient(#ffffff70, #ffffff70),
-    var(--pastel-rainbow);
-
-  --gradient-brand: linear-gradient(115deg, #4e469d, #663eb0 58%, #913f79);
+  --bg-ambient: linear-gradient(135deg, var(--pastel-lavender), var(--lavender-light) 65%, var(--background));
+  --gradient-brand: linear-gradient(115deg, #483269, #674994);
 
   /* Biến thiết kế StudyFlow ánh xạ theo bảng màu */
   --sf-primary-blue: var(--primary);
