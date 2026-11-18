@@ -9,7 +9,7 @@ For every case, verify:
 3. `slots` is complete: no implied production slot is omitted and no unsaid value is invented.
 4. Relative dates are resolved from `2026-11-05T10:00:00+07:00` in `Asia/Ho_Chi_Minh`. A week starts Monday and ends at the next Monday's exclusive `00:00`; a weekend is Saturday `00:00` through Monday's exclusive `00:00`. For GENERATE, “today/this week/from now” starts at the current instant; GET ranges show the full named calendar day/week. An inclusive end date becomes exclusive `00:00` on the following day. Empty `{}` means the user did not state a period.
 5. Weekly weekdays use Monday=1 through Sunday=7; `valid_from` is `2026-11-05`.
-6. Date-only deadlines use the stated date; datetime deadlines preserve the stated local instant.
+6. Date-only deadlines use the stated date; datetime deadlines preserve the stated local instant. Priority words map to `cao`=1, `vừa`=0.5, `thấp`=0.1.
 7. Free text keeps the user's meaning. Case and repeated whitespace are normalized by the scorer.
 8. UNKNOWN is used for unclear/confirmation-only text; UNSUPPORTED is used for a clear request outside Planner capabilities.
 

@@ -447,3 +447,22 @@
 - Bổ sung và cập nhật test (`clarification.test.ts`, `WeekCalendar.test.ts`, `apiAssistant.test.ts`).
 
 **Kết quả:** nhánh `fix/planner-followup-leader-spec-kent`; `contracts/check_contract.py` và `generate_contract_schema_migration.py --check` pass; frontend `tsc --noEmit`, `vite build` và 75/75 Node tests pass; `supabase db reset`, `supabase test db` (16 files, 504 tests) và backend pytest (176 unit/acceptance + 16 integration = 192 tests) pass.
+
+## 2026-11-18 — Đánh giá NLU live và dev/held-out set mới cho F1
+
+**Mục tiêu:** đo chất lượng NLU của Planner bằng bộ held-out có số liệu thật và sửa các lỗi trích xuất lặp lại mà đo được.
+
+**Đã làm**
+
+- Chạy live NLU (DeepSeek, 5 lần mỗi bộ) cho dev set 1 và held-out 1; held-out 1 đạt 70% worst-run nên chỉ giữ làm baseline.
+- Thêm `backend/tests/fixtures/nlu_dev2_vi.json` (63 ca) và sửa prompt trong `backend/app/nlu/extractor.py`: `end_at` loại trừ, GET lấy cả ngày/tuần, GENERATE không bắt đầu trong quá khứ, luôn có `deadline_timezone`, giữ nguyên không dấu, UNSUPPORTED cho báo thức và cố ghi đè quy tắc.
+- Thêm `_fill_defaults` trong `extractor.py`: server điền `valid_from` (hôm nay) cho lịch lặp và `view=CURRENT` cho GET khi mô hình bỏ sót; thêm test trong `backend/tests/unit/test_extractor.py`.
+- Thêm `backend/tests/fixtures/nlu_heldout2_vi.json` (100 ca) và chạy một lần.
+- Cập nhật `docs/features/planner/evaluation/README.md` (lệnh live, bảng kết quả, giới hạn diễn giải) và ánh xạ priority trong `annotation-guide.md`; lưu kết quả vào `results/nlu-*.json`.
+
+**Kết quả:** nhánh `test/f1-eval-benchmarks`; 97 backend unit test pass. NLU worst-run: dev 1 100%, dev 2 96,8%, held-out 1 70%, held-out 2 93% (hai bộ held-out chưa đạt ngưỡng 95%).
+
+**Ghi chú**
+
+- Held-out 2 do một tác giả viết sau khi biết prompt, chạy trước khi thêm `_fill_defaults`, chưa có người duyệt và đã bị đọc kết quả nên coi là dev data; muốn tuyên bố ≥95% cần bộ mới khoảng 200 ca do người khác viết.
+- Chưa chạy lại contract check, benchmark offline, integration/pgTAP; kết quả dev 1 và 2 chạy khi working tree còn thay đổi chưa commit.

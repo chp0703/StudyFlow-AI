@@ -27,15 +27,20 @@ python -B backend/scripts/benchmark_scheduler_quality.py --cases 100 --seed 2026
 
 # After human approval and loading .env into the current process without printing it:
 python -B backend/scripts/benchmark_f1.py --nlu-only --nlu-runs 5 --nlu-dataset backend/tests/fixtures/nlu_eval_vi.json --output docs/features/planner/evaluation/results/nlu-development.json
+python -B backend/scripts/benchmark_f1.py --nlu-only --nlu-runs 5 --nlu-dataset backend/tests/fixtures/nlu_dev2_vi.json --output docs/features/planner/evaluation/results/nlu-dev2.json
 python -B backend/scripts/benchmark_f1.py --nlu-only --nlu-runs 5 --nlu-dataset backend/tests/fixtures/nlu_heldout_vi.json --output docs/features/planner/evaluation/results/nlu-heldout.json
+python -B backend/scripts/benchmark_f1.py --nlu-only --nlu-runs 5 --nlu-dataset backend/tests/fixtures/nlu_heldout2_vi.json --output docs/features/planner/evaluation/results/nlu-heldout2.json
 ```
 
-Live evaluation is run only after the labels in `nlu_heldout_vi.json` are approved and frozen by SHA-256. Never store API keys or request headers in artifacts. The current set mirrors some prompt rules and has one approver, so even after freezing its generalization limits must remain explicit.
+Live evaluation of a held-out set is run only after its labels are approved and frozen by SHA-256, and only once. Never store API keys or request headers in artifacts. Each result file keeps per-case `outcomes`; reading them for a held-out set turns it into development data. Both held-out sets mirror some prompt rules and have one approver or author, so their generalization limits must remain explicit.
 
 ## Interpretation limits
 
-- The 40-case development set was used while editing the prompt and is not held out.
-- The 100-case candidate set becomes a one-shot held-out set only after approval. With one approver, inter-annotator agreement is unavailable.
+- The 40-case development set (`nlu_eval_vi.json`) and the 63-case development set 2 (`nlu_dev2_vi.json`) were used while editing the prompt and are not held out.
+- Held-out set 1 (`nlu_heldout_vi.json`) was run once and failed; its per-case outcomes were deliberately not inspected. It stays a baseline and must not be used to claim quality after the prompt changed.
+- Held-out set 2 (`nlu_heldout2_vi.json`) was written by one author after the prompt rules were known and was run once; it has no recorded human approval. Two labels (US02, US05) are arguably ambiguous, and its outcomes were read, so it is now development data.
+- With one author or approver, inter-annotator agreement is unavailable.
+- A claim of ≥95% accuracy needs a new set written by someone who has not seen the prompt, about 200 cases, run once: 197/200 gives a Wilson lower bound near 95.8%, while 95/100 gives about 88.8%.
 - `change_type` coverage is ADD-only because edit/delete window intents are outside the current contract.
 - CP-SAT proves an optimum only for 60-minute tasks on a 5-minute grid without retained or exact-start blocks.
 - Local latency does not represent concurrent production traffic.
@@ -43,7 +48,7 @@ Live evaluation is run only after the labels in `nlu_heldout_vi.json` are approv
 
 ## Results
 
-Offline evidence was generated from clean commits; NLU remains `NOT_RUN` pending human approval.
+Offline scheduler evidence was generated from clean commits. NLU live results are in the section below and in `results/nlu-*.json`.
 
 | Scheduler workload | Scheduled ratio | Mean | p50 | p95 | p99 |
 |---|---:|---:|---:|---:|---:|
@@ -55,7 +60,20 @@ The 50/200-task workloads intentionally exceed available capacity. The 200-task 
 
 CP-SAT proved `OPTIMAL` for all 100 subset workloads at clean commit `eb9362b`. Greedy matched the maximum completed-task count (`coverage gap = 0`) but had a mean priority-score gap of 7.96% and a worst gap of 60%. This is evidence about the declared restricted subset, not global scheduler optimality. Full per-seed statuses and solver metadata are in `results/scheduler-quality.json`.
 
-Held-out NLU SHA-256: `86c84628df2c9c8ed5d65153f63b6932b6f3068f13117d020ce9a6eb6f7a9d93`, approved by `phkhoiit-1508` on `2026-11-16`. This exact dataset is frozen for its first live evaluation.
+### NLU (live, DeepSeek `deepseek-flash`, 5 runs each)
+
+| Set | Cases | Worst run | Mean | NLU criterion (worst ≥95%) |
+|---|---:|---:|---:|---|
+| Development 1 (`nlu_eval_vi.json`) | 40 | 100% | 100% | met |
+| Development 2 (`nlu_dev2_vi.json`) | 63 | 96.8% | 98.7% | met |
+| Held-out 1 (`nlu_heldout_vi.json`) | 100 | 70% | 71.4% | **not met** |
+| Held-out 2 (`nlu_heldout2_vi.json`) | 100 | 93% | 95% | **not met** |
+
+- Held-out 1 (SHA-256 `86c84628df2c9c8ed5d65153f63b6932b6f3068f13117d020ce9a6eb6f7a9d93`, approved by `phkhoiit-1508` on `2026-11-16`) ran against the original prompt. Intent order was 97–100% correct; the failures were in slots.
+- Between the two held-out runs the prompt gained explicit period conventions (exclusive `end_at`, whole day/week for GET, GENERATE never starts in the past), mandatory `deadline_timezone`/`view`/`valid_from`, verbatim title/query text and UNSUPPORTED rules. Development 2 rose from 50.8% to 96.8% worst-run after these changes.
+- Held-out 2 (SHA-256 `e30b0582667aa7f7e2b09098524d2974abe66e5967d5b8bb21d9245578ece7ed`, no recorded approval) ran before the server began defaulting `valid_from` and `view` and before the "plain confirmation is UNKNOWN" prompt fix. Its failures were arguably ambiguous labels (US02, US05), weekday phrases read as recurring (AV05, AV10), a rule conflict (UK08) and isolated slot or format errors.
+- The development 1 and 2 numbers above were produced after those later changes. Development sets 1 and 2 were rerun on a working tree with uncommitted changes, so their `git_dirty` flag is true.
+- Wilson 95% intervals for the single-run frame exact match are stored per run in each result file.
 
 ## References
 
