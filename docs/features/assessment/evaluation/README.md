@@ -74,8 +74,9 @@ STAT-C01, REC-C01 and REC-C02 are covered by `supabase test db` and `backend/tes
 
 | Metric | Value | Evidence |
 |---|---|---|
-| GRD-C01 | see `results/offline.json` | offline, 10,000 random attempts |
-| GRD-C02 | see `results/offline.json` | offline |
+| GRD-C01 | 100% (10,000/10,000) | `results/offline.json`, seed 20261118, clean commit `0635199` |
+| GRD-C02 | 100% (10,000/10,000) | same |
+| PERF-02 (grading) | p50 0.167 ms, p95 0.308 ms, p99 0.382 ms | same, local machine, 1–50 questions per attempt |
 
 Live generation, QG-02 and RET-01 have no results until the corpus and labels exist.
 

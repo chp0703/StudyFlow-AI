@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "commit": "0635199c8e390faf56e379fc6ecda2731b84f113",
+    "git_dirty": false,
+    "generated_at": "2026-11-18T08:49:44+00:00"
+  },
+  "GRD-C01": 1.0,
+  "GRD-C02": 1.0,
+  "details": {
+    "cases": 10000,
+    "seed": 20261118,
+    "oracle_match": 10000,
+    "deterministic": 10000,
+    "mismatches": [],
+    "grading_ms": {
+      "p50": 0.167199999850709,
+      "p95": 0.3082000002905261,
+      "p99": 0.38219999987632036
+    }
+  }
+}
