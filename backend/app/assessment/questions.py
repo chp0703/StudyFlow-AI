@@ -232,15 +232,19 @@ class DeepSeekQuestionGenerator:
             ],
         }
         try:
-            response = self.http.post(
+            with self.http.stream(
+                "POST",
                 self.url,
                 headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
                 json=body,
-            )
-            response.raise_for_status()
-            if len(response.content) > self.max_response_bytes:
-                raise ValueError("response too large")
-            envelope = response.json()
+            ) as response:
+                response.raise_for_status()
+                content = bytearray()
+                for chunk in response.iter_bytes():
+                    if len(content) + len(chunk) > self.max_response_bytes:
+                        raise ValueError("response too large")
+                    content.extend(chunk)
+            envelope = json.loads(content)
             if not isinstance(envelope, dict):
                 raise ValueError("envelope must be dict")
             choices = envelope.get("choices")

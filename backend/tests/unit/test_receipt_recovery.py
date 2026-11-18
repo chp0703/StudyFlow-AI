@@ -58,3 +58,17 @@ class ReceiptRecoveryTest(unittest.TestCase):
         self.assertEqual(["claim_api_receipt", "complete_api_receipt"], [op for op, _, _ in self.calls])
         self.assertEqual(result.body, self.calls[-1][1]["response"])
         self.assertEqual(409, self.calls[-1][1]["http_status"])
+
+    def test_terminal_transient_error_releases_receipt_without_completing(self):
+        for code, expected_status in (("RATE_LIMITED", 429), ("SERVICE_UNAVAILABLE", 503)):
+            with self.subTest(code=code, status=expected_status):
+                self.calls.clear()
+
+                def dispatch(*args, error_code=code):
+                    raise Terminal(error_code, "Thử lại")
+
+                result = self.run_processor(dispatch)
+                self.assertEqual(expected_status, result.http_status)
+                self.assertEqual(code, result.body["error"]["code"])
+                self.assertEqual(["claim_api_receipt", "release_api_receipt"], [op for op, _, _ in self.calls])
+                self.assertEqual(3, self.calls[-1][1]["expected_lease_version"])
