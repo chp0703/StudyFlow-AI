@@ -4,8 +4,28 @@
 }
 
 .nav-item.active {
-  background: linear-gradient(105deg, var(--pastel-lavender), #f9f4ff);
-  color: var(--indigo);
+  background: linear-gradient(105deg, var(--nav-tint), #fff);
+  color: var(--nav-ink);
+  box-shadow: inset 3px 0 0 var(--nav-ink);
+}
+
+.nav-item > svg {
+  color: var(--nav-ink);
+}
+
+.nav-item[data-page="Assistant"] {
+  --nav-tint: var(--pastel-lavender);
+  --nav-ink: var(--indigo);
+}
+
+.nav-item[data-page="Planner"] {
+  --nav-tint: var(--pastel-sky);
+  --nav-ink: #254c88;
+}
+
+.nav-item[data-page="Study"] {
+  --nav-tint: var(--pastel-mint);
+  --nav-ink: #24654e;
 }
 
 .home-layout .assistant-shell {
@@ -14,10 +34,8 @@
 
 .home-layout .assistant-shell.is-empty {
   background:
-    radial-gradient(ellipse at 52% 37%, #eadcff 0%, transparent 50%),
-    radial-gradient(ellipse at 98% 5%, var(--pastel-blush), transparent 45%),
-    radial-gradient(ellipse at 0 100%, var(--pastel-mint), transparent 45%),
-    #fdfaff;
+    radial-gradient(ellipse at center, #ffffffa8, transparent 72%),
+    var(--pastel-rainbow);
 }
 
 .assistant-welcome::before {
@@ -30,7 +48,7 @@
   border-radius: 22px;
   background:
     radial-gradient(circle at 32% 28%, white, transparent 26%),
-    linear-gradient(145deg, #d9c4ff, #ecc3e5 72%, #ffe0c9);
+    var(--pastel-rainbow);
   box-shadow: 0 10px 25px #674a9733;
   transform: rotate(-10deg);
 }
@@ -54,18 +72,18 @@
 }
 
 .summary-blue {
-  --summary-tint: var(--pastel-mint);
-  --summary-ink: #24654e;
+  --summary-tint: var(--pastel-sky);
+  --summary-ink: #254c88;
 }
 
 .summary-rose {
-  --summary-tint: var(--pastel-blush);
+  --summary-tint: var(--pastel-coral);
   --summary-ink: #913555;
 }
 
 .summary-purple {
-  --summary-tint: var(--pastel-lavender);
-  --summary-ink: var(--indigo);
+  --summary-tint: var(--pastel-lemon);
+  --summary-ink: #714d17;
 }
 
 .home-summary .summary-card {
@@ -78,13 +96,20 @@
   color: var(--summary-ink);
 }
 
-.planner-calendar > .card-heading,
+.planner-calendar > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-sky), #fff 85%);
+}
+
+.task-panel > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-periwinkle), #fff 85%);
+}
+
 .study-quiz-card > .card-heading {
   background: linear-gradient(110deg, var(--pastel-lavender), #fff 85%);
 }
 
 .study-materials-card > .card-heading {
-  background: linear-gradient(110deg, var(--pastel-mint), #fff 85%);
+  background: linear-gradient(110deg, var(--pastel-aqua), #fff 85%);
 }
 
 .study-qa-card > .card-heading {

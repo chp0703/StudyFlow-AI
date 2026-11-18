@@ -15,17 +15,33 @@
   --background: #faf7fc;
   --border: #e7dff0;
 
+  --pastel-coral: #ffdbdb;
+  --pastel-lemon: #fff0b9;
+  --pastel-aqua: #d8f3f1;
+  --pastel-sky: #dceaff;
+  --pastel-periwinkle: #e2e3ff;
   --pastel-lavender: #eee4ff;
   --pastel-blush: #fce4ed;
   --pastel-mint: #dff4e9;
   --pastel-peach: #ffeddb;
+  --pastel-rainbow: linear-gradient(
+    110deg,
+    var(--pastel-coral),
+    var(--pastel-peach),
+    var(--pastel-lemon),
+    var(--pastel-mint),
+    var(--pastel-aqua),
+    var(--pastel-sky),
+    var(--pastel-periwinkle),
+    var(--pastel-lavender),
+    var(--pastel-blush)
+  );
   --bg-card: rgba(255, 255, 255, 0.94);
   --bg-card-solid: #ffffff;
 
   --bg-ambient:
-    radial-gradient(ellipse at 92% 8%, var(--pastel-blush), transparent 42%),
-    radial-gradient(ellipse at 4% 96%, var(--pastel-mint), transparent 40%),
-    linear-gradient(135deg, var(--pastel-lavender), var(--background) 62%);
+    linear-gradient(#ffffff70, #ffffff70),
+    var(--pastel-rainbow);
 
   --gradient-brand: linear-gradient(115deg, #4e469d, #663eb0 58%, #913f79);
 
