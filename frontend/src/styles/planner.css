@@ -325,32 +325,26 @@
   outline-offset: 1px;
   border-color: var(--color-primary);
 }
-.planner-clarification-colors {
+.task-color-picker {
+  display: grid;
+  gap: 4px;
+  margin-block: 4px 8px;
+}
+.task-color-control {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
 }
-.planner-clarification-color {
-  display: inline-grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 2px solid transparent;
-  border-radius: 999px;
-  color: #fff;
-  cursor: pointer;
-  transition: transform 0.14s ease, box-shadow 0.14s ease;
+.task-color-control select {
+  min-width: 0;
 }
-.planner-clarification-color:hover {
-  transform: scale(1.06);
-}
-.planner-clarification-color.is-selected {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-ink);
-}
-.planner-clarification-color:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+.task-color-swatch {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 1px solid var(--color-control);
+  border-radius: 50%;
+  background: var(--color-info-bg);
 }
 .planner-clarification-choices {
   display: flex;
@@ -817,7 +811,7 @@
 .month-date { width: 32px; min-height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--color-ink); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
 .month-window-dots { margin-left: 2px; color: var(--color-warning-text); font-size: 11px; }
 .month-event-list { display: grid; gap: 3px; }
-.month-event { min-width: 0; width: 100%; display: flex; gap: 3px; border: 0; border-left: 3px solid var(--color-primary); border-radius: 4px; padding: 3px 4px; background: var(--color-info-bg); color: var(--color-ink); font: inherit; font-size: 10px; text-align: left; cursor: pointer; }
+.month-event { min-width: 0; width: 100%; display: flex; gap: 3px; border: 0; border-left: 3px solid var(--evt, var(--color-primary)); border-radius: 4px; padding: 3px 4px; background: var(--evt-bg, var(--color-info-bg)); color: var(--evt-ink, var(--color-ink)); font: inherit; font-size: 10px; text-align: left; cursor: pointer; }
 .month-event time { flex: none; font-variant-numeric: tabular-nums; font-weight: 700; }
 .month-event span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .month-event.is-proposed, .month-agenda-event.is-proposed { outline: 1px dashed var(--color-primary); }
@@ -828,7 +822,7 @@
 .month-agenda-heading { display: flex; align-items: center; justify-content: space-between; }
 .month-agenda-heading h3 { margin: 0 0 8px; font-size: 14px; }
 .month-agenda-heading button { width: 44px; height: 44px; border: 0; background: transparent; color: var(--color-ink); cursor: pointer; }
-.month-agenda-event { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; margin-top: 5px; padding: 6px 8px; border: 0; border-left: 3px solid var(--color-primary); border-radius: 6px; background: var(--color-info-bg); color: var(--color-ink); font: inherit; text-align: left; cursor: pointer; }
+.month-agenda-event { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; margin-top: 5px; padding: 6px 8px; border: 0; border-left: 3px solid var(--evt, var(--color-primary)); border-radius: 6px; background: var(--evt-bg, var(--color-info-bg)); color: var(--evt-ink, var(--color-ink)); font: inherit; text-align: left; cursor: pointer; }
 .month-agenda-event time { font-variant-numeric: tabular-nums; font-size: 11px; }
 .month-agenda-event strong { overflow-wrap: anywhere; font-size: 12px; }
 .month-agenda-event small { margin-left: auto; }

@@ -1,6 +1,5 @@
-import { Check } from "lucide-react"
+import TaskColorPicker from "./TaskColorPicker"
 import {
-  TASK_COLOR_OPTIONS,
   TASK_PRIORITY_OPTIONS,
   type ClarificationDraftValues,
 } from "./clarification"
@@ -157,36 +156,11 @@ export default function TaskClarificationFields({
         </label>
       </div>
 
-      <div className="planner-clarification-field">
-        <span className="planner-clarification-label">Màu sắc</span>
-        <div
-          className="planner-clarification-colors"
-          role="radiogroup"
-          aria-label="Màu sắc công việc"
-        >
-          {TASK_COLOR_OPTIONS.map((swatch) => {
-            const selected = values.color === swatch.value
-            return (
-              <button
-                key={swatch.value}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                aria-label={swatch.label}
-                title={swatch.label}
-                className={`planner-clarification-color${
-                  selected ? " is-selected" : ""
-                }`}
-                style={{ backgroundColor: swatch.value }}
-                disabled={busy}
-                onClick={() => setField("color", swatch.value)}
-              >
-                {selected && <Check size={14} aria-hidden="true" />}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      <TaskColorPicker
+        color={values.color ?? ""}
+        onChange={(color) => setField("color", color)}
+        disabled={busy}
+      />
 
       <label
         htmlFor={`${idPrefix}-description`}

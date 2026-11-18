@@ -414,7 +414,8 @@ export function usePlanner(
     })
   }
 
-  const send = () => sendText(input)
+  const send = (color?: string) =>
+    sendText(color ? `${input.trim()}, màu ${color}` : input)
 
   const submitClarification = (followUpText: string) => {
     sendText(followUpText)

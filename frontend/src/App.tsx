@@ -497,6 +497,7 @@ export default function App() {
           <div className="sidebar-home-item">
             <Button
               className={`nav-item ${page === "Assistant" ? "active" : ""}`}
+              data-page="Assistant"
               aria-label="Trang chủ"
               aria-current={page === "Assistant" ? "page" : undefined}
               onClick={() => go("Assistant")}
@@ -518,6 +519,7 @@ export default function App() {
             <Button
               key={n.name}
               className={`nav-item ${page === n.name ? "active" : ""}`}
+              data-page={n.name}
               aria-label={n.label}
               aria-current={page === n.name ? "page" : undefined}
               onClick={() => go(n.name)}
