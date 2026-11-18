@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal, ROUND_HALF_UP
 from uuid import UUID, uuid5
 
 from ..clients.rpc import child_key, iso
@@ -160,11 +161,15 @@ def grade_attempt(
     correct_count = sum(1 for r in graded_responses if r["validity"] == "VALID" and r["is_correct"] is True)
     incorrect_count = sum(1 for r in graded_responses if r["validity"] == "VALID" and r["is_correct"] is False)
     omitted_count = total_questions - valid_response_count
+    score_percent: int | float | None
     if valid_response_count == 0:
         score_percent = None
     else:
-        raw_score = round(correct_count * 100.0 / valid_response_count, 2)
-        score_percent = int(raw_score) if raw_score.is_integer() else raw_score
+        raw_score = (Decimal(correct_count) * 100 / Decimal(valid_response_count)).quantize(
+            Decimal("0.01"),
+            rounding=ROUND_HALF_UP,
+        )
+        score_percent = int(raw_score) if raw_score == raw_score.to_integral_value() else float(raw_score)
 
     graded_attempt = {
         **attempt,
