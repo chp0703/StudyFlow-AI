@@ -3,7 +3,7 @@
   body {
     font-family: Inter, sans-serif;
     color: var(--color-ink);
-    background: var(--background);
+    background: var(--bg-ambient) fixed;
     font-size: 15px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;

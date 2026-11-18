@@ -27,6 +27,24 @@
   --bg-card: rgba(255, 255, 255, 0.94);
   --bg-card-solid: #ffffff;
 
+  --bg-ambient:
+    radial-gradient(
+      circle at 85% 6%,
+      rgba(255, 224, 102, 0.28),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 8% 90%,
+      rgba(34, 184, 167, 0.18),
+      transparent 24%
+    ),
+    linear-gradient(
+      135deg,
+      #fbfbff 0%,
+      #f5f7ff 48%,
+      #fff8fc 100%
+    );
+
   --gradient-brand: linear-gradient(115deg, #4e469d, #663eb0 58%, #913f79);
 
   /* Biến thiết kế StudyFlow ánh xạ theo bảng màu */

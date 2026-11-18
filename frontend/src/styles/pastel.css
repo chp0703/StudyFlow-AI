@@ -32,6 +32,10 @@
   background: var(--bg-card-solid);
 }
 
+.home-layout .assistant-shell.is-empty {
+  background: var(--bg-ambient) fixed;
+}
+
 .assistant-welcome-logo {
   display: block;
   width: clamp(180px, 37vw, 340px);
