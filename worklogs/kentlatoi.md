@@ -203,3 +203,18 @@
 
 **Ghi chú**
 - Chưa chạy API E2E có đăng nhập vì không có backend/tài khoản thử nghiệm.
+
+## 2026-11-18 — Implement F2 assessment frontend
+
+**Mục tiêu:** Đưa luồng đánh giá học tập theo contract vào trang Study và giữ bài quiz minh họa riêng cho Demo Mode.
+
+**Đã làm**
+- Tách quiz Demo khỏi `frontend/src/pages/Study.tsx` vào `frontend/src/features/assessment/`, ghi rõ câu hỏi và kết quả minh họa.
+- Thêm giao diện API Mode cho tải tài liệu, duyệt câu hỏi nháp bằng tham chiếu server, làm bài với câu hỏi VERIFIED, kết quả và thống kê chủ đề.
+- Thêm test biên VERIFIED và cập nhật `docs/features/assessment/README.md` theo khả năng backend hiện có.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; TypeScript, build, 81/81 frontend tests và `git diff --check` đạt.
+
+**Ghi chú**
+- Chưa chạy browser QA hoặc E2E với backend/DeepSeek có cấu hình.
+- Backend main chưa đăng ký route recommendations; giao diện báo chưa khả dụng. Contract chưa có danh sách tài liệu hoặc khôi phục attempt.
