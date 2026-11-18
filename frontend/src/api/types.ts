@@ -181,7 +181,7 @@ export type ActionPresentation = {
 
   pending_action: PendingActionRef
 
-  candidate: { slots: Record<string, unknown> } | null
+  candidate: ApiTaskCandidate | null
 
   proposal: PlanProposal | null
 
@@ -194,6 +194,10 @@ export type ActionPresentation = {
   effective_policy: Record<string, unknown> | null
 
   question_drafts?: QuestionDraftBatchData | null
+
+  revision_recommendation?: RevisionRecommendation | null
+
+  revision_source_chunks?: MaterialChunk[] | null
 }
 
 export type ToolResult = {
@@ -560,6 +564,65 @@ export type RevisionRecommendation = {
   candidate_id: string | null
 
   status: "PROPOSED" | "ACCEPTED" | "REJECTED"
+
+  created_at: string
+
+  updated_at: string
+}
+
+export type CandidateTaskFields = {
+  title?: string | null
+
+  description?: string | null
+
+  start_at?: string | null
+
+  available_from_at?: string | null
+
+  deadline_at?: string | null
+
+  deadline_precision?: "DATE" | "DATETIME" | null
+
+  deadline_date?: string | null
+
+  deadline_timezone?: "Asia/Ho_Chi_Minh" | null
+
+  estimated_minutes?: number | null
+
+  priority?: 0.1 | 0.5 | 1 | null
+
+  color?: string | null
+}
+
+export type CandidateReviewPatch = {
+  candidate_patch: CandidateTaskFields
+
+  expected_candidate_version: number
+}
+
+export type ApiTaskCandidate = {
+  candidate_id: string
+
+  user_id: string
+
+  conversation_id: string
+
+  version: number
+
+  status: "DRAFT" | "CONFIRMED" | "CANCELLED"
+
+  slots: CandidateTaskFields
+
+  raw_expressions: Record<string, string>
+
+  field_sources: Record<string, {
+    source: "USER_MESSAGE" | "CONFIRMED_CONTEXT" | "SYSTEM_DEFAULT" | "DERIVED"
+    reference: string | null
+  }>
+
+  source_message_id: string
+
+  confirmed_task_id: string | null
 
   created_at: string
 

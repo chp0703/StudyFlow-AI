@@ -98,6 +98,16 @@ jobs:
           upgraded=$(dump)
           test "$clean" = "$upgraded"
 
+      - name: Verify B6 to B7 upgrade matches clean replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          dump() { supabase db dump --local --schema app_private,app_api | grep -v '^--' | sha256sum | cut -d' ' -f1; }
+          clean=$(dump)
+          supabase db reset --version 202611190001 --yes
+          supabase migration up --yes
+          test "$clean" = "$(dump)"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

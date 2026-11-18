@@ -34,7 +34,9 @@
       "enum": [
         "create_question_drafts",
         "verify_question_drafts",
-        "list_questions"
+        "list_questions",
+        "create_revision_recommendation",
+        "decide_revision_recommendation"
       ]
     },
     "Issue": {
@@ -1942,7 +1944,8 @@
             "SET_SCHEDULING_PREFERENCES",
             "GENERATE_STUDY_PLAN",
             "GET_STUDY_PLAN",
-            "VERIFY_QUESTION_DRAFTS"
+            "VERIFY_QUESTION_DRAFTS",
+            "ACCEPT_REVISION_RECOMMENDATION"
           ]
         },
         "state": {
@@ -2332,6 +2335,14 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 9007199254740991
+        },
+        "candidate_patch": {
+          "$ref": "#/$defs/CandidateTaskFields"
+        },
+        "expected_candidate_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
         }
       },
       "required": [
@@ -2339,7 +2350,15 @@
         "conversation_id",
         "expected_action_version"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "dependentRequired": {
+        "candidate_patch": [
+          "expected_candidate_version"
+        ],
+        "expected_candidate_version": [
+          "candidate_patch"
+        ]
+      }
     },
     "Question": {
       "type": "object",
@@ -4883,6 +4902,31 @@
               "type": "null"
             }
           ]
+        },
+        "revision_recommendation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RevisionRecommendation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision_source_chunks": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/MaterialChunk"
+              },
+              "minItems": 1,
+              "maxItems": 50
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -4943,6 +4987,75 @@
             "properties": {
               "question_drafts": {
                 "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "pending_action": {
+                "properties": {
+                  "intent": {
+                    "const": "ACCEPT_REVISION_RECOMMENDATION"
+                  }
+                },
+                "required": [
+                  "intent"
+                ]
+              }
+            },
+            "required": [
+              "pending_action"
+            ]
+          },
+          "then": {
+            "required": [
+              "revision_recommendation",
+              "revision_source_chunks"
+            ],
+            "properties": {
+              "revision_recommendation": {
+                "$ref": "#/$defs/RevisionRecommendation"
+              },
+              "revision_source_chunks": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/MaterialChunk"
+                },
+                "minItems": 1,
+                "maxItems": 50
+              }
+            }
+          },
+          "else": {
+            "if": {
+              "properties": {
+                "pending_action": {
+                  "properties": {
+                    "intent": {
+                      "not": {
+                        "const": "CREATE_TASK"
+                      }
+                    }
+                  },
+                  "required": [
+                    "intent"
+                  ]
+                }
+              },
+              "required": [
+                "pending_action"
+              ]
+            },
+            "then": {
+              "properties": {
+                "revision_recommendation": {
+                  "type": "null"
+                },
+                "revision_source_chunks": {
+                  "type": "null"
+                }
               }
             }
           }
@@ -5162,6 +5275,9 @@
                 },
                 {
                   "$ref": "#/$defs/QuestionDraftBatchData"
+                },
+                {
+                  "$ref": "#/$defs/ActionPresentation"
                 }
               ]
             },
@@ -6569,6 +6685,14 @@
         },
         "presentation": {
           "$ref": "#/$defs/ActionPresentation"
+        },
+        "candidate_patch": {
+          "$ref": "#/$defs/CandidateTaskFields"
+        },
+        "expected_candidate_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
         }
       },
       "required": [
@@ -6576,7 +6700,15 @@
         "expected_action_version",
         "presentation"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "dependentRequired": {
+        "candidate_patch": [
+          "expected_candidate_version"
+        ],
+        "expected_candidate_version": [
+          "candidate_patch"
+        ]
+      }
     },
     "UpdateCandidateDraftArguments": {
       "type": "object",
@@ -6726,7 +6858,8 @@
             "prepare_action",
             "review_action",
             "submit_decision",
-            "generate_question_drafts"
+            "generate_question_drafts",
+            "create_revision_recommendation"
           ]
         },
         "idempotency_key": {
@@ -6937,7 +7070,8 @@
             "prepare_action",
             "review_action",
             "submit_decision",
-            "generate_question_drafts"
+            "generate_question_drafts",
+            "create_revision_recommendation"
           ]
         },
         "idempotency_key": {
@@ -6973,7 +7107,8 @@
             "prepare_action",
             "review_action",
             "submit_decision",
-            "generate_question_drafts"
+            "generate_question_drafts",
+            "create_revision_recommendation"
           ]
         },
         "idempotency_key": {
@@ -7010,7 +7145,8 @@
             "prepare_action",
             "review_action",
             "submit_decision",
-            "generate_question_drafts"
+            "generate_question_drafts",
+            "create_revision_recommendation"
           ]
         },
         "idempotency_key": {
@@ -7741,7 +7877,8 @@
             "prepare_action",
             "review_action",
             "submit_decision",
-            "generate_question_drafts"
+            "generate_question_drafts",
+            "create_revision_recommendation"
           ]
         },
         "idempotency_key": {
@@ -12035,7 +12172,36 @@
         "created_at",
         "updated_at"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "ACCEPTED"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "candidate_id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "candidate_id": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
     },
     "MaterialUploadRequest": {
       "type": "object",
@@ -13262,15 +13428,47 @@
     },
     "CreateRevisionRecommendationArguments": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "recommendation": {
-          "$ref": "#/$defs/RevisionRecommendation"
+        "recommendation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "pending_action_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 120
+        },
+        "suggested_minutes": {
+          "type": "integer",
+          "minimum": 15,
+          "maximum": 240
+        },
+        "priority": {
+          "enum": [
+            0.1,
+            0.5,
+            1
+          ]
         }
       },
       "required": [
-        "recommendation"
-      ],
-      "additionalProperties": false
+        "recommendation_id",
+        "pending_action_id",
+        "material_id",
+        "topic",
+        "suggested_minutes",
+        "priority"
+      ]
     },
     "RevisionRecommendationResult": {
       "oneOf": [
@@ -13286,13 +13484,75 @@
               "pattern": "\\S"
             },
             "outcome": {
-              "enum": [
-                "PROPOSED",
-                "COMMITTED"
-              ]
+              "const": "COMMITTED"
             },
             "data": {
-              "$ref": "#/$defs/RevisionRecommendation"
+              "$ref": "#/$defs/ActionPresentation"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "DecideRevisionRecommendationArguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "recommendation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "APPROVE",
+            "REJECT"
+          ]
+        }
+      },
+      "required": [
+        "recommendation_id",
+        "decision"
+      ]
+    },
+    "DecideRevisionRecommendationResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "$ref": "#/$defs/ActionPresentation"
             },
             "error": {
               "type": "null"

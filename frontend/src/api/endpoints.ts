@@ -2,6 +2,7 @@ import type { ApiClient } from "./client.ts"
 
 import type {
   ActionReference,
+  CandidateReviewPatch,
   ApiTask,
   ApiTimeWindow,
   AssessmentMaterialDetailData,
@@ -270,6 +271,7 @@ export function createEndpoints(client: ApiClient) {
       actionId: string,
       expectedVersion: number,
       key?: string,
+      patch?: CandidateReviewPatch,
     ) =>
       client.request<OrchestratorReply>(
         "POST",
@@ -279,6 +281,7 @@ export function createEndpoints(client: ApiClient) {
             schema_version: SCHEMA,
             conversation_id: conversationId,
             expected_action_version: expectedVersion,
+            ...(patch ?? {}),
           },
           idempotencyKey: key,
         },
