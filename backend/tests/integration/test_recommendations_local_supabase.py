@@ -99,6 +99,19 @@ class RevisionLocalTests(unittest.TestCase):
             self.assertEqual(self.f.post(app,f"/v1/actions/{action['action_id']}/review",patch).status_code,409)
             final=self.ok(self.decide(app,body,ready['action_reference']));self.assertEqual(final['state'],'SUCCEEDED')
             after=self.snapshot(body);self.assertEqual(after,(before[0]+1,before[1],before[2]+1))
+            replayed_create=self.f.post(app,'/v1/assessment/recommendations',body,key=key)
+            self.assertEqual(replayed_create.status_code,200,replayed_create.text)
+            self.assertEqual(replayed_create.headers['Idempotency-Replayed'],'true')
+            replayed_json=replayed_create.json()
+            self.assertEqual(replayed_json['result']['data'],created['result']['data'])
+            self.assertEqual(replayed_json['action_reference'],ref)
+            concluded_review=self.f.post(app,f"/v1/actions/{ref['action_id']}/review",dict(schema_version='1.1',conversation_id=body['conversation_id'],expected_action_version=ready['action_reference']['action_version']))
+            self.assertEqual(concluded_review.status_code,409,concluded_review.text)
+            self.assertEqual(self.decide(app,body,ref).status_code,409)
+            self.assertEqual(self.decide(app,body,ready['action_reference']).status_code,409)
+            self.assertEqual(self.snapshot(body),after)
+            with psycopg.connect(os.environ['F1_DB_TEST_DSN']) as db:
+                self.assertEqual(db.execute('select count(*) from app_private.task_candidates where conversation_id=%s',(body['conversation_id'],)).fetchone()[0],1)
 
     def test_no_data_omitted_invalid_correct_and_foreign_material(self):
         with self.client() as app:
@@ -127,7 +140,14 @@ class RevisionLocalTests(unittest.TestCase):
             self.assertTrue(any('50 đoạn' in x for x in rec['confidence_limit']['limitations']));self.assertTrue(any('lặp' in x for x in rec['confidence_limit']['limitations']))
             stats=self.ok(app.get('/v1/assessment/topics/stats',params={'material_id':body['material_id']},headers=self.f.auth('a')))
             self.assertEqual(stats['data']['items'][0]['valid_response_count'],306)
-            self.ok(self.decide(app,body,made['action_reference'],'REJECT'));self.assertEqual(made['result']['data']['revision_recommendation']['status'],'PROPOSED')
+            rejected=self.ok(self.decide(app,body,made['action_reference'],'REJECT'))
+            self.assertEqual(made['result']['data']['revision_recommendation']['status'],'PROPOSED')
+            self.assertEqual(rejected['state'],'SUCCEEDED')
+            self.assertIsNone(rejected['result']['data']['candidate'])
+            self.assertEqual(rejected['result']['data']['revision_recommendation']['status'],'REJECTED')
+            with psycopg.connect(os.environ['F1_DB_TEST_DSN']) as db:
+                self.assertEqual(db.execute('select status,candidate_id from app_private.revision_recommendations where recommendation_id=%s',(rec['recommendation_id'],)).fetchone(),('REJECTED',None))
+                self.assertEqual(db.execute('select count(*) from app_private.task_candidates where conversation_id=%s',(body['conversation_id'],)).fetchone()[0],0)
 
     def test_decision_race_and_candidate_cancel_preserve_accepted_status(self):
         with self.client() as app:
