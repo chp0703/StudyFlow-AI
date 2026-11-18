@@ -456,12 +456,12 @@
 
 - Thay state attempt trong bộ nhớ bằng RPC đọc context bền vững; save/submit và idempotency hoạt động sau khi backend restart hoặc chạy nhiều worker.
 - Giới hạn response DeepSeek ngay trong lúc streaming và bổ sung kiểm thử prompt injection cho context tài liệu không tin cậy.
+- Sửa receipt transient để HTTP 429/503 giải phóng lease thay vì cố lưu lỗi mà database chủ động từ chối.
 - Thêm contract, route, orchestration, RPC và migration append-only cho revision recommendation có evidence, confidence limit và quyết định bắt buộc qua `/v1/decisions`.
 - Bổ sung acceptance/integration tests, đưa các HTTP suite F2 vào CI và cập nhật README theo runtime hiện tại.
 
-**Kết quả:** nhánh `fix/f2-backend-completeness`; contract checker pass (192 definitions), generated migration đồng bộ, 129 unit tests, 37 scheduler acceptance tests và các HTTP acceptance suites pass; planner evaluation pass; local Supabase reset thành công, 618 pgTAP tests và F2 attempt/recommendation integration pass.
+**Kết quả:** nhánh `fix/f2-backend-completeness`; contract checker pass (192 definitions), generated migration đồng bộ, 130 unit tests, 37 scheduler acceptance tests, 72 API acceptance tests, 22 local integration tests và 6 concurrency tests pass; local Supabase reset thành công và 618 pgTAP tests pass. E2E với DeepSeek thật (`deepseek-flash`) pass từ upload material đến sinh/duyệt câu hỏi, restart backend, chấm điểm, thống kê và duyệt recommendation.
 
 **Ghi chú**
 
-- Chưa chạy DeepSeek thật vì không sử dụng API key; kiểm thử model dùng transport giả lập.
 - Không chạm cloud Supabase project.
