@@ -3,23 +3,7 @@
   body {
     font-family: Inter, sans-serif;
     color: var(--color-ink);
-    background:
-      radial-gradient(
-        circle at 85% 6%,
-        rgba(255, 224, 102, 0.28),
-        transparent 24%
-      ),
-      radial-gradient(
-        circle at 8% 90%,
-        rgba(34, 184, 167, 0.18),
-        transparent 24%
-      ),
-      linear-gradient(
-        135deg,
-        #fbfbff 0%,
-        #f5f7ff 48%,
-        #fff8fc 100%
-      );
+    background: var(--bg-ambient);
     background-attachment: fixed;
     font-size: 15px;
     line-height: 1.6;
