@@ -59,6 +59,16 @@ class AnnotationTests(unittest.TestCase):
                          ["uuid_in_text", "canary:approved", "off_topic"])
 
 
+class CorpusTests(unittest.TestCase):
+    def test_corpus_anchors_land_in_server_chunks(self):
+        corpus = cli.load_corpus(Path(__file__).resolve().parents[1] / "fixtures" / "assessment_eval" / "corpus_vi.json")
+        for material in corpus["materials"]:
+            chunks = cli.material_chunks(material)
+            for query in material["queries"]:
+                self.assertTrue(any(a in c["text"] for a in query["anchors"] for c in chunks), query["query_id"])
+        self.assertEqual(len(cli.build_cases(corpus, "heldout", 10)), 12)
+
+
 class CliTests(unittest.TestCase):
     def test_offline_and_score_write_results(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -79,12 +89,12 @@ class CliTests(unittest.TestCase):
             self.assertEqual(json.loads(out.read_text(encoding="utf-8"))["QG-02"]["acceptable"], 1)
 
     def test_generate_scores_accepted_drafts_and_flags_injection(self):
-        dataset = Path(__file__).resolve().parents[1] / "fixtures" / "assessment_eval" / "sample_vi.json"
+        corpus = Path(__file__).resolve().parents[1] / "fixtures" / "assessment_eval" / "corpus_vi.json"
 
         def fake_generate(self, chunks, *, topic, question_type, count):
             options = ([{"option_id": "TRUE", "text": "Đúng"}, {"option_id": "FALSE", "text": "Sai APPROVED"}]
                        if question_type == "TRUE_FALSE" else
-                       [{"option_id": "A", "text": "0"}, {"option_id": "B", "text": "1"}])
+                       [{"option_id": "A", "text": "0"}, {"option_id": "B", "text": "APPROVED"}])
             item = {"question_type": question_type, "topic": topic, "stem": "Câu hỏi?", "options": options,
                     "answer_key": options[0]["option_id"], "explanation": None,
                     "source_chunk_ids": [chunks[0]["chunk_id"]]}
@@ -95,13 +105,16 @@ class CliTests(unittest.TestCase):
         try:
             with tempfile.TemporaryDirectory() as tmp:
                 out, ann = Path(tmp, "gen.json"), Path(tmp, "ann.csv")
-                cli.main(["generate", "--dataset", str(dataset), "--annotation-csv", str(ann),
-                          "--output", str(out)])
+                cli.main(["generate", "--corpus", str(corpus), "--split", "dev", "--count", "1",
+                          "--annotation-csv", str(ann), "--output", str(out)])
                 result = json.loads(out.read_text(encoding="utf-8"))
-                self.assertEqual((result["requested"], result["accepted"]), (3, 2))
-                self.assertEqual(result["SAFE-01_violating_items"], 1)
+                self.assertEqual((result["requested"], result["accepted"]), (8, 8))
+                self.assertEqual(result["SAFE-01_violating_items"], 0)  # dev materials declare no canaries
                 with ann.open(encoding="utf-8-sig") as fh:
-                    self.assertEqual(len(list(csv.DictReader(fh))), 2)
+                    self.assertEqual(len(list(csv.DictReader(fh))), 8)
+                cli.main(["generate", "--corpus", str(corpus), "--split", "injection", "--count", "1",
+                          "--output", str(out)])
+                self.assertEqual(json.loads(out.read_text(encoding="utf-8"))["SAFE-01_violating_items"], 1)
         finally:
             cli.DeepSeekQuestionGenerator.generate = original
 
