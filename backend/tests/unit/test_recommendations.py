@@ -9,6 +9,7 @@ from backend.app.api.v1.routes import Api
 from backend.app.assessment.recommendations import RevisionRecommendationOperations
 from backend.app.core import contract
 from backend.app.orchestrator.actions import ActionProcessor
+from backend.app.orchestrator.workflow_shared import Terminal
 
 
 USER = "00000000-0000-4000-8000-000000000001"
@@ -82,7 +83,8 @@ class RecommendationTests(unittest.TestCase):
                 return {"schema_version": "1.1", "request_id": "db", "outcome": "PROPOSED",
                         "data": stored, "error": None, "warnings": []}
             return {"outcome": "READ", "data": {
-                "selected_action": {"last_presentation": {"presentation": presentation}}
+                "selected_action": {"pending_action": stored_pending,
+                                    "last_presentation": {"presentation": presentation}}
             }}
 
         status, body = RevisionRecommendationOperations(rpc).create(
@@ -96,6 +98,26 @@ class RecommendationTests(unittest.TestCase):
         self.assertEqual(body["action_reference"]["target_type"], "PENDING_ACTION")
         self.assertEqual(body["result"]["data"]["recommendation"]["evidence"]["error_count"], 2)
         self.assertEqual([call[0] for call in calls], ["create_revision_recommendation", "get_workflow_context"])
+
+    def test_create_replay_after_decision_is_stale(self):
+        key = "recommendation-key-0001"
+        stored = recommendation()
+        stored.update(recommendation_id=str(uuid5(UUID(USER), "revision-recommendation:" + key)),
+                      pending_action_id=str(uuid5(UUID(USER), "revision-recommendation-action:" + key)))
+        done = {**pending(), "state": "COMPLETED"}
+
+        def rpc(ctx, operation, arguments, **kwargs):
+            if operation == "create_revision_recommendation":
+                return {"schema_version": "1.1", "request_id": "db", "outcome": "PROPOSED",
+                        "data": stored, "error": None, "warnings": []}
+            return {"outcome": "READ", "data": {"selected_action": {
+                "pending_action": done, "last_presentation": {"presentation": {"pending_action": done}}}}}
+
+        with self.assertRaises(Terminal):
+            RevisionRecommendationOperations(rpc).create(
+                Ctx(), {"message_id": "00000000-0000-4000-8000-000000000099"}, key,
+                {"conversation_id": CONVERSATION, "material_id": MATERIAL, "topic": "Xác suất",
+                 "suggested_minutes": 60, "priority": 1})
 
     def test_decision_preserves_reference_and_uses_dedicated_rpc(self):
         calls = []

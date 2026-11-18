@@ -60,6 +60,9 @@ class RevisionRecommendationOperations:
         selected = context.get("selected_action")
         if selected is None or not selected.get("last_presentation"):
             raise WorkflowError("INTERNAL_ERROR", "Không thể tải đề xuất ôn tập vừa tạo.")
+        live = selected.get("pending_action") or {}
+        if live.get("state") != "AWAITING_APPROVAL":  # replayed key after a decision: presentation is a stale snapshot
+            raise Terminal("STALE_ENTITY_VERSION", "Gợi ý ôn tập đã được xử lý.")
         presentation = selected["last_presentation"]["presentation"]
         action = presentation["pending_action"]
         reference = {
