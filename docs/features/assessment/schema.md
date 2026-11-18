@@ -153,7 +153,7 @@ updated_at: timestamp
   - Mọi phần tử trong `question_ids` phải tham chiếu câu hỏi thuộc cùng `(user_id, material_id)` và đang có `status = VERIFIED`. Không có bất kỳ đường nào đưa câu `DRAFT` hoặc `REJECTED` vào `QuizAttempt`.
   - Khi `origin = MANUAL` thì `session_outcome_id = null`; khi `origin = SESSION_HANDOFF` thì `session_outcome_id` bắt buộc là UUID (chưa gắn FK sang F3 ở v1).
   - `total_questions = len(question_ids)`.
-  - Khi `status = IN_PROGRESS`: `submitted_at = null`, `score_percent = null`, `valid_response_count = 0`, `correct_count = 0`, `incorrect_count = 0`, `omitted_count = 0`.
+  - Khi `status = IN_PROGRESS`: `submitted_at = null`, `score_percent = null`, `valid_response_count = 0`, `correct_count = 0`, `incorrect_count = 0`, `omitted_count = total_questions`.
   - Khi `status = SUBMITTED`:
     - `submitted_at != null` và `submitted_at >= started_at`.
     - `correct_count + incorrect_count = valid_response_count`.

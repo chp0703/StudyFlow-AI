@@ -330,8 +330,10 @@ def semantic_errors(value, path='$'):
         if value['status'] == 'IN_PROGRESS':
             if value['submitted_at'] is not None or value['score_percent'] is not None:
                 fail('IN_PROGRESS attempt cannot have submitted_at or score_percent')
-            if any(value[k] != 0 for k in ('valid_response_count', 'correct_count', 'incorrect_count', 'omitted_count')):
-                fail('IN_PROGRESS attempt must have zeroed grading counts')
+            if any(value[k] != 0 for k in ('valid_response_count', 'correct_count', 'incorrect_count')):
+                fail('IN_PROGRESS attempt must have zeroed valid_response_count, correct_count, and incorrect_count')
+            if value['omitted_count'] != value['total_questions']:
+                fail('IN_PROGRESS attempt omitted_count must equal total_questions')
         if value['status'] == 'SUBMITTED':
             if value['submitted_at'] is None:
                 fail('SUBMITTED attempt requires submitted_at')

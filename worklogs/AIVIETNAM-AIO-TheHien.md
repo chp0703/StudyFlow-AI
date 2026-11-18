@@ -96,3 +96,16 @@ Supabase local được xác minh qua workflow CI vì máy phát triển thiếu
 
 **Kết quả**  
 Draft PR #57. Contract checker, generator và 76 HTTP acceptance đều đạt. Chạy lại CI PostgreSQL cho bản sửa.
+
+## 2026-11-19 — Đồng bộ kiểm tra attempt đang làm
+
+**Mục tiêu**  
+Để checker và bộ test concurrency chấp nhận đúng trạng thái attempt mà PostgreSQL đã trả.
+
+**Đã làm**
+
+- Đồng bộ quy tắc omitted_count cho IN_PROGRESS trong checker và tài liệu với constraint B5.
+- Thêm fixture hợp lệ và fixture sai để giữ quy tắc trong bộ kiểm chứng contract.
+
+**Kết quả**  
+Draft PR #57. Contract checker đạt 135 fixture và backend unit đạt 136 test. CI của bản trước đã qua 700 assertion pgTAP, 31 HTTP integration và kiểm tra dữ liệu cũ qua upgrade B7. Chạy lại concurrency với checker đã sửa.

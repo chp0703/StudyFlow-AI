@@ -628,6 +628,11 @@
       "valid": true
     },
     {
+      "file": "examples/valid/quiz-attempt-in-progress.json",
+      "schema": "QuizAttempt",
+      "valid": true
+    },
+    {
       "file": "examples/valid/QuizResponse.json",
       "schema": "QuizResponse",
       "valid": true
@@ -670,6 +675,12 @@
       "schema": "QuizAttempt",
       "valid": false,
       "expected_error": "MANUAL quiz attempt cannot have a session_outcome_id"
+    },
+    {
+      "file": "examples/invalid/quiz-attempt-in-progress-omitted-count.json",
+      "schema": "QuizAttempt",
+      "valid": false,
+      "expected_error": "IN_PROGRESS attempt omitted_count must equal total_questions"
     },
     {
       "file": "examples/invalid/material-upload-owner-injection.json",
