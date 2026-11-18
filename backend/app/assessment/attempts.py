@@ -10,6 +10,7 @@ from ..orchestrator.workflow_ports import WorkflowError
 
 VALID_QUESTION_TYPES = ("MCQ", "TRUE_FALSE")
 VALID_ORIGINS = ("MANUAL", "SESSION_HANDOFF")
+MAX_SUBMIT_GRADES = 3
 
 
 def classify_response(question: dict, selected_option_id: str | None) -> tuple[str, bool | None]:
@@ -226,30 +227,6 @@ class QuizAttemptOperations:
         )
         return result["data"]
 
-    def _replay(self, ctx, operation: str, idempotency_key: str, arguments: dict, result_schema: str) -> dict | None:
-        fingerprint = contract.sha256_hex({
-            "schema_version": "1.1",
-            "user_id": ctx.user_id,
-            "operation": operation,
-            "arguments": arguments,
-            "decision_binding": None,
-        })
-        lookup = self._call_rpc(
-            ctx,
-            "lookup_operation_result",
-            {
-                "operation": operation,
-                "idempotency_key": idempotency_key,
-                "request_fingerprint": fingerprint,
-            },
-            "lookup_operation_resultInternalResult",
-            idempotency_key=None,
-        )
-        stored = lookup["data"]["result"]
-        if stored is not None and not contract.is_valid(result_schema, stored):
-            raise WorkflowError("INTERNAL_ERROR", "Phản hồi đã lưu không đúng contract.")
-        return stored
-
     def create_attempt(self, ctx, key: str, body: dict) -> dict:
         if not contract.is_valid("CreateQuizAttemptRequest", body):
             raise WorkflowError("INVALID_PARAMETER", "Yêu cầu tạo lượt làm bài không đúng contract.")
@@ -344,13 +321,28 @@ class QuizAttemptOperations:
         return result, replayed
 
     def _lookup_submit_replay(self, ctx, idem_key: str, attempt_id: str) -> dict | None:
-        return self._replay(
+        fingerprint = contract.sha256_hex({
+            "schema_version": "1.1",
+            "user_id": ctx.user_id,
+            "operation": "submit_quiz_attempt",
+            "arguments": {"attempt_id": attempt_id},
+            "decision_binding": None,
+        })
+        lookup = self._call_rpc(
             ctx,
-            "submit_quiz_attempt",
-            idem_key,
-            {"attempt_id": attempt_id},
-            "QuizAttemptSubmissionResult",
+            "lookup_operation_result",
+            {
+                "operation": "submit_quiz_attempt",
+                "idempotency_key": idem_key,
+                "request_fingerprint": fingerprint,
+            },
+            "lookup_operation_resultInternalResult",
+            idempotency_key=None,
         )
+        stored = lookup["data"]["result"]
+        if stored is not None and not contract.is_valid("QuizAttemptSubmissionResult", stored):
+            raise WorkflowError("INTERNAL_ERROR", "Phản hồi đã lưu không đúng contract.")
+        return stored
 
     def submit_attempt(self, ctx, key: str, attempt_id: str, body: dict) -> tuple[dict, bool]:
         if not contract.is_valid("SubmitQuizAttemptRequest", body):
@@ -361,45 +353,61 @@ class QuizAttemptOperations:
         if replay is not None:
             return replay, True
 
-        context = self._load_context(ctx, attempt_id)
-        if context["attempt"].get("status") == "SUBMITTED":
-            replay = self._lookup_submit_replay(ctx, idem_key, attempt_id)
-            if replay is not None:
-                return replay, True
+        for _ in range(MAX_SUBMIT_GRADES):
+            context = self._load_context(ctx, attempt_id)
+            if context["attempt"].get("status") == "SUBMITTED":
+                replay = self._lookup_submit_replay(ctx, idem_key, attempt_id)
+                if replay is not None:
+                    return replay, True
+                raise WorkflowError(
+                    "STALE_ENTITY_VERSION",
+                    "Lượt làm bài đã được nộp và không thể chấm điểm lại.",
+                )
+
+            submitted_at = iso(self.clock())
+            graded = grade_attempt(
+                attempt=context["attempt"],
+                questions_by_id={item["question_id"]: item for item in context["questions"]},
+                responses_by_qid={item["question_id"]: item for item in context["responses"]},
+                submitted_at=submitted_at,
+            )
+            args = {
+                "attempt_id": attempt_id,
+                "graded_responses": graded["responses"],
+                "valid_response_count": graded["attempt"]["valid_response_count"],
+                "correct_count": graded["attempt"]["correct_count"],
+                "incorrect_count": graded["attempt"]["incorrect_count"],
+                "omitted_count": graded["attempt"]["omitted_count"],
+                "score_percent": graded["attempt"]["score_percent"],
+                "submitted_at": submitted_at,
+                "include_replay_status": True,
+                "expected_response_version": context["response_version"],
+            }
+
+            if not contract.is_valid("SubmitQuizAttemptArguments", args):
+                raise WorkflowError("INVALID_PARAMETER", "Tham số nộp bài không đúng contract.")
+
+            try:
+                result = self._call_rpc(
+                    ctx,
+                    "submit_quiz_attempt",
+                    args,
+                    "QuizAttemptSubmissionInternalResult",
+                    idempotency_key=idem_key,
+                )
+                break
+            except WorkflowError as exc:
+                if exc.code == "STALE_ENTITY_VERSION" and exc.field == "expected_response_version":
+                    continue
+                raise
+        else:
             raise WorkflowError(
-                "STALE_ENTITY_VERSION",
-                "Lượt làm bài đã được nộp và không thể chấm điểm lại.",
+                "SERVICE_UNAVAILABLE",
+                "Lượt làm bài đang được cập nhật câu trả lời, vui lòng thử nộp lại.",
+                retryable=True,
+                retry_after=1,
             )
 
-        submitted_at = iso(self.clock())
-        graded = grade_attempt(
-            attempt=context["attempt"],
-            questions_by_id={item["question_id"]: item for item in context["questions"]},
-            responses_by_qid={item["question_id"]: item for item in context["responses"]},
-            submitted_at=submitted_at,
-        )
-        args = {
-            "attempt_id": attempt_id,
-            "graded_responses": graded["responses"],
-            "valid_response_count": graded["attempt"]["valid_response_count"],
-            "correct_count": graded["attempt"]["correct_count"],
-            "incorrect_count": graded["attempt"]["incorrect_count"],
-            "omitted_count": graded["attempt"]["omitted_count"],
-            "score_percent": graded["attempt"]["score_percent"],
-            "submitted_at": submitted_at,
-            "include_replay_status": True,
-        }
-
-        if not contract.is_valid("SubmitQuizAttemptArguments", args):
-            raise WorkflowError("INVALID_PARAMETER", "Tham số nộp bài không đúng contract.")
-
-        result = self._call_rpc(
-            ctx,
-            "submit_quiz_attempt",
-            args,
-            "QuizAttemptSubmissionInternalResult",
-            idempotency_key=idem_key,
-        )
         result, replayed = _normalize_write_result(result)
         data = result["data"]
         sub_attempt = data["attempt"]

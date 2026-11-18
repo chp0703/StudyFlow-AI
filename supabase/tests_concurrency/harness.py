@@ -98,6 +98,7 @@ class Database:
         self.defs = self.schema["$defs"]
         self.registry = {row["rpc"]: row for row in registry["operations"] if row.get("rpc")}
         self.registry.update({row["rpc"]: row for row in registry["internal_interfaces"]})
+        self.registry.update({row["rpc"]: row for row in registry["extensions"]["assessment"]["internal_interfaces"]})
         self.admin = psycopg.connect(self.dsn, autocommit=True)
         self.key_id = "sol-concurrency-" + uid()
         self.secret = secrets.token_bytes(32)
