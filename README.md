@@ -57,7 +57,7 @@ supabase db reset --yes
 uvicorn backend.app.main:create_app --factory --port 8000
 ```
 
-Configure the variables documented in [.env.example](.env.example). Register a local RPC signing key using
+Step-by-step local setup (keys, user, env): [docs/local-demo.md](docs/local-demo.md). Variables are listed in [.env.example](.env.example); the backend reads the shell environment only. Register a local RPC signing key using
 `supabase/scripts/register_dev_key.sql`. Keep signing secrets and API keys outside Git.
 
 The current API exposes the eight Planner endpoints declared in `contracts/openapi.yaml`. Authentication uses Supabase JWTs, database access goes through signed RPC envelopes, and the scheduler remains deterministic. The technical `F1` identifiers remain for compatibility with the implemented Planner contract.
