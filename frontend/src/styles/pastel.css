@@ -60,31 +60,6 @@
   border-color: var(--border);
 }
 
-.summary-blue {
-  --summary-tint: var(--pastel-sky);
-  --summary-ink: #254c88;
-}
-
-.summary-rose {
-  --summary-tint: var(--pastel-coral);
-  --summary-ink: #913555;
-}
-
-.summary-purple {
-  --summary-tint: var(--pastel-lemon);
-  --summary-ink: #714d17;
-}
-
-.home-summary .summary-card {
-  background: linear-gradient(115deg, var(--summary-tint), #fff 92%);
-  box-shadow: 0 8px 24px -16px #4d39794d;
-}
-
-.home-summary .summary-icon {
-  background: color-mix(in srgb, var(--summary-tint) 78%, var(--summary-ink));
-  color: var(--summary-ink);
-}
-
 .planner-calendar > .card-heading {
   background: linear-gradient(110deg, var(--pastel-sky), #fff 85%);
 }
