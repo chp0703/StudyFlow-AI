@@ -93,7 +93,7 @@ Run on 2026-11-18. Model `deepseek-flash`, prompt `f2-question-v1`.
 | SAFE-01 | **0/18** violations: no ID, canary or topic leak; the forced-key attack did not force A (keys A, B, A); manual review agrees | `generation-injection.json`, `annotations/items-injection.csv` |
 | PERF-02, generation | Development p50 3.9 s, p95 8.7 s; held-out p50 6.5 s, p95 8.2 s; grading p95 0.31 ms | result files |
 | QG-01, Vi-SQuAD passages | 90/90 = 100% (30 random passages, MCQ count 3); p50 2.8 s, p95 3.9 s | `generation-squad.json`, clean commit `b141b52` |
-| QG-02, Vi-SQuAD passages | **89/90 = 98.9%**, Wilson 95% [94.0%, 99.8%]. **One AI rater only**; the DeepSeek judge run failed with HTTP 402 (no API balance) and is pending | `qg02-squad.json`, `annotations/ratings-squad-claude.csv` |
+| QG-02, Vi-SQuAD passages | **89/90 = 98.9%**, Wilson 95% [94.0%, 99.8%]. Two AI raters (Claude and `deepseek-flash`, the generator itself): both rejected item 40 and agreed on every other item (raw agreement 100% on acceptability; κ = 1.0 on acceptability, undefined on the criteria that are constant) | `qg02-squad.json`, `annotations/` |
 | VMLU-01, Vi-MQA `valid` | `deepseek-flash` **83.6%** (622/744), Wilson 95% [80.8%, 86.1%]; STEM 87.1%, Social Science 85.5%, Humanities 81.7%, Others 76.8%; 1 unparsed reply | `vmlu-mqa-valid.json`, clean commit `456e747` |
 
 ### Findings for the product
@@ -108,7 +108,7 @@ Run on 2026-11-18. Model `deepseek-flash`, prompt `f2-question-v1`.
 ## Interpretation limits
 
 - **No human rated anything.** Rater A is the AI assistant that wrote this protocol. Rater B is `deepseek-flash`, the same model that generated the items, so it is likely biased toward its own output. QG-02 is therefore an AI-rated estimate, not human-verified quality. The protocol in [annotation-guide.md](annotation-guide.md) is ready for two human raters.
-- **Vi-SQuAD items have a single AI rater** until the DeepSeek judge can be rerun (`judge` then `score` on `annotations/items-squad.csv` plus the local passages).
+- **Vi-SQuAD items have two AI raters, no human.** The second rater is the generator model, so agreement is weak evidence. The judge needs the passage text, which is stripped from the committed CSV; rerun it from the local copy.
 - **The own corpus was written by the same AI that rated it.** It is clean, factual school-level text, much easier than real student uploads (PDF scans, mixed formatting, long chapters). Held-out here means "not used while changing prompts"; it does not mean independent of the evaluator. The Vi-SQuAD run uses human-written passages instead, but they are short encyclopedic text, not course material.
 - **Kappa paradox.** Both raters accepted almost every item, so expected agreement approaches 1 and κ becomes undefined or 0 even at 98.75% raw agreement [14]. Report raw agreement until the set contains enough rejected items.
 - Without adjudication, an item counts as acceptable only when both raters accept it. This is conservative.

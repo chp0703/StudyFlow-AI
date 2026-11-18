@@ -1,4 +1,11 @@
 {
+  "metadata": {
+    "commit": "793676f54374ea975e4a7de3c0bf38ee8db0debd",
+    "git_dirty": true,
+    "generated_at": "2026-11-18T15:28:21+00:00",
+    "rater_a_sha256": "71320a389923a0c64326247095631a14089e85c93f27948cf406fa63577dbdfe",
+    "rater_b_sha256": "035f503db6daa9eeebfdaca4a2fdc9f559d6e9836f8b19513025b545e8ecfdcb"
+  },
   "QG-02": {
     "items": 90,
     "acceptable": 89,
@@ -7,9 +14,19 @@
       0.9397159168824657,
       0.9980359158990818
     ],
-    "raters": [
-      "claude-opus-5-5 (AI)"
-    ],
-    "second_rater": "pending: DeepSeek judge returned HTTP 402 (no balance)"
+    "cohen_kappa": {
+      "answer_correct": 1.0,
+      "answerable_from_source": 0.0,
+      "single_correct_answer": null,
+      "on_topic": null,
+      "acceptable": 1.0
+    },
+    "observed_agreement": {
+      "answer_correct": 1.0,
+      "answerable_from_source": 0.9888888888888889,
+      "single_correct_answer": 1.0,
+      "on_topic": 1.0,
+      "acceptable": 1.0
+    }
   }
 }
