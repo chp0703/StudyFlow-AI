@@ -797,3 +797,125 @@ test("valid task and plan proposals remain approvable", () => {
 
   assert.equal(planProposal.server?.approvalError, undefined)
 })
+
+test("question draft presentation summarizes stems, options, answer keys, explanations, and source chunks", () => {
+  const summary = summarize({
+    kind: "ACTION_PRESENTATION",
+
+    pending_action: {
+      intent: "VERIFY_QUESTION_DRAFTS",
+      state: "AWAITING_APPROVAL",
+      action_id: "act-1",
+    },
+
+    candidate: null,
+
+    proposal: null,
+
+    normalized_command: null,
+
+    effective_policy: null,
+
+    question_drafts: {
+      items: [
+        {
+          assessment_version: "1.0.0",
+
+          question_id: "q-1",
+
+          user_id: "u-1",
+
+          conversation_id: "c-1",
+
+          material_id: "m-1",
+
+          version: 1,
+
+          topic: "Kỳ vọng",
+
+          question_type: "MCQ",
+
+          stem: "Kỳ vọng E(X) là gì?",
+
+          options: [
+            { option_id: "A", text: "Tổng có trọng số" },
+
+            { option_id: "B", text: "Phương sai" },
+          ],
+
+          answer_key: "A",
+
+          explanation: "Theo định nghĩa trong tài liệu.",
+
+          source_chunk_ids: ["ch-1"],
+
+          status: "DRAFT",
+
+          model: "deepseek-chat",
+
+          prompt_version: "f2-question-v1",
+
+          verified_at: null,
+
+          created_at: "2026-11-16T08:00:00Z",
+
+          updated_at: "2026-11-16T08:00:00Z",
+        },
+      ],
+
+      source_chunks: [
+        {
+          chunk_id: "ch-1",
+
+          material_id: "m-1",
+
+          user_id: "u-1",
+
+          page: 3,
+
+          topic: "Kỳ vọng",
+
+          chunk_index: 0,
+
+          text: "Kỳ vọng bằng tổng giá trị nhân xác suất.",
+
+          created_at: "2026-11-16T08:00:00Z",
+        },
+      ],
+    },
+  })
+
+  assert.equal(summary.title, "Bộ câu hỏi nháp chờ xác nhận")
+
+  const labels = summary.details.map((d) => d.label)
+
+  assert.equal(
+    new Set(labels).size,
+    labels.length,
+    "detail labels must stay unique",
+  )
+
+  assert.deepEqual(summary.details, [
+    { label: "Số câu hỏi", value: "1" },
+
+    { label: "Chủ đề", value: "Kỳ vọng" },
+
+    { label: "Loại câu hỏi", value: "MCQ" },
+
+    { label: "Câu 1", value: "Kỳ vọng E(X) là gì?" },
+
+    { label: "Lựa chọn câu 1", value: "A: Tổng có trọng số | B: Phương sai" },
+
+    { label: "Đáp án đề xuất câu 1", value: "A (Tổng có trọng số)" },
+
+    { label: "Giải thích câu 1", value: "Theo định nghĩa trong tài liệu." },
+
+    { label: "Nguồn câu 1", value: "Trang 3 (Kỳ vọng)" },
+
+    {
+      label: "Đoạn nguồn #1 (Trang 3 - Kỳ vọng)",
+
+      value: "Kỳ vọng bằng tổng giá trị nhân xác suất.",
+    },
+  ])
+})

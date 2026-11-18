@@ -180,6 +180,25 @@ def semantic_errors(value, path='$'):
             fail('non-proposal presentation cannot contain schedule confirmation data')
         if value['proposal'] is not None and confirmation != value['proposal']['payload']['schedule_confirmation']:
             fail('proposal presentation must expose the exact persisted schedule confirmation')
+        drafts_batch = value.get('question_drafts')
+        if action['intent'] == 'VERIFY_QUESTION_DRAFTS':
+            if not isinstance(drafts_batch, dict) or not drafts_batch.get('items') or not drafts_batch.get('source_chunks'):
+                fail('VERIFY_QUESTION_DRAFTS presentation must include non-empty question_drafts items and source_chunks')
+            else:
+                cited_ids = set()
+                for item in drafts_batch['items']:
+                    if item.get('user_id') != action['user_id'] or item.get('conversation_id') != action['conversation_id']:
+                        fail('presented question_drafts must match pending action owner and conversation')
+                    cited_ids.update(item.get('source_chunk_ids') or [])
+                chunk_ids = [c.get('chunk_id') for c in drafts_batch['source_chunks'] if isinstance(c, dict)]
+                if len(chunk_ids) != len(set(chunk_ids)):
+                    fail('presented question_drafts source_chunks must be unique')
+                if any(c.get('user_id') != action['user_id'] for c in drafts_batch['source_chunks'] if isinstance(c, dict)):
+                    fail('presented question_drafts source_chunks must match pending action owner')
+                if set(chunk_ids) != cited_ids:
+                    fail('presented question_drafts source_chunks must match exact cited source_chunk_ids')
+        elif drafts_batch is not None:
+            fail('non-assessment presentation cannot contain question_drafts')
     if value.get('state') == 'AWAITING_APPROVAL' and 'result' in value:
         result = value['result']
         if result['outcome'] not in {'DRAFTED', 'PROPOSED'}:

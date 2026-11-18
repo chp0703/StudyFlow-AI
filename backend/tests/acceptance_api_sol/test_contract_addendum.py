@@ -144,7 +144,8 @@ class ApprovedAddendumAcceptance(unittest.TestCase):
         self.assertEqual(set(self.defs["Operation"]["enum"]), PUBLIC_OPERATIONS)
         self.assertEqual(len(self.data["entities"]), 10)
         command_operations = {branch["properties"]["operation"]["const"] for branch in self.defs["ValidatedCommand"]["oneOf"]}
-        self.assertEqual(command_operations, PUBLIC_OPERATIONS)
+        assessment_operations = {"create_question_drafts", "verify_question_drafts", "list_questions"}
+        self.assertEqual(command_operations, PUBLIC_OPERATIONS | assessment_operations)
         action_operations = {branch["properties"]["operation"]["const"] for branch in self.defs["ActionRequest"]["oneOf"]}
         self.assertEqual(action_operations, {"create_task_candidate", "set_availability", "set_busy_interval", "set_scheduling_preferences", "generate_study_plan"})
 

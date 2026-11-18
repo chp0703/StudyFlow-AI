@@ -1,0 +1,78 @@
+{
+  "kind": "ACTION_PRESENTATION",
+  "pending_action": {
+    "action_id": "00000000-0000-4000-8000-000000000241",
+    "user_id": "00000000-0000-4000-8000-000000000001",
+    "conversation_id": "00000000-0000-4000-8000-000000000003",
+    "version": 1,
+    "intent": "VERIFY_QUESTION_DRAFTS",
+    "state": "AWAITING_APPROVAL",
+    "requires_review": false,
+    "candidate_id": null,
+    "proposal_id": null,
+    "draft_arguments": {
+      "material_id": "00000000-0000-4000-8000-000000000201",
+      "question_ids": [
+        "00000000-0000-4000-8000-000000000221"
+      ]
+    },
+    "missing_fields": [],
+    "ambiguities": [],
+    "depends_on_action_id": null,
+    "created_at": "2026-11-16T08:02:00Z",
+    "updated_at": "2026-11-16T08:02:00Z"
+  },
+  "candidate": null,
+  "proposal": null,
+  "normalized_command": null,
+  "effective_policy": null,
+  "schedule_confirmation": null,
+  "question_drafts": {
+    "items": [
+      {
+        "assessment_version": "1.0.0",
+        "question_id": "00000000-0000-4000-8000-000000000221",
+        "user_id": "00000000-0000-4000-8000-000000000002",
+        "conversation_id": "00000000-0000-4000-8000-000000000003",
+        "material_id": "00000000-0000-4000-8000-000000000201",
+        "version": 1,
+        "topic": "Kỳ vọng và phương sai",
+        "question_type": "MCQ",
+        "stem": "Công thức nào biểu diễn đúng kỳ vọng E(X) của biến ngẫu nhiên rời rạc X?",
+        "options": [
+          {
+            "option_id": "A",
+            "text": "Tổng của x_i nhân P(X = x_i)"
+          },
+          {
+            "option_id": "B",
+            "text": "Tổng bình phương các P(X = x_i)"
+          }
+        ],
+        "answer_key": "A",
+        "explanation": "Theo định nghĩa ở trang 3.",
+        "source_chunk_ids": [
+          "00000000-0000-4000-8000-000000000211"
+        ],
+        "status": "DRAFT",
+        "model": "deepseek-chat",
+        "prompt_version": "f2-question-v1",
+        "verified_at": null,
+        "created_at": "2026-11-16T08:02:00Z",
+        "updated_at": "2026-11-16T08:02:00Z"
+      }
+    ],
+    "source_chunks": [
+      {
+        "chunk_id": "00000000-0000-4000-8000-000000000211",
+        "material_id": "00000000-0000-4000-8000-000000000201",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "page": 3,
+        "topic": "Kỳ vọng và phương sai",
+        "chunk_index": 0,
+        "text": "Kỳ vọng E(X) của biến ngẫu nhiên rời rạc X là tổng x_i nhân P(X = x_i).",
+        "created_at": "2026-11-16T08:00:00Z"
+      }
+    ]
+  }
+}

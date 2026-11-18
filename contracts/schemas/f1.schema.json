@@ -29,6 +29,14 @@
         "reject_study_plan"
       ]
     },
+    "AssessmentOperation": {
+      "type": "string",
+      "enum": [
+        "create_question_drafts",
+        "verify_question_drafts",
+        "list_questions"
+      ]
+    },
     "Issue": {
       "type": "object",
       "properties": {
@@ -1933,7 +1941,8 @@
             "SET_BUSY_INTERVAL",
             "SET_SCHEDULING_PREFERENCES",
             "GENERATE_STUDY_PLAN",
-            "GET_STUDY_PLAN"
+            "GET_STUDY_PLAN",
+            "VERIFY_QUESTION_DRAFTS"
           ]
         },
         "state": {
@@ -2129,7 +2138,14 @@
           "format": "uuid"
         },
         "operation": {
-          "$ref": "#/$defs/Operation"
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Operation"
+            },
+            {
+              "$ref": "#/$defs/AssessmentOperation"
+            }
+          ]
         },
         "idempotency_key": {
           "type": "string",
@@ -4436,6 +4452,66 @@
             "arguments"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "operation": {
+              "const": "create_question_drafts"
+            },
+            "arguments": {
+              "$ref": "#/$defs/CreateQuestionDraftsArguments"
+            }
+          },
+          "required": [
+            "schema_version",
+            "operation",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "operation": {
+              "const": "verify_question_drafts"
+            },
+            "arguments": {
+              "$ref": "#/$defs/VerifyQuestionDraftsArguments"
+            }
+          },
+          "required": [
+            "schema_version",
+            "operation",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "operation": {
+              "const": "list_questions"
+            },
+            "arguments": {
+              "$ref": "#/$defs/ListQuestionsArguments"
+            }
+          },
+          "required": [
+            "schema_version",
+            "operation",
+            "arguments"
+          ],
+          "additionalProperties": false
         }
       ]
     },
@@ -4797,6 +4873,16 @@
               "type": "null"
             }
           ]
+        },
+        "question_drafts": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/QuestionDraftBatchData"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -4807,6 +4893,60 @@
         "normalized_command",
         "effective_policy",
         "schedule_confirmation"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "pending_action": {
+                "properties": {
+                  "intent": {
+                    "const": "VERIFY_QUESTION_DRAFTS"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "question_drafts"
+            ],
+            "properties": {
+              "candidate": {
+                "type": "null"
+              },
+              "proposal": {
+                "type": "null"
+              },
+              "effective_policy": {
+                "type": "null"
+              },
+              "schedule_confirmation": {
+                "type": "null"
+              },
+              "question_drafts": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/QuestionDraftBatchData"
+                  },
+                  {
+                    "required": [
+                      "items",
+                      "source_chunks"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "question_drafts": {
+                "type": "null"
+              }
+            }
+          }
+        }
       ],
       "additionalProperties": false
     },
@@ -4882,6 +5022,9 @@
                 },
                 {
                   "$ref": "#/$defs/SchedulingReadData"
+                },
+                {
+                  "$ref": "#/$defs/QuestionDraftListData"
                 }
               ]
             },
@@ -4926,6 +5069,9 @@
                 },
                 {
                   "$ref": "#/$defs/ActionPresentation"
+                },
+                {
+                  "$ref": "#/$defs/QuestionDraftBatchData"
                 }
               ]
             },
@@ -5013,6 +5159,9 @@
                 },
                 {
                   "$ref": "#/$defs/PreferencesData"
+                },
+                {
+                  "$ref": "#/$defs/QuestionDraftBatchData"
                 }
               ]
             },
@@ -5051,7 +5200,14 @@
               "const": "REJECTED"
             },
             "data": {
-              "$ref": "#/$defs/PlanProposal"
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/PlanProposal"
+                },
+                {
+                  "$ref": "#/$defs/QuestionDraftBatchData"
+                }
+              ]
             },
             "error": {
               "type": "null"
@@ -6328,7 +6484,14 @@
       "type": "object",
       "properties": {
         "operation": {
-          "$ref": "#/$defs/Operation"
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Operation"
+            },
+            {
+              "$ref": "#/$defs/AssessmentOperation"
+            }
+          ]
         },
         "idempotency_key": {
           "type": "string",
@@ -6562,7 +6725,8 @@
             "send_message",
             "prepare_action",
             "review_action",
-            "submit_decision"
+            "submit_decision",
+            "generate_question_drafts"
           ]
         },
         "idempotency_key": {
@@ -6772,7 +6936,8 @@
             "send_message",
             "prepare_action",
             "review_action",
-            "submit_decision"
+            "submit_decision",
+            "generate_question_drafts"
           ]
         },
         "idempotency_key": {
@@ -6807,7 +6972,8 @@
             "send_message",
             "prepare_action",
             "review_action",
-            "submit_decision"
+            "submit_decision",
+            "generate_question_drafts"
           ]
         },
         "idempotency_key": {
@@ -6843,7 +7009,8 @@
             "send_message",
             "prepare_action",
             "review_action",
-            "submit_decision"
+            "submit_decision",
+            "generate_question_drafts"
           ]
         },
         "idempotency_key": {
@@ -7573,7 +7740,8 @@
             "send_message",
             "prepare_action",
             "review_action",
-            "submit_decision"
+            "submit_decision",
+            "generate_question_drafts"
           ]
         },
         "idempotency_key": {
@@ -12427,6 +12595,35 @@
           "items": {
             "$ref": "#/$defs/QuestionDraft"
           }
+        },
+        "action_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "generation_params": {
+          "type": "object",
+          "properties": {
+            "topic": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S",
+              "maxLength": 120
+            },
+            "question_type": {
+              "$ref": "#/$defs/QuestionType"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            }
+          },
+          "required": [
+            "topic",
+            "question_type",
+            "count"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -12488,6 +12685,14 @@
           "maxItems": 10,
           "items": {
             "$ref": "#/$defs/QuestionDraft"
+          }
+        },
+        "source_chunks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/MaterialChunk"
           }
         }
       },

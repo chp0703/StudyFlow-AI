@@ -136,6 +136,7 @@ export function createEndpoints(client: ApiClient) {
           count,
         },
         idempotencyKey: key,
+        retry: false,
       }),
 
     listAssessmentQuestions: (
