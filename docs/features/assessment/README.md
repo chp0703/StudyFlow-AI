@@ -10,4 +10,9 @@ This feature owns source-grounded question preparation, verified answer keys, qu
 - Revision recommendations carry source and assessment evidence.
 - Recommendations can propose Planner workload changes but cannot edit a confirmed schedule.
 
-Detailed requirements are maintained in [product requirements](../../product/requirements.md#feature-2--learning-assessment--adaptive-revision). Machine-readable contracts and persistence models must be added before implementation.
+## Specifications and Contracts
+
+- Product requirements: [requirements.md](../../product/requirements.md#feature-2--learning-assessment--adaptive-revision)
+- Domain schema, states, invariants, and consumer impact matrix: [schema.md](schema.md)
+- Contract extension overview (`1.0.0`): [contracts/ASSESSMENT.md](../../../contracts/ASSESSMENT.md)
+- OpenAPI 3.1 specification: [contracts/assessment-openapi.yaml](../../../contracts/assessment-openapi.yaml)

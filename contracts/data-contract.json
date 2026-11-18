@@ -1306,6 +1306,89 @@
         ],
         "same_owner_conversation": true
       }
+    },
+    "assessment": {
+      "version": "1.0.0",
+      "materials": {
+        "schema": "LearningMaterial",
+        "table": "app_private.materials",
+        "primary_key": [
+          "material_id"
+        ],
+        "ownership": [
+          "user_id",
+          "conversation_id"
+        ]
+      },
+      "material_chunks": {
+        "schema": "MaterialChunk",
+        "table": "app_private.material_chunks",
+        "primary_key": [
+          "chunk_id"
+        ],
+        "private_columns": {
+          "search_vector": "tsvector generated always as (to_tsvector('simple', text)) stored"
+        },
+        "ownership": [
+          "user_id",
+          "material_id"
+        ]
+      },
+      "question_drafts": {
+        "schema": "QuestionDraft",
+        "table": "app_private.question_drafts",
+        "primary_key": [
+          "question_id"
+        ],
+        "ownership": [
+          "user_id",
+          "conversation_id",
+          "material_id"
+        ],
+        "immutable_when": "status = 'VERIFIED'"
+      },
+      "quiz_attempts": {
+        "schema": "QuizAttempt",
+        "table": "app_private.quiz_attempts",
+        "primary_key": [
+          "attempt_id"
+        ],
+        "ownership": [
+          "user_id",
+          "material_id"
+        ]
+      },
+      "quiz_responses": {
+        "schema": "QuizResponse",
+        "table": "app_private.quiz_responses",
+        "primary_key": [
+          "response_id"
+        ],
+        "unique": [
+          [
+            "attempt_id",
+            "question_id"
+          ]
+        ],
+        "ownership": [
+          "user_id",
+          "attempt_id",
+          "question_id"
+        ]
+      },
+      "revision_recommendations": {
+        "schema": "RevisionRecommendation",
+        "table": "app_private.revision_recommendations",
+        "primary_key": [
+          "recommendation_id"
+        ],
+        "ownership": [
+          "user_id",
+          "conversation_id",
+          "material_id",
+          "pending_action_id"
+        ]
+      }
     }
   }
 }
