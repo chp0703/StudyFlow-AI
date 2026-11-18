@@ -33,3 +33,14 @@ generated SQL contract bundle.
 
 See [docs/features/assessment/schema.md](../docs/features/assessment/schema.md)
 for full entity definitions, state transitions and consumer impact analysis.
+
+
+## B7 runtime
+
+Creation and decisions return server-issued ActionPresentation with optional
+`revision_recommendation` and `revision_source_chunks`; both are required for B7
+and preserved for its linked CREATE_TASK. See the assessment feature README for
+the 50-attempt window, LOW confidence, structured candidate review and separate F1
+confirmation. CreateRevisionRecommendationArguments now accepts stable inputs and
+server IDs instead of a caller-supplied recommendation. Evidence/owner/state are
+computed in the database. `decide_revision_recommendation` is a signed internal RPC.

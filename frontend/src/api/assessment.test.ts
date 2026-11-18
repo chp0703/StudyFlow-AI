@@ -224,3 +224,31 @@ test("generateQuestionDrafts never auto-retries on 503 or network error", async 
     )
   }
 })
+
+test("B7 candidate review preserves existing call shape and sends patch/version together", async () => {
+  const { calls, endpoints } = fixture()
+
+  await endpoints.reviewAction("conv-1", "act-1", 1, "review-key-1")
+
+  await endpoints.reviewAction("conv-1", "act-1", 2, "patch-key-1", {
+    candidate_patch: { deadline_at: "2027-03-02T01:00:00Z" },
+    expected_candidate_version: 1,
+  })
+
+  assert.deepEqual(calls[0].options.body, {
+    schema_version: "1.1",
+    conversation_id: "conv-1",
+    expected_action_version: 1,
+  })
+
+  assert.deepEqual(calls[1].options.body, {
+    schema_version: "1.1",
+    conversation_id: "conv-1",
+    expected_action_version: 2,
+
+    candidate_patch: { deadline_at: "2027-03-02T01:00:00Z" },
+    expected_candidate_version: 1,
+  })
+
+  assert.equal(calls[1].options.idempotencyKey, "patch-key-1")
+})

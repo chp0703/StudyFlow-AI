@@ -449,8 +449,17 @@
         {
           "rpc": "create_revision_recommendation",
           "arguments_schema": "CreateRevisionRecommendationArguments",
-          "data_schema": "RevisionRecommendation",
+          "data_schema": "ActionPresentation",
           "result_schema": "RevisionRecommendationResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "decide_revision_recommendation",
+          "arguments_schema": "DecideRevisionRecommendationArguments",
+          "data_schema": "ActionPresentation",
+          "result_schema": "DecideRevisionRecommendationResult",
           "read_only": false,
           "attestation_required": true,
           "llm_callable": false

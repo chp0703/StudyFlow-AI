@@ -686,6 +686,41 @@
       "schema": "ActionPresentation",
       "valid": false,
       "expected_error": "presented question_drafts must match pending action owner and conversation"
+    },
+    {
+      "file": "examples/valid/b7-recommendation-presentation.json",
+      "schema": "ActionPresentation",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/b7-create-recommendation-arguments.json",
+      "schema": "CreateRevisionRecommendationArguments",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/b7-candidate-review.json",
+      "schema": "ReviewActionRequest",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/b7-review-patch-without-version.json",
+      "schema": "ReviewActionRequest",
+      "valid": false
+    },
+    {
+      "file": "examples/invalid/b7-review-version-without-patch.json",
+      "schema": "ReviewActionRequest",
+      "valid": false
+    },
+    {
+      "file": "examples/invalid/b7-create-owner-injection.json",
+      "schema": "CreateRevisionRecommendationArguments",
+      "valid": false
+    },
+    {
+      "file": "examples/invalid/b7-presentation-without-evidence.json",
+      "schema": "ActionPresentation",
+      "valid": false
     }
   ]
 }

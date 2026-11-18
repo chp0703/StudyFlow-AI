@@ -1,0 +1,39 @@
+{
+  "kind": "ACTION_PRESENTATION",
+  "pending_action": {
+    "action_id": "00000000-0000-4000-8000-000000000261",
+    "user_id": "00000000-0000-4000-8000-000000000001",
+    "conversation_id": "00000000-0000-4000-8000-000000000003",
+    "version": 1,
+    "intent": "ACCEPT_REVISION_RECOMMENDATION",
+    "state": "AWAITING_APPROVAL",
+    "requires_review": false,
+    "candidate_id": null,
+    "proposal_id": null,
+    "draft_arguments": {
+      "recommendation_id": "00000000-0000-4000-8000-000000000251"
+    },
+    "missing_fields": [],
+    "ambiguities": [],
+    "depends_on_action_id": null,
+    "created_at": "2026-11-16T08:20:00Z",
+    "updated_at": "2026-11-16T08:20:00Z"
+  },
+  "candidate": null,
+  "proposal": null,
+  "normalized_command": null,
+  "effective_policy": null,
+  "schedule_confirmation": null,
+  "revision_source_chunks": [
+    {
+      "chunk_id": "00000000-0000-4000-8000-000000000211",
+      "material_id": "00000000-0000-4000-8000-000000000201",
+      "user_id": "00000000-0000-4000-8000-000000000001",
+      "page": 3,
+      "topic": "Kỳ vọng và phương sai",
+      "chunk_index": 0,
+      "text": "Kỳ vọng E(X) của biến ngẫu nhiên rời rạc X là tổng có trọng số các giá trị của X theo xác suất tương ứng.",
+      "created_at": "2026-11-16T08:01:00Z"
+    }
+  ]
+}
