@@ -1,10 +1,16 @@
+.brand-logo,
+.auth-logo,
+.assistant-welcome-logo {
+  filter: grayscale(1);
+}
+
 .topbar,
 .sidebar {
-  box-shadow: 0 8px 32px -18px #51406d50;
+  box-shadow: 0 8px 32px -18px #00000030;
 }
 
 .nav-item.active {
-  background: linear-gradient(105deg, var(--pastel-lavender), #fff);
+  background: linear-gradient(105deg, var(--gray-surface), #fff);
   color: var(--indigo);
   box-shadow: inset 3px 0 0 var(--indigo);
 }
@@ -18,7 +24,7 @@
 }
 
 .home-layout .assistant-shell.is-empty {
-  background: radial-gradient(ellipse at center, var(--lavender-light), var(--lavender-deep));
+  background: radial-gradient(ellipse at center, var(--gray-light), var(--gray-deep));
 }
 
 .assistant-welcome-logo {
@@ -37,28 +43,28 @@
 }
 
 .assistant-composer {
-  box-shadow: 0 12px 34px -16px #4d397953;
+  box-shadow: 0 12px 34px -16px #00000038;
 }
 
 .from-user .assistant-bubble {
-  background: var(--pastel-lavender);
+  background: var(--gray-surface);
   border-color: var(--border);
 }
 
 .home-summary .summary-card {
-  background: linear-gradient(115deg, var(--pastel-lavender), #fff 92%);
-  box-shadow: 0 8px 24px -16px #4d39794d;
+  background: linear-gradient(115deg, var(--gray-surface), #fff 92%);
+  box-shadow: 0 8px 24px -16px #00000030;
 }
 
 .home-summary .summary-card .summary-icon {
-  background: var(--lavender-deep);
+  background: var(--gray-deep);
   color: var(--indigo);
 }
 
 .planner-calendar > .card-heading,
 .task-panel > .card-heading,
 .study-card > .card-heading {
-  background: linear-gradient(110deg, var(--pastel-lavender), #fff 85%);
+  background: linear-gradient(110deg, var(--gray-surface), #fff 85%);
 }
 
 @media (prefers-reduced-motion: no-preference) {

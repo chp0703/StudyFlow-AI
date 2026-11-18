@@ -2,31 +2,31 @@
 /* StudyFlow AI — Bảng màu và biến thiết kế */
 :root {
   /* Bảng màu yêu cầu */
-  --primary: #5846aa;
-  --indigo: #453489;
+  --primary: #202020;
+  --indigo: #111111;
   --purple: #8b5cf6;
   --pink: #ff6b81;
   --orange: #ff9f43;
   --yellow: #ffe066;
   --teal: #22b8a7;
 
-  --text-primary: #27213e;
-  --text-secondary: #615b74;
-  --background: #faf7fc;
-  --border: #e7dff0;
+  --text-primary: #171717;
+  --text-secondary: #555555;
+  --background: #fafafa;
+  --border: #dedede;
 
-  --lavender-light: #f6f0fd;
-  --pastel-lavender: #eee4fa;
-  --lavender-deep: #e5d5f6;
+  --gray-light: #f9f9f9;
+  --gray-surface: #ededed;
+  --gray-deep: #e4e4e4;
   --bg-card: rgba(255, 255, 255, 0.94);
   --bg-card-solid: #ffffff;
 
-  --bg-ambient: linear-gradient(135deg, var(--pastel-lavender), var(--lavender-light) 65%, var(--background));
-  --gradient-brand: linear-gradient(115deg, #483269, #674994);
+  --bg-ambient: linear-gradient(135deg, var(--gray-surface), var(--gray-light) 65%, var(--background));
+  --gradient-brand: linear-gradient(115deg, #151515, #444444);
 
   /* Biến thiết kế StudyFlow ánh xạ theo bảng màu */
   --sf-primary-blue: var(--primary);
-  --sf-sky-blue: #7c8df7;
+  --sf-sky-blue: #666666;
   --sf-deep-navy: var(--text-primary);
   --sf-muted-slate: var(--text-secondary);
   --sf-soft-background: var(--background);
@@ -50,7 +50,7 @@
   --color-control: var(--text-secondary);
   --color-focus: var(--indigo);
   --color-surface: var(--bg-card);
-  --color-info-bg: var(--pastel-lavender);
+  --color-info-bg: var(--gray-surface);
   --color-info-text: var(--indigo);
   --color-warning-bg: #fff8f0;
   --color-warning-text: #b45309;
