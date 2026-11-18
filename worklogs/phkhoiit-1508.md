@@ -459,3 +459,27 @@
 - `README.md`: liên kết tới hướng dẫn và ghi rõ backend chỉ đọc biến môi trường của shell.
 
 **Kết quả:** chỉ thay đổi tài liệu và file mẫu. Các lệnh trong hướng dẫn chưa được chạy lại từ một bản clone sạch.
+**Kết quả:** nhánh `fix/f2-backend-completeness`; contract checker pass (192 definitions), generated migration đồng bộ, 130 unit tests, 37 scheduler acceptance tests, 72 API acceptance tests, 22 local integration tests và 6 concurrency tests pass; local Supabase reset thành công và 618 pgTAP tests pass. E2E với DeepSeek thật (`deepseek-flash`) pass từ upload material đến sinh/duyệt câu hỏi, restart backend, chấm điểm, thống kê và duyệt recommendation.
+
+**Ghi chú**
+
+- Không chạm cloud Supabase project.
+- Chưa xử lý (cần quyết định): `priority`/`suggested_minutes` của recommendation do client gửi, chưa suy ra từ evidence; replay trong `save_response` phải load context trước vì fingerprint có `validity`.
+
+## 2026-11-18 — Evaluation Learning Assessment F2
+
+**Mục tiêu:** có số đo chất lượng F2 chạy lại được, theo cùng khuôn với evaluation F1, với metric có nguồn trích dẫn.
+
+**Đã làm**
+
+- Thêm metric và oracle (`backend/app/assessment/evaluation.py`) cùng runner `backend/scripts/evaluate_assessment.py` (`offline`, `retrieval-local`, `generate`, `judge`, `score`, `retrieval`), kèm 10 unit test.
+- Viết corpus tiếng Việt gốc gồm 10 tài liệu (4 dev / 6 held-out), 80 truy vấn có nhãn và 6 tài liệu prompt injection (`backend/tests/fixtures/assessment_eval/corpus_vi.json`), đóng băng SHA-256 trước khi chạy held-out.
+- Viết protocol, rubric và kết quả trong `docs/features/assessment/evaluation/`; lưu items sinh ra và bảng chấm trong `results/annotations/`.
+
+**Kết quả:** nhánh `test/f2-evaluation`. Chấm điểm khớp oracle 10.000/10.000; pgTAP 618 pass; tìm kiếm Recall@5 0,70 (từ khóa 1,00, câu hỏi tự nhiên 0,69, không dấu 0,00); held-out 80/120 câu sinh được, 79/80 đạt rubric (Wilson 93,3–99,8%); injection 0/18 vi phạm. Backend unit 140 test pass.
+
+**Ghi chú**
+
+- Chưa có người chấm thật: người chấm A là AI (Claude), người chấm B là `deepseek-flash`, cùng model sinh câu hỏi. Corpus cũng do AI viết.
+- VMLU chưa chạy vì không công bố giấy phép.
+- Phát hiện cần sửa ở PR riêng: `QUESTION_MAX_TOKENS=2048` không đủ cho `count=10`; tìm kiếm không dấu và câu hỏi tự nhiên trả rỗng; sinh câu hỏi chỉ dùng 12 chunk đầu; đáp án MCQ lệch vị trí.

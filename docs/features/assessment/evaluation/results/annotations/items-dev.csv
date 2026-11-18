@@ -1,0 +1,833 @@
+﻿question_id,case_id,topic,stem,options,answer_key,explanation,sources,answer_correct,answerable_from_source,single_correct_answer,on_topic,distractor_plausibility,clarity,note
+e99e6825-0ae3-45cb-8662-772ab001ce49,D1-xac-suat:MCQ,Xác suất cơ bản,"Khi gieo một con xúc xắc cân đối sáu mặt, không gian mẫu của phép thử là gì?","A: Ω = {1, 2, 3, 4, 5, 6} | B: Ω = {2, 4, 6} | C: Ω = {1, 3, 5} | D: Ω = {0, 1}",A,"Không gian mẫu là tập hợp mọi kết quả có thể của phép thử; với xúc xắc sáu mặt đó là {1, 2, 3, 4, 5, 6}.","# Xác suất cơ bản
+
+## Phép thử và biến cố
+
+Phép thử ngẫu nhiên là một thí nghiệm hay hành động mà ta không đoán trước được kết quả, dù biết tập hợp tất cả các kết quả có thể xảy ra. Tập hợp mọi kết quả có thể của phép thử gọi là không gian mẫu, thường kí hiệu là Ω. Ví dụ, khi gieo một con xúc xắc cân đối sáu mặt, không gian mẫu là Ω = {1, 2, 3, 4, 5, 6}.
+
+Biến cố là một tập con của không gian mẫu. Biến cố ""mặt xuất hiện có số chấm chẵn"" ứng với tập con {2, 4, 6}. Biến cố chắc chắn là chính Ω, luôn xảy ra. Biến cố không thể là tập rỗng, không bao giờ xảy ra. Biến cố đối của A, kí hiệu Ā, xảy ra khi và chỉ khi A không xảy ra.
+
+## Định nghĩa cổ điển của xác suất
+
+Nếu không gian mẫu có hữu hạn kết quả và các kết quả đồng khả năng, xác suất của biến cố A bằng số kết quả thuận lợi cho A chia cho số phần tử của không gian mẫu: P(A) = n(A)/n(Ω). Với con xúc xắc ở trên, xác suất ra mặt chẵn là 3/6 = 1/2.
+
+Xác suất của mọi biến cố nằm trong đoạn [0, 1]. Biến cố chắc chắn có xác suất bằng 1 và biến cố không thể có xác suất bằng 0. Xác suất của biến cố đối thỏa mãn P(Ā) = 1 − P(A). Công thức này rất tiện khi tính trực tiếp P(A) khó hơn tính P(Ā), chẳng hạn khi tính xác suất ""có ít nhất một lần"" xuất hiện một sự kiện.
+
+## Quy tắc cộng
+
+Hai biến cố A và B gọi là xung khắc nếu chúng không thể cùng xảy ra, tức là A ∩ B = ∅. Khi A và B xung khắc, xác suất để A hoặc B xảy ra là P(A ∪ B) = P(A) + P(B). Trong trường hợp tổng quát, khi A và B có thể cùng xảy ra, ta dùng công thức cộng mở rộng: P(A ∪ B) = P(A) + P(B) − P(A ∩ B). Phần trừ đi bù cho việc các kết quả chung đã bị đếm hai lần.
+
+## Quy tắc nhân và biến cố độc lập
+
+Hai biến cố A và B gọi là độc lập nếu việc xảy ra hay không xảy ra của biến cố này không làm thay đổi xác suất của biến cố kia. Khi đó P(A ∩ B) = P(A) · P(B). Ví dụ, gieo một đồng xu cân đối hai lần: xác suất cả hai lần đều ra mặt sấp là 1/2 · 1/2 = 1/4.
+
+Cần phân biệt xung khắc với độc lập. Hai biến cố xung khắc có xác suất dương thì không thể độc lập, vì nếu A đã ",,,,,,,
+3dfbc198-936c-49d1-9a87-5fd83dbc8e1d,D1-xac-suat:MCQ,Xác suất cơ bản,"Theo định nghĩa cổ điển của xác suất, nếu không gian mẫu hữu hạn và các kết quả đồng khả năng thì P(A) bằng gì?",A: n(Ω) / n(A) | B: n(A) / n(Ω) | C: n(A) · n(Ω) | D: 1 − n(A),B,"Định nghĩa cổ điển: P(A) = số kết quả thuận lợi cho A chia cho số phần tử của không gian mẫu, tức n(A)/n(Ω).","# Xác suất cơ bản
+
+## Phép thử và biến cố
+
+Phép thử ngẫu nhiên là một thí nghiệm hay hành động mà ta không đoán trước được kết quả, dù biết tập hợp tất cả các kết quả có thể xảy ra. Tập hợp mọi kết quả có thể của phép thử gọi là không gian mẫu, thường kí hiệu là Ω. Ví dụ, khi gieo một con xúc xắc cân đối sáu mặt, không gian mẫu là Ω = {1, 2, 3, 4, 5, 6}.
+
+Biến cố là một tập con của không gian mẫu. Biến cố ""mặt xuất hiện có số chấm chẵn"" ứng với tập con {2, 4, 6}. Biến cố chắc chắn là chính Ω, luôn xảy ra. Biến cố không thể là tập rỗng, không bao giờ xảy ra. Biến cố đối của A, kí hiệu Ā, xảy ra khi và chỉ khi A không xảy ra.
+
+## Định nghĩa cổ điển của xác suất
+
+Nếu không gian mẫu có hữu hạn kết quả và các kết quả đồng khả năng, xác suất của biến cố A bằng số kết quả thuận lợi cho A chia cho số phần tử của không gian mẫu: P(A) = n(A)/n(Ω). Với con xúc xắc ở trên, xác suất ra mặt chẵn là 3/6 = 1/2.
+
+Xác suất của mọi biến cố nằm trong đoạn [0, 1]. Biến cố chắc chắn có xác suất bằng 1 và biến cố không thể có xác suất bằng 0. Xác suất của biến cố đối thỏa mãn P(Ā) = 1 − P(A). Công thức này rất tiện khi tính trực tiếp P(A) khó hơn tính P(Ā), chẳng hạn khi tính xác suất ""có ít nhất một lần"" xuất hiện một sự kiện.
+
+## Quy tắc cộng
+
+Hai biến cố A và B gọi là xung khắc nếu chúng không thể cùng xảy ra, tức là A ∩ B = ∅. Khi A và B xung khắc, xác suất để A hoặc B xảy ra là P(A ∪ B) = P(A) + P(B). Trong trường hợp tổng quát, khi A và B có thể cùng xảy ra, ta dùng công thức cộng mở rộng: P(A ∪ B) = P(A) + P(B) − P(A ∩ B). Phần trừ đi bù cho việc các kết quả chung đã bị đếm hai lần.
+
+## Quy tắc nhân và biến cố độc lập
+
+Hai biến cố A và B gọi là độc lập nếu việc xảy ra hay không xảy ra của biến cố này không làm thay đổi xác suất của biến cố kia. Khi đó P(A ∩ B) = P(A) · P(B). Ví dụ, gieo một đồng xu cân đối hai lần: xác suất cả hai lần đều ra mặt sấp là 1/2 · 1/2 = 1/4.
+
+Cần phân biệt xung khắc với độc lập. Hai biến cố xung khắc có xác suất dương thì không thể độc lập, vì nếu A đã ",,,,,,,
+6d91a854-be01-47d4-8a07-bf4b72daff01,D1-xac-suat:MCQ,Xác suất cơ bản,Công thức nào đúng cho xác suất của biến cố đối Ā?,A: P(Ā) = P(A) | B: P(Ā) = 1 + P(A) | C: P(Ā) = 1 − P(A) | D: P(Ā) = P(A) − 1,C,Xác suất biến cố đối thỏa mãn P(Ā) = 1 − P(A).,"# Xác suất cơ bản
+
+## Phép thử và biến cố
+
+Phép thử ngẫu nhiên là một thí nghiệm hay hành động mà ta không đoán trước được kết quả, dù biết tập hợp tất cả các kết quả có thể xảy ra. Tập hợp mọi kết quả có thể của phép thử gọi là không gian mẫu, thường kí hiệu là Ω. Ví dụ, khi gieo một con xúc xắc cân đối sáu mặt, không gian mẫu là Ω = {1, 2, 3, 4, 5, 6}.
+
+Biến cố là một tập con của không gian mẫu. Biến cố ""mặt xuất hiện có số chấm chẵn"" ứng với tập con {2, 4, 6}. Biến cố chắc chắn là chính Ω, luôn xảy ra. Biến cố không thể là tập rỗng, không bao giờ xảy ra. Biến cố đối của A, kí hiệu Ā, xảy ra khi và chỉ khi A không xảy ra.
+
+## Định nghĩa cổ điển của xác suất
+
+Nếu không gian mẫu có hữu hạn kết quả và các kết quả đồng khả năng, xác suất của biến cố A bằng số kết quả thuận lợi cho A chia cho số phần tử của không gian mẫu: P(A) = n(A)/n(Ω). Với con xúc xắc ở trên, xác suất ra mặt chẵn là 3/6 = 1/2.
+
+Xác suất của mọi biến cố nằm trong đoạn [0, 1]. Biến cố chắc chắn có xác suất bằng 1 và biến cố không thể có xác suất bằng 0. Xác suất của biến cố đối thỏa mãn P(Ā) = 1 − P(A). Công thức này rất tiện khi tính trực tiếp P(A) khó hơn tính P(Ā), chẳng hạn khi tính xác suất ""có ít nhất một lần"" xuất hiện một sự kiện.
+
+## Quy tắc cộng
+
+Hai biến cố A và B gọi là xung khắc nếu chúng không thể cùng xảy ra, tức là A ∩ B = ∅. Khi A và B xung khắc, xác suất để A hoặc B xảy ra là P(A ∪ B) = P(A) + P(B). Trong trường hợp tổng quát, khi A và B có thể cùng xảy ra, ta dùng công thức cộng mở rộng: P(A ∪ B) = P(A) + P(B) − P(A ∩ B). Phần trừ đi bù cho việc các kết quả chung đã bị đếm hai lần.
+
+## Quy tắc nhân và biến cố độc lập
+
+Hai biến cố A và B gọi là độc lập nếu việc xảy ra hay không xảy ra của biến cố này không làm thay đổi xác suất của biến cố kia. Khi đó P(A ∩ B) = P(A) · P(B). Ví dụ, gieo một đồng xu cân đối hai lần: xác suất cả hai lần đều ra mặt sấp là 1/2 · 1/2 = 1/4.
+
+Cần phân biệt xung khắc với độc lập. Hai biến cố xung khắc có xác suất dương thì không thể độc lập, vì nếu A đã ",,,,,,,
+aa2e9915-77d4-452a-8009-fc545a6e8bf4,D1-xac-suat:MCQ,Xác suất cơ bản,"Khi hai biến cố A và B có thể cùng xảy ra, công thức cộng mở rộng cho P(A ∪ B) là gì?",A: P(A ∪ B) = P(A) + P(B) | B: P(A ∪ B) = P(A) + P(B) − P(A ∩ B) | C: P(A ∪ B) = P(A) · P(B) | D: P(A ∪ B) = P(A) + P(B) + P(A ∩ B),B,Công thức cộng mở rộng trừ đi P(A ∩ B) để bù cho các kết quả chung bị đếm hai lần.,"# Xác suất cơ bản
+
+## Phép thử và biến cố
+
+Phép thử ngẫu nhiên là một thí nghiệm hay hành động mà ta không đoán trước được kết quả, dù biết tập hợp tất cả các kết quả có thể xảy ra. Tập hợp mọi kết quả có thể của phép thử gọi là không gian mẫu, thường kí hiệu là Ω. Ví dụ, khi gieo một con xúc xắc cân đối sáu mặt, không gian mẫu là Ω = {1, 2, 3, 4, 5, 6}.
+
+Biến cố là một tập con của không gian mẫu. Biến cố ""mặt xuất hiện có số chấm chẵn"" ứng với tập con {2, 4, 6}. Biến cố chắc chắn là chính Ω, luôn xảy ra. Biến cố không thể là tập rỗng, không bao giờ xảy ra. Biến cố đối của A, kí hiệu Ā, xảy ra khi và chỉ khi A không xảy ra.
+
+## Định nghĩa cổ điển của xác suất
+
+Nếu không gian mẫu có hữu hạn kết quả và các kết quả đồng khả năng, xác suất của biến cố A bằng số kết quả thuận lợi cho A chia cho số phần tử của không gian mẫu: P(A) = n(A)/n(Ω). Với con xúc xắc ở trên, xác suất ra mặt chẵn là 3/6 = 1/2.
+
+Xác suất của mọi biến cố nằm trong đoạn [0, 1]. Biến cố chắc chắn có xác suất bằng 1 và biến cố không thể có xác suất bằng 0. Xác suất của biến cố đối thỏa mãn P(Ā) = 1 − P(A). Công thức này rất tiện khi tính trực tiếp P(A) khó hơn tính P(Ā), chẳng hạn khi tính xác suất ""có ít nhất một lần"" xuất hiện một sự kiện.
+
+## Quy tắc cộng
+
+Hai biến cố A và B gọi là xung khắc nếu chúng không thể cùng xảy ra, tức là A ∩ B = ∅. Khi A và B xung khắc, xác suất để A hoặc B xảy ra là P(A ∪ B) = P(A) + P(B). Trong trường hợp tổng quát, khi A và B có thể cùng xảy ra, ta dùng công thức cộng mở rộng: P(A ∪ B) = P(A) + P(B) − P(A ∩ B). Phần trừ đi bù cho việc các kết quả chung đã bị đếm hai lần.
+
+## Quy tắc nhân và biến cố độc lập
+
+Hai biến cố A và B gọi là độc lập nếu việc xảy ra hay không xảy ra của biến cố này không làm thay đổi xác suất của biến cố kia. Khi đó P(A ∩ B) = P(A) · P(B). Ví dụ, gieo một đồng xu cân đối hai lần: xác suất cả hai lần đều ra mặt sấp là 1/2 · 1/2 = 1/4.
+
+Cần phân biệt xung khắc với độc lập. Hai biến cố xung khắc có xác suất dương thì không thể độc lập, vì nếu A đã ",,,,,,,
+7cbb6a34-2bbf-472d-9217-630da7b1a09d,D1-xac-suat:MCQ,Xác suất cơ bản,Gieo một đồng xu cân đối hai lần. Xác suất cả hai lần đều ra mặt sấp là bao nhiêu?,A: 1/2 | B: 1/3 | C: 1/4 | D: 1/8,C,Hai lần gieo độc lập nên xác suất là 1/2 · 1/2 = 1/4.,"# Xác suất cơ bản
+
+## Phép thử và biến cố
+
+Phép thử ngẫu nhiên là một thí nghiệm hay hành động mà ta không đoán trước được kết quả, dù biết tập hợp tất cả các kết quả có thể xảy ra. Tập hợp mọi kết quả có thể của phép thử gọi là không gian mẫu, thường kí hiệu là Ω. Ví dụ, khi gieo một con xúc xắc cân đối sáu mặt, không gian mẫu là Ω = {1, 2, 3, 4, 5, 6}.
+
+Biến cố là một tập con của không gian mẫu. Biến cố ""mặt xuất hiện có số chấm chẵn"" ứng với tập con {2, 4, 6}. Biến cố chắc chắn là chính Ω, luôn xảy ra. Biến cố không thể là tập rỗng, không bao giờ xảy ra. Biến cố đối của A, kí hiệu Ā, xảy ra khi và chỉ khi A không xảy ra.
+
+## Định nghĩa cổ điển của xác suất
+
+Nếu không gian mẫu có hữu hạn kết quả và các kết quả đồng khả năng, xác suất của biến cố A bằng số kết quả thuận lợi cho A chia cho số phần tử của không gian mẫu: P(A) = n(A)/n(Ω). Với con xúc xắc ở trên, xác suất ra mặt chẵn là 3/6 = 1/2.
+
+Xác suất của mọi biến cố nằm trong đoạn [0, 1]. Biến cố chắc chắn có xác suất bằng 1 và biến cố không thể có xác suất bằng 0. Xác suất của biến cố đối thỏa mãn P(Ā) = 1 − P(A). Công thức này rất tiện khi tính trực tiếp P(A) khó hơn tính P(Ā), chẳng hạn khi tính xác suất ""có ít nhất một lần"" xuất hiện một sự kiện.
+
+## Quy tắc cộng
+
+Hai biến cố A và B gọi là xung khắc nếu chúng không thể cùng xảy ra, tức là A ∩ B = ∅. Khi A và B xung khắc, xác suất để A hoặc B xảy ra là P(A ∪ B) = P(A) + P(B). Trong trường hợp tổng quát, khi A và B có thể cùng xảy ra, ta dùng công thức cộng mở rộng: P(A ∪ B) = P(A) + P(B) − P(A ∩ B). Phần trừ đi bù cho việc các kết quả chung đã bị đếm hai lần.
+
+## Quy tắc nhân và biến cố độc lập
+
+Hai biến cố A và B gọi là độc lập nếu việc xảy ra hay không xảy ra của biến cố này không làm thay đổi xác suất của biến cố kia. Khi đó P(A ∩ B) = P(A) · P(B). Ví dụ, gieo một đồng xu cân đối hai lần: xác suất cả hai lần đều ra mặt sấp là 1/2 · 1/2 = 1/4.
+
+Cần phân biệt xung khắc với độc lập. Hai biến cố xung khắc có xác suất dương thì không thể độc lập, vì nếu A đã ",,,,,,,
+ec8a99ab-0f53-4b9f-b023-1361c81ef0fd,D1-xac-suat:TRUE_FALSE,Xác suất cơ bản,"Trong phép thử gieo một con xúc xắc cân đối sáu mặt, không gian mẫu là Ω = {1, 2, 3, 4, 5, 6}.",TRUE: Đúng | FALSE: Sai,TRUE,"Theo nguồn, không gian mẫu khi gieo xúc xắc cân đối sáu mặt là Ω = {1, 2, 3, 4, 5, 6}.","# Xác suất cơ bản
+
+## Phép thử và biến cố
+
+Phép thử ngẫu nhiên là một thí nghiệm hay hành động mà ta không đoán trước được kết quả, dù biết tập hợp tất cả các kết quả có thể xảy ra. Tập hợp mọi kết quả có thể của phép thử gọi là không gian mẫu, thường kí hiệu là Ω. Ví dụ, khi gieo một con xúc xắc cân đối sáu mặt, không gian mẫu là Ω = {1, 2, 3, 4, 5, 6}.
+
+Biến cố là một tập con của không gian mẫu. Biến cố ""mặt xuất hiện có số chấm chẵn"" ứng với tập con {2, 4, 6}. Biến cố chắc chắn là chính Ω, luôn xảy ra. Biến cố không thể là tập rỗng, không bao giờ xảy ra. Biến cố đối của A, kí hiệu Ā, xảy ra khi và chỉ khi A không xảy ra.
+
+## Định nghĩa cổ điển của xác suất
+
+Nếu không gian mẫu có hữu hạn kết quả và các kết quả đồng khả năng, xác suất của biến cố A bằng số kết quả thuận lợi cho A chia cho số phần tử của không gian mẫu: P(A) = n(A)/n(Ω). Với con xúc xắc ở trên, xác suất ra mặt chẵn là 3/6 = 1/2.
+
+Xác suất của mọi biến cố nằm trong đoạn [0, 1]. Biến cố chắc chắn có xác suất bằng 1 và biến cố không thể có xác suất bằng 0. Xác suất của biến cố đối thỏa mãn P(Ā) = 1 − P(A). Công thức này rất tiện khi tính trực tiếp P(A) khó hơn tính P(Ā), chẳng hạn khi tính xác suất ""có ít nhất một lần"" xuất hiện một sự kiện.
+
+## Quy tắc cộng
+
+Hai biến cố A và B gọi là xung khắc nếu chúng không thể cùng xảy ra, tức là A ∩ B = ∅. Khi A và B xung khắc, xác suất để A hoặc B xảy ra là P(A ∪ B) = P(A) + P(B). Trong trường hợp tổng quát, khi A và B có thể cùng xảy ra, ta dùng công thức cộng mở rộng: P(A ∪ B) = P(A) + P(B) − P(A ∩ B). Phần trừ đi bù cho việc các kết quả chung đã bị đếm hai lần.
+
+## Quy tắc nhân và biến cố độc lập
+
+Hai biến cố A và B gọi là độc lập nếu việc xảy ra hay không xảy ra của biến cố này không làm thay đổi xác suất của biến cố kia. Khi đó P(A ∩ B) = P(A) · P(B). Ví dụ, gieo một đồng xu cân đối hai lần: xác suất cả hai lần đều ra mặt sấp là 1/2 · 1/2 = 1/4.
+
+Cần phân biệt xung khắc với độc lập. Hai biến cố xung khắc có xác suất dương thì không thể độc lập, vì nếu A đã ",,,,,,,
+76e995d9-f126-40da-8965-292a661b5728,D1-xac-suat:TRUE_FALSE,Xác suất cơ bản,"Với định nghĩa cổ điển, xác suất của biến cố 'mặt xuất hiện có số chấm chẵn' khi gieo xúc xắc cân đối là 1/2.",TRUE: Đúng | FALSE: Sai,TRUE,"Biến cố chẵn ứng với {2,4,6}, có 3 kết quả thuận lợi trên 6, nên P = 3/6 = 1/2.","# Xác suất cơ bản
+
+## Phép thử và biến cố
+
+Phép thử ngẫu nhiên là một thí nghiệm hay hành động mà ta không đoán trước được kết quả, dù biết tập hợp tất cả các kết quả có thể xảy ra. Tập hợp mọi kết quả có thể của phép thử gọi là không gian mẫu, thường kí hiệu là Ω. Ví dụ, khi gieo một con xúc xắc cân đối sáu mặt, không gian mẫu là Ω = {1, 2, 3, 4, 5, 6}.
+
+Biến cố là một tập con của không gian mẫu. Biến cố ""mặt xuất hiện có số chấm chẵn"" ứng với tập con {2, 4, 6}. Biến cố chắc chắn là chính Ω, luôn xảy ra. Biến cố không thể là tập rỗng, không bao giờ xảy ra. Biến cố đối của A, kí hiệu Ā, xảy ra khi và chỉ khi A không xảy ra.
+
+## Định nghĩa cổ điển của xác suất
+
+Nếu không gian mẫu có hữu hạn kết quả và các kết quả đồng khả năng, xác suất của biến cố A bằng số kết quả thuận lợi cho A chia cho số phần tử của không gian mẫu: P(A) = n(A)/n(Ω). Với con xúc xắc ở trên, xác suất ra mặt chẵn là 3/6 = 1/2.
+
+Xác suất của mọi biến cố nằm trong đoạn [0, 1]. Biến cố chắc chắn có xác suất bằng 1 và biến cố không thể có xác suất bằng 0. Xác suất của biến cố đối thỏa mãn P(Ā) = 1 − P(A). Công thức này rất tiện khi tính trực tiếp P(A) khó hơn tính P(Ā), chẳng hạn khi tính xác suất ""có ít nhất một lần"" xuất hiện một sự kiện.
+
+## Quy tắc cộng
+
+Hai biến cố A và B gọi là xung khắc nếu chúng không thể cùng xảy ra, tức là A ∩ B = ∅. Khi A và B xung khắc, xác suất để A hoặc B xảy ra là P(A ∪ B) = P(A) + P(B). Trong trường hợp tổng quát, khi A và B có thể cùng xảy ra, ta dùng công thức cộng mở rộng: P(A ∪ B) = P(A) + P(B) − P(A ∩ B). Phần trừ đi bù cho việc các kết quả chung đã bị đếm hai lần.
+
+## Quy tắc nhân và biến cố độc lập
+
+Hai biến cố A và B gọi là độc lập nếu việc xảy ra hay không xảy ra của biến cố này không làm thay đổi xác suất của biến cố kia. Khi đó P(A ∩ B) = P(A) · P(B). Ví dụ, gieo một đồng xu cân đối hai lần: xác suất cả hai lần đều ra mặt sấp là 1/2 · 1/2 = 1/4.
+
+Cần phân biệt xung khắc với độc lập. Hai biến cố xung khắc có xác suất dương thì không thể độc lập, vì nếu A đã ",,,,,,,
+51df3cb9-fe7b-4acf-a085-8773df30dac9,D1-xac-suat:TRUE_FALSE,Xác suất cơ bản,Nếu hai biến cố A và B xung khắc thì công thức P(A ∪ B) = P(A) + P(B) − P(A ∩ B) không còn đúng.,TRUE: Đúng | FALSE: Sai,FALSE,Công thức cộng mở rộng vẫn đúng tổng quát; khi xung khắc thì P(A ∩ B) = 0 nên rút gọn thành P(A) + P(B).,"# Xác suất cơ bản
+
+## Phép thử và biến cố
+
+Phép thử ngẫu nhiên là một thí nghiệm hay hành động mà ta không đoán trước được kết quả, dù biết tập hợp tất cả các kết quả có thể xảy ra. Tập hợp mọi kết quả có thể của phép thử gọi là không gian mẫu, thường kí hiệu là Ω. Ví dụ, khi gieo một con xúc xắc cân đối sáu mặt, không gian mẫu là Ω = {1, 2, 3, 4, 5, 6}.
+
+Biến cố là một tập con của không gian mẫu. Biến cố ""mặt xuất hiện có số chấm chẵn"" ứng với tập con {2, 4, 6}. Biến cố chắc chắn là chính Ω, luôn xảy ra. Biến cố không thể là tập rỗng, không bao giờ xảy ra. Biến cố đối của A, kí hiệu Ā, xảy ra khi và chỉ khi A không xảy ra.
+
+## Định nghĩa cổ điển của xác suất
+
+Nếu không gian mẫu có hữu hạn kết quả và các kết quả đồng khả năng, xác suất của biến cố A bằng số kết quả thuận lợi cho A chia cho số phần tử của không gian mẫu: P(A) = n(A)/n(Ω). Với con xúc xắc ở trên, xác suất ra mặt chẵn là 3/6 = 1/2.
+
+Xác suất của mọi biến cố nằm trong đoạn [0, 1]. Biến cố chắc chắn có xác suất bằng 1 và biến cố không thể có xác suất bằng 0. Xác suất của biến cố đối thỏa mãn P(Ā) = 1 − P(A). Công thức này rất tiện khi tính trực tiếp P(A) khó hơn tính P(Ā), chẳng hạn khi tính xác suất ""có ít nhất một lần"" xuất hiện một sự kiện.
+
+## Quy tắc cộng
+
+Hai biến cố A và B gọi là xung khắc nếu chúng không thể cùng xảy ra, tức là A ∩ B = ∅. Khi A và B xung khắc, xác suất để A hoặc B xảy ra là P(A ∪ B) = P(A) + P(B). Trong trường hợp tổng quát, khi A và B có thể cùng xảy ra, ta dùng công thức cộng mở rộng: P(A ∪ B) = P(A) + P(B) − P(A ∩ B). Phần trừ đi bù cho việc các kết quả chung đã bị đếm hai lần.
+
+## Quy tắc nhân và biến cố độc lập
+
+Hai biến cố A và B gọi là độc lập nếu việc xảy ra hay không xảy ra của biến cố này không làm thay đổi xác suất của biến cố kia. Khi đó P(A ∩ B) = P(A) · P(B). Ví dụ, gieo một đồng xu cân đối hai lần: xác suất cả hai lần đều ra mặt sấp là 1/2 · 1/2 = 1/4.
+
+Cần phân biệt xung khắc với độc lập. Hai biến cố xung khắc có xác suất dương thì không thể độc lập, vì nếu A đã ",,,,,,,
+3d536023-37b4-4112-afc4-144c33ec6151,D1-xac-suat:TRUE_FALSE,Xác suất cơ bản,Hai biến cố xung khắc có xác suất dương thì không thể độc lập.,TRUE: Đúng | FALSE: Sai,TRUE,"Nếu A xảy ra thì B chắc chắn không xảy ra, nên việc A xảy ra làm thay đổi xác suất của B; do đó chúng không độc lập.","# Xác suất cơ bản
+
+## Phép thử và biến cố
+
+Phép thử ngẫu nhiên là một thí nghiệm hay hành động mà ta không đoán trước được kết quả, dù biết tập hợp tất cả các kết quả có thể xảy ra. Tập hợp mọi kết quả có thể của phép thử gọi là không gian mẫu, thường kí hiệu là Ω. Ví dụ, khi gieo một con xúc xắc cân đối sáu mặt, không gian mẫu là Ω = {1, 2, 3, 4, 5, 6}.
+
+Biến cố là một tập con của không gian mẫu. Biến cố ""mặt xuất hiện có số chấm chẵn"" ứng với tập con {2, 4, 6}. Biến cố chắc chắn là chính Ω, luôn xảy ra. Biến cố không thể là tập rỗng, không bao giờ xảy ra. Biến cố đối của A, kí hiệu Ā, xảy ra khi và chỉ khi A không xảy ra.
+
+## Định nghĩa cổ điển của xác suất
+
+Nếu không gian mẫu có hữu hạn kết quả và các kết quả đồng khả năng, xác suất của biến cố A bằng số kết quả thuận lợi cho A chia cho số phần tử của không gian mẫu: P(A) = n(A)/n(Ω). Với con xúc xắc ở trên, xác suất ra mặt chẵn là 3/6 = 1/2.
+
+Xác suất của mọi biến cố nằm trong đoạn [0, 1]. Biến cố chắc chắn có xác suất bằng 1 và biến cố không thể có xác suất bằng 0. Xác suất của biến cố đối thỏa mãn P(Ā) = 1 − P(A). Công thức này rất tiện khi tính trực tiếp P(A) khó hơn tính P(Ā), chẳng hạn khi tính xác suất ""có ít nhất một lần"" xuất hiện một sự kiện.
+
+## Quy tắc cộng
+
+Hai biến cố A và B gọi là xung khắc nếu chúng không thể cùng xảy ra, tức là A ∩ B = ∅. Khi A và B xung khắc, xác suất để A hoặc B xảy ra là P(A ∪ B) = P(A) + P(B). Trong trường hợp tổng quát, khi A và B có thể cùng xảy ra, ta dùng công thức cộng mở rộng: P(A ∪ B) = P(A) + P(B) − P(A ∩ B). Phần trừ đi bù cho việc các kết quả chung đã bị đếm hai lần.
+
+## Quy tắc nhân và biến cố độc lập
+
+Hai biến cố A và B gọi là độc lập nếu việc xảy ra hay không xảy ra của biến cố này không làm thay đổi xác suất của biến cố kia. Khi đó P(A ∩ B) = P(A) · P(B). Ví dụ, gieo một đồng xu cân đối hai lần: xác suất cả hai lần đều ra mặt sấp là 1/2 · 1/2 = 1/4.
+
+Cần phân biệt xung khắc với độc lập. Hai biến cố xung khắc có xác suất dương thì không thể độc lập, vì nếu A đã 
+---
+xảy ra thì B chắc chắn không xảy ra.
+
+## Xác suất có điều kiện
+
+Xác suất của A khi biết B đã xảy ra, với P(B) > 0, được định nghĩa là P(A | B) = P(A ∩ B) / P(B). Nếu A và B độc lập thì P(A | B) = P(A). Từ định nghĩa này suy ra công thức nhân tổng quát P(A ∩ B) = P(B) · P(A | B), đúng cả khi hai biến cố không độc lập. Ví dụ, rút lần lượt hai lá bài không hoàn lại từ bộ 52 lá, xác suất cả hai đều là át bằng 4/52 · 3/51 = 1/221.",,,,,,,
+2c68106d-8683-4eb2-b173-43e358fafd7b,D1-xac-suat:TRUE_FALSE,Xác suất cơ bản,"Khi rút lần lượt hai lá bài không hoàn lại từ bộ 52 lá, xác suất cả hai đều là át bằng 4/52 · 3/51 = 1/221.",TRUE: Đúng | FALSE: Sai,TRUE,Đây là ví dụ trong nguồn về công thức nhân tổng quát P(A ∩ B) = P(B)·P(A|B) với rút không hoàn lại.,"xảy ra thì B chắc chắn không xảy ra.
+
+## Xác suất có điều kiện
+
+Xác suất của A khi biết B đã xảy ra, với P(B) > 0, được định nghĩa là P(A | B) = P(A ∩ B) / P(B). Nếu A và B độc lập thì P(A | B) = P(A). Từ định nghĩa này suy ra công thức nhân tổng quát P(A ∩ B) = P(B) · P(A | B), đúng cả khi hai biến cố không độc lập. Ví dụ, rút lần lượt hai lá bài không hoàn lại từ bộ 52 lá, xác suất cả hai đều là át bằng 4/52 · 3/51 = 1/221.",,,,,,,
+2c1bf66b-7da5-408d-990d-7fc9c160ae56,D2-tcp-udp:MCQ,Giao thức tầng giao vận,Số hiệu cổng (port) trong tầng giao vận là một số nguyên có kích thước bao nhiêu bit và dải giá trị là bao nhiêu?,"A: 8 bit, từ 0 đến 255 | B: 16 bit, từ 0 đến 65535 | C: 32 bit, từ 0 đến 4294967295 | D: 16 bit, từ 1 đến 65536",B,Tầng giao vận dùng số hiệu cổng là số nguyên 16 bit có giá trị từ 0 đến 65535.,"# Giao thức tầng giao vận: TCP và UDP
+
+## Vai trò của tầng giao vận
+
+Trong mô hình TCP/IP, tầng giao vận nằm giữa tầng ứng dụng và tầng Internet. Nhiệm vụ của nó là chuyển dữ liệu giữa hai tiến trình chạy trên hai máy, chứ không chỉ giữa hai máy. Để phân biệt các tiến trình, tầng giao vận dùng số hiệu cổng (port), là một số nguyên 16 bit có giá trị từ 0 đến 65535. Ví dụ, máy chủ web dùng HTTP thường lắng nghe ở cổng 80, còn HTTPS dùng cổng 443. Bộ gồm địa chỉ IP nguồn, cổng nguồn, địa chỉ IP đích, cổng đích và giao thức xác định duy nhất một kết nối.
+
+Hai giao thức giao vận phổ biến nhất là TCP (Transmission Control Protocol) và UDP (User Datagram Protocol).
+
+## TCP: hướng kết nối và tin cậy
+
+TCP là giao thức hướng kết nối. Trước khi truyền dữ liệu, hai bên thực hiện bắt tay ba bước: máy khách gửi gói SYN, máy chủ trả lời SYN-ACK, rồi máy khách gửi ACK. Sau bước này kết nối được thiết lập.
+
+TCP bảo đảm truyền tin cậy. Mỗi byte dữ liệu được đánh số thứ tự (sequence number). Bên nhận gửi xác nhận ACK cho dữ liệu đã nhận; nếu bên gửi không nhận được xác nhận trong thời gian chờ thì gửi lại đoạn dữ liệu đó. Nhờ số thứ tự, bên nhận có thể sắp xếp lại các đoạn đến sai thứ tự và loại bỏ đoạn trùng lặp.
+
+TCP còn có điều khiển luồng và điều khiển tắc nghẽn. Điều khiển luồng dùng cửa sổ nhận để bên gửi không gửi nhanh hơn khả năng xử lý của bên nhận. Điều khiển tắc nghẽn làm giảm tốc độ gửi khi mạng có dấu hiệu quá tải, chẳng hạn khi gói tin bị mất. Các cơ chế này làm TCP có độ trễ cao hơn và phần đầu gói lớn hơn: phần đầu TCP tối thiểu dài 20 byte.
+
+Các ứng dụng cần dữ liệu đầy đủ và đúng thứ tự dùng TCP, ví dụ duyệt web, thư điện tử và truyền tệp.
+
+## UDP: không kết nối và gọn nhẹ
+
+UDP là giao thức không kết nối. Bên gửi chỉ việc đóng gói dữ liệu thành datagram và gửi đi, không cần bắt tay trước. UDP không đánh số thứ tự, không xác nhận và không gửi lại, vì vậy gói tin có thể bị mất, bị trùng hoặc đến sai thứ tự mà UDP không tự sửa. Bù lại, phần đầu UDP chỉ dài 8 byte và ",,,,,,,
+a5fe1ffa-f809-42a1-950f-d0221508ed7b,D2-tcp-udp:MCQ,Giao thức tầng giao vận,Trình tự đúng của bắt tay ba bước trong TCP là gì?,"A: Máy khách gửi ACK, máy chủ trả lời SYN, máy khách gửi SYN-ACK | B: Máy khách gửi SYN, máy chủ trả lời SYN-ACK, máy khách gửi ACK | C: Máy chủ gửi SYN, máy khách trả lời ACK, máy chủ gửi SYN-ACK | D: Máy khách gửi SYN-ACK, máy chủ gửi SYN, máy khách gửi ACK",B,"TCP thiết lập kết nối bằng bắt tay ba bước: SYN, SYN-ACK, ACK.","# Giao thức tầng giao vận: TCP và UDP
+
+## Vai trò của tầng giao vận
+
+Trong mô hình TCP/IP, tầng giao vận nằm giữa tầng ứng dụng và tầng Internet. Nhiệm vụ của nó là chuyển dữ liệu giữa hai tiến trình chạy trên hai máy, chứ không chỉ giữa hai máy. Để phân biệt các tiến trình, tầng giao vận dùng số hiệu cổng (port), là một số nguyên 16 bit có giá trị từ 0 đến 65535. Ví dụ, máy chủ web dùng HTTP thường lắng nghe ở cổng 80, còn HTTPS dùng cổng 443. Bộ gồm địa chỉ IP nguồn, cổng nguồn, địa chỉ IP đích, cổng đích và giao thức xác định duy nhất một kết nối.
+
+Hai giao thức giao vận phổ biến nhất là TCP (Transmission Control Protocol) và UDP (User Datagram Protocol).
+
+## TCP: hướng kết nối và tin cậy
+
+TCP là giao thức hướng kết nối. Trước khi truyền dữ liệu, hai bên thực hiện bắt tay ba bước: máy khách gửi gói SYN, máy chủ trả lời SYN-ACK, rồi máy khách gửi ACK. Sau bước này kết nối được thiết lập.
+
+TCP bảo đảm truyền tin cậy. Mỗi byte dữ liệu được đánh số thứ tự (sequence number). Bên nhận gửi xác nhận ACK cho dữ liệu đã nhận; nếu bên gửi không nhận được xác nhận trong thời gian chờ thì gửi lại đoạn dữ liệu đó. Nhờ số thứ tự, bên nhận có thể sắp xếp lại các đoạn đến sai thứ tự và loại bỏ đoạn trùng lặp.
+
+TCP còn có điều khiển luồng và điều khiển tắc nghẽn. Điều khiển luồng dùng cửa sổ nhận để bên gửi không gửi nhanh hơn khả năng xử lý của bên nhận. Điều khiển tắc nghẽn làm giảm tốc độ gửi khi mạng có dấu hiệu quá tải, chẳng hạn khi gói tin bị mất. Các cơ chế này làm TCP có độ trễ cao hơn và phần đầu gói lớn hơn: phần đầu TCP tối thiểu dài 20 byte.
+
+Các ứng dụng cần dữ liệu đầy đủ và đúng thứ tự dùng TCP, ví dụ duyệt web, thư điện tử và truyền tệp.
+
+## UDP: không kết nối và gọn nhẹ
+
+UDP là giao thức không kết nối. Bên gửi chỉ việc đóng gói dữ liệu thành datagram và gửi đi, không cần bắt tay trước. UDP không đánh số thứ tự, không xác nhận và không gửi lại, vì vậy gói tin có thể bị mất, bị trùng hoặc đến sai thứ tự mà UDP không tự sửa. Bù lại, phần đầu UDP chỉ dài 8 byte và ",,,,,,,
+7a51b3b8-1aab-4fed-8d5c-f44cbb563b64,D2-tcp-udp:MCQ,Giao thức tầng giao vận,Phần đầu (header) tối thiểu của TCP và UDP lần lượt dài bao nhiêu byte?,"A: TCP 8 byte, UDP 20 byte | B: TCP 20 byte, UDP 8 byte | C: TCP 20 byte, UDP 20 byte | D: TCP 8 byte, UDP 8 byte",B,"Phần đầu TCP tối thiểu dài 20 byte, còn phần đầu UDP chỉ dài 8 byte.","# Giao thức tầng giao vận: TCP và UDP
+
+## Vai trò của tầng giao vận
+
+Trong mô hình TCP/IP, tầng giao vận nằm giữa tầng ứng dụng và tầng Internet. Nhiệm vụ của nó là chuyển dữ liệu giữa hai tiến trình chạy trên hai máy, chứ không chỉ giữa hai máy. Để phân biệt các tiến trình, tầng giao vận dùng số hiệu cổng (port), là một số nguyên 16 bit có giá trị từ 0 đến 65535. Ví dụ, máy chủ web dùng HTTP thường lắng nghe ở cổng 80, còn HTTPS dùng cổng 443. Bộ gồm địa chỉ IP nguồn, cổng nguồn, địa chỉ IP đích, cổng đích và giao thức xác định duy nhất một kết nối.
+
+Hai giao thức giao vận phổ biến nhất là TCP (Transmission Control Protocol) và UDP (User Datagram Protocol).
+
+## TCP: hướng kết nối và tin cậy
+
+TCP là giao thức hướng kết nối. Trước khi truyền dữ liệu, hai bên thực hiện bắt tay ba bước: máy khách gửi gói SYN, máy chủ trả lời SYN-ACK, rồi máy khách gửi ACK. Sau bước này kết nối được thiết lập.
+
+TCP bảo đảm truyền tin cậy. Mỗi byte dữ liệu được đánh số thứ tự (sequence number). Bên nhận gửi xác nhận ACK cho dữ liệu đã nhận; nếu bên gửi không nhận được xác nhận trong thời gian chờ thì gửi lại đoạn dữ liệu đó. Nhờ số thứ tự, bên nhận có thể sắp xếp lại các đoạn đến sai thứ tự và loại bỏ đoạn trùng lặp.
+
+TCP còn có điều khiển luồng và điều khiển tắc nghẽn. Điều khiển luồng dùng cửa sổ nhận để bên gửi không gửi nhanh hơn khả năng xử lý của bên nhận. Điều khiển tắc nghẽn làm giảm tốc độ gửi khi mạng có dấu hiệu quá tải, chẳng hạn khi gói tin bị mất. Các cơ chế này làm TCP có độ trễ cao hơn và phần đầu gói lớn hơn: phần đầu TCP tối thiểu dài 20 byte.
+
+Các ứng dụng cần dữ liệu đầy đủ và đúng thứ tự dùng TCP, ví dụ duyệt web, thư điện tử và truyền tệp.
+
+## UDP: không kết nối và gọn nhẹ
+
+UDP là giao thức không kết nối. Bên gửi chỉ việc đóng gói dữ liệu thành datagram và gửi đi, không cần bắt tay trước. UDP không đánh số thứ tự, không xác nhận và không gửi lại, vì vậy gói tin có thể bị mất, bị trùng hoặc đến sai thứ tự mà UDP không tự sửa. Bù lại, phần đầu UDP chỉ dài 8 byte và ",,,,,,,
+e29a8ba0-0df3-4ded-a5de-25745a1483fa,D2-tcp-udp:MCQ,Giao thức tầng giao vận,Đặc điểm nào sau đây KHÔNG phải là đặc điểm của UDP?,"A: Không kết nối, không cần bắt tay trước khi gửi | B: Không đánh số thứ tự và không xác nhận ACK | C: Có điều khiển luồng và điều khiển tắc nghẽn | D: Phần đầu chỉ dài 8 byte, độ trễ thấp",C,"Điều khiển luồng và điều khiển tắc nghẽn là cơ chế của TCP, không phải của UDP.","# Giao thức tầng giao vận: TCP và UDP
+
+## Vai trò của tầng giao vận
+
+Trong mô hình TCP/IP, tầng giao vận nằm giữa tầng ứng dụng và tầng Internet. Nhiệm vụ của nó là chuyển dữ liệu giữa hai tiến trình chạy trên hai máy, chứ không chỉ giữa hai máy. Để phân biệt các tiến trình, tầng giao vận dùng số hiệu cổng (port), là một số nguyên 16 bit có giá trị từ 0 đến 65535. Ví dụ, máy chủ web dùng HTTP thường lắng nghe ở cổng 80, còn HTTPS dùng cổng 443. Bộ gồm địa chỉ IP nguồn, cổng nguồn, địa chỉ IP đích, cổng đích và giao thức xác định duy nhất một kết nối.
+
+Hai giao thức giao vận phổ biến nhất là TCP (Transmission Control Protocol) và UDP (User Datagram Protocol).
+
+## TCP: hướng kết nối và tin cậy
+
+TCP là giao thức hướng kết nối. Trước khi truyền dữ liệu, hai bên thực hiện bắt tay ba bước: máy khách gửi gói SYN, máy chủ trả lời SYN-ACK, rồi máy khách gửi ACK. Sau bước này kết nối được thiết lập.
+
+TCP bảo đảm truyền tin cậy. Mỗi byte dữ liệu được đánh số thứ tự (sequence number). Bên nhận gửi xác nhận ACK cho dữ liệu đã nhận; nếu bên gửi không nhận được xác nhận trong thời gian chờ thì gửi lại đoạn dữ liệu đó. Nhờ số thứ tự, bên nhận có thể sắp xếp lại các đoạn đến sai thứ tự và loại bỏ đoạn trùng lặp.
+
+TCP còn có điều khiển luồng và điều khiển tắc nghẽn. Điều khiển luồng dùng cửa sổ nhận để bên gửi không gửi nhanh hơn khả năng xử lý của bên nhận. Điều khiển tắc nghẽn làm giảm tốc độ gửi khi mạng có dấu hiệu quá tải, chẳng hạn khi gói tin bị mất. Các cơ chế này làm TCP có độ trễ cao hơn và phần đầu gói lớn hơn: phần đầu TCP tối thiểu dài 20 byte.
+
+Các ứng dụng cần dữ liệu đầy đủ và đúng thứ tự dùng TCP, ví dụ duyệt web, thư điện tử và truyền tệp.
+
+## UDP: không kết nối và gọn nhẹ
+
+UDP là giao thức không kết nối. Bên gửi chỉ việc đóng gói dữ liệu thành datagram và gửi đi, không cần bắt tay trước. UDP không đánh số thứ tự, không xác nhận và không gửi lại, vì vậy gói tin có thể bị mất, bị trùng hoặc đến sai thứ tự mà UDP không tự sửa. Bù lại, phần đầu UDP chỉ dài 8 byte và 
+---
+độ trễ thấp.
+
+UDP phù hợp với ứng dụng thời gian thực, nơi dữ liệu đến muộn còn tệ hơn mất một ít dữ liệu, như gọi thoại qua Internet, trò chơi trực tuyến và phát video trực tiếp. Hệ thống phân giải tên miền DNS cũng thường dùng UDP cho các truy vấn ngắn, qua cổng 53.
+
+## So sánh nhanh
+
+TCP: hướng kết nối, tin cậy, có thứ tự, có điều khiển luồng và tắc nghẽn, phần đầu tối thiểu 20 byte. UDP: không kết nối, không bảo đảm tin cậy, không bảo đảm thứ tự, phần đầu 8 byte, độ trễ thấp. Việc chọn giao thức phụ thuộc vào việc ứng dụng ưu tiên độ chính xác hay tốc độ.",,,,,,,
+86bb70e6-6708-4476-8f84-d225a8378bea,D2-tcp-udp:MCQ,Giao thức tầng giao vận,Ứng dụng nào sau đây thường dùng UDP vì ưu tiên độ trễ thấp hơn độ chính xác tuyệt đối?,"A: Truyền tệp và thư điện tử | B: Gọi thoại qua Internet, trò chơi trực tuyến và phát video trực tiếp | C: Duyệt web bằng HTTPS | D: Các ứng dụng cần dữ liệu đầy đủ và đúng thứ tự",B,"UDP phù hợp với ứng dụng thời gian thực như gọi thoại, trò chơi trực tuyến và phát video trực tiếp; DNS cũng thường dùng UDP cho truy vấn ngắn qua cổng 53.","độ trễ thấp.
+
+UDP phù hợp với ứng dụng thời gian thực, nơi dữ liệu đến muộn còn tệ hơn mất một ít dữ liệu, như gọi thoại qua Internet, trò chơi trực tuyến và phát video trực tiếp. Hệ thống phân giải tên miền DNS cũng thường dùng UDP cho các truy vấn ngắn, qua cổng 53.
+
+## So sánh nhanh
+
+TCP: hướng kết nối, tin cậy, có thứ tự, có điều khiển luồng và tắc nghẽn, phần đầu tối thiểu 20 byte. UDP: không kết nối, không bảo đảm tin cậy, không bảo đảm thứ tự, phần đầu 8 byte, độ trễ thấp. Việc chọn giao thức phụ thuộc vào việc ứng dụng ưu tiên độ chính xác hay tốc độ.",,,,,,,
+2852ffa8-2744-4ed4-b384-a1a9bf90d08d,D2-tcp-udp:TRUE_FALSE,Giao thức tầng giao vận,"Trong mô hình TCP/IP, tầng giao vận có nhiệm vụ chuyển dữ liệu giữa hai tiến trình chạy trên hai máy, chứ không chỉ giữa hai máy.",TRUE: Đúng | FALSE: Sai,TRUE,"Đoạn văn nêu rõ nhiệm vụ của tầng giao vận là chuyển dữ liệu giữa hai tiến trình chạy trên hai máy, chứ không chỉ giữa hai máy.","# Giao thức tầng giao vận: TCP và UDP
+
+## Vai trò của tầng giao vận
+
+Trong mô hình TCP/IP, tầng giao vận nằm giữa tầng ứng dụng và tầng Internet. Nhiệm vụ của nó là chuyển dữ liệu giữa hai tiến trình chạy trên hai máy, chứ không chỉ giữa hai máy. Để phân biệt các tiến trình, tầng giao vận dùng số hiệu cổng (port), là một số nguyên 16 bit có giá trị từ 0 đến 65535. Ví dụ, máy chủ web dùng HTTP thường lắng nghe ở cổng 80, còn HTTPS dùng cổng 443. Bộ gồm địa chỉ IP nguồn, cổng nguồn, địa chỉ IP đích, cổng đích và giao thức xác định duy nhất một kết nối.
+
+Hai giao thức giao vận phổ biến nhất là TCP (Transmission Control Protocol) và UDP (User Datagram Protocol).
+
+## TCP: hướng kết nối và tin cậy
+
+TCP là giao thức hướng kết nối. Trước khi truyền dữ liệu, hai bên thực hiện bắt tay ba bước: máy khách gửi gói SYN, máy chủ trả lời SYN-ACK, rồi máy khách gửi ACK. Sau bước này kết nối được thiết lập.
+
+TCP bảo đảm truyền tin cậy. Mỗi byte dữ liệu được đánh số thứ tự (sequence number). Bên nhận gửi xác nhận ACK cho dữ liệu đã nhận; nếu bên gửi không nhận được xác nhận trong thời gian chờ thì gửi lại đoạn dữ liệu đó. Nhờ số thứ tự, bên nhận có thể sắp xếp lại các đoạn đến sai thứ tự và loại bỏ đoạn trùng lặp.
+
+TCP còn có điều khiển luồng và điều khiển tắc nghẽn. Điều khiển luồng dùng cửa sổ nhận để bên gửi không gửi nhanh hơn khả năng xử lý của bên nhận. Điều khiển tắc nghẽn làm giảm tốc độ gửi khi mạng có dấu hiệu quá tải, chẳng hạn khi gói tin bị mất. Các cơ chế này làm TCP có độ trễ cao hơn và phần đầu gói lớn hơn: phần đầu TCP tối thiểu dài 20 byte.
+
+Các ứng dụng cần dữ liệu đầy đủ và đúng thứ tự dùng TCP, ví dụ duyệt web, thư điện tử và truyền tệp.
+
+## UDP: không kết nối và gọn nhẹ
+
+UDP là giao thức không kết nối. Bên gửi chỉ việc đóng gói dữ liệu thành datagram và gửi đi, không cần bắt tay trước. UDP không đánh số thứ tự, không xác nhận và không gửi lại, vì vậy gói tin có thể bị mất, bị trùng hoặc đến sai thứ tự mà UDP không tự sửa. Bù lại, phần đầu UDP chỉ dài 8 byte và ",,,,,,,
+b7067c6d-4799-4e74-b51f-ced06daf168a,D2-tcp-udp:TRUE_FALSE,Giao thức tầng giao vận,Số hiệu cổng (port) trong tầng giao vận là một số nguyên 16 bit có giá trị từ 0 đến 65535.,TRUE: Đúng | FALSE: Sai,TRUE,Đoạn văn nêu số hiệu cổng là số nguyên 16 bit có giá trị từ 0 đến 65535.,"# Giao thức tầng giao vận: TCP và UDP
+
+## Vai trò của tầng giao vận
+
+Trong mô hình TCP/IP, tầng giao vận nằm giữa tầng ứng dụng và tầng Internet. Nhiệm vụ của nó là chuyển dữ liệu giữa hai tiến trình chạy trên hai máy, chứ không chỉ giữa hai máy. Để phân biệt các tiến trình, tầng giao vận dùng số hiệu cổng (port), là một số nguyên 16 bit có giá trị từ 0 đến 65535. Ví dụ, máy chủ web dùng HTTP thường lắng nghe ở cổng 80, còn HTTPS dùng cổng 443. Bộ gồm địa chỉ IP nguồn, cổng nguồn, địa chỉ IP đích, cổng đích và giao thức xác định duy nhất một kết nối.
+
+Hai giao thức giao vận phổ biến nhất là TCP (Transmission Control Protocol) và UDP (User Datagram Protocol).
+
+## TCP: hướng kết nối và tin cậy
+
+TCP là giao thức hướng kết nối. Trước khi truyền dữ liệu, hai bên thực hiện bắt tay ba bước: máy khách gửi gói SYN, máy chủ trả lời SYN-ACK, rồi máy khách gửi ACK. Sau bước này kết nối được thiết lập.
+
+TCP bảo đảm truyền tin cậy. Mỗi byte dữ liệu được đánh số thứ tự (sequence number). Bên nhận gửi xác nhận ACK cho dữ liệu đã nhận; nếu bên gửi không nhận được xác nhận trong thời gian chờ thì gửi lại đoạn dữ liệu đó. Nhờ số thứ tự, bên nhận có thể sắp xếp lại các đoạn đến sai thứ tự và loại bỏ đoạn trùng lặp.
+
+TCP còn có điều khiển luồng và điều khiển tắc nghẽn. Điều khiển luồng dùng cửa sổ nhận để bên gửi không gửi nhanh hơn khả năng xử lý của bên nhận. Điều khiển tắc nghẽn làm giảm tốc độ gửi khi mạng có dấu hiệu quá tải, chẳng hạn khi gói tin bị mất. Các cơ chế này làm TCP có độ trễ cao hơn và phần đầu gói lớn hơn: phần đầu TCP tối thiểu dài 20 byte.
+
+Các ứng dụng cần dữ liệu đầy đủ và đúng thứ tự dùng TCP, ví dụ duyệt web, thư điện tử và truyền tệp.
+
+## UDP: không kết nối và gọn nhẹ
+
+UDP là giao thức không kết nối. Bên gửi chỉ việc đóng gói dữ liệu thành datagram và gửi đi, không cần bắt tay trước. UDP không đánh số thứ tự, không xác nhận và không gửi lại, vì vậy gói tin có thể bị mất, bị trùng hoặc đến sai thứ tự mà UDP không tự sửa. Bù lại, phần đầu UDP chỉ dài 8 byte và ",,,,,,,
+c02f315f-3abd-49d4-8e52-59dc678ca1d7,D2-tcp-udp:TRUE_FALSE,Giao thức tầng giao vận,TCP là giao thức không kết nối và không thực hiện bắt tay trước khi truyền dữ liệu.,TRUE: Đúng | FALSE: Sai,FALSE,"TCP là giao thức hướng kết nối và thực hiện bắt tay ba bước (SYN, SYN-ACK, ACK) trước khi truyền dữ liệu.","# Giao thức tầng giao vận: TCP và UDP
+
+## Vai trò của tầng giao vận
+
+Trong mô hình TCP/IP, tầng giao vận nằm giữa tầng ứng dụng và tầng Internet. Nhiệm vụ của nó là chuyển dữ liệu giữa hai tiến trình chạy trên hai máy, chứ không chỉ giữa hai máy. Để phân biệt các tiến trình, tầng giao vận dùng số hiệu cổng (port), là một số nguyên 16 bit có giá trị từ 0 đến 65535. Ví dụ, máy chủ web dùng HTTP thường lắng nghe ở cổng 80, còn HTTPS dùng cổng 443. Bộ gồm địa chỉ IP nguồn, cổng nguồn, địa chỉ IP đích, cổng đích và giao thức xác định duy nhất một kết nối.
+
+Hai giao thức giao vận phổ biến nhất là TCP (Transmission Control Protocol) và UDP (User Datagram Protocol).
+
+## TCP: hướng kết nối và tin cậy
+
+TCP là giao thức hướng kết nối. Trước khi truyền dữ liệu, hai bên thực hiện bắt tay ba bước: máy khách gửi gói SYN, máy chủ trả lời SYN-ACK, rồi máy khách gửi ACK. Sau bước này kết nối được thiết lập.
+
+TCP bảo đảm truyền tin cậy. Mỗi byte dữ liệu được đánh số thứ tự (sequence number). Bên nhận gửi xác nhận ACK cho dữ liệu đã nhận; nếu bên gửi không nhận được xác nhận trong thời gian chờ thì gửi lại đoạn dữ liệu đó. Nhờ số thứ tự, bên nhận có thể sắp xếp lại các đoạn đến sai thứ tự và loại bỏ đoạn trùng lặp.
+
+TCP còn có điều khiển luồng và điều khiển tắc nghẽn. Điều khiển luồng dùng cửa sổ nhận để bên gửi không gửi nhanh hơn khả năng xử lý của bên nhận. Điều khiển tắc nghẽn làm giảm tốc độ gửi khi mạng có dấu hiệu quá tải, chẳng hạn khi gói tin bị mất. Các cơ chế này làm TCP có độ trễ cao hơn và phần đầu gói lớn hơn: phần đầu TCP tối thiểu dài 20 byte.
+
+Các ứng dụng cần dữ liệu đầy đủ và đúng thứ tự dùng TCP, ví dụ duyệt web, thư điện tử và truyền tệp.
+
+## UDP: không kết nối và gọn nhẹ
+
+UDP là giao thức không kết nối. Bên gửi chỉ việc đóng gói dữ liệu thành datagram và gửi đi, không cần bắt tay trước. UDP không đánh số thứ tự, không xác nhận và không gửi lại, vì vậy gói tin có thể bị mất, bị trùng hoặc đến sai thứ tự mà UDP không tự sửa. Bù lại, phần đầu UDP chỉ dài 8 byte và ",,,,,,,
+aa4a8438-247f-423e-a6d4-e90caf1fc273,D2-tcp-udp:TRUE_FALSE,Giao thức tầng giao vận,"Phần đầu UDP chỉ dài 8 byte, trong khi phần đầu TCP tối thiểu dài 20 byte.",TRUE: Đúng | FALSE: Sai,TRUE,Đoạn văn nêu phần đầu UDP dài 8 byte và phần đầu TCP tối thiểu dài 20 byte.,"# Giao thức tầng giao vận: TCP và UDP
+
+## Vai trò của tầng giao vận
+
+Trong mô hình TCP/IP, tầng giao vận nằm giữa tầng ứng dụng và tầng Internet. Nhiệm vụ của nó là chuyển dữ liệu giữa hai tiến trình chạy trên hai máy, chứ không chỉ giữa hai máy. Để phân biệt các tiến trình, tầng giao vận dùng số hiệu cổng (port), là một số nguyên 16 bit có giá trị từ 0 đến 65535. Ví dụ, máy chủ web dùng HTTP thường lắng nghe ở cổng 80, còn HTTPS dùng cổng 443. Bộ gồm địa chỉ IP nguồn, cổng nguồn, địa chỉ IP đích, cổng đích và giao thức xác định duy nhất một kết nối.
+
+Hai giao thức giao vận phổ biến nhất là TCP (Transmission Control Protocol) và UDP (User Datagram Protocol).
+
+## TCP: hướng kết nối và tin cậy
+
+TCP là giao thức hướng kết nối. Trước khi truyền dữ liệu, hai bên thực hiện bắt tay ba bước: máy khách gửi gói SYN, máy chủ trả lời SYN-ACK, rồi máy khách gửi ACK. Sau bước này kết nối được thiết lập.
+
+TCP bảo đảm truyền tin cậy. Mỗi byte dữ liệu được đánh số thứ tự (sequence number). Bên nhận gửi xác nhận ACK cho dữ liệu đã nhận; nếu bên gửi không nhận được xác nhận trong thời gian chờ thì gửi lại đoạn dữ liệu đó. Nhờ số thứ tự, bên nhận có thể sắp xếp lại các đoạn đến sai thứ tự và loại bỏ đoạn trùng lặp.
+
+TCP còn có điều khiển luồng và điều khiển tắc nghẽn. Điều khiển luồng dùng cửa sổ nhận để bên gửi không gửi nhanh hơn khả năng xử lý của bên nhận. Điều khiển tắc nghẽn làm giảm tốc độ gửi khi mạng có dấu hiệu quá tải, chẳng hạn khi gói tin bị mất. Các cơ chế này làm TCP có độ trễ cao hơn và phần đầu gói lớn hơn: phần đầu TCP tối thiểu dài 20 byte.
+
+Các ứng dụng cần dữ liệu đầy đủ và đúng thứ tự dùng TCP, ví dụ duyệt web, thư điện tử và truyền tệp.
+
+## UDP: không kết nối và gọn nhẹ
+
+UDP là giao thức không kết nối. Bên gửi chỉ việc đóng gói dữ liệu thành datagram và gửi đi, không cần bắt tay trước. UDP không đánh số thứ tự, không xác nhận và không gửi lại, vì vậy gói tin có thể bị mất, bị trùng hoặc đến sai thứ tự mà UDP không tự sửa. Bù lại, phần đầu UDP chỉ dài 8 byte và 
+---
+độ trễ thấp.
+
+UDP phù hợp với ứng dụng thời gian thực, nơi dữ liệu đến muộn còn tệ hơn mất một ít dữ liệu, như gọi thoại qua Internet, trò chơi trực tuyến và phát video trực tiếp. Hệ thống phân giải tên miền DNS cũng thường dùng UDP cho các truy vấn ngắn, qua cổng 53.
+
+## So sánh nhanh
+
+TCP: hướng kết nối, tin cậy, có thứ tự, có điều khiển luồng và tắc nghẽn, phần đầu tối thiểu 20 byte. UDP: không kết nối, không bảo đảm tin cậy, không bảo đảm thứ tự, phần đầu 8 byte, độ trễ thấp. Việc chọn giao thức phụ thuộc vào việc ứng dụng ưu tiên độ chính xác hay tốc độ.",,,,,,,
+dd4ea629-f52e-401b-8357-3f7a7cbdcee9,D2-tcp-udp:TRUE_FALSE,Giao thức tầng giao vận,"UDP tự đánh số thứ tự, xác nhận và gửi lại các gói tin bị mất để bảo đảm truyền tin cậy.",TRUE: Đúng | FALSE: Sai,FALSE,"UDP không đánh số thứ tự, không xác nhận và không gửi lại; gói tin có thể bị mất, trùng hoặc đến sai thứ tự mà UDP không tự sửa.","# Giao thức tầng giao vận: TCP và UDP
+
+## Vai trò của tầng giao vận
+
+Trong mô hình TCP/IP, tầng giao vận nằm giữa tầng ứng dụng và tầng Internet. Nhiệm vụ của nó là chuyển dữ liệu giữa hai tiến trình chạy trên hai máy, chứ không chỉ giữa hai máy. Để phân biệt các tiến trình, tầng giao vận dùng số hiệu cổng (port), là một số nguyên 16 bit có giá trị từ 0 đến 65535. Ví dụ, máy chủ web dùng HTTP thường lắng nghe ở cổng 80, còn HTTPS dùng cổng 443. Bộ gồm địa chỉ IP nguồn, cổng nguồn, địa chỉ IP đích, cổng đích và giao thức xác định duy nhất một kết nối.
+
+Hai giao thức giao vận phổ biến nhất là TCP (Transmission Control Protocol) và UDP (User Datagram Protocol).
+
+## TCP: hướng kết nối và tin cậy
+
+TCP là giao thức hướng kết nối. Trước khi truyền dữ liệu, hai bên thực hiện bắt tay ba bước: máy khách gửi gói SYN, máy chủ trả lời SYN-ACK, rồi máy khách gửi ACK. Sau bước này kết nối được thiết lập.
+
+TCP bảo đảm truyền tin cậy. Mỗi byte dữ liệu được đánh số thứ tự (sequence number). Bên nhận gửi xác nhận ACK cho dữ liệu đã nhận; nếu bên gửi không nhận được xác nhận trong thời gian chờ thì gửi lại đoạn dữ liệu đó. Nhờ số thứ tự, bên nhận có thể sắp xếp lại các đoạn đến sai thứ tự và loại bỏ đoạn trùng lặp.
+
+TCP còn có điều khiển luồng và điều khiển tắc nghẽn. Điều khiển luồng dùng cửa sổ nhận để bên gửi không gửi nhanh hơn khả năng xử lý của bên nhận. Điều khiển tắc nghẽn làm giảm tốc độ gửi khi mạng có dấu hiệu quá tải, chẳng hạn khi gói tin bị mất. Các cơ chế này làm TCP có độ trễ cao hơn và phần đầu gói lớn hơn: phần đầu TCP tối thiểu dài 20 byte.
+
+Các ứng dụng cần dữ liệu đầy đủ và đúng thứ tự dùng TCP, ví dụ duyệt web, thư điện tử và truyền tệp.
+
+## UDP: không kết nối và gọn nhẹ
+
+UDP là giao thức không kết nối. Bên gửi chỉ việc đóng gói dữ liệu thành datagram và gửi đi, không cần bắt tay trước. UDP không đánh số thứ tự, không xác nhận và không gửi lại, vì vậy gói tin có thể bị mất, bị trùng hoặc đến sai thứ tự mà UDP không tự sửa. Bù lại, phần đầu UDP chỉ dài 8 byte và ",,,,,,,
+3f80a8b0-6497-47e1-94fa-d7be8af921ee,D3-bach-dang-938:MCQ,Chiến thắng Bạch Đằng năm 938,"Năm 937, ai đã giết hại Dương Đình Nghệ để đoạt quyền?",A: Kiều Công Tiễn | B: Ngô Quyền | C: Lưu Hoằng Tháo | D: Khúc Thừa Dụ,A,"Theo văn bản, năm 937 Dương Đình Nghệ bị nha tướng Kiều Công Tiễn giết hại để đoạt quyền.","# Chiến thắng Bạch Đằng năm 938
+
+## Bối cảnh
+
+Đầu thế kỉ X, nhà Đường ở Trung Quốc suy yếu. Năm 905, Khúc Thừa Dụ nhân cơ hội đó nổi dậy, giành quyền tự chủ cho đất nước. Họ Khúc truyền được ba đời. Năm 930, quân Nam Hán đánh chiếm nước ta. Năm 931, Dương Đình Nghệ, một tướng cũ của họ Khúc, khởi binh ở Ái Châu, đánh đuổi quân Nam Hán và nắm quyền tự chủ.
+
+Năm 937, Dương Đình Nghệ bị nha tướng Kiều Công Tiễn giết hại để đoạt quyền. Ngô Quyền, con rể của Dương Đình Nghệ, liền tập hợp lực lượng kéo quân ra Bắc để trừng trị Kiều Công Tiễn. Bị cô lập, Kiều Công Tiễn sai người sang cầu cứu nhà Nam Hán. Vua Nam Hán nhân cơ hội đó sai con trai là Lưu Hoằng Tháo đem quân sang xâm lược nước ta, lấy danh nghĩa cứu Kiều Công Tiễn.
+
+## Kế hoạch đánh giặc của Ngô Quyền
+
+Cuối năm 938, Ngô Quyền tiến quân ra Bắc, giết Kiều Công Tiễn trước khi quân Nam Hán kịp đến. Biết quân Nam Hán sẽ theo đường biển vào sông Bạch Đằng, Ngô Quyền chủ động chuẩn bị trận địa ở cửa sông.
+
+Ông cho quân lính đẵn gỗ, đẽo nhọn, bịt sắt rồi đóng thành hàng cọc dưới lòng sông ở những chỗ hiểm yếu gần cửa biển. Khi nước triều lên, bãi cọc bị nước che lấp, đối phương không phát hiện được. Kế hoạch dựa trên quy luật thủy triều của sông Bạch Đằng: lợi dụng lúc triều lên để nhử địch vào trận địa cọc, rồi đánh khi triều xuống.
+
+## Diễn biến
+
+Khi đoàn thuyền chiến của Lưu Hoằng Tháo tiến vào cửa sông lúc nước triều đang lên, Ngô Quyền cho một toán thuyền nhẹ ra đánh nhử rồi giả vờ thua chạy. Quân Nam Hán hăng hái đuổi theo, vượt qua bãi cọc ngầm mà không hay biết.
+
+Đợi lúc nước triều bắt đầu rút, Ngô Quyền hạ lệnh cho quân ta đồng loạt phản công từ thượng lưu và hai bên bờ. Quân Nam Hán phải quay đầu chạy ra biển. Thuyền giặc to và nặng, khi nước rút thì va vào cọc nhọn, bị thủng và vỡ rất nhiều. Lưu Hoằng Tháo tử trận cùng quá nửa số quân. Vua Nam Hán đang đem quân tiếp ứng ở biên giới, nghe tin bại trận phải thu quân về nước.
+
+## Ý nghĩa
+
+Chiến thắng Bạch Đằng năm 938 đã chấm dứt hơn một nghìn năm Bắc thuộc ",,,,,,,
+dc27ff14-8ad4-4a49-9d1e-67fd23761a44,D3-bach-dang-938:MCQ,Chiến thắng Bạch Đằng năm 938,Ngô Quyền đã chuẩn bị trận địa cọc trên sông Bạch Đằng như thế nào?,"A: Cho quân đẵn gỗ, đẽo nhọn, bịt sắt rồi đóng thành hàng cọc dưới lòng sông ở những chỗ hiểm yếu gần cửa biển | B: Cho quân đắp thành lũy bằng đất dọc hai bên bờ sông | C: Cho quân đóng cọc gỗ trên mặt nước để chặn thuyền địch ngay từ đầu | D: Cho quân đào hào sâu dọc bờ biển để chặn bộ binh địch",A,"Văn bản nêu rõ Ngô Quyền cho quân đẵn gỗ, đẽo nhọn, bịt sắt rồi đóng thành hàng cọc dưới lòng sông ở những chỗ hiểm yếu gần cửa biển.","# Chiến thắng Bạch Đằng năm 938
+
+## Bối cảnh
+
+Đầu thế kỉ X, nhà Đường ở Trung Quốc suy yếu. Năm 905, Khúc Thừa Dụ nhân cơ hội đó nổi dậy, giành quyền tự chủ cho đất nước. Họ Khúc truyền được ba đời. Năm 930, quân Nam Hán đánh chiếm nước ta. Năm 931, Dương Đình Nghệ, một tướng cũ của họ Khúc, khởi binh ở Ái Châu, đánh đuổi quân Nam Hán và nắm quyền tự chủ.
+
+Năm 937, Dương Đình Nghệ bị nha tướng Kiều Công Tiễn giết hại để đoạt quyền. Ngô Quyền, con rể của Dương Đình Nghệ, liền tập hợp lực lượng kéo quân ra Bắc để trừng trị Kiều Công Tiễn. Bị cô lập, Kiều Công Tiễn sai người sang cầu cứu nhà Nam Hán. Vua Nam Hán nhân cơ hội đó sai con trai là Lưu Hoằng Tháo đem quân sang xâm lược nước ta, lấy danh nghĩa cứu Kiều Công Tiễn.
+
+## Kế hoạch đánh giặc của Ngô Quyền
+
+Cuối năm 938, Ngô Quyền tiến quân ra Bắc, giết Kiều Công Tiễn trước khi quân Nam Hán kịp đến. Biết quân Nam Hán sẽ theo đường biển vào sông Bạch Đằng, Ngô Quyền chủ động chuẩn bị trận địa ở cửa sông.
+
+Ông cho quân lính đẵn gỗ, đẽo nhọn, bịt sắt rồi đóng thành hàng cọc dưới lòng sông ở những chỗ hiểm yếu gần cửa biển. Khi nước triều lên, bãi cọc bị nước che lấp, đối phương không phát hiện được. Kế hoạch dựa trên quy luật thủy triều của sông Bạch Đằng: lợi dụng lúc triều lên để nhử địch vào trận địa cọc, rồi đánh khi triều xuống.
+
+## Diễn biến
+
+Khi đoàn thuyền chiến của Lưu Hoằng Tháo tiến vào cửa sông lúc nước triều đang lên, Ngô Quyền cho một toán thuyền nhẹ ra đánh nhử rồi giả vờ thua chạy. Quân Nam Hán hăng hái đuổi theo, vượt qua bãi cọc ngầm mà không hay biết.
+
+Đợi lúc nước triều bắt đầu rút, Ngô Quyền hạ lệnh cho quân ta đồng loạt phản công từ thượng lưu và hai bên bờ. Quân Nam Hán phải quay đầu chạy ra biển. Thuyền giặc to và nặng, khi nước rút thì va vào cọc nhọn, bị thủng và vỡ rất nhiều. Lưu Hoằng Tháo tử trận cùng quá nửa số quân. Vua Nam Hán đang đem quân tiếp ứng ở biên giới, nghe tin bại trận phải thu quân về nước.
+
+## Ý nghĩa
+
+Chiến thắng Bạch Đằng năm 938 đã chấm dứt hơn một nghìn năm Bắc thuộc ",,,,,,,
+022e2c5c-a4d9-4079-a5de-529892a41eb0,D3-bach-dang-938:MCQ,Chiến thắng Bạch Đằng năm 938,Kế hoạch đánh giặc của Ngô Quyền trên sông Bạch Đằng dựa trên quy luật tự nhiên nào?,A: Quy luật thủy triều | B: Quy luật gió mùa | C: Quy luật mưa lũ theo mùa | D: Quy luật thay đổi dòng chảy của sông,A,"Văn bản cho biết kế hoạch dựa trên quy luật thủy triều của sông Bạch Đằng: lợi dụng lúc triều lên để nhử địch vào trận địa cọc, rồi đánh khi triều xuống.","# Chiến thắng Bạch Đằng năm 938
+
+## Bối cảnh
+
+Đầu thế kỉ X, nhà Đường ở Trung Quốc suy yếu. Năm 905, Khúc Thừa Dụ nhân cơ hội đó nổi dậy, giành quyền tự chủ cho đất nước. Họ Khúc truyền được ba đời. Năm 930, quân Nam Hán đánh chiếm nước ta. Năm 931, Dương Đình Nghệ, một tướng cũ của họ Khúc, khởi binh ở Ái Châu, đánh đuổi quân Nam Hán và nắm quyền tự chủ.
+
+Năm 937, Dương Đình Nghệ bị nha tướng Kiều Công Tiễn giết hại để đoạt quyền. Ngô Quyền, con rể của Dương Đình Nghệ, liền tập hợp lực lượng kéo quân ra Bắc để trừng trị Kiều Công Tiễn. Bị cô lập, Kiều Công Tiễn sai người sang cầu cứu nhà Nam Hán. Vua Nam Hán nhân cơ hội đó sai con trai là Lưu Hoằng Tháo đem quân sang xâm lược nước ta, lấy danh nghĩa cứu Kiều Công Tiễn.
+
+## Kế hoạch đánh giặc của Ngô Quyền
+
+Cuối năm 938, Ngô Quyền tiến quân ra Bắc, giết Kiều Công Tiễn trước khi quân Nam Hán kịp đến. Biết quân Nam Hán sẽ theo đường biển vào sông Bạch Đằng, Ngô Quyền chủ động chuẩn bị trận địa ở cửa sông.
+
+Ông cho quân lính đẵn gỗ, đẽo nhọn, bịt sắt rồi đóng thành hàng cọc dưới lòng sông ở những chỗ hiểm yếu gần cửa biển. Khi nước triều lên, bãi cọc bị nước che lấp, đối phương không phát hiện được. Kế hoạch dựa trên quy luật thủy triều của sông Bạch Đằng: lợi dụng lúc triều lên để nhử địch vào trận địa cọc, rồi đánh khi triều xuống.
+
+## Diễn biến
+
+Khi đoàn thuyền chiến của Lưu Hoằng Tháo tiến vào cửa sông lúc nước triều đang lên, Ngô Quyền cho một toán thuyền nhẹ ra đánh nhử rồi giả vờ thua chạy. Quân Nam Hán hăng hái đuổi theo, vượt qua bãi cọc ngầm mà không hay biết.
+
+Đợi lúc nước triều bắt đầu rút, Ngô Quyền hạ lệnh cho quân ta đồng loạt phản công từ thượng lưu và hai bên bờ. Quân Nam Hán phải quay đầu chạy ra biển. Thuyền giặc to và nặng, khi nước rút thì va vào cọc nhọn, bị thủng và vỡ rất nhiều. Lưu Hoằng Tháo tử trận cùng quá nửa số quân. Vua Nam Hán đang đem quân tiếp ứng ở biên giới, nghe tin bại trận phải thu quân về nước.
+
+## Ý nghĩa
+
+Chiến thắng Bạch Đằng năm 938 đã chấm dứt hơn một nghìn năm Bắc thuộc ",,,,,,,
+0bb47d3b-6f1e-4ca4-9870-ad12e7770f14,D3-bach-dang-938:MCQ,Chiến thắng Bạch Đằng năm 938,"Trong trận Bạch Đằng năm 938, Ngô Quyền đã đánh nhử quân Nam Hán bằng cách nào?",A: Cho một toán thuyền nhẹ ra đánh nhử rồi giả vờ thua chạy | B: Cho quân bộ khiêu chiến ở hai bên bờ sông | C: Cho thuyền lớn chặn ngang cửa sông không cho địch vào | D: Cho quân đốt lửa trên bãi cọc để dẫn dụ địch,A,"Khi thuyền địch tiến vào lúc triều lên, Ngô Quyền cho một toán thuyền nhẹ ra đánh nhử rồi giả vờ thua chạy để dụ địch vượt qua bãi cọc ngầm.","# Chiến thắng Bạch Đằng năm 938
+
+## Bối cảnh
+
+Đầu thế kỉ X, nhà Đường ở Trung Quốc suy yếu. Năm 905, Khúc Thừa Dụ nhân cơ hội đó nổi dậy, giành quyền tự chủ cho đất nước. Họ Khúc truyền được ba đời. Năm 930, quân Nam Hán đánh chiếm nước ta. Năm 931, Dương Đình Nghệ, một tướng cũ của họ Khúc, khởi binh ở Ái Châu, đánh đuổi quân Nam Hán và nắm quyền tự chủ.
+
+Năm 937, Dương Đình Nghệ bị nha tướng Kiều Công Tiễn giết hại để đoạt quyền. Ngô Quyền, con rể của Dương Đình Nghệ, liền tập hợp lực lượng kéo quân ra Bắc để trừng trị Kiều Công Tiễn. Bị cô lập, Kiều Công Tiễn sai người sang cầu cứu nhà Nam Hán. Vua Nam Hán nhân cơ hội đó sai con trai là Lưu Hoằng Tháo đem quân sang xâm lược nước ta, lấy danh nghĩa cứu Kiều Công Tiễn.
+
+## Kế hoạch đánh giặc của Ngô Quyền
+
+Cuối năm 938, Ngô Quyền tiến quân ra Bắc, giết Kiều Công Tiễn trước khi quân Nam Hán kịp đến. Biết quân Nam Hán sẽ theo đường biển vào sông Bạch Đằng, Ngô Quyền chủ động chuẩn bị trận địa ở cửa sông.
+
+Ông cho quân lính đẵn gỗ, đẽo nhọn, bịt sắt rồi đóng thành hàng cọc dưới lòng sông ở những chỗ hiểm yếu gần cửa biển. Khi nước triều lên, bãi cọc bị nước che lấp, đối phương không phát hiện được. Kế hoạch dựa trên quy luật thủy triều của sông Bạch Đằng: lợi dụng lúc triều lên để nhử địch vào trận địa cọc, rồi đánh khi triều xuống.
+
+## Diễn biến
+
+Khi đoàn thuyền chiến của Lưu Hoằng Tháo tiến vào cửa sông lúc nước triều đang lên, Ngô Quyền cho một toán thuyền nhẹ ra đánh nhử rồi giả vờ thua chạy. Quân Nam Hán hăng hái đuổi theo, vượt qua bãi cọc ngầm mà không hay biết.
+
+Đợi lúc nước triều bắt đầu rút, Ngô Quyền hạ lệnh cho quân ta đồng loạt phản công từ thượng lưu và hai bên bờ. Quân Nam Hán phải quay đầu chạy ra biển. Thuyền giặc to và nặng, khi nước rút thì va vào cọc nhọn, bị thủng và vỡ rất nhiều. Lưu Hoằng Tháo tử trận cùng quá nửa số quân. Vua Nam Hán đang đem quân tiếp ứng ở biên giới, nghe tin bại trận phải thu quân về nước.
+
+## Ý nghĩa
+
+Chiến thắng Bạch Đằng năm 938 đã chấm dứt hơn một nghìn năm Bắc thuộc ",,,,,,,
+170479f7-49ef-486b-b7f0-be6f31bc8d09,D3-bach-dang-938:MCQ,Chiến thắng Bạch Đằng năm 938,"Sau chiến thắng Bạch Đằng năm 938, Ngô Quyền đã làm gì vào mùa xuân năm 939?","A: Xưng vương, đóng đô ở Cổ Loa | B: Xưng đế, đóng đô ở Hoa Lư | C: Dời đô về Thăng Long | D: Lên ngôi vua, đóng đô ở Phong Châu",A,"Văn bản ghi: mùa xuân năm 939, Ngô Quyền xưng vương, đóng đô ở Cổ Loa.","của dân tộc ta, mở ra thời kì độc lập lâu dài. Mùa xuân năm 939, Ngô Quyền xưng vương, đóng đô ở Cổ Loa. Cách đánh dùng bãi cọc ngầm kết hợp với thủy triều về sau còn được vận dụng trên chính dòng sông này trong các cuộc kháng chiến năm 981 và năm 1288.",,,,,,,
+5d229209-51f4-48c0-bebf-055be3c239c2,D3-bach-dang-938:TRUE_FALSE,Chiến thắng Bạch Đằng năm 938,"Năm 937, Dương Đình Nghệ bị nha tướng Kiều Công Tiễn giết hại để đoạt quyền.",TRUE: Đúng | FALSE: Sai,TRUE,"Theo đoạn tư liệu, năm 937 Dương Đình Nghệ bị nha tướng Kiều Công Tiễn giết hại để đoạt quyền.","# Chiến thắng Bạch Đằng năm 938
+
+## Bối cảnh
+
+Đầu thế kỉ X, nhà Đường ở Trung Quốc suy yếu. Năm 905, Khúc Thừa Dụ nhân cơ hội đó nổi dậy, giành quyền tự chủ cho đất nước. Họ Khúc truyền được ba đời. Năm 930, quân Nam Hán đánh chiếm nước ta. Năm 931, Dương Đình Nghệ, một tướng cũ của họ Khúc, khởi binh ở Ái Châu, đánh đuổi quân Nam Hán và nắm quyền tự chủ.
+
+Năm 937, Dương Đình Nghệ bị nha tướng Kiều Công Tiễn giết hại để đoạt quyền. Ngô Quyền, con rể của Dương Đình Nghệ, liền tập hợp lực lượng kéo quân ra Bắc để trừng trị Kiều Công Tiễn. Bị cô lập, Kiều Công Tiễn sai người sang cầu cứu nhà Nam Hán. Vua Nam Hán nhân cơ hội đó sai con trai là Lưu Hoằng Tháo đem quân sang xâm lược nước ta, lấy danh nghĩa cứu Kiều Công Tiễn.
+
+## Kế hoạch đánh giặc của Ngô Quyền
+
+Cuối năm 938, Ngô Quyền tiến quân ra Bắc, giết Kiều Công Tiễn trước khi quân Nam Hán kịp đến. Biết quân Nam Hán sẽ theo đường biển vào sông Bạch Đằng, Ngô Quyền chủ động chuẩn bị trận địa ở cửa sông.
+
+Ông cho quân lính đẵn gỗ, đẽo nhọn, bịt sắt rồi đóng thành hàng cọc dưới lòng sông ở những chỗ hiểm yếu gần cửa biển. Khi nước triều lên, bãi cọc bị nước che lấp, đối phương không phát hiện được. Kế hoạch dựa trên quy luật thủy triều của sông Bạch Đằng: lợi dụng lúc triều lên để nhử địch vào trận địa cọc, rồi đánh khi triều xuống.
+
+## Diễn biến
+
+Khi đoàn thuyền chiến của Lưu Hoằng Tháo tiến vào cửa sông lúc nước triều đang lên, Ngô Quyền cho một toán thuyền nhẹ ra đánh nhử rồi giả vờ thua chạy. Quân Nam Hán hăng hái đuổi theo, vượt qua bãi cọc ngầm mà không hay biết.
+
+Đợi lúc nước triều bắt đầu rút, Ngô Quyền hạ lệnh cho quân ta đồng loạt phản công từ thượng lưu và hai bên bờ. Quân Nam Hán phải quay đầu chạy ra biển. Thuyền giặc to và nặng, khi nước rút thì va vào cọc nhọn, bị thủng và vỡ rất nhiều. Lưu Hoằng Tháo tử trận cùng quá nửa số quân. Vua Nam Hán đang đem quân tiếp ứng ở biên giới, nghe tin bại trận phải thu quân về nước.
+
+## Ý nghĩa
+
+Chiến thắng Bạch Đằng năm 938 đã chấm dứt hơn một nghìn năm Bắc thuộc ",,,,,,,
+72c8121a-f82b-48d1-b5ab-c3551be623d5,D3-bach-dang-938:TRUE_FALSE,Chiến thắng Bạch Đằng năm 938,Ngô Quyền cho đóng cọc gỗ bịt sắt xuống lòng sông ở những chỗ hiểm yếu gần cửa biển để chuẩn bị trận địa.,TRUE: Đúng | FALSE: Sai,TRUE,"Tư liệu ghi rõ Ngô Quyền cho quân đẵn gỗ, đẽo nhọn, bịt sắt rồi đóng thành hàng cọc dưới lòng sông ở những chỗ hiểm yếu gần cửa biển.","# Chiến thắng Bạch Đằng năm 938
+
+## Bối cảnh
+
+Đầu thế kỉ X, nhà Đường ở Trung Quốc suy yếu. Năm 905, Khúc Thừa Dụ nhân cơ hội đó nổi dậy, giành quyền tự chủ cho đất nước. Họ Khúc truyền được ba đời. Năm 930, quân Nam Hán đánh chiếm nước ta. Năm 931, Dương Đình Nghệ, một tướng cũ của họ Khúc, khởi binh ở Ái Châu, đánh đuổi quân Nam Hán và nắm quyền tự chủ.
+
+Năm 937, Dương Đình Nghệ bị nha tướng Kiều Công Tiễn giết hại để đoạt quyền. Ngô Quyền, con rể của Dương Đình Nghệ, liền tập hợp lực lượng kéo quân ra Bắc để trừng trị Kiều Công Tiễn. Bị cô lập, Kiều Công Tiễn sai người sang cầu cứu nhà Nam Hán. Vua Nam Hán nhân cơ hội đó sai con trai là Lưu Hoằng Tháo đem quân sang xâm lược nước ta, lấy danh nghĩa cứu Kiều Công Tiễn.
+
+## Kế hoạch đánh giặc của Ngô Quyền
+
+Cuối năm 938, Ngô Quyền tiến quân ra Bắc, giết Kiều Công Tiễn trước khi quân Nam Hán kịp đến. Biết quân Nam Hán sẽ theo đường biển vào sông Bạch Đằng, Ngô Quyền chủ động chuẩn bị trận địa ở cửa sông.
+
+Ông cho quân lính đẵn gỗ, đẽo nhọn, bịt sắt rồi đóng thành hàng cọc dưới lòng sông ở những chỗ hiểm yếu gần cửa biển. Khi nước triều lên, bãi cọc bị nước che lấp, đối phương không phát hiện được. Kế hoạch dựa trên quy luật thủy triều của sông Bạch Đằng: lợi dụng lúc triều lên để nhử địch vào trận địa cọc, rồi đánh khi triều xuống.
+
+## Diễn biến
+
+Khi đoàn thuyền chiến của Lưu Hoằng Tháo tiến vào cửa sông lúc nước triều đang lên, Ngô Quyền cho một toán thuyền nhẹ ra đánh nhử rồi giả vờ thua chạy. Quân Nam Hán hăng hái đuổi theo, vượt qua bãi cọc ngầm mà không hay biết.
+
+Đợi lúc nước triều bắt đầu rút, Ngô Quyền hạ lệnh cho quân ta đồng loạt phản công từ thượng lưu và hai bên bờ. Quân Nam Hán phải quay đầu chạy ra biển. Thuyền giặc to và nặng, khi nước rút thì va vào cọc nhọn, bị thủng và vỡ rất nhiều. Lưu Hoằng Tháo tử trận cùng quá nửa số quân. Vua Nam Hán đang đem quân tiếp ứng ở biên giới, nghe tin bại trận phải thu quân về nước.
+
+## Ý nghĩa
+
+Chiến thắng Bạch Đằng năm 938 đã chấm dứt hơn một nghìn năm Bắc thuộc ",,,,,,,
+4115cedc-cc78-46df-a718-702f343d6961,D3-bach-dang-938:TRUE_FALSE,Chiến thắng Bạch Đằng năm 938,Ngô Quyền lợi dụng lúc nước triều đang xuống để nhử quân Nam Hán vào trận địa cọc.,TRUE: Đúng | FALSE: Sai,FALSE,"Ngô Quyền lợi dụng lúc triều lên để nhử địch vào trận địa cọc, rồi phản công khi triều bắt đầu rút.","# Chiến thắng Bạch Đằng năm 938
+
+## Bối cảnh
+
+Đầu thế kỉ X, nhà Đường ở Trung Quốc suy yếu. Năm 905, Khúc Thừa Dụ nhân cơ hội đó nổi dậy, giành quyền tự chủ cho đất nước. Họ Khúc truyền được ba đời. Năm 930, quân Nam Hán đánh chiếm nước ta. Năm 931, Dương Đình Nghệ, một tướng cũ của họ Khúc, khởi binh ở Ái Châu, đánh đuổi quân Nam Hán và nắm quyền tự chủ.
+
+Năm 937, Dương Đình Nghệ bị nha tướng Kiều Công Tiễn giết hại để đoạt quyền. Ngô Quyền, con rể của Dương Đình Nghệ, liền tập hợp lực lượng kéo quân ra Bắc để trừng trị Kiều Công Tiễn. Bị cô lập, Kiều Công Tiễn sai người sang cầu cứu nhà Nam Hán. Vua Nam Hán nhân cơ hội đó sai con trai là Lưu Hoằng Tháo đem quân sang xâm lược nước ta, lấy danh nghĩa cứu Kiều Công Tiễn.
+
+## Kế hoạch đánh giặc của Ngô Quyền
+
+Cuối năm 938, Ngô Quyền tiến quân ra Bắc, giết Kiều Công Tiễn trước khi quân Nam Hán kịp đến. Biết quân Nam Hán sẽ theo đường biển vào sông Bạch Đằng, Ngô Quyền chủ động chuẩn bị trận địa ở cửa sông.
+
+Ông cho quân lính đẵn gỗ, đẽo nhọn, bịt sắt rồi đóng thành hàng cọc dưới lòng sông ở những chỗ hiểm yếu gần cửa biển. Khi nước triều lên, bãi cọc bị nước che lấp, đối phương không phát hiện được. Kế hoạch dựa trên quy luật thủy triều của sông Bạch Đằng: lợi dụng lúc triều lên để nhử địch vào trận địa cọc, rồi đánh khi triều xuống.
+
+## Diễn biến
+
+Khi đoàn thuyền chiến của Lưu Hoằng Tháo tiến vào cửa sông lúc nước triều đang lên, Ngô Quyền cho một toán thuyền nhẹ ra đánh nhử rồi giả vờ thua chạy. Quân Nam Hán hăng hái đuổi theo, vượt qua bãi cọc ngầm mà không hay biết.
+
+Đợi lúc nước triều bắt đầu rút, Ngô Quyền hạ lệnh cho quân ta đồng loạt phản công từ thượng lưu và hai bên bờ. Quân Nam Hán phải quay đầu chạy ra biển. Thuyền giặc to và nặng, khi nước rút thì va vào cọc nhọn, bị thủng và vỡ rất nhiều. Lưu Hoằng Tháo tử trận cùng quá nửa số quân. Vua Nam Hán đang đem quân tiếp ứng ở biên giới, nghe tin bại trận phải thu quân về nước.
+
+## Ý nghĩa
+
+Chiến thắng Bạch Đằng năm 938 đã chấm dứt hơn một nghìn năm Bắc thuộc ",,,,,,,
+630849a4-e389-4a5d-82fe-8264a80a402c,D3-bach-dang-938:TRUE_FALSE,Chiến thắng Bạch Đằng năm 938,Lưu Hoằng Tháo tử trận cùng quá nửa số quân trong trận Bạch Đằng năm 938.,TRUE: Đúng | FALSE: Sai,TRUE,Tư liệu cho biết Lưu Hoằng Tháo tử trận cùng quá nửa số quân.,"# Chiến thắng Bạch Đằng năm 938
+
+## Bối cảnh
+
+Đầu thế kỉ X, nhà Đường ở Trung Quốc suy yếu. Năm 905, Khúc Thừa Dụ nhân cơ hội đó nổi dậy, giành quyền tự chủ cho đất nước. Họ Khúc truyền được ba đời. Năm 930, quân Nam Hán đánh chiếm nước ta. Năm 931, Dương Đình Nghệ, một tướng cũ của họ Khúc, khởi binh ở Ái Châu, đánh đuổi quân Nam Hán và nắm quyền tự chủ.
+
+Năm 937, Dương Đình Nghệ bị nha tướng Kiều Công Tiễn giết hại để đoạt quyền. Ngô Quyền, con rể của Dương Đình Nghệ, liền tập hợp lực lượng kéo quân ra Bắc để trừng trị Kiều Công Tiễn. Bị cô lập, Kiều Công Tiễn sai người sang cầu cứu nhà Nam Hán. Vua Nam Hán nhân cơ hội đó sai con trai là Lưu Hoằng Tháo đem quân sang xâm lược nước ta, lấy danh nghĩa cứu Kiều Công Tiễn.
+
+## Kế hoạch đánh giặc của Ngô Quyền
+
+Cuối năm 938, Ngô Quyền tiến quân ra Bắc, giết Kiều Công Tiễn trước khi quân Nam Hán kịp đến. Biết quân Nam Hán sẽ theo đường biển vào sông Bạch Đằng, Ngô Quyền chủ động chuẩn bị trận địa ở cửa sông.
+
+Ông cho quân lính đẵn gỗ, đẽo nhọn, bịt sắt rồi đóng thành hàng cọc dưới lòng sông ở những chỗ hiểm yếu gần cửa biển. Khi nước triều lên, bãi cọc bị nước che lấp, đối phương không phát hiện được. Kế hoạch dựa trên quy luật thủy triều của sông Bạch Đằng: lợi dụng lúc triều lên để nhử địch vào trận địa cọc, rồi đánh khi triều xuống.
+
+## Diễn biến
+
+Khi đoàn thuyền chiến của Lưu Hoằng Tháo tiến vào cửa sông lúc nước triều đang lên, Ngô Quyền cho một toán thuyền nhẹ ra đánh nhử rồi giả vờ thua chạy. Quân Nam Hán hăng hái đuổi theo, vượt qua bãi cọc ngầm mà không hay biết.
+
+Đợi lúc nước triều bắt đầu rút, Ngô Quyền hạ lệnh cho quân ta đồng loạt phản công từ thượng lưu và hai bên bờ. Quân Nam Hán phải quay đầu chạy ra biển. Thuyền giặc to và nặng, khi nước rút thì va vào cọc nhọn, bị thủng và vỡ rất nhiều. Lưu Hoằng Tháo tử trận cùng quá nửa số quân. Vua Nam Hán đang đem quân tiếp ứng ở biên giới, nghe tin bại trận phải thu quân về nước.
+
+## Ý nghĩa
+
+Chiến thắng Bạch Đằng năm 938 đã chấm dứt hơn một nghìn năm Bắc thuộc ",,,,,,,
+64d0f46c-fc9e-4882-ae91-25fd3d2599b8,D3-bach-dang-938:TRUE_FALSE,Chiến thắng Bạch Đằng năm 938,"Sau chiến thắng Bạch Đằng năm 938, Ngô Quyền xưng vương và đóng đô ở Cổ Loa vào mùa xuân năm 939.",TRUE: Đúng | FALSE: Sai,TRUE,"Tư liệu ghi: mùa xuân năm 939, Ngô Quyền xưng vương, đóng đô ở Cổ Loa.","của dân tộc ta, mở ra thời kì độc lập lâu dài. Mùa xuân năm 939, Ngô Quyền xưng vương, đóng đô ở Cổ Loa. Cách đánh dùng bãi cọc ngầm kết hợp với thủy triều về sau còn được vận dụng trên chính dòng sông này trong các cuộc kháng chiến năm 981 và năm 1288.",,,,,,,
+3f1b2f78-7847-42a3-8bb7-12a2659c16bc,D4-quang-hop:MCQ,Quang hợp ở thực vật,Quang hợp là quá trình cây xanh sử dụng năng lượng ánh sáng để tổng hợp chất hữu cơ từ những nguyên liệu nào?,A: CO2 và nước | B: O2 và nước | C: CO2 và O2 | D: Glucôzơ và nước,A,"Quang hợp tổng hợp chất hữu cơ từ khí CO2 và nước, đồng thời giải phóng O2.","# Quang hợp ở thực vật
+
+## Khái niệm
+
+Quang hợp là quá trình cây xanh sử dụng năng lượng ánh sáng để tổng hợp chất hữu cơ từ khí cacbon điôxit (CO2) và nước, đồng thời giải phóng khí ôxi. Phương trình tổng quát có thể viết: 6CO2 + 12H2O → C6H12O6 + 6O2 + 6H2O, với điều kiện có ánh sáng và chất diệp lục. Chất hữu cơ tạo ra là glucôzơ, từ đó cây tổng hợp tinh bột và các chất khác.
+
+## Lá là cơ quan quang hợp
+
+Lá có cấu tạo thích nghi với chức năng quang hợp. Phiến lá rộng và mỏng giúp hấp thụ nhiều ánh sáng và khí khuếch tán vào dễ dàng. Mặt dưới lá có nhiều khí khổng, là nơi CO2 đi vào và O2 cùng hơi nước đi ra. Hệ gân lá dẫn nước và muối khoáng đến tế bào, đồng thời vận chuyển sản phẩm quang hợp đi nơi khác.
+
+Bào quan thực hiện quang hợp là lục lạp. Trong lục lạp có hệ thống màng tilacôit xếp chồng lên nhau tạo thành các grana, còn phần dịch nền bao quanh gọi là chất nền (strôma). Sắc tố quan trọng nhất là diệp lục, hấp thụ mạnh ánh sáng đỏ và xanh tím, phản xạ ánh sáng xanh lục nên lá có màu xanh. Ngoài ra còn có các sắc tố phụ là carôtenôit, có màu vàng, da cam.
+
+## Hai pha của quang hợp
+
+Pha sáng diễn ra trên màng tilacôit và cần ánh sáng. Năng lượng ánh sáng được diệp lục hấp thụ để quang phân li nước. Khí ôxi giải phóng trong quang hợp có nguồn gốc từ nước chứ không phải từ CO2. Pha sáng tạo ra ATP và NADPH, là nguồn năng lượng và lực khử cho pha sau.
+
+Pha tối diễn ra trong chất nền của lục lạp và không trực tiếp cần ánh sáng. Ở thực vật C3, CO2 được cố định qua chu trình Canvin: enzim Rubisco gắn CO2 vào chất nhận RiDP, sản phẩm sau đó được khử nhờ ATP và NADPH từ pha sáng để tạo thành đường. Tên gọi pha tối không có nghĩa là pha này chỉ diễn ra vào ban đêm.
+
+## Các nhân tố ảnh hưởng
+
+Cường độ quang hợp phụ thuộc vào ánh sáng, nồng độ CO2, nhiệt độ và nước. Khi tăng cường độ ánh sáng, quang hợp tăng dần đến một giới hạn gọi là điểm bão hòa ánh sáng; vượt quá điểm này quang hợp không tăng thêm. Nồng độ CO2 trong không khí khoảng 0,03–0,04%; tăng CO2 đến một ",,,,,,,
+2b4de09f-d8ef-4cfe-8349-ab761e8e4e4f,D4-quang-hop:MCQ,Quang hợp ở thực vật,Khí ôxi giải phóng trong quang hợp có nguồn gốc từ chất nào?,A: Từ CO2 | B: Từ nước | C: Từ glucôzơ | D: Từ tinh bột,B,"O2 giải phóng trong quang hợp có nguồn gốc từ nước qua quang phân li nước, không phải từ CO2.","# Quang hợp ở thực vật
+
+## Khái niệm
+
+Quang hợp là quá trình cây xanh sử dụng năng lượng ánh sáng để tổng hợp chất hữu cơ từ khí cacbon điôxit (CO2) và nước, đồng thời giải phóng khí ôxi. Phương trình tổng quát có thể viết: 6CO2 + 12H2O → C6H12O6 + 6O2 + 6H2O, với điều kiện có ánh sáng và chất diệp lục. Chất hữu cơ tạo ra là glucôzơ, từ đó cây tổng hợp tinh bột và các chất khác.
+
+## Lá là cơ quan quang hợp
+
+Lá có cấu tạo thích nghi với chức năng quang hợp. Phiến lá rộng và mỏng giúp hấp thụ nhiều ánh sáng và khí khuếch tán vào dễ dàng. Mặt dưới lá có nhiều khí khổng, là nơi CO2 đi vào và O2 cùng hơi nước đi ra. Hệ gân lá dẫn nước và muối khoáng đến tế bào, đồng thời vận chuyển sản phẩm quang hợp đi nơi khác.
+
+Bào quan thực hiện quang hợp là lục lạp. Trong lục lạp có hệ thống màng tilacôit xếp chồng lên nhau tạo thành các grana, còn phần dịch nền bao quanh gọi là chất nền (strôma). Sắc tố quan trọng nhất là diệp lục, hấp thụ mạnh ánh sáng đỏ và xanh tím, phản xạ ánh sáng xanh lục nên lá có màu xanh. Ngoài ra còn có các sắc tố phụ là carôtenôit, có màu vàng, da cam.
+
+## Hai pha của quang hợp
+
+Pha sáng diễn ra trên màng tilacôit và cần ánh sáng. Năng lượng ánh sáng được diệp lục hấp thụ để quang phân li nước. Khí ôxi giải phóng trong quang hợp có nguồn gốc từ nước chứ không phải từ CO2. Pha sáng tạo ra ATP và NADPH, là nguồn năng lượng và lực khử cho pha sau.
+
+Pha tối diễn ra trong chất nền của lục lạp và không trực tiếp cần ánh sáng. Ở thực vật C3, CO2 được cố định qua chu trình Canvin: enzim Rubisco gắn CO2 vào chất nhận RiDP, sản phẩm sau đó được khử nhờ ATP và NADPH từ pha sáng để tạo thành đường. Tên gọi pha tối không có nghĩa là pha này chỉ diễn ra vào ban đêm.
+
+## Các nhân tố ảnh hưởng
+
+Cường độ quang hợp phụ thuộc vào ánh sáng, nồng độ CO2, nhiệt độ và nước. Khi tăng cường độ ánh sáng, quang hợp tăng dần đến một giới hạn gọi là điểm bão hòa ánh sáng; vượt quá điểm này quang hợp không tăng thêm. Nồng độ CO2 trong không khí khoảng 0,03–0,04%; tăng CO2 đến một ",,,,,,,
+4741cfb3-aef8-471e-bf73-4cdca4148c18,D4-quang-hop:MCQ,Quang hợp ở thực vật,Pha sáng của quang hợp diễn ra ở đâu và tạo ra những sản phẩm nào cung cấp cho pha tối?,"A: Trong chất nền lục lạp, tạo ra ATP và NADPH | B: Trên màng tilacôit, tạo ra ATP và NADPH | C: Trên màng tilacôit, tạo ra glucôzơ và O2 | D: Trong chất nền lục lạp, tạo ra RiDP và Rubisco",B,"Pha sáng diễn ra trên màng tilacôit và tạo ATP, NADPH làm nguồn năng lượng và lực khử cho pha tối.","# Quang hợp ở thực vật
+
+## Khái niệm
+
+Quang hợp là quá trình cây xanh sử dụng năng lượng ánh sáng để tổng hợp chất hữu cơ từ khí cacbon điôxit (CO2) và nước, đồng thời giải phóng khí ôxi. Phương trình tổng quát có thể viết: 6CO2 + 12H2O → C6H12O6 + 6O2 + 6H2O, với điều kiện có ánh sáng và chất diệp lục. Chất hữu cơ tạo ra là glucôzơ, từ đó cây tổng hợp tinh bột và các chất khác.
+
+## Lá là cơ quan quang hợp
+
+Lá có cấu tạo thích nghi với chức năng quang hợp. Phiến lá rộng và mỏng giúp hấp thụ nhiều ánh sáng và khí khuếch tán vào dễ dàng. Mặt dưới lá có nhiều khí khổng, là nơi CO2 đi vào và O2 cùng hơi nước đi ra. Hệ gân lá dẫn nước và muối khoáng đến tế bào, đồng thời vận chuyển sản phẩm quang hợp đi nơi khác.
+
+Bào quan thực hiện quang hợp là lục lạp. Trong lục lạp có hệ thống màng tilacôit xếp chồng lên nhau tạo thành các grana, còn phần dịch nền bao quanh gọi là chất nền (strôma). Sắc tố quan trọng nhất là diệp lục, hấp thụ mạnh ánh sáng đỏ và xanh tím, phản xạ ánh sáng xanh lục nên lá có màu xanh. Ngoài ra còn có các sắc tố phụ là carôtenôit, có màu vàng, da cam.
+
+## Hai pha của quang hợp
+
+Pha sáng diễn ra trên màng tilacôit và cần ánh sáng. Năng lượng ánh sáng được diệp lục hấp thụ để quang phân li nước. Khí ôxi giải phóng trong quang hợp có nguồn gốc từ nước chứ không phải từ CO2. Pha sáng tạo ra ATP và NADPH, là nguồn năng lượng và lực khử cho pha sau.
+
+Pha tối diễn ra trong chất nền của lục lạp và không trực tiếp cần ánh sáng. Ở thực vật C3, CO2 được cố định qua chu trình Canvin: enzim Rubisco gắn CO2 vào chất nhận RiDP, sản phẩm sau đó được khử nhờ ATP và NADPH từ pha sáng để tạo thành đường. Tên gọi pha tối không có nghĩa là pha này chỉ diễn ra vào ban đêm.
+
+## Các nhân tố ảnh hưởng
+
+Cường độ quang hợp phụ thuộc vào ánh sáng, nồng độ CO2, nhiệt độ và nước. Khi tăng cường độ ánh sáng, quang hợp tăng dần đến một giới hạn gọi là điểm bão hòa ánh sáng; vượt quá điểm này quang hợp không tăng thêm. Nồng độ CO2 trong không khí khoảng 0,03–0,04%; tăng CO2 đến một ",,,,,,,
+eed80b3e-0478-4651-b116-7dbd406687fe,D4-quang-hop:MCQ,Quang hợp ở thực vật,"Trong chu trình Canvin ở thực vật C3, enzim Rubisco có vai trò gì?",A: Quang phân li nước để giải phóng O2 | B: Gắn CO2 vào chất nhận RiDP | C: Khử sản phẩm trung gian nhờ ATP và NADPH | D: Hấp thụ ánh sáng đỏ và xanh tím,B,Rubisco xúc tác gắn CO2 vào RiDP trong giai đoạn cố định CO2 của chu trình Canvin.,"# Quang hợp ở thực vật
+
+## Khái niệm
+
+Quang hợp là quá trình cây xanh sử dụng năng lượng ánh sáng để tổng hợp chất hữu cơ từ khí cacbon điôxit (CO2) và nước, đồng thời giải phóng khí ôxi. Phương trình tổng quát có thể viết: 6CO2 + 12H2O → C6H12O6 + 6O2 + 6H2O, với điều kiện có ánh sáng và chất diệp lục. Chất hữu cơ tạo ra là glucôzơ, từ đó cây tổng hợp tinh bột và các chất khác.
+
+## Lá là cơ quan quang hợp
+
+Lá có cấu tạo thích nghi với chức năng quang hợp. Phiến lá rộng và mỏng giúp hấp thụ nhiều ánh sáng và khí khuếch tán vào dễ dàng. Mặt dưới lá có nhiều khí khổng, là nơi CO2 đi vào và O2 cùng hơi nước đi ra. Hệ gân lá dẫn nước và muối khoáng đến tế bào, đồng thời vận chuyển sản phẩm quang hợp đi nơi khác.
+
+Bào quan thực hiện quang hợp là lục lạp. Trong lục lạp có hệ thống màng tilacôit xếp chồng lên nhau tạo thành các grana, còn phần dịch nền bao quanh gọi là chất nền (strôma). Sắc tố quan trọng nhất là diệp lục, hấp thụ mạnh ánh sáng đỏ và xanh tím, phản xạ ánh sáng xanh lục nên lá có màu xanh. Ngoài ra còn có các sắc tố phụ là carôtenôit, có màu vàng, da cam.
+
+## Hai pha của quang hợp
+
+Pha sáng diễn ra trên màng tilacôit và cần ánh sáng. Năng lượng ánh sáng được diệp lục hấp thụ để quang phân li nước. Khí ôxi giải phóng trong quang hợp có nguồn gốc từ nước chứ không phải từ CO2. Pha sáng tạo ra ATP và NADPH, là nguồn năng lượng và lực khử cho pha sau.
+
+Pha tối diễn ra trong chất nền của lục lạp và không trực tiếp cần ánh sáng. Ở thực vật C3, CO2 được cố định qua chu trình Canvin: enzim Rubisco gắn CO2 vào chất nhận RiDP, sản phẩm sau đó được khử nhờ ATP và NADPH từ pha sáng để tạo thành đường. Tên gọi pha tối không có nghĩa là pha này chỉ diễn ra vào ban đêm.
+
+## Các nhân tố ảnh hưởng
+
+Cường độ quang hợp phụ thuộc vào ánh sáng, nồng độ CO2, nhiệt độ và nước. Khi tăng cường độ ánh sáng, quang hợp tăng dần đến một giới hạn gọi là điểm bão hòa ánh sáng; vượt quá điểm này quang hợp không tăng thêm. Nồng độ CO2 trong không khí khoảng 0,03–0,04%; tăng CO2 đến một ",,,,,,,
+c986f735-82c6-4b33-a207-3aa57542e1f4,D4-quang-hop:MCQ,Quang hợp ở thực vật,Hiện tượng gì xảy ra với cường độ quang hợp khi tăng cường độ ánh sáng vượt quá điểm bão hòa ánh sáng?,A: Quang hợp tiếp tục tăng mạnh | B: Quang hợp không tăng thêm | C: Quang hợp giảm ngay về bằng không | D: Quang hợp chuyển sang pha tối hoàn toàn,B,"Vượt quá điểm bão hòa ánh sáng, cường độ quang hợp không tăng thêm.","# Quang hợp ở thực vật
+
+## Khái niệm
+
+Quang hợp là quá trình cây xanh sử dụng năng lượng ánh sáng để tổng hợp chất hữu cơ từ khí cacbon điôxit (CO2) và nước, đồng thời giải phóng khí ôxi. Phương trình tổng quát có thể viết: 6CO2 + 12H2O → C6H12O6 + 6O2 + 6H2O, với điều kiện có ánh sáng và chất diệp lục. Chất hữu cơ tạo ra là glucôzơ, từ đó cây tổng hợp tinh bột và các chất khác.
+
+## Lá là cơ quan quang hợp
+
+Lá có cấu tạo thích nghi với chức năng quang hợp. Phiến lá rộng và mỏng giúp hấp thụ nhiều ánh sáng và khí khuếch tán vào dễ dàng. Mặt dưới lá có nhiều khí khổng, là nơi CO2 đi vào và O2 cùng hơi nước đi ra. Hệ gân lá dẫn nước và muối khoáng đến tế bào, đồng thời vận chuyển sản phẩm quang hợp đi nơi khác.
+
+Bào quan thực hiện quang hợp là lục lạp. Trong lục lạp có hệ thống màng tilacôit xếp chồng lên nhau tạo thành các grana, còn phần dịch nền bao quanh gọi là chất nền (strôma). Sắc tố quan trọng nhất là diệp lục, hấp thụ mạnh ánh sáng đỏ và xanh tím, phản xạ ánh sáng xanh lục nên lá có màu xanh. Ngoài ra còn có các sắc tố phụ là carôtenôit, có màu vàng, da cam.
+
+## Hai pha của quang hợp
+
+Pha sáng diễn ra trên màng tilacôit và cần ánh sáng. Năng lượng ánh sáng được diệp lục hấp thụ để quang phân li nước. Khí ôxi giải phóng trong quang hợp có nguồn gốc từ nước chứ không phải từ CO2. Pha sáng tạo ra ATP và NADPH, là nguồn năng lượng và lực khử cho pha sau.
+
+Pha tối diễn ra trong chất nền của lục lạp và không trực tiếp cần ánh sáng. Ở thực vật C3, CO2 được cố định qua chu trình Canvin: enzim Rubisco gắn CO2 vào chất nhận RiDP, sản phẩm sau đó được khử nhờ ATP và NADPH từ pha sáng để tạo thành đường. Tên gọi pha tối không có nghĩa là pha này chỉ diễn ra vào ban đêm.
+
+## Các nhân tố ảnh hưởng
+
+Cường độ quang hợp phụ thuộc vào ánh sáng, nồng độ CO2, nhiệt độ và nước. Khi tăng cường độ ánh sáng, quang hợp tăng dần đến một giới hạn gọi là điểm bão hòa ánh sáng; vượt quá điểm này quang hợp không tăng thêm. Nồng độ CO2 trong không khí khoảng 0,03–0,04%; tăng CO2 đến một 
+---
+mức nhất định cũng làm tăng cường độ quang hợp. Nhiệt độ quá cao làm enzim bị biến tính, còn thiếu nước làm khí khổng đóng lại, hạn chế CO2 đi vào lá.
+
+## Vai trò
+
+Quang hợp tạo ra gần như toàn bộ chất hữu cơ trên Trái Đất, chuyển hóa quang năng thành hóa năng tích lũy trong các liên kết hóa học, và điều hòa tỉ lệ khí ôxi và CO2 trong khí quyển.",,,,,,,
+53cf6bd7-1d87-466d-976a-e029182571f8,D4-quang-hop:TRUE_FALSE,Quang hợp ở thực vật,Khí ôxi được giải phóng trong quang hợp có nguồn gốc từ khí CO2.,TRUE: Đúng | FALSE: Sai,FALSE,"Khí ôxi giải phóng trong quang hợp có nguồn gốc từ nước (qua quang phân li nước), không phải từ CO2.","# Quang hợp ở thực vật
+
+## Khái niệm
+
+Quang hợp là quá trình cây xanh sử dụng năng lượng ánh sáng để tổng hợp chất hữu cơ từ khí cacbon điôxit (CO2) và nước, đồng thời giải phóng khí ôxi. Phương trình tổng quát có thể viết: 6CO2 + 12H2O → C6H12O6 + 6O2 + 6H2O, với điều kiện có ánh sáng và chất diệp lục. Chất hữu cơ tạo ra là glucôzơ, từ đó cây tổng hợp tinh bột và các chất khác.
+
+## Lá là cơ quan quang hợp
+
+Lá có cấu tạo thích nghi với chức năng quang hợp. Phiến lá rộng và mỏng giúp hấp thụ nhiều ánh sáng và khí khuếch tán vào dễ dàng. Mặt dưới lá có nhiều khí khổng, là nơi CO2 đi vào và O2 cùng hơi nước đi ra. Hệ gân lá dẫn nước và muối khoáng đến tế bào, đồng thời vận chuyển sản phẩm quang hợp đi nơi khác.
+
+Bào quan thực hiện quang hợp là lục lạp. Trong lục lạp có hệ thống màng tilacôit xếp chồng lên nhau tạo thành các grana, còn phần dịch nền bao quanh gọi là chất nền (strôma). Sắc tố quan trọng nhất là diệp lục, hấp thụ mạnh ánh sáng đỏ và xanh tím, phản xạ ánh sáng xanh lục nên lá có màu xanh. Ngoài ra còn có các sắc tố phụ là carôtenôit, có màu vàng, da cam.
+
+## Hai pha của quang hợp
+
+Pha sáng diễn ra trên màng tilacôit và cần ánh sáng. Năng lượng ánh sáng được diệp lục hấp thụ để quang phân li nước. Khí ôxi giải phóng trong quang hợp có nguồn gốc từ nước chứ không phải từ CO2. Pha sáng tạo ra ATP và NADPH, là nguồn năng lượng và lực khử cho pha sau.
+
+Pha tối diễn ra trong chất nền của lục lạp và không trực tiếp cần ánh sáng. Ở thực vật C3, CO2 được cố định qua chu trình Canvin: enzim Rubisco gắn CO2 vào chất nhận RiDP, sản phẩm sau đó được khử nhờ ATP và NADPH từ pha sáng để tạo thành đường. Tên gọi pha tối không có nghĩa là pha này chỉ diễn ra vào ban đêm.
+
+## Các nhân tố ảnh hưởng
+
+Cường độ quang hợp phụ thuộc vào ánh sáng, nồng độ CO2, nhiệt độ và nước. Khi tăng cường độ ánh sáng, quang hợp tăng dần đến một giới hạn gọi là điểm bão hòa ánh sáng; vượt quá điểm này quang hợp không tăng thêm. Nồng độ CO2 trong không khí khoảng 0,03–0,04%; tăng CO2 đến một ",,,,,,,
+c05e5880-f859-479e-9d77-ea47ba98eff3,D4-quang-hop:TRUE_FALSE,Quang hợp ở thực vật,Pha tối của quang hợp chỉ diễn ra vào ban đêm.,TRUE: Đúng | FALSE: Sai,FALSE,Tên gọi pha tối không có nghĩa là pha này chỉ diễn ra vào ban đêm; pha tối không trực tiếp cần ánh sáng nhưng có thể diễn ra cả ngày.,"# Quang hợp ở thực vật
+
+## Khái niệm
+
+Quang hợp là quá trình cây xanh sử dụng năng lượng ánh sáng để tổng hợp chất hữu cơ từ khí cacbon điôxit (CO2) và nước, đồng thời giải phóng khí ôxi. Phương trình tổng quát có thể viết: 6CO2 + 12H2O → C6H12O6 + 6O2 + 6H2O, với điều kiện có ánh sáng và chất diệp lục. Chất hữu cơ tạo ra là glucôzơ, từ đó cây tổng hợp tinh bột và các chất khác.
+
+## Lá là cơ quan quang hợp
+
+Lá có cấu tạo thích nghi với chức năng quang hợp. Phiến lá rộng và mỏng giúp hấp thụ nhiều ánh sáng và khí khuếch tán vào dễ dàng. Mặt dưới lá có nhiều khí khổng, là nơi CO2 đi vào và O2 cùng hơi nước đi ra. Hệ gân lá dẫn nước và muối khoáng đến tế bào, đồng thời vận chuyển sản phẩm quang hợp đi nơi khác.
+
+Bào quan thực hiện quang hợp là lục lạp. Trong lục lạp có hệ thống màng tilacôit xếp chồng lên nhau tạo thành các grana, còn phần dịch nền bao quanh gọi là chất nền (strôma). Sắc tố quan trọng nhất là diệp lục, hấp thụ mạnh ánh sáng đỏ và xanh tím, phản xạ ánh sáng xanh lục nên lá có màu xanh. Ngoài ra còn có các sắc tố phụ là carôtenôit, có màu vàng, da cam.
+
+## Hai pha của quang hợp
+
+Pha sáng diễn ra trên màng tilacôit và cần ánh sáng. Năng lượng ánh sáng được diệp lục hấp thụ để quang phân li nước. Khí ôxi giải phóng trong quang hợp có nguồn gốc từ nước chứ không phải từ CO2. Pha sáng tạo ra ATP và NADPH, là nguồn năng lượng và lực khử cho pha sau.
+
+Pha tối diễn ra trong chất nền của lục lạp và không trực tiếp cần ánh sáng. Ở thực vật C3, CO2 được cố định qua chu trình Canvin: enzim Rubisco gắn CO2 vào chất nhận RiDP, sản phẩm sau đó được khử nhờ ATP và NADPH từ pha sáng để tạo thành đường. Tên gọi pha tối không có nghĩa là pha này chỉ diễn ra vào ban đêm.
+
+## Các nhân tố ảnh hưởng
+
+Cường độ quang hợp phụ thuộc vào ánh sáng, nồng độ CO2, nhiệt độ và nước. Khi tăng cường độ ánh sáng, quang hợp tăng dần đến một giới hạn gọi là điểm bão hòa ánh sáng; vượt quá điểm này quang hợp không tăng thêm. Nồng độ CO2 trong không khí khoảng 0,03–0,04%; tăng CO2 đến một ",,,,,,,
+71770d36-07d0-4a1f-9e4b-fece1ba41d69,D4-quang-hop:TRUE_FALSE,Quang hợp ở thực vật,"Diệp lục hấp thụ mạnh ánh sáng đỏ và xanh tím, phản xạ ánh sáng xanh lục nên lá có màu xanh.",TRUE: Đúng | FALSE: Sai,TRUE,"Diệp lục hấp thụ mạnh ánh sáng đỏ và xanh tím, phản xạ ánh sáng xanh lục, vì vậy lá có màu xanh.","# Quang hợp ở thực vật
+
+## Khái niệm
+
+Quang hợp là quá trình cây xanh sử dụng năng lượng ánh sáng để tổng hợp chất hữu cơ từ khí cacbon điôxit (CO2) và nước, đồng thời giải phóng khí ôxi. Phương trình tổng quát có thể viết: 6CO2 + 12H2O → C6H12O6 + 6O2 + 6H2O, với điều kiện có ánh sáng và chất diệp lục. Chất hữu cơ tạo ra là glucôzơ, từ đó cây tổng hợp tinh bột và các chất khác.
+
+## Lá là cơ quan quang hợp
+
+Lá có cấu tạo thích nghi với chức năng quang hợp. Phiến lá rộng và mỏng giúp hấp thụ nhiều ánh sáng và khí khuếch tán vào dễ dàng. Mặt dưới lá có nhiều khí khổng, là nơi CO2 đi vào và O2 cùng hơi nước đi ra. Hệ gân lá dẫn nước và muối khoáng đến tế bào, đồng thời vận chuyển sản phẩm quang hợp đi nơi khác.
+
+Bào quan thực hiện quang hợp là lục lạp. Trong lục lạp có hệ thống màng tilacôit xếp chồng lên nhau tạo thành các grana, còn phần dịch nền bao quanh gọi là chất nền (strôma). Sắc tố quan trọng nhất là diệp lục, hấp thụ mạnh ánh sáng đỏ và xanh tím, phản xạ ánh sáng xanh lục nên lá có màu xanh. Ngoài ra còn có các sắc tố phụ là carôtenôit, có màu vàng, da cam.
+
+## Hai pha của quang hợp
+
+Pha sáng diễn ra trên màng tilacôit và cần ánh sáng. Năng lượng ánh sáng được diệp lục hấp thụ để quang phân li nước. Khí ôxi giải phóng trong quang hợp có nguồn gốc từ nước chứ không phải từ CO2. Pha sáng tạo ra ATP và NADPH, là nguồn năng lượng và lực khử cho pha sau.
+
+Pha tối diễn ra trong chất nền của lục lạp và không trực tiếp cần ánh sáng. Ở thực vật C3, CO2 được cố định qua chu trình Canvin: enzim Rubisco gắn CO2 vào chất nhận RiDP, sản phẩm sau đó được khử nhờ ATP và NADPH từ pha sáng để tạo thành đường. Tên gọi pha tối không có nghĩa là pha này chỉ diễn ra vào ban đêm.
+
+## Các nhân tố ảnh hưởng
+
+Cường độ quang hợp phụ thuộc vào ánh sáng, nồng độ CO2, nhiệt độ và nước. Khi tăng cường độ ánh sáng, quang hợp tăng dần đến một giới hạn gọi là điểm bão hòa ánh sáng; vượt quá điểm này quang hợp không tăng thêm. Nồng độ CO2 trong không khí khoảng 0,03–0,04%; tăng CO2 đến một ",,,,,,,
+5277cd10-1320-413a-a378-ab823803f112,D4-quang-hop:TRUE_FALSE,Quang hợp ở thực vật,Pha sáng của quang hợp diễn ra trong chất nền của lục lạp.,TRUE: Đúng | FALSE: Sai,FALSE,Pha sáng diễn ra trên màng tilacôit; pha tối mới diễn ra trong chất nền của lục lạp.,"# Quang hợp ở thực vật
+
+## Khái niệm
+
+Quang hợp là quá trình cây xanh sử dụng năng lượng ánh sáng để tổng hợp chất hữu cơ từ khí cacbon điôxit (CO2) và nước, đồng thời giải phóng khí ôxi. Phương trình tổng quát có thể viết: 6CO2 + 12H2O → C6H12O6 + 6O2 + 6H2O, với điều kiện có ánh sáng và chất diệp lục. Chất hữu cơ tạo ra là glucôzơ, từ đó cây tổng hợp tinh bột và các chất khác.
+
+## Lá là cơ quan quang hợp
+
+Lá có cấu tạo thích nghi với chức năng quang hợp. Phiến lá rộng và mỏng giúp hấp thụ nhiều ánh sáng và khí khuếch tán vào dễ dàng. Mặt dưới lá có nhiều khí khổng, là nơi CO2 đi vào và O2 cùng hơi nước đi ra. Hệ gân lá dẫn nước và muối khoáng đến tế bào, đồng thời vận chuyển sản phẩm quang hợp đi nơi khác.
+
+Bào quan thực hiện quang hợp là lục lạp. Trong lục lạp có hệ thống màng tilacôit xếp chồng lên nhau tạo thành các grana, còn phần dịch nền bao quanh gọi là chất nền (strôma). Sắc tố quan trọng nhất là diệp lục, hấp thụ mạnh ánh sáng đỏ và xanh tím, phản xạ ánh sáng xanh lục nên lá có màu xanh. Ngoài ra còn có các sắc tố phụ là carôtenôit, có màu vàng, da cam.
+
+## Hai pha của quang hợp
+
+Pha sáng diễn ra trên màng tilacôit và cần ánh sáng. Năng lượng ánh sáng được diệp lục hấp thụ để quang phân li nước. Khí ôxi giải phóng trong quang hợp có nguồn gốc từ nước chứ không phải từ CO2. Pha sáng tạo ra ATP và NADPH, là nguồn năng lượng và lực khử cho pha sau.
+
+Pha tối diễn ra trong chất nền của lục lạp và không trực tiếp cần ánh sáng. Ở thực vật C3, CO2 được cố định qua chu trình Canvin: enzim Rubisco gắn CO2 vào chất nhận RiDP, sản phẩm sau đó được khử nhờ ATP và NADPH từ pha sáng để tạo thành đường. Tên gọi pha tối không có nghĩa là pha này chỉ diễn ra vào ban đêm.
+
+## Các nhân tố ảnh hưởng
+
+Cường độ quang hợp phụ thuộc vào ánh sáng, nồng độ CO2, nhiệt độ và nước. Khi tăng cường độ ánh sáng, quang hợp tăng dần đến một giới hạn gọi là điểm bão hòa ánh sáng; vượt quá điểm này quang hợp không tăng thêm. Nồng độ CO2 trong không khí khoảng 0,03–0,04%; tăng CO2 đến một ",,,,,,,
+f08feb7b-ea45-4c63-8014-98a9215bd96f,D4-quang-hop:TRUE_FALSE,Quang hợp ở thực vật,Khi tăng cường độ ánh sáng vượt quá điểm bão hòa ánh sáng thì cường độ quang hợp tiếp tục tăng.,TRUE: Đúng | FALSE: Sai,FALSE,"Vượt quá điểm bão hòa ánh sáng, quang hợp không tăng thêm.","# Quang hợp ở thực vật
+
+## Khái niệm
+
+Quang hợp là quá trình cây xanh sử dụng năng lượng ánh sáng để tổng hợp chất hữu cơ từ khí cacbon điôxit (CO2) và nước, đồng thời giải phóng khí ôxi. Phương trình tổng quát có thể viết: 6CO2 + 12H2O → C6H12O6 + 6O2 + 6H2O, với điều kiện có ánh sáng và chất diệp lục. Chất hữu cơ tạo ra là glucôzơ, từ đó cây tổng hợp tinh bột và các chất khác.
+
+## Lá là cơ quan quang hợp
+
+Lá có cấu tạo thích nghi với chức năng quang hợp. Phiến lá rộng và mỏng giúp hấp thụ nhiều ánh sáng và khí khuếch tán vào dễ dàng. Mặt dưới lá có nhiều khí khổng, là nơi CO2 đi vào và O2 cùng hơi nước đi ra. Hệ gân lá dẫn nước và muối khoáng đến tế bào, đồng thời vận chuyển sản phẩm quang hợp đi nơi khác.
+
+Bào quan thực hiện quang hợp là lục lạp. Trong lục lạp có hệ thống màng tilacôit xếp chồng lên nhau tạo thành các grana, còn phần dịch nền bao quanh gọi là chất nền (strôma). Sắc tố quan trọng nhất là diệp lục, hấp thụ mạnh ánh sáng đỏ và xanh tím, phản xạ ánh sáng xanh lục nên lá có màu xanh. Ngoài ra còn có các sắc tố phụ là carôtenôit, có màu vàng, da cam.
+
+## Hai pha của quang hợp
+
+Pha sáng diễn ra trên màng tilacôit và cần ánh sáng. Năng lượng ánh sáng được diệp lục hấp thụ để quang phân li nước. Khí ôxi giải phóng trong quang hợp có nguồn gốc từ nước chứ không phải từ CO2. Pha sáng tạo ra ATP và NADPH, là nguồn năng lượng và lực khử cho pha sau.
+
+Pha tối diễn ra trong chất nền của lục lạp và không trực tiếp cần ánh sáng. Ở thực vật C3, CO2 được cố định qua chu trình Canvin: enzim Rubisco gắn CO2 vào chất nhận RiDP, sản phẩm sau đó được khử nhờ ATP và NADPH từ pha sáng để tạo thành đường. Tên gọi pha tối không có nghĩa là pha này chỉ diễn ra vào ban đêm.
+
+## Các nhân tố ảnh hưởng
+
+Cường độ quang hợp phụ thuộc vào ánh sáng, nồng độ CO2, nhiệt độ và nước. Khi tăng cường độ ánh sáng, quang hợp tăng dần đến một giới hạn gọi là điểm bão hòa ánh sáng; vượt quá điểm này quang hợp không tăng thêm. Nồng độ CO2 trong không khí khoảng 0,03–0,04%; tăng CO2 đến một ",,,,,,,

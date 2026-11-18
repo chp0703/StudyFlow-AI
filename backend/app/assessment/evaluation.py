@@ -143,8 +143,11 @@ def score_annotations(rater_a: list[dict], rater_b: list[dict], adjudicated: lis
         decisions = [acceptable(x) and acceptable(y) for x, y in pairs]
     ok = sum(decisions)
     low, high = wilson_interval(ok, len(decisions))
+    # Kappa collapses when nearly every item gets the same label (Feinstein & Cicchetti 1990); report raw agreement too.
+    agreement = {c: sum(int(x[c]) == int(y[c]) for x, y in pairs) / len(pairs) for c in CRITICAL}
+    agreement["acceptable"] = sum(acceptable(x) == acceptable(y) for x, y in pairs) / len(pairs)
     return {"items": len(decisions), "acceptable": ok, "acceptable_rate": ok / len(decisions),
-            "wilson_95": [low, high], "cohen_kappa": kappa}
+            "wilson_95": [low, high], "cohen_kappa": kappa, "observed_agreement": agreement}
 
 
 # ------------------------------------------------------------------ SAFE-01: leakage check on generated drafts
