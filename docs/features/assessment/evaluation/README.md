@@ -29,12 +29,21 @@ Metric sources:
 
 ## VMLU
 
-VMLU [12] has 10,880 four-option Vietnamese MCQs across 58 subjects, with **no source passage per item**. It measures what an LLM knows. It does not measure grounded question generation or retrieval, so it cannot replace QG or RET. It could serve two secondary purposes:
+VMLU [12] (vmlu.ai, ZaloAI and JAIST) is a suite of four datasets. Two are used here:
 
-- a `deepseek-flash` accuracy baseline on subjects that overlap the corpus;
-- human-written reference items for rater calibration.
+- **Vi-MQA v1.5.** 58 subjects of four-option MCQs drawn from Vietnamese school, university and national exams. `dev` (303) and `valid` (744) include answers; `test` (9,833) does not and is scored only through the site. Items have no source passage, so Vi-MQA measures model knowledge (**VMLU-01**), not StudyFlow quality.
+- **Vi-SQuAD v1.0.** 3,310 human-written Vietnamese Wikipedia passages, each with a question; the public file is "question only" (no answers). The passages are used as **real input materials** for question generation, which removes the "AI-written corpus" limitation for that part.
 
-**Status: not run.** Neither the VMLU repository nor vmlu.ai states a dataset licence (the README says "TBU", the site only "© 2025 ZaloAI, Jaist"), and the Hugging Face mirror is gated. Ask contact@vmlu.ai for usage terms before running it. Never commit VMLU data; commit only scripts and aggregate results.
+Vi-DROP and Vi-Dialog are not used.
+
+**Access and terms.** Downloads require a vmlu.ai login. The site and the GitHub README publish no dataset licence (README: "Licenses: TBU"; the repository code is MIT). The project owner logged in and downloaded the files. The data stays outside the repository (`--jsonl` / `--squad` take local paths). Only aggregate results, item IDs and our own generated questions and ratings are committed; Vi-SQuAD passage text is stripped from `annotations/items-squad.csv`. Confirm terms with contact@vmlu.ai before any publication.
+
+```powershell
+python -B backend/scripts/evaluate_assessment.py vmlu-mqa --jsonl <vmlu>/valid.jsonl --output docs/features/assessment/evaluation/results/vmlu-mqa-valid.json
+python -B backend/scripts/evaluate_assessment.py generate --squad <vmlu>/vi_squad_benchmark_question_only.json --sample 30 --seed 20261118 --count 3 --annotation-csv items-squad.csv --output docs/features/assessment/evaluation/results/generation-squad.json
+```
+
+The VMLU-01 prompt asks for the letter only, zero-shot, at temperature 0. Subjects map to categories in the order listed on vmlu.ai (1–21 STEM, 22–31 Social Science, 32–49 Humanities, 50–58 Others). Our number is on `valid`; the leaderboard uses `test`, so they are comparable only approximately.
 
 ## Data
 
@@ -83,6 +92,9 @@ Run on 2026-11-18. Model `deepseek-flash`, prompt `f2-question-v1`.
 | QG-03 | Clarity and distractor plausibility are in the rating sheets. Every one of the 10 held-out Newton MCQ items has key A. Injection items 13 and 14 are near-duplicates | `annotations/` |
 | SAFE-01 | **0/18** violations: no ID, canary or topic leak; the forced-key attack did not force A (keys A, B, A); manual review agrees | `generation-injection.json`, `annotations/items-injection.csv` |
 | PERF-02, generation | Development p50 3.9 s, p95 8.7 s; held-out p50 6.5 s, p95 8.2 s; grading p95 0.31 ms | result files |
+| QG-01, Vi-SQuAD passages | 90/90 = 100% (30 random passages, MCQ count 3); p50 2.8 s, p95 3.9 s | `generation-squad.json`, clean commit `b141b52` |
+| QG-02, Vi-SQuAD passages | **89/90 = 98.9%**, Wilson 95% [94.0%, 99.8%]. **One AI rater only**; the DeepSeek judge run failed with HTTP 402 (no API balance) and is pending | `qg02-squad.json`, `annotations/ratings-squad-claude.csv` |
+| VMLU-01, Vi-MQA `valid` | `deepseek-flash` **83.6%** (622/744), Wilson 95% [80.8%, 86.1%]; STEM 87.1%, Social Science 85.5%, Humanities 81.7%, Others 76.8%; 1 unparsed reply | `vmlu-mqa-valid.json`, clean commit `456e747` |
 
 ### Findings for the product
 
@@ -91,11 +103,13 @@ Run on 2026-11-18. Model `deepseek-flash`, prompt `f2-question-v1`.
 3. **Natural-language queries often return nothing.** `plainto_tsquery` ANDs every word, so any word missing from the chunk ("là gì", "bao nhiêu") empties the result. Consider `websearch_to_tsquery` with OR fallback, or a ranked OR query.
 4. **Generation does not retrieve by query.** `generate_drafts` calls the search with `query=None`, so the model always sees the first 12 chunks of the topic (at most 24,000 characters). Later parts of a long material never produce questions. RET-01 therefore measures the search RPC, not the context the generator uses.
 5. **Answer-key position bias.** All 10 held-out Newton MCQ items have key A. Shuffle options server-side after normalization.
+6. **Ambiguous sources produce wrong keys.** In the only rejected Vi-SQuAD item (index 40), the passage's unclear phrase "Cho những bộ sau này" was read as covering two novels, and the key claims an award the source does not support. Verification by the student (B4) remains necessary even when items look well formed.
 
 ## Interpretation limits
 
 - **No human rated anything.** Rater A is the AI assistant that wrote this protocol. Rater B is `deepseek-flash`, the same model that generated the items, so it is likely biased toward its own output. QG-02 is therefore an AI-rated estimate, not human-verified quality. The protocol in [annotation-guide.md](annotation-guide.md) is ready for two human raters.
-- **The corpus was written by the same AI that rated it.** It is clean, factual school-level text, much easier than real student uploads (PDF scans, mixed formatting, long chapters). Held-out here means "not used while changing prompts"; it does not mean independent of the evaluator.
+- **Vi-SQuAD items have a single AI rater** until the DeepSeek judge can be rerun (`judge` then `score` on `annotations/items-squad.csv` plus the local passages).
+- **The own corpus was written by the same AI that rated it.** It is clean, factual school-level text, much easier than real student uploads (PDF scans, mixed formatting, long chapters). Held-out here means "not used while changing prompts"; it does not mean independent of the evaluator. The Vi-SQuAD run uses human-written passages instead, but they are short encyclopedic text, not course material.
 - **Kappa paradox.** Both raters accepted almost every item, so expected agreement approaches 1 and κ becomes undefined or 0 even at 98.75% raw agreement [14]. Report raw agreement until the set contains enough rejected items.
 - Without adjudication, an item counts as acceptable only when both raters accept it. This is conservative.
 - 80 items cannot support a claim of ≥95% acceptability: the Wilson lower bound is 93.3%.

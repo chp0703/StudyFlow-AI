@@ -1,0 +1,15 @@
+{
+  "QG-02": {
+    "items": 90,
+    "acceptable": 89,
+    "acceptable_rate": 0.9888888888888889,
+    "wilson_95": [
+      0.9397159168824657,
+      0.9980359158990818
+    ],
+    "raters": [
+      "claude-opus-5-5 (AI)"
+    ],
+    "second_rater": "pending: DeepSeek judge returned HTTP 402 (no balance)"
+  }
+}
