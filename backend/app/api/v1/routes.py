@@ -70,7 +70,7 @@ class Api:
             ),
             max_context_chunks=settings.question_max_context_chunks,
         )
-        self.attempts = QuizAttemptOperations(self.rpc, self.questions, clock)
+        self.attempts = QuizAttemptOperations(self.rpc, clock)
         self.topic_stats = TopicStatsOperations(self.rpc)
         self.recommendations = RevisionRecommendationOperations(self.rpc, clock)
         self.processor = ActionProcessor(self)

@@ -6636,6 +6636,9 @@
               "$ref": "#/$defs/ToolResult"
             },
             {
+              "$ref": "#/$defs/QuizAttemptSubmissionResult"
+            },
+            {
               "type": "null"
             }
           ]
@@ -13174,6 +13177,9 @@
         },
         "validity": {
           "$ref": "#/$defs/QuizResponseValidity"
+        },
+        "include_replay_status": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -13281,6 +13287,14 @@
           "type": "string",
           "format": "date-time",
           "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        },
+        "include_replay_status": {
+          "type": "boolean"
+        },
+        "expected_response_version": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
         }
       },
       "required": [
@@ -13553,6 +13567,192 @@
             },
             "data": {
               "$ref": "#/$defs/ActionPresentation"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "GetQuizAttemptContextArguments": {
+      "type": "object",
+      "properties": {
+        "attempt_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "attempt_id"
+      ],
+      "additionalProperties": false
+    },
+    "QuizAttemptContextData": {
+      "type": "object",
+      "properties": {
+        "attempt": {
+          "$ref": "#/$defs/QuizAttempt"
+        },
+        "questions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/QuestionDraft"
+          }
+        },
+        "responses": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/QuizResponse"
+          }
+        },
+        "response_version": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "attempt",
+        "questions",
+        "responses",
+        "response_version"
+      ],
+      "additionalProperties": false
+    },
+    "QuizAttemptContextResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "$ref": "#/$defs/QuizAttemptContextData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "QuizResponseInternalResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "enum": [
+                "COMMITTED",
+                "READ"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/QuizResponse"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "QuizAttemptSubmissionInternalResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "enum": [
+                "COMMITTED",
+                "READ"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/QuizAttemptSubmissionData"
             },
             "error": {
               "type": "null"

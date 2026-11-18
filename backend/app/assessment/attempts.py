@@ -180,19 +180,29 @@ def grade_attempt(
     return {"attempt": graded_attempt, "responses": graded_responses}
 
 
+def _normalize_write_result(result: dict) -> tuple[dict, bool]:
+    replayed = result["outcome"] == "READ"
+    if replayed:
+        return {**result, "outcome": "COMMITTED"}, True
+    return result, False
+
+
 class QuizAttemptOperations:
     """Backend service boundary for B5 quiz attempts, response saving, and grading."""
 
-    def __init__(self, rpc, questions, clock):
+    def __init__(self, rpc, clock):
         self.rpc = rpc
-        self.questions = questions
         self.clock = clock
-        self._attempts: dict[tuple[str, str], dict] = {}
-        self._responses: dict[tuple[str, str], dict[str, dict]] = {}
-        self._submit_args: dict[tuple[str, str], dict] = {}
-        self._idempotency: dict[tuple[str, str, str], str] = {}
 
-    def _call_rpc(self, ctx, operation: str, arguments: dict, result_schema: str, *, idempotency_key: str) -> dict:
+    def _call_rpc(
+        self,
+        ctx,
+        operation: str,
+        arguments: dict,
+        result_schema: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> dict:
         result = self.rpc(ctx, operation, arguments, idempotency_key=idempotency_key)
         if not contract.is_valid(result_schema, result):
             raise WorkflowError("INTERNAL_ERROR", "Phản hồi bài kiểm tra từ database không đúng contract.")
@@ -206,27 +216,39 @@ class QuizAttemptOperations:
             )
         return result
 
-    def _load_questions_by_id(self, ctx, *, material_id: str | None = None, status: str | None = "VERIFIED") -> dict[str, dict]:
-        items_by_id: dict[str, dict] = {}
-        cursor: str | None = None
-        for _ in range(20):
-            res = self.questions.list_questions(
-                ctx,
-                {
-                    "material_id": material_id,
-                    "topic": None,
-                    "status": status,
-                    "page_size": 100,
-                    "cursor": cursor,
-                },
-            )
-            data = res["data"]
-            for item in data["items"]:
-                items_by_id[item["question_id"]] = item
-            cursor = data["next_cursor"]
-            if cursor is None:
-                break
-        return items_by_id
+    def _load_context(self, ctx, attempt_id: str) -> dict:
+        result = self._call_rpc(
+            ctx,
+            "get_quiz_attempt_context",
+            {"attempt_id": attempt_id},
+            "QuizAttemptContextResult",
+            idempotency_key=None,
+        )
+        return result["data"]
+
+    def _replay(self, ctx, operation: str, idempotency_key: str, arguments: dict, result_schema: str) -> dict | None:
+        fingerprint = contract.sha256_hex({
+            "schema_version": "1.1",
+            "user_id": ctx.user_id,
+            "operation": operation,
+            "arguments": arguments,
+            "decision_binding": None,
+        })
+        lookup = self._call_rpc(
+            ctx,
+            "lookup_operation_result",
+            {
+                "operation": operation,
+                "idempotency_key": idempotency_key,
+                "request_fingerprint": fingerprint,
+            },
+            "lookup_operation_resultInternalResult",
+            idempotency_key=None,
+        )
+        stored = lookup["data"]["result"]
+        if stored is not None and not contract.is_valid(result_schema, stored):
+            raise WorkflowError("INTERNAL_ERROR", "Phản hồi đã lưu không đúng contract.")
+        return stored
 
     def create_attempt(self, ctx, key: str, body: dict) -> dict:
         if not contract.is_valid("CreateQuizAttemptRequest", body):
@@ -274,8 +296,6 @@ class QuizAttemptOperations:
             or attempt["session_outcome_id"] != args["session_outcome_id"]
         ):
             raise WorkflowError("ENTITY_NOT_FOUND", "Không tìm thấy lượt làm bài.")
-        self._attempts[(ctx.user_id, attempt["attempt_id"])] = dict(attempt)
-        self._responses.setdefault((ctx.user_id, attempt["attempt_id"]), {})
         return result
 
     def save_response(self, ctx, key: str, attempt_id: str, question_id: str, body: dict) -> tuple[dict, bool]:
@@ -285,42 +305,31 @@ class QuizAttemptOperations:
         question_id = str(UUID(question_id))
         selected_option_id = body["selected_option_id"]
 
-        cached_attempt = self._attempts.get((ctx.user_id, attempt_id))
-        material_id = cached_attempt["material_id"] if cached_attempt is not None else None
-        questions_by_id = self._load_questions_by_id(ctx, material_id=material_id, status="VERIFIED")
-        question = questions_by_id.get(question_id)
-        if question is None and material_id is not None:
-            questions_by_id = self._load_questions_by_id(ctx, material_id=None, status="VERIFIED")
-            question = questions_by_id.get(question_id)
-
-        if question is not None:
-            validity, _ = classify_response(question, selected_option_id)
-        else:
-            validity = (
-                "OMITTED"
-                if selected_option_id is None or (isinstance(selected_option_id, str) and not selected_option_id.strip())
-                else "INVALID"
-            )
+        context = self._load_context(ctx, attempt_id)
+        question = next((item for item in context["questions"] if item["question_id"] == question_id), None)
+        if question is None:
+            raise WorkflowError("ENTITY_NOT_FOUND", "Không tìm thấy lượt làm bài hoặc câu hỏi.")
+        validity, _ = classify_response(question, selected_option_id)
 
         args = {
             "attempt_id": attempt_id,
             "question_id": question_id,
             "selected_option_id": selected_option_id,
             "validity": validity,
+            "include_replay_status": True,
         }
         if not contract.is_valid("SaveQuizResponseArguments", args):
             raise WorkflowError("INVALID_PARAMETER", "Tham số lưu câu trả lời không đúng contract.")
 
         idem_key = child_key(key, "save-quiz-response")
-        fp = contract.sha256_hex(args)
-        replayed = self._idempotency.get((ctx.user_id, "save_quiz_response", idem_key)) == fp
         result = self._call_rpc(
             ctx,
             "save_quiz_response",
             args,
-            "QuizResponseResult",
+            "QuizResponseInternalResult",
             idempotency_key=idem_key,
         )
+        result, replayed = _normalize_write_result(result)
         resp = result["data"]
         if (
             resp["user_id"] != ctx.user_id
@@ -332,70 +341,54 @@ class QuizAttemptOperations:
             or resp["graded_at"] is not None
         ):
             raise WorkflowError("ENTITY_NOT_FOUND", "Không tìm thấy lượt làm bài hoặc câu hỏi.")
-        self._idempotency[(ctx.user_id, "save_quiz_response", idem_key)] = fp
-        self._responses.setdefault((ctx.user_id, attempt_id), {})[question_id] = dict(resp)
         return result, replayed
+
+    def _lookup_submit_replay(self, ctx, idem_key: str, attempt_id: str) -> dict | None:
+        return self._replay(
+            ctx,
+            "submit_quiz_attempt",
+            idem_key,
+            {"attempt_id": attempt_id},
+            "QuizAttemptSubmissionResult",
+        )
 
     def submit_attempt(self, ctx, key: str, attempt_id: str, body: dict) -> tuple[dict, bool]:
         if not contract.is_valid("SubmitQuizAttemptRequest", body):
             raise WorkflowError("INVALID_PARAMETER", "Yêu cầu nộp bài không đúng contract.")
         attempt_id = str(UUID(attempt_id))
         idem_key = child_key(key, "submit-quiz-attempt")
-        fp = contract.sha256_hex({"attempt_id": attempt_id})
-        replayed = self._idempotency.get((ctx.user_id, "submit_quiz_attempt", idem_key)) == fp
+        replay = self._lookup_submit_replay(ctx, idem_key, attempt_id)
+        if replay is not None:
+            return replay, True
 
-        cached_attempt = self._attempts.get((ctx.user_id, attempt_id))
-        if cached_attempt is not None and cached_attempt.get("status") == "IN_PROGRESS":
-            questions_by_id = self._load_questions_by_id(
-                ctx,
-                material_id=cached_attempt["material_id"],
-                status=None,
+        context = self._load_context(ctx, attempt_id)
+        if context["attempt"].get("status") == "SUBMITTED":
+            replay = self._lookup_submit_replay(ctx, idem_key, attempt_id)
+            if replay is not None:
+                return replay, True
+            raise WorkflowError(
+                "STALE_ENTITY_VERSION",
+                "Lượt làm bài đã được nộp và không thể chấm điểm lại.",
             )
-            submitted_at = iso(self.clock())
-            graded = grade_attempt(
-                attempt=cached_attempt,
-                questions_by_id=questions_by_id,
-                responses_by_qid=self._responses.get((ctx.user_id, attempt_id), {}),
-                submitted_at=submitted_at,
-            )
-            args = {
-                "attempt_id": attempt_id,
-                "graded_responses": graded["responses"],
-                "valid_response_count": graded["attempt"]["valid_response_count"],
-                "correct_count": graded["attempt"]["correct_count"],
-                "incorrect_count": graded["attempt"]["incorrect_count"],
-                "omitted_count": graded["attempt"]["omitted_count"],
-                "score_percent": graded["attempt"]["score_percent"],
-                "submitted_at": submitted_at,
-            }
-        elif (ctx.user_id, attempt_id) in self._submit_args:
-            args = self._submit_args[(ctx.user_id, attempt_id)]
-        else:
-            now_iso = iso(self.clock())
-            probe_qid = str(uuid5(UUID(attempt_id), "probe-question"))
-            args = {
-                "attempt_id": attempt_id,
-                "graded_responses": [
-                    {
-                        "response_id": str(uuid5(UUID(attempt_id), f"quiz-response:{probe_qid}")),
-                        "attempt_id": attempt_id,
-                        "question_id": probe_qid,
-                        "user_id": ctx.user_id,
-                        "selected_option_id": None,
-                        "validity": "OMITTED",
-                        "is_correct": None,
-                        "graded_at": now_iso,
-                        "created_at": now_iso,
-                        "updated_at": now_iso,
-                    }
-                ],
-                "valid_response_count": 0,
-                "correct_count": 0,
-                "incorrect_count": 0,
-                "omitted_count": 1,
-                "score_percent": None,
-                "submitted_at": now_iso,
-            }
+
+        submitted_at = iso(self.clock())
+        graded = grade_attempt(
+            attempt=context["attempt"],
+            questions_by_id={item["question_id"]: item for item in context["questions"]},
+            responses_by_qid={item["question_id"]: item for item in context["responses"]},
+            submitted_at=submitted_at,
+        )
+        args = {
+            "attempt_id": attempt_id,
+            "graded_responses": graded["responses"],
+            "valid_response_count": graded["attempt"]["valid_response_count"],
+            "correct_count": graded["attempt"]["correct_count"],
+            "incorrect_count": graded["attempt"]["incorrect_count"],
+            "omitted_count": graded["attempt"]["omitted_count"],
+            "score_percent": graded["attempt"]["score_percent"],
+            "submitted_at": submitted_at,
+            "include_replay_status": True,
+        }
 
         if not contract.is_valid("SubmitQuizAttemptArguments", args):
             raise WorkflowError("INVALID_PARAMETER", "Tham số nộp bài không đúng contract.")
@@ -404,9 +397,10 @@ class QuizAttemptOperations:
             ctx,
             "submit_quiz_attempt",
             args,
-            "QuizAttemptSubmissionResult",
+            "QuizAttemptSubmissionInternalResult",
             idempotency_key=idem_key,
         )
+        result, replayed = _normalize_write_result(result)
         data = result["data"]
         sub_attempt = data["attempt"]
         sub_responses = data["responses"]
@@ -426,7 +420,4 @@ class QuizAttemptOperations:
         ):
             raise WorkflowError("ENTITY_NOT_FOUND", "Không tìm thấy lượt làm bài.")
 
-        self._attempts[(ctx.user_id, attempt_id)] = dict(sub_attempt)
-        self._submit_args[(ctx.user_id, attempt_id)] = args
-        self._idempotency[(ctx.user_id, "submit_quiz_attempt", idem_key)] = fp
         return result, replayed

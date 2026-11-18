@@ -420,10 +420,19 @@
           "llm_callable": false
         },
         {
+          "rpc": "get_quiz_attempt_context",
+          "arguments_schema": "GetQuizAttemptContextArguments",
+          "data_schema": "QuizAttemptContextData",
+          "result_schema": "QuizAttemptContextResult",
+          "read_only": true,
+          "attestation_required": false,
+          "llm_callable": false
+        },
+        {
           "rpc": "save_quiz_response",
           "arguments_schema": "SaveQuizResponseArguments",
           "data_schema": "QuizResponse",
-          "result_schema": "QuizResponseResult",
+          "result_schema": "QuizResponseInternalResult",
           "read_only": false,
           "attestation_required": true,
           "llm_callable": false
@@ -432,7 +441,7 @@
           "rpc": "submit_quiz_attempt",
           "arguments_schema": "SubmitQuizAttemptArguments",
           "data_schema": "QuizAttemptSubmissionData",
-          "result_schema": "QuizAttemptSubmissionResult",
+          "result_schema": "QuizAttemptSubmissionInternalResult",
           "read_only": false,
           "attestation_required": true,
           "llm_callable": false
