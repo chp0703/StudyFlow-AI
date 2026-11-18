@@ -32,12 +32,6 @@
   background: var(--bg-card-solid);
 }
 
-.home-layout .assistant-shell.is-empty {
-  background:
-    radial-gradient(ellipse at center, #ffffffa8, transparent 72%),
-    var(--pastel-rainbow);
-}
-
 .assistant-welcome-logo {
   display: block;
   width: clamp(180px, 37vw, 340px);

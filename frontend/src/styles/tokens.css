@@ -12,7 +12,7 @@
 
   --text-primary: #27213e;
   --text-secondary: #615b74;
-  --background: #faf7fc;
+  --background: #ffffff;
   --border: #e7dff0;
 
   --pastel-coral: #ffdbdb;
@@ -24,24 +24,8 @@
   --pastel-blush: #fce4ed;
   --pastel-mint: #dff4e9;
   --pastel-peach: #ffeddb;
-  --pastel-rainbow: linear-gradient(
-    110deg,
-    var(--pastel-coral),
-    var(--pastel-peach),
-    var(--pastel-lemon),
-    var(--pastel-mint),
-    var(--pastel-aqua),
-    var(--pastel-sky),
-    var(--pastel-periwinkle),
-    var(--pastel-lavender),
-    var(--pastel-blush)
-  );
   --bg-card: rgba(255, 255, 255, 0.94);
   --bg-card-solid: #ffffff;
-
-  --bg-ambient:
-    linear-gradient(#ffffff70, #ffffff70),
-    var(--pastel-rainbow);
 
   --gradient-brand: linear-gradient(115deg, #4e469d, #663eb0 58%, #913f79);
 
