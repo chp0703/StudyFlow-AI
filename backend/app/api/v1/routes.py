@@ -23,6 +23,8 @@ from ...ingestion.service import SourceExtractor
 from ...ingestion.workflow import SourceOperations
 from ...assessment.materials import MaterialOperations, MAX_BYTES as MATERIAL_MAX_BYTES
 from ...assessment.questions import AssessmentQuestionOperations, DeepSeekQuestionGenerator
+from ...assessment.attempts import QuizAttemptOperations
+from ...assessment.stats import TopicStatsOperations
 
 log = logging.getLogger("studyflow.api")
 _KEY = re.compile(r"^[A-Za-z0-9._:-]{16,128}$")
@@ -67,6 +69,8 @@ class Api:
             ),
             max_context_chunks=settings.question_max_context_chunks,
         )
+        self.attempts = QuizAttemptOperations(self.rpc, self.questions, clock)
+        self.topic_stats = TopicStatsOperations(self.rpc)
         self.processor = ActionProcessor(self)
         self.sources = SourceOperations(self.rpc, source_extractor or SourceExtractor(
             settings.deepseek_base_url, settings.deepseek_api_key, settings.ingestion_model), clock)
@@ -274,6 +278,48 @@ class Api:
         result = await run_in_threadpool(self.questions.list_questions, ctx, args)
         return self.result_response(result, ctx)
 
+    @staticmethod
+    def _uuid_param(request: Request, name: str) -> str:
+        value = request.path_params[name]
+        try:
+            return str(UUID(value))
+        except ValueError:
+            raise ApiError("INVALID_PARAMETER", f"{name} must be a UUID.", status=400, field=name) from None
+
+    async def post_assessment_attempts(self, request: Request, ctx: Ctx):
+        body = await self.read_json(request)
+        self.validated("CreateQuizAttemptRequest", body)
+        result = await run_in_threadpool(self.attempts.create_attempt, ctx, request.headers["idempotency-key"], body)
+        return respond(result, 200, ctx.request_id, post=True, replayed=result["outcome"] == "READ")
+
+    async def put_assessment_attempt_response(self, request: Request, ctx: Ctx):
+        attempt_id = self._uuid_param(request, "attempt_id")
+        question_id = self._uuid_param(request, "question_id")
+        body = await self.read_json(request)
+        self.validated("SaveQuizResponseRequest", body)
+        result, replayed = await run_in_threadpool(
+            self.attempts.save_response, ctx, request.headers["idempotency-key"], attempt_id, question_id, body
+        )
+        return respond(result, 200, ctx.request_id, post=True, replayed=replayed)
+
+    async def post_assessment_attempt_submit(self, request: Request, ctx: Ctx):
+        attempt_id = self._uuid_param(request, "attempt_id")
+        body = await self.read_json(request)
+        self.validated("SubmitQuizAttemptRequest", body)
+        result, replayed = await run_in_threadpool(
+            self.attempts.submit_attempt, ctx, request.headers["idempotency-key"], attempt_id, body
+        )
+        return respond(result, 200, ctx.request_id, post=True, replayed=replayed)
+
+    async def get_assessment_topic_stats(self, request: Request, ctx: Ctx):
+        query = self._query(request, {"material_id"})
+        args = {"material_id": query.get("material_id")}
+        self.validated("GetTopicStatsArguments", args)
+        if args["material_id"] is not None:
+            args["material_id"] = str(UUID(args["material_id"]))
+        result = await run_in_threadpool(self.topic_stats.get, ctx, args)
+        return self.result_response(result, ctx)
+
     # ----------------------------------------------------------------- đăng ký endpoint
     def register(self, app: FastAPI) -> None:
         routes = [
@@ -287,9 +333,13 @@ class Api:
             ("GET", "/v1/assessment/materials/{material_id}", self.get_material),
             ("POST", "/v1/assessment/drafts", self.post_assessment_drafts),
             ("GET", "/v1/assessment/questions", self.get_assessment_questions),
+            ("POST", "/v1/assessment/attempts", self.post_assessment_attempts),
+            ("PUT", "/v1/assessment/attempts/{attempt_id}/responses/{question_id}", self.put_assessment_attempt_response),
+            ("POST", "/v1/assessment/attempts/{attempt_id}/submit", self.post_assessment_attempt_submit),
+            ("GET", "/v1/assessment/topics/stats", self.get_assessment_topic_stats),
         ]
         for method, path, handler in routes:
-            app.add_api_route(path, self._wrap(handler, post=method == "POST"), methods=[method],
+            app.add_api_route(path, self._wrap(handler, post=method in ("POST", "PUT")), methods=[method],
                               include_in_schema=False)
 
     def _wrap(self, handler, *, post: bool):
@@ -312,6 +362,7 @@ def fallback_response(request: Request, status: int):
     request_id = str(uuid4())
     error = {"code": code, "message": "The requested resource was not found." if status == 404 else "Method not allowed.",
              "field": None, "details": {}, "retryable": False}
-    return respond(error_body(error, request_id, post=request.method == "POST"), status, request_id,
-                   post=request.method == "POST")
+    is_write = request.method in ("POST", "PUT")
+    return respond(error_body(error, request_id, post=is_write), status, request_id,
+                   post=is_write)
 

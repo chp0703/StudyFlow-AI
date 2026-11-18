@@ -50,7 +50,7 @@ def create_app(settings: Settings | None = None, *, rpc_transport: httpx.BaseTra
         return fallback_response(request, exc.status_code)
 
     app.add_middleware(
-        CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["GET", "POST", "OPTIONS"],
+        CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["GET", "POST", "PUT", "OPTIONS"],
         allow_headers=["Authorization", "Idempotency-Key", "Content-Type"],
         expose_headers=["X-Request-ID", "Idempotency-Replayed", "Retry-After"], max_age=600)
     return app
