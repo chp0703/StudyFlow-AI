@@ -459,12 +459,6 @@
 - `README.md`: liên kết tới hướng dẫn và ghi rõ backend chỉ đọc biến môi trường của shell.
 
 **Kết quả:** chỉ thay đổi tài liệu và file mẫu. Các lệnh trong hướng dẫn chưa được chạy lại từ một bản clone sạch.
-**Kết quả:** nhánh `fix/f2-backend-completeness`; contract checker pass (192 definitions), generated migration đồng bộ, 130 unit tests, 37 scheduler acceptance tests, 72 API acceptance tests, 22 local integration tests và 6 concurrency tests pass; local Supabase reset thành công và 618 pgTAP tests pass. E2E với DeepSeek thật (`deepseek-flash`) pass từ upload material đến sinh/duyệt câu hỏi, restart backend, chấm điểm, thống kê và duyệt recommendation.
-
-**Ghi chú**
-
-- Không chạm cloud Supabase project.
-- Chưa xử lý (cần quyết định): `priority`/`suggested_minutes` của recommendation do client gửi, chưa suy ra từ evidence; replay trong `save_response` phải load context trước vì fingerprint có `validity`.
 
 ## 2026-11-18 — Evaluation Learning Assessment F2
 
