@@ -448,6 +448,18 @@
 
 **Kết quả:** nhánh `fix/planner-followup-leader-spec-kent`; `contracts/check_contract.py` và `generate_contract_schema_migration.py --check` pass; frontend `tsc --noEmit`, `vite build` và 75/75 Node tests pass; `supabase db reset`, `supabase test db` (16 files, 504 tests) và backend pytest (176 unit/acceptance + 16 integration = 192 tests) pass.
 
+## 2026-11-18 — Hướng dẫn chạy demo local
+
+**Mục tiêu:** để thành viên khác dựng được demo trên máy mình mà không phải đoán các biến môi trường.
+
+**Đã làm**
+
+- Thêm `docs/local-demo.md`: các bước Supabase local, sinh và đăng ký khóa ký RPC, biến môi trường backend, `.env.local` frontend, tạo tài khoản.
+- `.env.example`: `SUPABASE_URL` mặc định trỏ Supabase local, `RPC_SIGNING_KEY_ID=f1-dev-1` khớp với `register_dev_key.sql`.
+- `README.md`: liên kết tới hướng dẫn và ghi rõ backend chỉ đọc biến môi trường của shell.
+
+**Kết quả:** chỉ thay đổi tài liệu và file mẫu. Các lệnh trong hướng dẫn chưa được chạy lại từ một bản clone sạch.
+
 ## 2026-11-18 — Đánh giá NLU live và dev/held-out set mới cho F1
 
 **Mục tiêu:** đo chất lượng NLU của Planner bằng bộ held-out có số liệu thật và sửa các lỗi trích xuất lặp lại mà đo được.
@@ -477,7 +489,7 @@
 - Giới hạn coverage theo từng task trong `backend/app/f1/scheduler/evaluation.py`; thêm regression với task có retained block vượt số phút còn lại và task chưa được xếp.
 - Chấm `null`, `[]`, `{}` nhất quán giữa slot metrics và frame exact match trong `backend/app/nlu/evaluation.py`; thêm regression cho các slot rỗng ngoài dự đoán.
 - Tính lại slot metrics của 15 run exact-scored từ prediction đã lưu, ghi dấu scorer trong `docs/features/planner/evaluation/results/nlu-*.json` và giải thích nguồn số liệu trong README.
-- Merge `main` hiện tại vào nhánh PR; worklog không còn conflict.
+- Merge `main` mới nhất vào nhánh PR và hợp nhất hai mục worklog bị conflict.
 
 **Kết quả:** PR #48 (`test/f1-eval-benchmarks`); 141 backend unit tests, contract check và generated schema check pass; 15 run đã lưu khớp scorer mới.
 
