@@ -75,7 +75,15 @@ select ok(not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pron
  and p.proname not in ('ensure_user_context','list_time_windows','get_workflow_context',
  'get_workflow_continuation','initialize_workflow_continuation','checkpoint_workflow_continuation',
  -- BE-04 extension 1.0.0; source behavior is exercised in test 19.
- 'store_ingestion_source','get_ingestion_source','claim_source_extraction','complete_source_extraction'))
+ 'store_ingestion_source','get_ingestion_source','claim_source_extraction','complete_source_extraction',
+ -- F2 B2 extension 1.0.0; ownership/retrieval are exercised in test 20.
+ 'store_assessment_material','get_assessment_material','search_material_chunks',
+ -- F2 B3+B4 extension 1.0.0; question draft/verify/list are exercised in test 21.
+ 'create_question_drafts','verify_question_drafts','list_questions',
+ -- F2 B5 extension 1.0.0; quiz attempt/response/grading are exercised in test 22.
+ 'create_quiz_attempt','save_quiz_response','submit_quiz_attempt',
+ -- F2 B6 extension 1.0.0; topic statistics are exercised in test 22.
+ 'get_topic_stats'))
  or p.pronargs<>1 or p.proargtypes[0]<>'jsonb'::regtype
  or p.proargnames is distinct from array['p_request']::text[])),
  'old overloads, legacy issuer and unregistered public RPCs are removed');

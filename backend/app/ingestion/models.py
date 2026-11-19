@@ -23,22 +23,22 @@ def invalid(message='Không đọc được nguồn. Hãy kiểm tra định d�
     return WorkflowError('INVALID_PARAMETER', message)
 
 
-def decode_upload(filename: str, mime_type: str, encoded: str) -> bytes:
+def decode_upload(filename: str, mime_type: str, encoded: str, *, max_bytes: int = MAX_BYTES) -> bytes:
     if (not isinstance(filename, str) or not filename.strip() or len(filename) > 255
             or '/' in filename or '\\' in filename or any(ord(c) < 32 for c in filename)):
         raise invalid('Tên tệp không hợp lệ.')
     if mime_type not in MIME_EXTENSIONS or PurePosixPath(filename).suffix.lower() not in MIME_EXTENSIONS[mime_type]:
         raise invalid('Định dạng tệp chưa được hỗ trợ hoặc không khớp MIME.')
-    if not isinstance(encoded, str) or len(encoded) > 4 * ((MAX_BYTES + 2) // 3):
-        raise WorkflowError('PAYLOAD_TOO_LARGE', 'Tệp vượt giới hạn 5 MiB.')
+    if not isinstance(encoded, str) or len(encoded) > 4 * ((max_bytes + 2) // 3):
+        raise WorkflowError('PAYLOAD_TOO_LARGE', f'Tệp vượt giới hạn {max_bytes // (1024 * 1024)} MiB.')
     try:
         content = base64.b64decode(encoded, validate=True)
     except (ValueError, binascii.Error):
         raise invalid('Nội dung tệp không phải base64 hợp lệ.') from None
     if not content:
         raise invalid('Tệp rỗng.')
-    if len(content) > MAX_BYTES:
-        raise WorkflowError('PAYLOAD_TOO_LARGE', 'Tệp vượt giới hạn 5 MiB.')
+    if len(content) > max_bytes:
+        raise WorkflowError('PAYLOAD_TOO_LARGE', f'Tệp vượt giới hạn {max_bytes // (1024 * 1024)} MiB.')
     if mime_type.startswith('image/'):
         from .image import validate_image
         validate_image(content, mime_type)

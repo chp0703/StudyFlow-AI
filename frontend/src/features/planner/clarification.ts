@@ -19,13 +19,18 @@ export type ClarificationFollowUpResult = {
 }
 
 export const TASK_COLOR_OPTIONS = [
-  { value: "#6C5CE7", label: "Tím" },
-  { value: "#0EA5E9", label: "Xanh dương" },
-  { value: "#10B981", label: "Xanh lá" },
-  { value: "#F59E0B", label: "Vàng cam" },
-  { value: "#EF4444", label: "Đỏ" },
-  { value: "#EC4899", label: "Hồng" },
+  { value: "#6C5CE7", label: "Tím · Ôn tập" },
+  { value: "#0EA5E9", label: "Xanh dương · Học trên lớp" },
+  { value: "#10B981", label: "Xanh lá · Tự học" },
+  { value: "#F59E0B", label: "Cam · Dự án" },
+  { value: "#EF4444", label: "Đỏ · Hạn nộp" },
+  { value: "#EC4899", label: "Hồng · Hoạt động cá nhân" },
+  { value: "#C69214", label: "Vàng · Bài tập" },
+  { value: "#0D9488", label: "Xanh ngọc · Học nhóm" },
+  { value: "#6366F1", label: "Chàm · Kiểm tra" },
 ] as const
+
+export const TASK_COLOR_SUFFIX = /,\s*màu\s+(#[0-9a-f]{6})\s*$/iu
 
 export const TASK_PRIORITY_OPTIONS = [
   { value: "HIGH", label: "Cao" },
@@ -182,7 +187,9 @@ export function extractTaskDraftFromPrompt(
     estimated_minutes:
       parsedDuration ?? (missing.has("estimated_minutes") ? "60" : ""),
     priority,
-    color: TASK_COLOR_OPTIONS[0].value,
+    color:
+      prompt.match(TASK_COLOR_SUFFIX)?.[1].toUpperCase() ??
+      TASK_COLOR_OPTIONS[0].value,
     description: "",
   }
 }
@@ -323,17 +330,18 @@ export function formatClarificationFollowUp(
     }
 
     if (clarification.source === "demo") {
+      const colorSuffix = color ? `, màu ${color}` : ""
       if (startDate && startTime) {
         return {
           ok: true,
-          text: `thêm ${title} ${formatDdMmYyyy(startDate)} lúc ${startTime}`,
+          text: `thêm ${title} ${formatDdMmYyyy(startDate)} lúc ${startTime}${colorSuffix}`,
         }
       }
       if (deadlineDate) {
         const dur = minutesRaw ? ` ${minutesRaw} phút` : ""
         return {
           ok: true,
-          text: `tạo công việc ${title} hạn ${formatDdMmYyyy(deadlineDate)}${dur}`,
+          text: `tạo công việc ${title} hạn ${formatDdMmYyyy(deadlineDate)}${dur}${colorSuffix}`,
         }
       }
     }

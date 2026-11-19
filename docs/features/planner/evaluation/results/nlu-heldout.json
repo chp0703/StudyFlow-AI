@@ -19,7 +19,8 @@
       "backend\\app\\f1\\scheduler\\evaluation.py": "919eaf052e28008d5b57869181cd48da884235afebf987580597a280e22e0fca",
       "backend\\app\\nlu\\evaluation.py": "17bb795f2b91c723faf285a46a070f07a9f908c93c58f406b5d749b62ef8ba44",
       "backend\\scripts\\benchmark_f1.py": "ad3a69f6ae14156d053c328a73cc8a8d1b2a21333a1fc7638ee63d07e1c78f68"
-    }
+    },
+    "slot_metrics_rescored_with": "6816b019a8646744c30be241cccbceb77333f37175bb54d3ca6c9f5bd30be5eb"
   },
   "nlu": {
     "ok": false,
@@ -2636,9 +2637,9 @@
         "case_count": 100,
         "intent_sequence_accuracy": 1.0,
         "intent_macro_f1": 1.0,
-        "slot_precision": 0.9425675675675675,
-        "slot_recall": 0.8942307692307693,
-        "slot_micro_f1": 0.9177631578947368,
+        "slot_precision": 0.9484848484848485,
+        "slot_recall": 0.9046242774566474,
+        "slot_micro_f1": 0.9260355029585798,
         "frame_exact_matches": 70,
         "frame_exact_match_rate": 0.7,
         "frame_exact_match_wilson_95": [
@@ -5290,9 +5291,9 @@
         "case_count": 100,
         "intent_sequence_accuracy": 0.99,
         "intent_macro_f1": 0.9888610414926204,
-        "slot_precision": 0.9362416107382551,
-        "slot_recall": 0.8942307692307693,
-        "slot_micro_f1": 0.9147540983606557,
+        "slot_precision": 0.9395770392749244,
+        "slot_recall": 0.8988439306358381,
+        "slot_micro_f1": 0.9187592319054653,
         "frame_exact_matches": 71,
         "frame_exact_match_rate": 0.71,
         "frame_exact_match_wilson_95": [
@@ -7909,9 +7910,9 @@
         "case_count": 100,
         "intent_sequence_accuracy": 0.99,
         "intent_macro_f1": 0.9888610414926204,
-        "slot_precision": 0.9496644295302014,
-        "slot_recall": 0.907051282051282,
-        "slot_micro_f1": 0.9278688524590164,
+        "slot_precision": 0.9516616314199395,
+        "slot_recall": 0.9104046242774566,
+        "slot_micro_f1": 0.930576070901034,
         "frame_exact_matches": 73,
         "frame_exact_match_rate": 0.73,
         "frame_exact_match_wilson_95": [
@@ -10511,9 +10512,9 @@
         "case_count": 100,
         "intent_sequence_accuracy": 0.97,
         "intent_macro_f1": 0.9724279835390947,
-        "slot_precision": 0.939799331103679,
-        "slot_recall": 0.9006410256410257,
-        "slot_micro_f1": 0.9198036006546645,
+        "slot_precision": 0.9425981873111783,
+        "slot_recall": 0.9017341040462428,
+        "slot_micro_f1": 0.9217134416543574,
         "frame_exact_matches": 70,
         "frame_exact_match_rate": 0.7,
         "frame_exact_match_wilson_95": [
@@ -13126,9 +13127,9 @@
         "case_count": 100,
         "intent_sequence_accuracy": 0.99,
         "intent_macro_f1": 0.9888610414926204,
-        "slot_precision": 0.9466666666666667,
-        "slot_recall": 0.9102564102564102,
-        "slot_micro_f1": 0.9281045751633987,
+        "slot_precision": 0.948948948948949,
+        "slot_recall": 0.9132947976878613,
+        "slot_micro_f1": 0.930780559646539,
         "frame_exact_matches": 73,
         "frame_exact_match_rate": 0.73,
         "frame_exact_match_wilson_95": [

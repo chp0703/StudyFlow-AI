@@ -17,10 +17,12 @@ from .workflow_shared import (
 
 
 class ActionProcessor:
-    def __init__(self, rpc: RpcCall, clock: Clock, extractor: Extractor, timezone: str = PRODUCT_TIMEZONE):
+    def __init__(self, rpc: RpcCall, clock: Clock, extractor: Extractor, timezone: str = PRODUCT_TIMEZONE, *,
+                 questions=None):
         if timezone != PRODUCT_TIMEZONE:
             raise ValueError(f"timezone must be {PRODUCT_TIMEZONE}")
         self.rpc, self.clock = rpc, clock
+        self.questions_ops = questions
         self.chat = ChatProcessor(self, extractor, clock=clock, timezone=timezone)
 
     def step(self, ctx, operation: str, arguments: dict, **kwargs) -> dict:
@@ -38,6 +40,10 @@ class ActionProcessor:
             return self.chat.handle_message(ctx, receipt, key, body)
         if http_operation == "prepare_action":
             return self.prepare(ctx, receipt, key, body)
+        if http_operation == "generate_question_drafts":
+            if self.questions_ops is None:
+                raise Terminal("UNSUPPORTED_OPERATION", "Question draft generation is not configured.")
+            return self.questions_ops.generate_drafts(ctx, receipt, key, body)
         if http_operation == "submit_decision":
             return self.decide(ctx, receipt, key, body)
         return self.review(ctx, receipt, key, body, path["action_id"])
@@ -217,6 +223,8 @@ class ActionProcessor:
                         "proposal": action["proposal"], "normalized_command": last.get("normalized_command"),
                         "effective_policy": last.get("effective_policy"),
                         "schedule_confirmation": last.get("schedule_confirmation")}
+        if last.get("question_drafts") is not None:
+            presentation["question_drafts"] = last["question_drafts"]
         stored = self.step(ctx, "review_pending_action", {
             "action_id": action_id, "expected_action_version": body["expected_action_version"], "presentation": presentation},
             conversation_id=conversation, idempotency_key=child_key(key, "review"), message_id=receipt["message_id"])["data"]
@@ -242,6 +250,8 @@ class ActionProcessor:
             if pending["version"] != ref["action_version"]:
                 raise Terminal("STALE_ENTITY_VERSION", "Thao tác đã thay đổi; hãy tải lại trước khi quyết định.")
         last = (action["last_presentation"] or {}).get("presentation") or {}
+        if pending.get("intent") == "VERIFY_QUESTION_DRAFTS":
+            return self._decide_question_drafts(ctx, receipt, key, conversation, ref, pending, decision)
         command = last.get("normalized_command")
         if decision == "REJECT":
             return self.reject(ctx, receipt, key, conversation, ref, action, command)
@@ -288,3 +298,41 @@ class ActionProcessor:
         done = reply(ctx.request_id, "SUCCEEDED", "Đã hủy thao tác. Không có dữ liệu nào được lưu.",
                      result=_ok(ctx.request_id, "DRAFTED", presentation))
         return 200, self.chat.resume(ctx, receipt, key, conversation, ref, None, None, True, done) or done
+
+    def _decide_question_drafts(self, ctx, receipt, key, conversation, ref, pending, decision):
+        if (ref["target_type"] != "PENDING_ACTION" or ref["target_id"] != pending["action_id"]
+                or ref["target_version"] != ref["action_version"]):
+            raise Terminal("APPROVAL_REQUIRED", "Tham chiếu thao tác xác nhận câu hỏi không khớp.")
+        question_ids = list((pending.get("draft_arguments") or {}).get("question_ids") or [])
+        if not question_ids:
+            raise Terminal("INVALID_PARAMETER", "Thao tác xác nhận không chứa danh sách câu hỏi hợp lệ.")
+        approval = {
+            "approval_action_id": str(uuid4()),
+            "user_id": ctx.user_id,
+            "target_type": "PENDING_ACTION",
+            "target_id": ref["action_id"],
+            "target_version": ref["action_version"],
+            "decision": decision,
+            "source": "UI",
+            "source_message_id": None,
+            "created_at": iso(datetime.now(timezone.utc)),
+        }
+        result = self.step(
+            ctx,
+            "verify_question_drafts",
+            {
+                "conversation_id": conversation,
+                "action_id": ref["action_id"],
+                "expected_action_version": ref["action_version"],
+                "question_ids": question_ids,
+                "decision": decision,
+            },
+            conversation_id=conversation,
+            idempotency_key=child_key(key, "decision"),
+            approval_action=approval,
+            action_reference=ref,
+            message_id=receipt["message_id"],
+        )
+        result = {**result, "request_id": ctx.request_id}
+        message = "Đã xác nhận bộ câu hỏi." if decision == "APPROVE" else "Đã từ chối bộ câu hỏi nháp."
+        return 200, reply(ctx.request_id, "SUCCEEDED", message, result=result)

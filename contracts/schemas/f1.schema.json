@@ -29,6 +29,14 @@
         "reject_study_plan"
       ]
     },
+    "AssessmentOperation": {
+      "type": "string",
+      "enum": [
+        "create_question_drafts",
+        "verify_question_drafts",
+        "list_questions"
+      ]
+    },
     "Issue": {
       "type": "object",
       "properties": {
@@ -1933,7 +1941,8 @@
             "SET_BUSY_INTERVAL",
             "SET_SCHEDULING_PREFERENCES",
             "GENERATE_STUDY_PLAN",
-            "GET_STUDY_PLAN"
+            "GET_STUDY_PLAN",
+            "VERIFY_QUESTION_DRAFTS"
           ]
         },
         "state": {
@@ -2129,7 +2138,14 @@
           "format": "uuid"
         },
         "operation": {
-          "$ref": "#/$defs/Operation"
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Operation"
+            },
+            {
+              "$ref": "#/$defs/AssessmentOperation"
+            }
+          ]
         },
         "idempotency_key": {
           "type": "string",
@@ -4436,6 +4452,66 @@
             "arguments"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "operation": {
+              "const": "create_question_drafts"
+            },
+            "arguments": {
+              "$ref": "#/$defs/CreateQuestionDraftsArguments"
+            }
+          },
+          "required": [
+            "schema_version",
+            "operation",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "operation": {
+              "const": "verify_question_drafts"
+            },
+            "arguments": {
+              "$ref": "#/$defs/VerifyQuestionDraftsArguments"
+            }
+          },
+          "required": [
+            "schema_version",
+            "operation",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "operation": {
+              "const": "list_questions"
+            },
+            "arguments": {
+              "$ref": "#/$defs/ListQuestionsArguments"
+            }
+          },
+          "required": [
+            "schema_version",
+            "operation",
+            "arguments"
+          ],
+          "additionalProperties": false
         }
       ]
     },
@@ -4797,6 +4873,16 @@
               "type": "null"
             }
           ]
+        },
+        "question_drafts": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/QuestionDraftBatchData"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -4807,6 +4893,60 @@
         "normalized_command",
         "effective_policy",
         "schedule_confirmation"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "pending_action": {
+                "properties": {
+                  "intent": {
+                    "const": "VERIFY_QUESTION_DRAFTS"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "question_drafts"
+            ],
+            "properties": {
+              "candidate": {
+                "type": "null"
+              },
+              "proposal": {
+                "type": "null"
+              },
+              "effective_policy": {
+                "type": "null"
+              },
+              "schedule_confirmation": {
+                "type": "null"
+              },
+              "question_drafts": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/QuestionDraftBatchData"
+                  },
+                  {
+                    "required": [
+                      "items",
+                      "source_chunks"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "question_drafts": {
+                "type": "null"
+              }
+            }
+          }
+        }
       ],
       "additionalProperties": false
     },
@@ -4882,6 +5022,9 @@
                 },
                 {
                   "$ref": "#/$defs/SchedulingReadData"
+                },
+                {
+                  "$ref": "#/$defs/QuestionDraftListData"
                 }
               ]
             },
@@ -4926,6 +5069,9 @@
                 },
                 {
                   "$ref": "#/$defs/ActionPresentation"
+                },
+                {
+                  "$ref": "#/$defs/QuestionDraftBatchData"
                 }
               ]
             },
@@ -5013,6 +5159,9 @@
                 },
                 {
                   "$ref": "#/$defs/PreferencesData"
+                },
+                {
+                  "$ref": "#/$defs/QuestionDraftBatchData"
                 }
               ]
             },
@@ -5051,7 +5200,14 @@
               "const": "REJECTED"
             },
             "data": {
-              "$ref": "#/$defs/PlanProposal"
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/PlanProposal"
+                },
+                {
+                  "$ref": "#/$defs/QuestionDraftBatchData"
+                }
+              ]
             },
             "error": {
               "type": "null"
@@ -6328,7 +6484,14 @@
       "type": "object",
       "properties": {
         "operation": {
-          "$ref": "#/$defs/Operation"
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Operation"
+            },
+            {
+              "$ref": "#/$defs/AssessmentOperation"
+            }
+          ]
         },
         "idempotency_key": {
           "type": "string",
@@ -6562,7 +6725,8 @@
             "send_message",
             "prepare_action",
             "review_action",
-            "submit_decision"
+            "submit_decision",
+            "generate_question_drafts"
           ]
         },
         "idempotency_key": {
@@ -6772,7 +6936,8 @@
             "send_message",
             "prepare_action",
             "review_action",
-            "submit_decision"
+            "submit_decision",
+            "generate_question_drafts"
           ]
         },
         "idempotency_key": {
@@ -6807,7 +6972,8 @@
             "send_message",
             "prepare_action",
             "review_action",
-            "submit_decision"
+            "submit_decision",
+            "generate_question_drafts"
           ]
         },
         "idempotency_key": {
@@ -6843,7 +7009,8 @@
             "send_message",
             "prepare_action",
             "review_action",
-            "submit_decision"
+            "submit_decision",
+            "generate_question_drafts"
           ]
         },
         "idempotency_key": {
@@ -7573,7 +7740,8 @@
             "send_message",
             "prepare_action",
             "review_action",
-            "submit_decision"
+            "submit_decision",
+            "generate_question_drafts"
           ]
         },
         "idempotency_key": {
@@ -10969,6 +11137,2162 @@
             },
             "data": {
               "$ref": "#/$defs/SourceClaimData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "QuestionDraftStatus": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "VERIFIED",
+        "REJECTED"
+      ]
+    },
+    "QuestionType": {
+      "type": "string",
+      "enum": [
+        "MCQ",
+        "TRUE_FALSE"
+      ]
+    },
+    "QuizAttemptOrigin": {
+      "type": "string",
+      "enum": [
+        "MANUAL",
+        "SESSION_HANDOFF"
+      ]
+    },
+    "QuizAttemptStatus": {
+      "type": "string",
+      "enum": [
+        "IN_PROGRESS",
+        "SUBMITTED"
+      ]
+    },
+    "QuizResponseValidity": {
+      "type": "string",
+      "enum": [
+        "VALID",
+        "OMITTED",
+        "INVALID"
+      ]
+    },
+    "TopicStatsStatus": {
+      "type": "string",
+      "enum": [
+        "AVAILABLE",
+        "INSUFFICIENT_DATA"
+      ]
+    },
+    "LearningMaterial": {
+      "type": "object",
+      "properties": {
+        "assessment_version": {
+          "const": "1.0.0"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "user_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\x00-\\x1f]+$"
+        },
+        "mime_type": {
+          "type": "string",
+          "enum": [
+            "text/plain",
+            "text/markdown",
+            "application/pdf"
+          ]
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10485760
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "page_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "char_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500000
+        },
+        "topics": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "maxLength": 120
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "UPLOADED",
+            "READY",
+            "FAILED"
+          ]
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "INVALID_PARAMETER",
+                "SERVICE_UNAVAILABLE",
+                "INTERNAL_ERROR"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        }
+      },
+      "required": [
+        "assessment_version",
+        "material_id",
+        "user_id",
+        "conversation_id",
+        "filename",
+        "mime_type",
+        "size_bytes",
+        "sha256",
+        "page_count",
+        "char_count",
+        "topics",
+        "status",
+        "error_code",
+        "created_at",
+        "updated_at"
+      ],
+      "additionalProperties": false
+    },
+    "MaterialChunk": {
+      "type": "object",
+      "properties": {
+        "chunk_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "user_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 120
+        },
+        "chunk_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 4000
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        }
+      },
+      "required": [
+        "chunk_id",
+        "material_id",
+        "user_id",
+        "page",
+        "topic",
+        "chunk_index",
+        "text",
+        "created_at"
+      ],
+      "additionalProperties": false
+    },
+    "QuestionOption": {
+      "type": "object",
+      "properties": {
+        "option_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 32
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 1000
+        }
+      },
+      "required": [
+        "option_id",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "QuestionDraft": {
+      "type": "object",
+      "properties": {
+        "assessment_version": {
+          "const": "1.0.0"
+        },
+        "question_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "user_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 120
+        },
+        "question_type": {
+          "$ref": "#/$defs/QuestionType"
+        },
+        "stem": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 2000
+        },
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 6,
+          "items": {
+            "$ref": "#/$defs/QuestionOption"
+          }
+        },
+        "answer_key": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 32
+        },
+        "explanation": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S",
+              "maxLength": 2000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_chunk_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "status": {
+          "$ref": "#/$defs/QuestionDraftStatus"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S",
+              "maxLength": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt_version": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 64
+        },
+        "verified_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        }
+      },
+      "required": [
+        "assessment_version",
+        "question_id",
+        "user_id",
+        "conversation_id",
+        "material_id",
+        "version",
+        "topic",
+        "question_type",
+        "stem",
+        "options",
+        "answer_key",
+        "explanation",
+        "source_chunk_ids",
+        "status",
+        "model",
+        "prompt_version",
+        "verified_at",
+        "created_at",
+        "updated_at"
+      ],
+      "additionalProperties": false
+    },
+    "QuizAttempt": {
+      "type": "object",
+      "properties": {
+        "assessment_version": {
+          "const": "1.0.0"
+        },
+        "attempt_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "user_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "origin": {
+          "$ref": "#/$defs/QuizAttemptOrigin"
+        },
+        "session_outcome_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/QuizAttemptStatus"
+        },
+        "question_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "total_questions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "valid_response_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50
+        },
+        "correct_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50
+        },
+        "incorrect_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50
+        },
+        "omitted_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50
+        },
+        "score_percent": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        },
+        "submitted_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        }
+      },
+      "required": [
+        "assessment_version",
+        "attempt_id",
+        "user_id",
+        "material_id",
+        "origin",
+        "session_outcome_id",
+        "status",
+        "question_ids",
+        "total_questions",
+        "valid_response_count",
+        "correct_count",
+        "incorrect_count",
+        "omitted_count",
+        "score_percent",
+        "started_at",
+        "submitted_at",
+        "created_at",
+        "updated_at"
+      ],
+      "additionalProperties": false
+    },
+    "QuizResponse": {
+      "type": "object",
+      "properties": {
+        "response_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "attempt_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "question_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "user_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "selected_option_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S",
+              "maxLength": 32
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "validity": {
+          "$ref": "#/$defs/QuizResponseValidity"
+        },
+        "is_correct": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "graded_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        }
+      },
+      "required": [
+        "response_id",
+        "attempt_id",
+        "question_id",
+        "user_id",
+        "selected_option_id",
+        "validity",
+        "is_correct",
+        "graded_at",
+        "created_at",
+        "updated_at"
+      ],
+      "additionalProperties": false
+    },
+    "TopicStatsItem": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 120
+        },
+        "status": {
+          "$ref": "#/$defs/TopicStatsStatus"
+        },
+        "valid_response_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "error_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "error_rate": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "last_attempt_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "material_id",
+        "topic",
+        "status",
+        "valid_response_count",
+        "error_count",
+        "error_rate",
+        "last_attempt_at"
+      ],
+      "additionalProperties": false
+    },
+    "TopicStatsData": {
+      "type": "object",
+      "properties": {
+        "assessment_version": {
+          "const": "1.0.0"
+        },
+        "material_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TopicStatsItem"
+          }
+        }
+      },
+      "required": [
+        "assessment_version",
+        "material_id",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "RecommendationEvidence": {
+      "type": "object",
+      "properties": {
+        "attempt_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "chunk_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "valid_response_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "error_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "error_rate": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "attempt_ids",
+        "chunk_ids",
+        "valid_response_count",
+        "error_count",
+        "error_rate"
+      ],
+      "additionalProperties": false
+    },
+    "ConfidenceLimit": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ]
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "maxLength": 500
+          }
+        }
+      },
+      "required": [
+        "level",
+        "limitations"
+      ],
+      "additionalProperties": false
+    },
+    "RevisionRecommendation": {
+      "type": "object",
+      "properties": {
+        "assessment_version": {
+          "const": "1.0.0"
+        },
+        "recommendation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "user_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 120
+        },
+        "priority": {
+          "enum": [
+            0.1,
+            0.5,
+            1
+          ]
+        },
+        "suggested_minutes": {
+          "type": "integer",
+          "minimum": 15,
+          "maximum": 240
+        },
+        "reason_summary": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "evidence": {
+          "$ref": "#/$defs/RecommendationEvidence"
+        },
+        "confidence_limit": {
+          "$ref": "#/$defs/ConfidenceLimit"
+        },
+        "pending_action_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "candidate_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "PROPOSED",
+            "ACCEPTED",
+            "REJECTED"
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        }
+      },
+      "required": [
+        "assessment_version",
+        "recommendation_id",
+        "user_id",
+        "conversation_id",
+        "material_id",
+        "topic",
+        "priority",
+        "suggested_minutes",
+        "reason_summary",
+        "evidence",
+        "confidence_limit",
+        "pending_action_id",
+        "candidate_id",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "additionalProperties": false
+    },
+    "MaterialUploadRequest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\x00-\\x1f]+$"
+        },
+        "mime_type": {
+          "type": "string",
+          "enum": [
+            "text/plain",
+            "text/markdown",
+            "application/pdf"
+          ]
+        },
+        "content_base64": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 13981016,
+          "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+        },
+        "topics": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "maxLength": 120
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "conversation_id",
+        "filename",
+        "mime_type",
+        "content_base64",
+        "topics"
+      ],
+      "additionalProperties": false
+    },
+    "GenerateQuestionDraftsRequest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 120
+        },
+        "question_type": {
+          "$ref": "#/$defs/QuestionType"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      },
+      "required": [
+        "schema_version",
+        "conversation_id",
+        "material_id",
+        "topic",
+        "question_type",
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "CreateQuizAttemptRequest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "question_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "origin": {
+          "$ref": "#/$defs/QuizAttemptOrigin"
+        },
+        "session_outcome_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "material_id",
+        "question_ids",
+        "origin",
+        "session_outcome_id"
+      ],
+      "additionalProperties": false
+    },
+    "SaveQuizResponseRequest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1"
+        },
+        "selected_option_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S",
+              "maxLength": 32
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "selected_option_id"
+      ],
+      "additionalProperties": false
+    },
+    "SubmitQuizAttemptRequest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1"
+        }
+      },
+      "required": [
+        "schema_version"
+      ],
+      "additionalProperties": false
+    },
+    "CreateRevisionRecommendationRequest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 120
+        },
+        "suggested_minutes": {
+          "type": "integer",
+          "minimum": 15,
+          "maximum": 240
+        },
+        "priority": {
+          "enum": [
+            0.1,
+            0.5,
+            1
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "conversation_id",
+        "material_id",
+        "topic",
+        "suggested_minutes",
+        "priority"
+      ],
+      "additionalProperties": false
+    },
+    "StoreMaterialArguments": {
+      "type": "object",
+      "properties": {
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\x00-\\x1f]+$"
+        },
+        "mime_type": {
+          "type": "string",
+          "enum": [
+            "text/plain",
+            "text/markdown",
+            "application/pdf"
+          ]
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10485760
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "page_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "char_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500000
+        },
+        "topics": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "maxLength": 120
+          }
+        },
+        "chunks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 500,
+          "items": {
+            "$ref": "#/$defs/MaterialChunk"
+          }
+        }
+      },
+      "required": [
+        "conversation_id",
+        "material_id",
+        "filename",
+        "mime_type",
+        "size_bytes",
+        "sha256",
+        "page_count",
+        "char_count",
+        "topics",
+        "chunks"
+      ],
+      "additionalProperties": false
+    },
+    "MaterialLookupArguments": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "material_id",
+        "conversation_id"
+      ],
+      "additionalProperties": false
+    },
+    "AssessmentMaterialDetailData": {
+      "type": "object",
+      "properties": {
+        "material": {
+          "$ref": "#/$defs/LearningMaterial"
+        },
+        "chunks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MaterialChunk"
+          }
+        }
+      },
+      "required": [
+        "material",
+        "chunks"
+      ],
+      "additionalProperties": false
+    },
+    "AssessmentMaterialResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "enum": [
+                "READ",
+                "COMMITTED"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/LearningMaterial"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "AssessmentMaterialDetailResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "enum": [
+                "READ",
+                "COMMITTED"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/AssessmentMaterialDetailData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "SearchMaterialChunksArguments": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "topic": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S",
+              "maxLength": 120
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "query": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S",
+              "maxLength": 200
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        }
+      },
+      "required": [
+        "material_id",
+        "topic",
+        "query",
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+    "MaterialChunkSearchData": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MaterialChunk"
+          }
+        }
+      },
+      "required": [
+        "material_id",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "MaterialChunkSearchResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "enum": [
+                "READ"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/MaterialChunkSearchData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "CreateQuestionDraftsArguments": {
+      "type": "object",
+      "properties": {
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "drafts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/QuestionDraft"
+          }
+        },
+        "action_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "generation_params": {
+          "type": "object",
+          "properties": {
+            "topic": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S",
+              "maxLength": 120
+            },
+            "question_type": {
+              "$ref": "#/$defs/QuestionType"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            }
+          },
+          "required": [
+            "topic",
+            "question_type",
+            "count"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "conversation_id",
+        "material_id",
+        "drafts"
+      ],
+      "additionalProperties": false
+    },
+    "VerifyQuestionDraftsArguments": {
+      "type": "object",
+      "properties": {
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "action_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expected_action_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "question_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "APPROVE",
+            "REJECT"
+          ]
+        }
+      },
+      "required": [
+        "conversation_id",
+        "action_id",
+        "expected_action_version",
+        "question_ids",
+        "decision"
+      ],
+      "additionalProperties": false
+    },
+    "QuestionDraftBatchData": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/QuestionDraft"
+          }
+        },
+        "source_chunks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/MaterialChunk"
+          }
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "QuestionDraftBatchResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "enum": [
+                "DRAFTED",
+                "COMMITTED",
+                "REJECTED"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/QuestionDraftBatchData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "ListQuestionsArguments": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "topic": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S",
+              "maxLength": 120
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/QuestionDraftStatus"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "page_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "cursor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S",
+              "maxLength": 512
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "material_id",
+        "topic",
+        "status",
+        "page_size",
+        "cursor"
+      ],
+      "additionalProperties": false
+    },
+    "QuestionDraftListData": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/QuestionDraft"
+          }
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S",
+              "maxLength": 512
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "items",
+        "next_cursor"
+      ],
+      "additionalProperties": false
+    },
+    "QuestionDraftListResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "enum": [
+                "READ"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/QuestionDraftListData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "CreateQuizAttemptArguments": {
+      "type": "object",
+      "properties": {
+        "attempt_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "question_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "origin": {
+          "$ref": "#/$defs/QuizAttemptOrigin"
+        },
+        "session_outcome_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "attempt_id",
+        "material_id",
+        "question_ids",
+        "origin",
+        "session_outcome_id"
+      ],
+      "additionalProperties": false
+    },
+    "QuizAttemptResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "enum": [
+                "READ",
+                "COMMITTED"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/QuizAttempt"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "SaveQuizResponseArguments": {
+      "type": "object",
+      "properties": {
+        "attempt_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "question_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "selected_option_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S",
+              "maxLength": 32
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "validity": {
+          "$ref": "#/$defs/QuizResponseValidity"
+        }
+      },
+      "required": [
+        "attempt_id",
+        "question_id",
+        "selected_option_id",
+        "validity"
+      ],
+      "additionalProperties": false
+    },
+    "QuizResponseResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "enum": [
+                "COMMITTED"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/QuizResponse"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "SubmitQuizAttemptArguments": {
+      "type": "object",
+      "properties": {
+        "attempt_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "graded_responses": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/QuizResponse"
+          }
+        },
+        "valid_response_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50
+        },
+        "correct_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50
+        },
+        "incorrect_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50
+        },
+        "omitted_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50
+        },
+        "score_percent": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "submitted_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d{1,6})?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$"
+        }
+      },
+      "required": [
+        "attempt_id",
+        "graded_responses",
+        "valid_response_count",
+        "correct_count",
+        "incorrect_count",
+        "omitted_count",
+        "score_percent",
+        "submitted_at"
+      ],
+      "additionalProperties": false
+    },
+    "QuizAttemptSubmissionData": {
+      "type": "object",
+      "properties": {
+        "attempt": {
+          "$ref": "#/$defs/QuizAttempt"
+        },
+        "responses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QuizResponse"
+          }
+        }
+      },
+      "required": [
+        "attempt",
+        "responses"
+      ],
+      "additionalProperties": false
+    },
+    "QuizAttemptSubmissionResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "enum": [
+                "COMMITTED"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/QuizAttemptSubmissionData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "GetTopicStatsArguments": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "material_id"
+      ],
+      "additionalProperties": false
+    },
+    "TopicStatsResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "enum": [
+                "READ"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/TopicStatsData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "CreateRevisionRecommendationArguments": {
+      "type": "object",
+      "properties": {
+        "recommendation": {
+          "$ref": "#/$defs/RevisionRecommendation"
+        }
+      },
+      "required": [
+        "recommendation"
+      ],
+      "additionalProperties": false
+    },
+    "RevisionRecommendationResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "enum": [
+                "PROPOSED",
+                "COMMITTED"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/RevisionRecommendation"
             },
             "error": {
               "type": "null"

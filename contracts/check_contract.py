@@ -180,6 +180,25 @@ def semantic_errors(value, path='$'):
             fail('non-proposal presentation cannot contain schedule confirmation data')
         if value['proposal'] is not None and confirmation != value['proposal']['payload']['schedule_confirmation']:
             fail('proposal presentation must expose the exact persisted schedule confirmation')
+        drafts_batch = value.get('question_drafts')
+        if action['intent'] == 'VERIFY_QUESTION_DRAFTS':
+            if not isinstance(drafts_batch, dict) or not drafts_batch.get('items') or not drafts_batch.get('source_chunks'):
+                fail('VERIFY_QUESTION_DRAFTS presentation must include non-empty question_drafts items and source_chunks')
+            else:
+                cited_ids = set()
+                for item in drafts_batch['items']:
+                    if item.get('user_id') != action['user_id'] or item.get('conversation_id') != action['conversation_id']:
+                        fail('presented question_drafts must match pending action owner and conversation')
+                    cited_ids.update(item.get('source_chunk_ids') or [])
+                chunk_ids = [c.get('chunk_id') for c in drafts_batch['source_chunks'] if isinstance(c, dict)]
+                if len(chunk_ids) != len(set(chunk_ids)):
+                    fail('presented question_drafts source_chunks must be unique')
+                if any(c.get('user_id') != action['user_id'] for c in drafts_batch['source_chunks'] if isinstance(c, dict)):
+                    fail('presented question_drafts source_chunks must match pending action owner')
+                if set(chunk_ids) != cited_ids:
+                    fail('presented question_drafts source_chunks must match exact cited source_chunk_ids')
+        elif drafts_batch is not None:
+            fail('non-assessment presentation cannot contain question_drafts')
     if value.get('state') == 'AWAITING_APPROVAL' and 'result' in value:
         result = value['result']
         if result['outcome'] not in {'DRAFTED', 'PROPOSED'}:
@@ -284,6 +303,67 @@ def semantic_errors(value, path='$'):
                 fail('active_action must be in an awaiting state')
         if isinstance(value.get('source_message'), dict) and value['source_message'].get('conversation_id') != conv_id:
             fail('source_message must belong to the requested conversation_id')
+    if {'assessment_version', 'material_id', 'topics', 'status', 'error_code'} <= set(value):
+        if value['status'] == 'READY' and value.get('error_code') is not None:
+            fail('READY material cannot have an error_code')
+        if value['status'] == 'FAILED' and value.get('error_code') is None:
+            fail('FAILED material requires an error_code')
+    if {'question_id', 'question_type', 'options', 'answer_key', 'source_chunk_ids', 'status', 'verified_at'} <= set(value):
+        option_ids = [opt['option_id'] for opt in value['options'] if isinstance(opt, dict) and 'option_id' in opt]
+        if len(option_ids) != len(set(option_ids)):
+            fail('question options must have unique option_ids')
+        if value['answer_key'] not in option_ids:
+            fail('answer_key must match one of the question options')
+        if value['question_type'] == 'TRUE_FALSE' and set(option_ids) != {'TRUE', 'FALSE'}:
+            fail('TRUE_FALSE question must have exact option_ids TRUE and FALSE')
+        if (value['status'] == 'VERIFIED') != (value['verified_at'] is not None):
+            fail('verified_at must be present iff question status is VERIFIED')
+    if 'origin' in value and 'session_outcome_id' in value:
+        if value['origin'] == 'MANUAL' and value['session_outcome_id'] is not None:
+            fail('MANUAL quiz attempt cannot have a session_outcome_id')
+        if value['origin'] == 'SESSION_HANDOFF' and value['session_outcome_id'] is None:
+            fail('SESSION_HANDOFF quiz attempt requires a session_outcome_id')
+    if {'attempt_id', 'question_ids', 'total_questions', 'status', 'valid_response_count',
+            'correct_count', 'incorrect_count', 'omitted_count', 'score_percent', 'started_at', 'submitted_at'} <= set(value):
+        if value['total_questions'] != len(value['question_ids']):
+            fail('total_questions must match question_ids length')
+        if value['status'] == 'IN_PROGRESS':
+            if value['submitted_at'] is not None or value['score_percent'] is not None:
+                fail('IN_PROGRESS attempt cannot have submitted_at or score_percent')
+            if any(value[k] != 0 for k in ('valid_response_count', 'correct_count', 'incorrect_count', 'omitted_count')):
+                fail('IN_PROGRESS attempt must have zeroed grading counts')
+        if value['status'] == 'SUBMITTED':
+            if value['submitted_at'] is None:
+                fail('SUBMITTED attempt requires submitted_at')
+            elif instant(value['submitted_at']) < instant(value['started_at']):
+                fail('submitted_at cannot precede started_at')
+            if value['correct_count'] + value['incorrect_count'] != value['valid_response_count']:
+                fail('correct_count + incorrect_count must equal valid_response_count')
+            if value['valid_response_count'] + value['omitted_count'] != value['total_questions']:
+                fail('valid_response_count + omitted_count must equal total_questions')
+            if (value['valid_response_count'] == 0) != (value['score_percent'] is None):
+                fail('score_percent must be null iff valid_response_count is 0')
+    if {'response_id', 'attempt_id', 'question_id', 'selected_option_id', 'validity', 'is_correct', 'graded_at'} <= set(value):
+        if value['validity'] in {'OMITTED', 'INVALID'} and value['is_correct'] is not None:
+            fail('omitted or invalid response must have is_correct=null and never count as wrong')
+        if value['validity'] == 'OMITTED' and value['selected_option_id'] is not None:
+            fail('OMITTED response must have selected_option_id=null')
+        if value['validity'] == 'VALID' and value['selected_option_id'] is None:
+            fail('VALID response requires selected_option_id')
+        if value['validity'] == 'VALID' and value['graded_at'] is not None and not isinstance(value['is_correct'], bool):
+            fail('graded VALID response requires boolean is_correct')
+    if {'material_id', 'topic', 'status', 'valid_response_count', 'error_count', 'error_rate', 'last_attempt_at'} <= set(value):
+        if value['valid_response_count'] == 0:
+            if value['status'] != 'INSUFFICIENT_DATA' or value['error_count'] != 0 or value['error_rate'] is not None:
+                fail('zero valid responses must report INSUFFICIENT_DATA with error_count=0 and error_rate=null')
+        else:
+            if value['status'] != 'AVAILABLE' or value['error_rate'] is None:
+                fail('positive valid_response_count must report AVAILABLE with non-null error_rate')
+            if value['error_count'] > value['valid_response_count']:
+                fail('error_count cannot exceed valid_response_count')
+    if {'attempt_ids', 'chunk_ids', 'valid_response_count', 'error_count', 'error_rate'} <= set(value):
+        if value['error_count'] > value['valid_response_count']:
+            fail('recommendation evidence error_count cannot exceed valid_response_count')
     for k, v in value.items():
         errors += semantic_errors(v, f'{path}.{k}')
     return errors
@@ -365,12 +445,24 @@ def main():
         assert interface['arguments_schema'] in definitions and interface['result_schema'] in definitions
         assert interface['llm_callable'] is False
         assert interface['attestation_required'] == (not interface['read_only'])
+    assessment_api = read('assessment-openapi.yaml')
+    check_refs(assessment_api, assessment_api)
+    assert service['extensions']['assessment']['version'] == data['extensions']['assessment']['version'] == assessment_api['info']['version'] == '1.0.0'
+    assert api['x-assessment-contract'] == {'version': '1.0.0', 'document': 'assessment-openapi.yaml'}
+    assert len(assessment_api['paths']) == 9
+    for interface in service['extensions']['assessment']['internal_interfaces']:
+        assert interface['arguments_schema'] in definitions and interface['data_schema'] in definitions and interface['result_schema'] in definitions
+        assert interface['llm_callable'] is False
+        assert interface['attestation_required'] == (not interface['read_only'])
+    for key in ('materials', 'material_chunks', 'question_drafts', 'quiz_attempts', 'quiz_responses', 'revision_recommendations'):
+        assert data['extensions']['assessment'][key]['schema'] in definitions
     try:
         from openapi_spec_validator import validate
     except ImportError as exc:
         raise SystemExit('Install contracts/requirements-check.txt to validate OpenAPI too.') from exc
     validate(api, base_uri=(ROOT / 'openapi.yaml').as_uri())
     validate(ingestion_api, base_uri=(ROOT / 'ingestion-openapi.yaml').as_uri())
+    validate(assessment_api, base_uri=(ROOT / 'assessment-openapi.yaml').as_uri())
     manifest = read('examples/manifest.json')
     for case in manifest['cases']:
         payload = read(case['file'])

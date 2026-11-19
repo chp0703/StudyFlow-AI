@@ -52,10 +52,11 @@ def evaluate_context(
         durations.append((perf_counter() - started) * 1000)
     first = results[0]
     total = sum(item.remaining_minutes for item in first.task_summaries)
-    covered = sum(item.retained_future_minutes + item.newly_scheduled_minutes for item in first.task_summaries)
+    covered = sum(min(item.retained_future_minutes + item.newly_scheduled_minutes, item.remaining_minutes)
+                  for item in first.task_summaries)
     metrics = EvaluationMetrics(
         hard_constraint_violations=len(first.conflicts),
-        scheduled_ratio=(min(covered, total) / total) if total else 1.0,
+        scheduled_ratio=(covered / total) if total else 1.0,
         fully_covered_tasks=sum(item.unallocated_minutes == 0 for item in first.task_summaries),
         unallocated_minutes=sum(item.unallocated_minutes for item in first.task_summaries),
         generated_block_count=len(first.generated_blocks),
