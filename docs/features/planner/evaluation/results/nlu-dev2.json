@@ -19,7 +19,8 @@
       "backend\\app\\f1\\scheduler\\evaluation.py": "919eaf052e28008d5b57869181cd48da884235afebf987580597a280e22e0fca",
       "backend\\app\\nlu\\evaluation.py": "17bb795f2b91c723faf285a46a070f07a9f908c93c58f406b5d749b62ef8ba44",
       "backend\\scripts\\benchmark_f1.py": "ad3a69f6ae14156d053c328a73cc8a8d1b2a21333a1fc7638ee63d07e1c78f68"
-    }
+    },
+    "slot_metrics_rescored_with": "6816b019a8646744c30be241cccbceb77333f37175bb54d3ca6c9f5bd30be5eb"
   },
   "nlu": {
     "ok": true,
@@ -1659,9 +1660,9 @@
         "case_count": 63,
         "intent_sequence_accuracy": 0.9841269841269841,
         "intent_macro_f1": 0.982905982905983,
-        "slot_precision": 0.9620853080568721,
-        "slot_recall": 0.9620853080568721,
-        "slot_micro_f1": 0.9620853080568721,
+        "slot_precision": 0.9641255605381166,
+        "slot_recall": 0.9641255605381166,
+        "slot_micro_f1": 0.9641255605381166,
         "frame_exact_matches": 62,
         "frame_exact_match_rate": 0.9841269841269841,
         "frame_exact_match_wilson_95": [
@@ -6568,9 +6569,9 @@
         "case_count": 63,
         "intent_sequence_accuracy": 0.9841269841269841,
         "intent_macro_f1": 0.982905982905983,
-        "slot_precision": 0.957345971563981,
-        "slot_recall": 0.957345971563981,
-        "slot_micro_f1": 0.957345971563981,
+        "slot_precision": 0.9596412556053812,
+        "slot_recall": 0.9596412556053812,
+        "slot_micro_f1": 0.9596412556053812,
         "frame_exact_matches": 61,
         "frame_exact_match_rate": 0.9682539682539683,
         "frame_exact_match_wilson_95": [
@@ -8229,9 +8230,9 @@
         "case_count": 63,
         "intent_sequence_accuracy": 1.0,
         "intent_macro_f1": 1.0,
-        "slot_precision": 0.995260663507109,
-        "slot_recall": 0.995260663507109,
-        "slot_micro_f1": 0.995260663507109,
+        "slot_precision": 0.9955156950672646,
+        "slot_recall": 0.9955156950672646,
+        "slot_micro_f1": 0.9955156950672646,
         "frame_exact_matches": 62,
         "frame_exact_match_rate": 0.9841269841269841,
         "frame_exact_match_wilson_95": [

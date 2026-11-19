@@ -18,6 +18,8 @@ This directory keeps the evaluation protocol, human-review material and machine-
 
 The development set uses partial assertions and must not be called exact match. The candidate set is strict after documented equivalences: missing SEARCH_TASKS `query`/`status_filter` equals `null`/`[]`, and optional display-only `window.label` is ignored. Other extra slots are false positives. `raw_expressions` is excluded from semantic scoring; model output must still pass the contract. A 95/100 point estimate has a Wilson lower bound near 88.8%, so it must not be described as proof that population accuracy is at least 95%.
 
+Slot metrics count `null`, `[]`, and `{}` as values after the same normalization used for frame exact match. The three exact-scored result files were rescored from their saved predictions after correcting this rule; `slot_metrics_rescored_with` identifies the scorer, while `source_sha256` still identifies the original live run. No model calls were repeated.
+
 ## Reproduction
 
 ```powershell
