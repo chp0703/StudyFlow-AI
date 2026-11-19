@@ -190,6 +190,7 @@ class QuizGradingUnitTests(unittest.TestCase):
         self.assertEqual(graded_attempt["incorrect_count"], 1)
         self.assertEqual(graded_attempt["omitted_count"], 2)
         self.assertEqual(graded_attempt["score_percent"], 50)
+        self.assertIs(type(graded_attempt["score_percent"]), int)
         self.assertEqual(graded_attempt["submitted_at"], STAMP)
 
         by_qid = {r["question_id"]: r for r in result["responses"]}
@@ -253,6 +254,30 @@ class QuizGradingUnitTests(unittest.TestCase):
         )
         self.assertTrue(contract.is_valid("QuizAttemptSubmissionData", result))
         self.assertEqual(result["attempt"]["score_percent"], 66.67)
+
+    def test_grade_attempt_half_up_rounding_to_two_decimals(self):
+        qids = [f"00000000-0000-4000-8000-{i + 1:012d}" for i in range(32)]
+        questions = {qid: _mcq_question(qid, answer_key="B") for qid in qids}
+        for correct_count, expected_score in ((1, 3.13), (25, 78.13)):
+            with self.subTest(correct_count=correct_count):
+                attempt = _attempt(qids)
+                responses = {
+                    qid: {"selected_option_id": "B" if idx < correct_count else "A"}
+                    for idx, qid in enumerate(qids)
+                }
+                result = grade_attempt(
+                    attempt=attempt,
+                    questions_by_id=questions,
+                    responses_by_qid=responses,
+                    submitted_at=STAMP,
+                )
+                self.assertTrue(contract.is_valid("QuizAttemptSubmissionData", result))
+                graded_attempt = result["attempt"]
+                self.assertEqual(graded_attempt["valid_response_count"], 32)
+                self.assertEqual(graded_attempt["correct_count"], correct_count)
+                self.assertEqual(graded_attempt["incorrect_count"], 32 - correct_count)
+                self.assertEqual(graded_attempt["omitted_count"], 0)
+                self.assertEqual(graded_attempt["score_percent"], expected_score)
 
     def test_grade_attempt_rejects_draft_or_rejected_question(self):
         for bad_status in ("DRAFT", "REJECTED"):

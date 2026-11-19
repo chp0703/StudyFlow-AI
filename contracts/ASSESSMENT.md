@@ -33,3 +33,23 @@ generated SQL contract bundle.
 
 See [docs/features/assessment/schema.md](../docs/features/assessment/schema.md)
 for full entity definitions, state transitions and consumer impact analysis.
+
+
+## B7 runtime
+
+Creation and decisions return server-issued ActionPresentation with optional
+`revision_recommendation` and `revision_source_chunks`; both are required for B7
+and preserved for its linked CREATE_TASK. See the assessment feature README for
+the 50-attempt window, LOW confidence, structured candidate review and separate F1
+confirmation. CreateRevisionRecommendationArguments now accepts stable inputs and
+server IDs instead of a caller-supplied recommendation: `priority` and
+`suggested_minutes` are user choices, while evidence, owner and state are derived
+in the database. `decide_revision_recommendation` is a signed internal RPC.
+
+Replaying a completed recommendation-create request with the same
+`Idempotency-Key` returns the original `ActionPresentation` and
+`ActionReference` with `Idempotency-Replayed: true`, even after a decision has
+already transitioned the action. Clients must use
+`POST /v1/actions/{action_id}/review` to inspect the current awaiting action
+status (concluded actions return `409`); a decision request sent with a fresh
+`Idempotency-Key` and an old `ActionReference` is denied (`409`).

@@ -766,7 +766,7 @@
         },
         "responses": {
           "200": {
-            "description": "Revision recommendation prepared with PendingAction awaiting confirmation via POST /v1/decisions.",
+            "description": "Immutable evidence-backed recommendation awaiting UI decision. APPROVE creates a Planner task draft; task and plan confirmations are separate.",
             "content": {
               "application/json": {
                 "schema": {
