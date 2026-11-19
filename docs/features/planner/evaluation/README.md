@@ -52,7 +52,7 @@ Run live datasets sequentially; one concurrent attempt hit provider errors and w
 
 ## Results
 
-Offline scheduler evidence was generated from clean commits. NLU live results are in the section below and in `results/nlu-*.json`. The five refreshed reports retain `39aa48f` as the clean run commit, although that commit left the branch history after a rebase. `git diff --exit-code 39aa48f 804dd113 -- backend/app/f1/scheduler backend/app/nlu backend/app/orchestrator/chat.py backend/scripts/benchmark_f1.py backend/scripts/benchmark_scheduler_quality.py backend/tests/fixtures/nlu_*.json` found no changes in the evaluation code or inputs; the recorded source and prompt hashes also match the rebased worktree. The `git_commit` fields describe when the measurements ran, not the current branch head.
+Offline scheduler evidence was generated from clean commits. NLU live results are in the section below and in `results/nlu-*.json`. The five refreshed reports retain `39aa48f` as the clean run commit, although that commit left the branch history after a rebase; it is kept reachable as the tag `eval-run-39aa48f`. `git diff --exit-code 39aa48f 804dd113 -- backend/app/f1/scheduler backend/app/nlu backend/app/orchestrator/chat.py backend/scripts/benchmark_f1.py backend/scripts/benchmark_scheduler_quality.py backend/tests/fixtures/nlu_*.json` found no changes in the evaluation code or inputs; the recorded source and prompt hashes also match the rebased worktree. The `git_commit` fields describe when the measurements ran, not the current branch head.
 
 | Scheduler workload | Scheduled ratio | Mean | p50 | p95 | p99 |
 |---|---:|---:|---:|---:|---:|
