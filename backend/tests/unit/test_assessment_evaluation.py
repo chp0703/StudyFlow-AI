@@ -26,6 +26,16 @@ class GradingOracleTests(unittest.TestCase):
         self.assertEqual(got, {"valid_response_count": 2, "correct_count": 1, "incorrect_count": 1,
                                "omitted_count": 2, "score_percent": 50.0})
 
+    def test_oracle_rounds_half_up_like_postgres(self):
+        def score(correct: int, valid: int):
+            ids = [f"q{i}" for i in range(valid)]
+            picked = {q: ("X" if i < correct else "Y") for i, q in enumerate(ids)}
+            return ev.oracle_grade(ids, {q: "X" for q in ids}, {q: {"X", "Y"} for q in ids}, picked)["score_percent"]
+        self.assertEqual(score(1, 32), 3.13)  # 3.125: Python round() gives 3.12
+        self.assertEqual(score(1, 3), 33.33)
+        self.assertEqual(score(2, 3), 66.67)
+        self.assertEqual(score(3, 4), 75)
+
 
 class RankingTests(unittest.TestCase):
     def test_ranking_metrics(self):

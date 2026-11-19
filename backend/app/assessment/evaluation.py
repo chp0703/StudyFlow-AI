@@ -37,7 +37,9 @@ def oracle_grade(question_ids: list[str], answer_keys: dict[str, str], option_id
             continue
         valid += 1
         correct += choice == answer_keys[qid]
-    score = None if valid == 0 else round(correct * 100 / valid, 2)
+    # Half-up to 2 decimals in integer arithmetic, as PostgreSQL round(numeric) does (Python round() is half-even on floats).
+    hundredths = None if valid == 0 else (20000 * correct + valid) // (2 * valid)
+    score = None if hundredths is None else (hundredths // 100 if hundredths % 100 == 0 else hundredths / 100)
     return {"valid_response_count": valid, "correct_count": correct, "incorrect_count": valid - correct,
             "omitted_count": len(question_ids) - valid, "score_percent": score}
 

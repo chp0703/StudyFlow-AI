@@ -484,3 +484,14 @@
 - VMLU chưa chạy vì không công bố giấy phép.
 - Phát hiện cần sửa ở PR riêng: `QUESTION_MAX_TOKENS=2048` không đủ cho `count=10`; tìm kiếm không dấu và câu hỏi tự nhiên trả rỗng; sinh câu hỏi chỉ dùng 12 chunk đầu; đáp án MCQ lệch vị trí.
 - Bổ sung VMLU (dữ liệu do chủ dự án đăng nhập và tải từ vmlu.ai, không commit): `deepseek-flash` đạt 83,6% trên Vi-MQA `valid` (744 câu); sinh 90/90 câu từ 30 đoạn Vi-SQuAD, 89/90 đạt rubric theo một người chấm AI. Judge DeepSeek chạy lại sau khi nạp tiền: hai người chấm AI đồng ý 90/90 về việc câu có đạt hay không (cùng loại câu 40).
+
+## 2026-11-19 — Oracle chấm điểm làm tròn half-up như PostgreSQL
+
+**Mục tiêu:** oracle GRD-C01 phải độc lập với `grade_attempt`; trước đây cả hai cùng dùng `round(x, 2)` của Python (half-even trên float) nên che mất lệch so với PostgreSQL (half-up).
+
+**Đã làm**
+
+- `backend/app/assessment/evaluation.py`: `oracle_grade` làm tròn half-up bằng số nguyên (không dùng `Decimal` để không trùng cách cài của `grade_attempt` ở #57).
+- `backend/tests/unit/test_assessment_evaluation.py`: thêm test `1/32 -> 3.13`, `1/3`, `2/3`, `3/4`.
+
+**Kết quả:** trên mã của #57 (`81dcb1b`), oracle cũ khớp 9957/10000 ca (lệch ở ví dụ 9/32: 28.12 so với 28.13), oracle mới khớp 10000/10000. Chưa chạy lại `results/` và phần `db`; cần làm sau khi #57 vào `main`.
