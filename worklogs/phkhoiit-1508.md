@@ -499,3 +499,21 @@
 - Bước 2 đăng ký khóa ký RPC qua `docker exec` vào container `supabase_db`, đổi hex sang base64 bằng Python.
 
 **Kết quả:** các lệnh này đã được chạy thật trên Windows (Git Bash) và backend gọi `/v1/tasks` thành công với khóa vừa đăng ký.
+
+## 2026-11-19 — Việc nhỏ sau review #57
+
+**Mục tiêu:** xử lý các góp ý nhỏ của review #57 và hai lỗi môi trường đã gặp khi chạy lại evaluation.
+
+**Đã làm**
+
+- `backend/app/clients/rpc.py`: thêm `operation_fingerprint`; `attempts.py` và `questions.py` dùng chung thay vì tự dựng lại dấu vân tay (tránh lệch khi công thức đổi).
+- `backend/tests/integration/test_recommendations_local_supabase.py`: thêm kiểm tra `candidate_patch` không mở lại action đã hoàn tất (409).
+- `backend/tests/integration/check_quiz_attempt_upgrade.py`: gọi Supabase CLI qua `shutil.which` để chạy được trên Windows (`supabase.cmd`).
+- `.gitattributes`: ép LF cho corpus và CSV đánh giá, vì SHA-256 của chúng được ghi trong kết quả.
+
+**Kết quả:** unit 146/146; acceptance `test_question_http` 5/5 và `test_attempt_http` 6/6; integration recommendations 7/7, attempts 3/3; `check_quiz_attempt_upgrade.py` đạt trên Windows. Corpus checkout ra SHA-256 `19f9c3a9…` đúng giá trị đóng băng.
+
+**Ghi chú**
+
+- Góp ý "UNAUTHENTICATED không nên là lỗi thử lại" ở review #57 là sai: lỗi này đến từ chứng thực RPC của backend và cả `actions.py` của F1 xử lý như vậy; không đổi.
+- Chưa làm: quy tắc suy ra `priority`/`suggested_minutes` từ evidence (cần quyết định sản phẩm, migration và pgTAP).

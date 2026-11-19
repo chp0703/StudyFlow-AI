@@ -5,7 +5,7 @@ from __future__ import annotations
 from decimal import Decimal, ROUND_HALF_UP
 from uuid import UUID, uuid5
 
-from ..clients.rpc import child_key, iso
+from ..clients.rpc import child_key, iso, operation_fingerprint
 from ..core import contract
 from ..orchestrator.workflow_ports import WorkflowError
 
@@ -326,13 +326,7 @@ class QuizAttemptOperations:
         return result, replayed
 
     def _lookup_submit_replay(self, ctx, idem_key: str, attempt_id: str) -> dict | None:
-        fingerprint = contract.sha256_hex({
-            "schema_version": "1.1",
-            "user_id": ctx.user_id,
-            "operation": "submit_quiz_attempt",
-            "arguments": {"attempt_id": attempt_id},
-            "decision_binding": None,
-        })
+        fingerprint = operation_fingerprint(ctx.user_id, "submit_quiz_attempt", {"attempt_id": attempt_id})
         lookup = self._call_rpc(
             ctx,
             "lookup_operation_result",

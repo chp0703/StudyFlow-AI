@@ -109,6 +109,7 @@ class RevisionLocalTests(unittest.TestCase):
             self.assertEqual(concluded_review.status_code,409,concluded_review.text)
             self.assertEqual(self.decide(app,body,ref).status_code,409)
             self.assertEqual(self.decide(app,body,ready['action_reference']).status_code,409)
+            self.assertEqual(self.f.post(app,f"/v1/actions/{action['action_id']}/review",patch).status_code,409)  # a patch cannot reopen a completed action
             self.assertEqual(self.snapshot(body),after)
             with psycopg.connect(os.environ['F1_DB_TEST_DSN']) as db:
                 self.assertEqual(db.execute('select count(*) from app_private.task_candidates where conversation_id=%s',(body['conversation_id'],)).fetchone()[0],1)

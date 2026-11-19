@@ -11,7 +11,7 @@ from uuid import uuid4
 import httpx
 
 from ..core.config import Settings
-from ..core.contract import canonical
+from ..core.contract import canonical, sha256_hex
 
 CONTRACT_VERSION = "1.0.1"
 SCHEMA_VERSION = "1.1"
@@ -35,6 +35,14 @@ class RpcUnavailable(Exception):
 
 def iso(moment: datetime) -> str:
     return moment.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+
+def operation_fingerprint(user_id: str, operation: str, arguments: dict) -> str:
+    """Dấu vân tay thao tác mà database lưu cùng khóa idempotency; dùng để tra lại kết quả đã lưu."""
+    return sha256_hex({
+        "schema_version": SCHEMA_VERSION, "user_id": user_id, "operation": operation,
+        "arguments": arguments, "decision_binding": None,
+    })
 
 
 def child_key(origin_key: str, step: str) -> str:

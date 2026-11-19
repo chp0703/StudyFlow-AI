@@ -5,3 +5,7 @@
 *.gif filter=lfs diff=lfs merge=lfs -text
 *.ico filter=lfs diff=lfs merge=lfs -text
 
+
+# Evaluation inputs are hashed (SHA-256); keep them byte-identical across platforms.
+backend/tests/fixtures/assessment_eval/*.json text eol=lf
+docs/features/assessment/evaluation/results/annotations/*.csv text eol=lf
