@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "commit": "3f010ef0e3c70c687f3d3a84c63807740635a903",
-    "git_dirty": false,
-    "generated_at": "2026-11-18T09:18:03+00:00",
+    "commit": "6cbd2e0f7c0736428afb9d3a3fabf686a4841fd9",
+    "git_dirty": true,
+    "generated_at": "2026-11-19T03:59:40+00:00",
     "corpus": "backend/tests/fixtures/assessment_eval/corpus_vi.json",
-    "corpus_sha256": "19f9c3a9753263e6828a9d376c675398e453c7be3661c492ac90c7b3a1f51ed0",
+    "corpus_sha256": "46cedb8b36489e67307e88abdfd7955187a59909104b5b95ad1126deaa55b6d4",
     "search_config": "plainto_tsquery('simple') AND-match, ts_rank_cd, limit 20"
   },
   "RET-01": {
@@ -44,10 +44,10 @@
       "kind": "keyword",
       "query": "không gian mẫu",
       "ranked": [
-        "8536fea6-4a79-5103-b08c-0c6c09f30883"
+        "fef52b8c-d67a-5948-a165-3dcfee28f366"
       ],
       "relevant": [
-        "8536fea6-4a79-5103-b08c-0c6c09f30883"
+        "fef52b8c-d67a-5948-a165-3dcfee28f366"
       ]
     },
     {
@@ -56,10 +56,10 @@
       "kind": "natural_question",
       "query": "biến cố xung khắc",
       "ranked": [
-        "8536fea6-4a79-5103-b08c-0c6c09f30883"
+        "fef52b8c-d67a-5948-a165-3dcfee28f366"
       ],
       "relevant": [
-        "8536fea6-4a79-5103-b08c-0c6c09f30883"
+        "fef52b8c-d67a-5948-a165-3dcfee28f366"
       ]
     },
     {
@@ -68,10 +68,10 @@
       "kind": "natural_question",
       "query": "công thức xác suất có điều kiện",
       "ranked": [
-        "b516623e-e658-5c46-b5e2-2a61b5b7b78d"
+        "59acb7a4-6aa8-545a-b476-1d633f9e0c6e"
       ],
       "relevant": [
-        "b516623e-e658-5c46-b5e2-2a61b5b7b78d"
+        "59acb7a4-6aa8-545a-b476-1d633f9e0c6e"
       ]
     },
     {
@@ -81,7 +81,7 @@
       "query": "hai biến cố độc lập là gì",
       "ranked": [],
       "relevant": [
-        "8536fea6-4a79-5103-b08c-0c6c09f30883"
+        "fef52b8c-d67a-5948-a165-3dcfee28f366"
       ]
     },
     {
@@ -91,7 +91,7 @@
       "query": "bien co doi",
       "ranked": [],
       "relevant": [
-        "8536fea6-4a79-5103-b08c-0c6c09f30883"
+        "fef52b8c-d67a-5948-a165-3dcfee28f366"
       ]
     },
     {
@@ -100,10 +100,10 @@
       "kind": "natural_question",
       "query": "rút bài không hoàn lại",
       "ranked": [
-        "b516623e-e658-5c46-b5e2-2a61b5b7b78d"
+        "59acb7a4-6aa8-545a-b476-1d633f9e0c6e"
       ],
       "relevant": [
-        "b516623e-e658-5c46-b5e2-2a61b5b7b78d"
+        "59acb7a4-6aa8-545a-b476-1d633f9e0c6e"
       ]
     },
     {
@@ -112,10 +112,10 @@
       "kind": "natural_question",
       "query": "xác suất cổ điển",
       "ranked": [
-        "8536fea6-4a79-5103-b08c-0c6c09f30883"
+        "fef52b8c-d67a-5948-a165-3dcfee28f366"
       ],
       "relevant": [
-        "8536fea6-4a79-5103-b08c-0c6c09f30883"
+        "fef52b8c-d67a-5948-a165-3dcfee28f366"
       ]
     },
     {
@@ -124,10 +124,10 @@
       "kind": "natural_question",
       "query": "công thức cộng mở rộng",
       "ranked": [
-        "8536fea6-4a79-5103-b08c-0c6c09f30883"
+        "fef52b8c-d67a-5948-a165-3dcfee28f366"
       ],
       "relevant": [
-        "8536fea6-4a79-5103-b08c-0c6c09f30883"
+        "fef52b8c-d67a-5948-a165-3dcfee28f366"
       ]
     },
     {
@@ -136,10 +136,10 @@
       "kind": "natural_question",
       "query": "bắt tay ba bước",
       "ranked": [
-        "399575f3-0ffc-50b5-9227-70a848e0a368"
+        "8ac9e194-b245-5372-8c50-786b98f693fd"
       ],
       "relevant": [
-        "399575f3-0ffc-50b5-9227-70a848e0a368"
+        "8ac9e194-b245-5372-8c50-786b98f693fd"
       ]
     },
     {
@@ -149,7 +149,7 @@
       "query": "phần đầu UDP dài bao nhiêu byte",
       "ranked": [],
       "relevant": [
-        "399575f3-0ffc-50b5-9227-70a848e0a368"
+        "8ac9e194-b245-5372-8c50-786b98f693fd"
       ]
     },
     {
@@ -158,10 +158,10 @@
       "kind": "keyword",
       "query": "số hiệu cổng",
       "ranked": [
-        "399575f3-0ffc-50b5-9227-70a848e0a368"
+        "8ac9e194-b245-5372-8c50-786b98f693fd"
       ],
       "relevant": [
-        "399575f3-0ffc-50b5-9227-70a848e0a368"
+        "8ac9e194-b245-5372-8c50-786b98f693fd"
       ]
     },
     {
@@ -170,11 +170,11 @@
       "kind": "natural_question",
       "query": "điều khiển tắc nghẽn",
       "ranked": [
-        "399575f3-0ffc-50b5-9227-70a848e0a368",
-        "d32109ba-5b33-5f5d-b89b-620ed4473e0e"
+        "8ac9e194-b245-5372-8c50-786b98f693fd",
+        "28375f2d-2487-5147-ba06-c371da4c0da3"
       ],
       "relevant": [
-        "399575f3-0ffc-50b5-9227-70a848e0a368"
+        "8ac9e194-b245-5372-8c50-786b98f693fd"
       ]
     },
     {
@@ -183,10 +183,10 @@
       "kind": "keyword",
       "query": "DNS",
       "ranked": [
-        "d32109ba-5b33-5f5d-b89b-620ed4473e0e"
+        "28375f2d-2487-5147-ba06-c371da4c0da3"
       ],
       "relevant": [
-        "d32109ba-5b33-5f5d-b89b-620ed4473e0e"
+        "28375f2d-2487-5147-ba06-c371da4c0da3"
       ]
     },
     {
@@ -196,7 +196,7 @@
       "query": "giao thuc khong ket noi",
       "ranked": [],
       "relevant": [
-        "399575f3-0ffc-50b5-9227-70a848e0a368"
+        "8ac9e194-b245-5372-8c50-786b98f693fd"
       ]
     },
     {
@@ -206,7 +206,7 @@
       "query": "vì sao TCP tin cậy",
       "ranked": [],
       "relevant": [
-        "399575f3-0ffc-50b5-9227-70a848e0a368"
+        "8ac9e194-b245-5372-8c50-786b98f693fd"
       ]
     },
     {
@@ -215,11 +215,11 @@
       "kind": "natural_question",
       "query": "ứng dụng thời gian thực",
       "ranked": [
-        "d32109ba-5b33-5f5d-b89b-620ed4473e0e",
-        "399575f3-0ffc-50b5-9227-70a848e0a368"
+        "28375f2d-2487-5147-ba06-c371da4c0da3",
+        "8ac9e194-b245-5372-8c50-786b98f693fd"
       ],
       "relevant": [
-        "d32109ba-5b33-5f5d-b89b-620ed4473e0e"
+        "28375f2d-2487-5147-ba06-c371da4c0da3"
       ]
     },
     {
@@ -228,10 +228,10 @@
       "kind": "keyword",
       "query": "Kiều Công Tiễn",
       "ranked": [
-        "ab77a9b9-3269-5548-8a92-8da080bf3adc"
+        "8765a986-1fe9-546f-b0a3-2fdc4b6c8d41"
       ],
       "relevant": [
-        "ab77a9b9-3269-5548-8a92-8da080bf3adc"
+        "8765a986-1fe9-546f-b0a3-2fdc4b6c8d41"
       ]
     },
     {
@@ -240,11 +240,11 @@
       "kind": "keyword",
       "query": "bãi cọc ngầm",
       "ranked": [
-        "ab77a9b9-3269-5548-8a92-8da080bf3adc",
-        "30e6dc2e-eaf2-5cd1-87b4-0dc93d8143c7"
+        "8765a986-1fe9-546f-b0a3-2fdc4b6c8d41",
+        "53722c2e-58ad-5410-8586-ffa5620d9e91"
       ],
       "relevant": [
-        "ab77a9b9-3269-5548-8a92-8da080bf3adc"
+        "8765a986-1fe9-546f-b0a3-2fdc4b6c8d41"
       ]
     },
     {
@@ -253,10 +253,10 @@
       "kind": "natural_question",
       "query": "ý nghĩa chiến thắng Bạch Đằng",
       "ranked": [
-        "ab77a9b9-3269-5548-8a92-8da080bf3adc"
+        "8765a986-1fe9-546f-b0a3-2fdc4b6c8d41"
       ],
       "relevant": [
-        "ab77a9b9-3269-5548-8a92-8da080bf3adc"
+        "8765a986-1fe9-546f-b0a3-2fdc4b6c8d41"
       ]
     },
     {
@@ -266,7 +266,7 @@
       "query": "Ngô Quyền đóng đô ở đâu",
       "ranked": [],
       "relevant": [
-        "30e6dc2e-eaf2-5cd1-87b4-0dc93d8143c7"
+        "53722c2e-58ad-5410-8586-ffa5620d9e91"
       ]
     },
     {
@@ -276,7 +276,7 @@
       "query": "Luu Hoang Thao",
       "ranked": [],
       "relevant": [
-        "ab77a9b9-3269-5548-8a92-8da080bf3adc"
+        "8765a986-1fe9-546f-b0a3-2fdc4b6c8d41"
       ]
     },
     {
@@ -285,11 +285,11 @@
       "kind": "keyword",
       "query": "thủy triều",
       "ranked": [
-        "ab77a9b9-3269-5548-8a92-8da080bf3adc",
-        "30e6dc2e-eaf2-5cd1-87b4-0dc93d8143c7"
+        "8765a986-1fe9-546f-b0a3-2fdc4b6c8d41",
+        "53722c2e-58ad-5410-8586-ffa5620d9e91"
       ],
       "relevant": [
-        "ab77a9b9-3269-5548-8a92-8da080bf3adc"
+        "8765a986-1fe9-546f-b0a3-2fdc4b6c8d41"
       ]
     },
     {
@@ -298,10 +298,10 @@
       "kind": "keyword",
       "query": "Khúc Thừa Dụ",
       "ranked": [
-        "ab77a9b9-3269-5548-8a92-8da080bf3adc"
+        "8765a986-1fe9-546f-b0a3-2fdc4b6c8d41"
       ],
       "relevant": [
-        "ab77a9b9-3269-5548-8a92-8da080bf3adc"
+        "8765a986-1fe9-546f-b0a3-2fdc4b6c8d41"
       ]
     },
     {
@@ -310,10 +310,10 @@
       "kind": "natural_question",
       "query": "Dương Đình Nghệ khởi binh",
       "ranked": [
-        "ab77a9b9-3269-5548-8a92-8da080bf3adc"
+        "8765a986-1fe9-546f-b0a3-2fdc4b6c8d41"
       ],
       "relevant": [
-        "ab77a9b9-3269-5548-8a92-8da080bf3adc"
+        "8765a986-1fe9-546f-b0a3-2fdc4b6c8d41"
       ]
     },
     {
@@ -322,11 +322,11 @@
       "kind": "keyword",
       "query": "khí khổng",
       "ranked": [
-        "4b86f99c-11e2-5a42-8c27-30f4eb40e79a",
-        "6cd7e243-63bf-5e87-bd62-3a84f1b793d2"
+        "efd1f101-8310-53e1-8f19-3a086127ce2c",
+        "fcfea4bc-17c8-5bcd-a92f-6c124e3b4e0f"
       ],
       "relevant": [
-        "6cd7e243-63bf-5e87-bd62-3a84f1b793d2"
+        "fcfea4bc-17c8-5bcd-a92f-6c124e3b4e0f"
       ]
     },
     {
@@ -336,7 +336,7 @@
       "query": "ôxi giải phóng có nguồn gốc từ đâu",
       "ranked": [],
       "relevant": [
-        "6cd7e243-63bf-5e87-bd62-3a84f1b793d2"
+        "fcfea4bc-17c8-5bcd-a92f-6c124e3b4e0f"
       ]
     },
     {
@@ -345,10 +345,10 @@
       "kind": "keyword",
       "query": "chu trình Canvin",
       "ranked": [
-        "6cd7e243-63bf-5e87-bd62-3a84f1b793d2"
+        "fcfea4bc-17c8-5bcd-a92f-6c124e3b4e0f"
       ],
       "relevant": [
-        "6cd7e243-63bf-5e87-bd62-3a84f1b793d2"
+        "fcfea4bc-17c8-5bcd-a92f-6c124e3b4e0f"
       ]
     },
     {
@@ -357,10 +357,10 @@
       "kind": "natural_question",
       "query": "điểm bão hòa ánh sáng",
       "ranked": [
-        "6cd7e243-63bf-5e87-bd62-3a84f1b793d2"
+        "fcfea4bc-17c8-5bcd-a92f-6c124e3b4e0f"
       ],
       "relevant": [
-        "6cd7e243-63bf-5e87-bd62-3a84f1b793d2"
+        "fcfea4bc-17c8-5bcd-a92f-6c124e3b4e0f"
       ]
     },
     {
@@ -370,7 +370,7 @@
       "query": "luc lap",
       "ranked": [],
       "relevant": [
-        "6cd7e243-63bf-5e87-bd62-3a84f1b793d2"
+        "fcfea4bc-17c8-5bcd-a92f-6c124e3b4e0f"
       ]
     },
     {
@@ -380,7 +380,7 @@
       "query": "pha sáng diễn ra ở đâu",
       "ranked": [],
       "relevant": [
-        "6cd7e243-63bf-5e87-bd62-3a84f1b793d2"
+        "fcfea4bc-17c8-5bcd-a92f-6c124e3b4e0f"
       ]
     },
     {
@@ -389,10 +389,10 @@
       "kind": "keyword",
       "query": "carôtenôit",
       "ranked": [
-        "6cd7e243-63bf-5e87-bd62-3a84f1b793d2"
+        "fcfea4bc-17c8-5bcd-a92f-6c124e3b4e0f"
       ],
       "relevant": [
-        "6cd7e243-63bf-5e87-bd62-3a84f1b793d2"
+        "fcfea4bc-17c8-5bcd-a92f-6c124e3b4e0f"
       ]
     },
     {
@@ -401,10 +401,10 @@
       "kind": "natural_question",
       "query": "phương trình tổng quát quang hợp",
       "ranked": [
-        "6cd7e243-63bf-5e87-bd62-3a84f1b793d2"
+        "fcfea4bc-17c8-5bcd-a92f-6c124e3b4e0f"
       ],
       "relevant": [
-        "6cd7e243-63bf-5e87-bd62-3a84f1b793d2"
+        "fcfea4bc-17c8-5bcd-a92f-6c124e3b4e0f"
       ]
     },
     {
@@ -413,10 +413,10 @@
       "kind": "keyword",
       "query": "quán tính",
       "ranked": [
-        "050b29b9-0324-502c-8386-e4ec6751d16d"
+        "efbb7246-39ed-5c66-89e5-0ee59427964e"
       ],
       "relevant": [
-        "050b29b9-0324-502c-8386-e4ec6751d16d"
+        "efbb7246-39ed-5c66-89e5-0ee59427964e"
       ]
     },
     {
@@ -425,11 +425,11 @@
       "kind": "natural_question",
       "query": "lực và phản lực",
       "ranked": [
-        "841e3024-980d-56ea-a4ba-fe81916e55d3",
-        "050b29b9-0324-502c-8386-e4ec6751d16d"
+        "4aae6668-6f5b-5e34-ba98-31c160280775",
+        "efbb7246-39ed-5c66-89e5-0ee59427964e"
       ],
       "relevant": [
-        "841e3024-980d-56ea-a4ba-fe81916e55d3"
+        "4aae6668-6f5b-5e34-ba98-31c160280775"
       ]
     },
     {
@@ -439,7 +439,7 @@
       "query": "1 N là gì",
       "ranked": [],
       "relevant": [
-        "050b29b9-0324-502c-8386-e4ec6751d16d"
+        "efbb7246-39ed-5c66-89e5-0ee59427964e"
       ]
     },
     {
@@ -448,10 +448,10 @@
       "kind": "natural_question",
       "query": "trọng lượng trên Mặt Trăng",
       "ranked": [
-        "050b29b9-0324-502c-8386-e4ec6751d16d"
+        "efbb7246-39ed-5c66-89e5-0ee59427964e"
       ],
       "relevant": [
-        "050b29b9-0324-502c-8386-e4ec6751d16d"
+        "efbb7246-39ed-5c66-89e5-0ee59427964e"
       ]
     },
     {
@@ -461,7 +461,7 @@
       "query": "he quy chieu quan tinh",
       "ranked": [],
       "relevant": [
-        "050b29b9-0324-502c-8386-e4ec6751d16d"
+        "efbb7246-39ed-5c66-89e5-0ee59427964e"
       ]
     },
     {
@@ -471,7 +471,7 @@
       "query": "vì sao hành khách chúi về phía trước khi phanh gấp",
       "ranked": [],
       "relevant": [
-        "050b29b9-0324-502c-8386-e4ec6751d16d"
+        "efbb7246-39ed-5c66-89e5-0ee59427964e"
       ]
     },
     {
@@ -480,10 +480,10 @@
       "kind": "natural_question",
       "query": "biểu thức định luật II",
       "ranked": [
-        "050b29b9-0324-502c-8386-e4ec6751d16d"
+        "efbb7246-39ed-5c66-89e5-0ee59427964e"
       ],
       "relevant": [
-        "050b29b9-0324-502c-8386-e4ec6751d16d"
+        "efbb7246-39ed-5c66-89e5-0ee59427964e"
       ]
     },
     {
@@ -492,10 +492,10 @@
       "kind": "keyword",
       "query": "súng giật lùi",
       "ranked": [
-        "841e3024-980d-56ea-a4ba-fe81916e55d3"
+        "4aae6668-6f5b-5e34-ba98-31c160280775"
       ],
       "relevant": [
-        "841e3024-980d-56ea-a4ba-fe81916e55d3"
+        "4aae6668-6f5b-5e34-ba98-31c160280775"
       ]
     },
     {
@@ -504,10 +504,10 @@
       "kind": "natural_question",
       "query": "quy tắc bát tử",
       "ranked": [
-        "6290aeae-0d78-5f70-8103-dadad4527505"
+        "15184f8f-ad4f-540f-8997-df7011de1df8"
       ],
       "relevant": [
-        "6290aeae-0d78-5f70-8103-dadad4527505"
+        "15184f8f-ad4f-540f-8997-df7011de1df8"
       ]
     },
     {
@@ -517,7 +517,7 @@
       "query": "liên kết ion hình thành như thế nào",
       "ranked": [],
       "relevant": [
-        "6290aeae-0d78-5f70-8103-dadad4527505"
+        "15184f8f-ad4f-540f-8997-df7011de1df8"
       ]
     },
     {
@@ -526,10 +526,10 @@
       "kind": "natural_question",
       "query": "độ âm điện lớn nhất",
       "ranked": [
-        "6290aeae-0d78-5f70-8103-dadad4527505"
+        "15184f8f-ad4f-540f-8997-df7011de1df8"
       ],
       "relevant": [
-        "6290aeae-0d78-5f70-8103-dadad4527505"
+        "15184f8f-ad4f-540f-8997-df7011de1df8"
       ]
     },
     {
@@ -539,7 +539,7 @@
       "query": "lien ket cong hoa tri co cuc",
       "ranked": [],
       "relevant": [
-        "6290aeae-0d78-5f70-8103-dadad4527505"
+        "15184f8f-ad4f-540f-8997-df7011de1df8"
       ]
     },
     {
@@ -548,10 +548,10 @@
       "kind": "natural_question",
       "query": "hiệu độ âm điện",
       "ranked": [
-        "6290aeae-0d78-5f70-8103-dadad4527505"
+        "15184f8f-ad4f-540f-8997-df7011de1df8"
       ],
       "relevant": [
-        "6290aeae-0d78-5f70-8103-dadad4527505"
+        "15184f8f-ad4f-540f-8997-df7011de1df8"
       ]
     },
     {
@@ -560,10 +560,10 @@
       "kind": "keyword",
       "query": "nước sôi cao",
       "ranked": [
-        "51f128cc-b921-50c5-b53e-5132a1601f55"
+        "6e504909-582c-5b9c-9691-fffd17bec49e"
       ],
       "relevant": [
-        "51f128cc-b921-50c5-b53e-5132a1601f55"
+        "6e504909-582c-5b9c-9691-fffd17bec49e"
       ]
     },
     {
@@ -572,10 +572,10 @@
       "kind": "natural_question",
       "query": "liên kết ba trong N2",
       "ranked": [
-        "6290aeae-0d78-5f70-8103-dadad4527505"
+        "15184f8f-ad4f-540f-8997-df7011de1df8"
       ],
       "relevant": [
-        "6290aeae-0d78-5f70-8103-dadad4527505"
+        "15184f8f-ad4f-540f-8997-df7011de1df8"
       ]
     },
     {
@@ -584,10 +584,10 @@
       "kind": "keyword",
       "query": "NaCl",
       "ranked": [
-        "6290aeae-0d78-5f70-8103-dadad4527505"
+        "15184f8f-ad4f-540f-8997-df7011de1df8"
       ],
       "relevant": [
-        "6290aeae-0d78-5f70-8103-dadad4527505"
+        "15184f8f-ad4f-540f-8997-df7011de1df8"
       ]
     },
     {
@@ -596,10 +596,10 @@
       "kind": "keyword",
       "query": "quy luật cầu",
       "ranked": [
-        "1ab6e85d-3f88-5a7a-9520-4815374ba363"
+        "f9e4e1d4-4a1c-5a6d-92e7-64dbae5dca1c"
       ],
       "relevant": [
-        "1ab6e85d-3f88-5a7a-9520-4815374ba363"
+        "f9e4e1d4-4a1c-5a6d-92e7-64dbae5dca1c"
       ]
     },
     {
@@ -608,10 +608,10 @@
       "kind": "natural_question",
       "query": "hàng hóa thay thế",
       "ranked": [
-        "1ab6e85d-3f88-5a7a-9520-4815374ba363"
+        "f9e4e1d4-4a1c-5a6d-92e7-64dbae5dca1c"
       ],
       "relevant": [
-        "1ab6e85d-3f88-5a7a-9520-4815374ba363"
+        "f9e4e1d4-4a1c-5a6d-92e7-64dbae5dca1c"
       ]
     },
     {
@@ -621,7 +621,7 @@
       "query": "giá cân bằng là gì",
       "ranked": [],
       "relevant": [
-        "1ab6e85d-3f88-5a7a-9520-4815374ba363"
+        "f9e4e1d4-4a1c-5a6d-92e7-64dbae5dca1c"
       ]
     },
     {
@@ -631,7 +631,7 @@
       "query": "gia tran",
       "ranked": [],
       "relevant": [
-        "c2f08b4b-b6ad-5a98-86a1-cf1cf5588d98"
+        "342744b2-a7a6-5c92-b064-ef39a9856ecd"
       ]
     },
     {
@@ -641,7 +641,7 @@
       "query": "vì sao đường cung dịch sang phải",
       "ranked": [],
       "relevant": [
-        "1ab6e85d-3f88-5a7a-9520-4815374ba363"
+        "f9e4e1d4-4a1c-5a6d-92e7-64dbae5dca1c"
       ]
     },
     {
@@ -650,10 +650,10 @@
       "kind": "natural_question",
       "query": "dư thừa hàng hóa",
       "ranked": [
-        "1ab6e85d-3f88-5a7a-9520-4815374ba363"
+        "f9e4e1d4-4a1c-5a6d-92e7-64dbae5dca1c"
       ],
       "relevant": [
-        "1ab6e85d-3f88-5a7a-9520-4815374ba363"
+        "f9e4e1d4-4a1c-5a6d-92e7-64dbae5dca1c"
       ]
     },
     {
@@ -662,10 +662,10 @@
       "kind": "natural_question",
       "query": "phân biệt cầu và nhu cầu",
       "ranked": [
-        "1ab6e85d-3f88-5a7a-9520-4815374ba363"
+        "f9e4e1d4-4a1c-5a6d-92e7-64dbae5dca1c"
       ],
       "relevant": [
-        "1ab6e85d-3f88-5a7a-9520-4815374ba363"
+        "f9e4e1d4-4a1c-5a6d-92e7-64dbae5dca1c"
       ]
     },
     {
@@ -674,10 +674,10 @@
       "kind": "natural_question",
       "query": "xe máy và xăng",
       "ranked": [
-        "1ab6e85d-3f88-5a7a-9520-4815374ba363"
+        "f9e4e1d4-4a1c-5a6d-92e7-64dbae5dca1c"
       ],
       "relevant": [
-        "1ab6e85d-3f88-5a7a-9520-4815374ba363"
+        "f9e4e1d4-4a1c-5a6d-92e7-64dbae5dca1c"
       ]
     },
     {
@@ -686,10 +686,10 @@
       "kind": "keyword",
       "query": "LIFO",
       "ranked": [
-        "67c1eb08-2926-5d91-a662-018bec1f6674"
+        "b8ccb911-9e3e-5716-85d8-3b2220d7af32"
       ],
       "relevant": [
-        "67c1eb08-2926-5d91-a662-018bec1f6674"
+        "b8ccb911-9e3e-5716-85d8-3b2220d7af32"
       ]
     },
     {
@@ -698,10 +698,10 @@
       "kind": "keyword",
       "query": "hàng đợi vòng",
       "ranked": [
-        "67c1eb08-2926-5d91-a662-018bec1f6674"
+        "b8ccb911-9e3e-5716-85d8-3b2220d7af32"
       ],
       "relevant": [
-        "67c1eb08-2926-5d91-a662-018bec1f6674"
+        "b8ccb911-9e3e-5716-85d8-3b2220d7af32"
       ]
     },
     {
@@ -710,10 +710,10 @@
       "kind": "natural_question",
       "query": "kiểm tra dấu ngoặc cân bằng bằng ngăn xếp",
       "ranked": [
-        "67c1eb08-2926-5d91-a662-018bec1f6674"
+        "b8ccb911-9e3e-5716-85d8-3b2220d7af32"
       ],
       "relevant": [
-        "67c1eb08-2926-5d91-a662-018bec1f6674"
+        "b8ccb911-9e3e-5716-85d8-3b2220d7af32"
       ]
     },
     {
@@ -722,10 +722,10 @@
       "kind": "keyword",
       "query": "BFS",
       "ranked": [
-        "8a3fafc4-5d10-5cd3-8f19-6527a7f0c965"
+        "a6598721-d9c4-5787-845c-08a064d4cfd4"
       ],
       "relevant": [
-        "8a3fafc4-5d10-5cd3-8f19-6527a7f0c965"
+        "a6598721-d9c4-5787-845c-08a064d4cfd4"
       ]
     },
     {
@@ -735,7 +735,7 @@
       "query": "hang doi uu tien",
       "ranked": [],
       "relevant": [
-        "8a3fafc4-5d10-5cd3-8f19-6527a7f0c965"
+        "a6598721-d9c4-5787-845c-08a064d4cfd4"
       ]
     },
     {
@@ -744,10 +744,10 @@
       "kind": "keyword",
       "query": "tràn dưới",
       "ranked": [
-        "67c1eb08-2926-5d91-a662-018bec1f6674"
+        "b8ccb911-9e3e-5716-85d8-3b2220d7af32"
       ],
       "relevant": [
-        "67c1eb08-2926-5d91-a662-018bec1f6674"
+        "b8ccb911-9e3e-5716-85d8-3b2220d7af32"
       ]
     },
     {
@@ -756,10 +756,10 @@
       "kind": "natural_question",
       "query": "độ phức tạp của push và pop",
       "ranked": [
-        "67c1eb08-2926-5d91-a662-018bec1f6674"
+        "b8ccb911-9e3e-5716-85d8-3b2220d7af32"
       ],
       "relevant": [
-        "67c1eb08-2926-5d91-a662-018bec1f6674"
+        "b8ccb911-9e3e-5716-85d8-3b2220d7af32"
       ]
     },
     {
@@ -768,10 +768,10 @@
       "kind": "keyword",
       "query": "deque",
       "ranked": [
-        "8a3fafc4-5d10-5cd3-8f19-6527a7f0c965"
+        "a6598721-d9c4-5787-845c-08a064d4cfd4"
       ],
       "relevant": [
-        "8a3fafc4-5d10-5cd3-8f19-6527a7f0c965"
+        "a6598721-d9c4-5787-845c-08a064d4cfd4"
       ]
     },
     {
@@ -780,10 +780,10 @@
       "kind": "natural_question",
       "query": "gió mùa Đông Bắc",
       "ranked": [
-        "6f28234a-5c98-597d-bf7f-d70f55892d76"
+        "98bf9be3-8052-53ab-b341-a367e6e3a48f"
       ],
       "relevant": [
-        "6f28234a-5c98-597d-bf7f-d70f55892d76"
+        "98bf9be3-8052-53ab-b341-a367e6e3a48f"
       ]
     },
     {
@@ -792,10 +792,10 @@
       "kind": "keyword",
       "query": "gió Lào",
       "ranked": [
-        "6f28234a-5c98-597d-bf7f-d70f55892d76"
+        "98bf9be3-8052-53ab-b341-a367e6e3a48f"
       ],
       "relevant": [
-        "6f28234a-5c98-597d-bf7f-d70f55892d76"
+        "98bf9be3-8052-53ab-b341-a367e6e3a48f"
       ]
     },
     {
@@ -804,10 +804,10 @@
       "kind": "natural_question",
       "query": "ranh giới khí hậu dãy Bạch Mã",
       "ranked": [
-        "6f28234a-5c98-597d-bf7f-d70f55892d76"
+        "98bf9be3-8052-53ab-b341-a367e6e3a48f"
       ],
       "relevant": [
-        "6f28234a-5c98-597d-bf7f-d70f55892d76"
+        "98bf9be3-8052-53ab-b341-a367e6e3a48f"
       ]
     },
     {
@@ -817,7 +817,7 @@
       "query": "nhiet do giam theo do cao",
       "ranked": [],
       "relevant": [
-        "6f28234a-5c98-597d-bf7f-d70f55892d76"
+        "98bf9be3-8052-53ab-b341-a367e6e3a48f"
       ]
     },
     {
@@ -826,10 +826,10 @@
       "kind": "natural_question",
       "query": "lượng mưa trung bình năm",
       "ranked": [
-        "6f28234a-5c98-597d-bf7f-d70f55892d76"
+        "98bf9be3-8052-53ab-b341-a367e6e3a48f"
       ],
       "relevant": [
-        "6f28234a-5c98-597d-bf7f-d70f55892d76"
+        "98bf9be3-8052-53ab-b341-a367e6e3a48f"
       ]
     },
     {
@@ -838,10 +838,10 @@
       "kind": "keyword",
       "query": "mùa bão",
       "ranked": [
-        "82c89005-0908-579e-a746-7b460b2ee3b1"
+        "4c02b1f7-36b7-5c6e-8081-f19f56a8d9d6"
       ],
       "relevant": [
-        "82c89005-0908-579e-a746-7b460b2ee3b1"
+        "4c02b1f7-36b7-5c6e-8081-f19f56a8d9d6"
       ]
     },
     {
@@ -850,10 +850,10 @@
       "kind": "keyword",
       "query": "mưa phùn",
       "ranked": [
-        "6f28234a-5c98-597d-bf7f-d70f55892d76"
+        "98bf9be3-8052-53ab-b341-a367e6e3a48f"
       ],
       "relevant": [
-        "6f28234a-5c98-597d-bf7f-d70f55892d76"
+        "98bf9be3-8052-53ab-b341-a367e6e3a48f"
       ]
     },
     {
@@ -863,7 +863,7 @@
       "query": "khí hậu phía nam có bao nhiêu mùa",
       "ranked": [],
       "relevant": [
-        "6f28234a-5c98-597d-bf7f-d70f55892d76"
+        "98bf9be3-8052-53ab-b341-a367e6e3a48f"
       ]
     },
     {
@@ -872,10 +872,10 @@
       "kind": "natural_question",
       "query": "Đoạn trường tân thanh",
       "ranked": [
-        "92bbb07e-5e89-50a3-9aca-e6784666badb"
+        "e1f05e06-7ffc-5683-aafc-1cc3cde94615"
       ],
       "relevant": [
-        "92bbb07e-5e89-50a3-9aca-e6784666badb"
+        "e1f05e06-7ffc-5683-aafc-1cc3cde94615"
       ]
     },
     {
@@ -885,7 +885,7 @@
       "query": "Truyện Kiều có bao nhiêu câu",
       "ranked": [],
       "relevant": [
-        "92bbb07e-5e89-50a3-9aca-e6784666badb"
+        "e1f05e06-7ffc-5683-aafc-1cc3cde94615"
       ]
     },
     {
@@ -894,10 +894,10 @@
       "kind": "keyword",
       "query": "Từ Hải",
       "ranked": [
-        "92bbb07e-5e89-50a3-9aca-e6784666badb"
+        "e1f05e06-7ffc-5683-aafc-1cc3cde94615"
       ],
       "relevant": [
-        "92bbb07e-5e89-50a3-9aca-e6784666badb"
+        "e1f05e06-7ffc-5683-aafc-1cc3cde94615"
       ]
     },
     {
@@ -907,7 +907,7 @@
       "query": "gia tri nhan dao",
       "ranked": [],
       "relevant": [
-        "5fc6c358-9d86-56c3-a853-97574c04acf5"
+        "dc65cd58-a173-5b43-962f-c014c5e5de27"
       ]
     },
     {
@@ -917,7 +917,7 @@
       "query": "Nguyễn Du quê ở đâu",
       "ranked": [],
       "relevant": [
-        "92bbb07e-5e89-50a3-9aca-e6784666badb"
+        "e1f05e06-7ffc-5683-aafc-1cc3cde94615"
       ]
     },
     {
@@ -926,10 +926,10 @@
       "kind": "natural_question",
       "query": "Kim Vân Kiều truyện",
       "ranked": [
-        "92bbb07e-5e89-50a3-9aca-e6784666badb"
+        "e1f05e06-7ffc-5683-aafc-1cc3cde94615"
       ],
       "relevant": [
-        "92bbb07e-5e89-50a3-9aca-e6784666badb"
+        "e1f05e06-7ffc-5683-aafc-1cc3cde94615"
       ]
     },
     {
@@ -938,10 +938,10 @@
       "kind": "natural_question",
       "query": "tả cảnh ngụ tình",
       "ranked": [
-        "5fc6c358-9d86-56c3-a853-97574c04acf5"
+        "dc65cd58-a173-5b43-962f-c014c5e5de27"
       ],
       "relevant": [
-        "5fc6c358-9d86-56c3-a853-97574c04acf5"
+        "dc65cd58-a173-5b43-962f-c014c5e5de27"
       ]
     },
     {
@@ -950,10 +950,10 @@
       "kind": "keyword",
       "query": "Thúy Vân",
       "ranked": [
-        "92bbb07e-5e89-50a3-9aca-e6784666badb"
+        "e1f05e06-7ffc-5683-aafc-1cc3cde94615"
       ],
       "relevant": [
-        "92bbb07e-5e89-50a3-9aca-e6784666badb"
+        "e1f05e06-7ffc-5683-aafc-1cc3cde94615"
       ]
     }
   ]
