@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "metadata": {
-    "generated_at": "2026-11-16T15:27:21.297003+00:00",
-    "git_commit": "bbcd1d5a045fe3bf98909a3ddc55abf7f6ec467f",
+    "generated_at": "2026-11-19T03:38:46.977231+00:00",
+    "git_commit": "39aa48f357f869b69e97d8ac8fd3a9fb65fe4c68",
     "git_dirty": false,
     "environment": {
       "python": "3.12.10",
@@ -13,28 +13,28 @@
       "path": "backend\\tests\\fixtures\\nlu_eval_vi.json",
       "sha256": "c809680f8c22a91f7e80fd82f3643460fbd4dd736f648fb11168c9f9c470e8ab"
     },
-    "prompt_sha256": "1ad4dbac926b12301202bc58ca634847af5a577a113978cb2386acf49f1025af",
+    "prompt_sha256": "891dfa2a494ec0f5af84db1fa94393d635edf36807446e41e79d8efc90392e14",
     "source_sha256": {
       "backend\\app\\f1\\scheduler\\engine.py": "b3570960a96bcd06426c9c9f8d7ef30b981186f2d6ad1ea56a1f3618fac08d36",
-      "backend\\app\\f1\\scheduler\\evaluation.py": "919eaf052e28008d5b57869181cd48da884235afebf987580597a280e22e0fca",
-      "backend\\app\\nlu\\evaluation.py": "d31fff1af5fcae019825c4f114703be0b1c2fe2c6543e438b254768e9f2a83e9",
+      "backend\\app\\f1\\scheduler\\evaluation.py": "96407aff401a92cdc37da2c8f5b2506b718dcbcbe28b80b26255eaf33d0d5889",
+      "backend\\app\\nlu\\evaluation.py": "6816b019a8646744c30be241cccbceb77333f37175bb54d3ca6c9f5bd30be5eb",
       "backend\\scripts\\benchmark_f1.py": "6a0a7a2cba04c9ddd3c330b06aa0b98aa4a20725608c952be1598c11aa03f1a2"
     }
   },
   "unit": {
     "ok": true,
-    "seconds": 7.4,
+    "seconds": 9.8,
     "tail": [
-      "Ran 95 tests in 5.062s",
+      "Ran 141 tests in 8.085s",
       "",
       "OK"
     ]
   },
   "contract": {
     "ok": true,
-    "seconds": 6.3,
+    "seconds": 4.9,
     "tail": [
-      "PASS: 137 definitions; 8 API paths; 10 tools; 10 entities; 111 positive/negative fixtures; OpenAPI 3.1; source/mapping/reference checks.",
+      "PASS: 187 definitions; 8 API paths; 10 tools; 10 entities; 126 positive/negative fixtures; OpenAPI 3.1; source/mapping/reference checks.",
       "Scope: static contracts and pure payload invariants only. DB/auth/transaction/UI runtime cases remain unrun."
     ]
   },
@@ -54,36 +54,36 @@
         "hard_constraint_violations": 0,
         "deterministic": true,
         "scheduled_ratio": 1.0,
-        "mean_latency_ms": 2.681,
-        "latency_ms_p50": 2.428,
-        "latency_ms_p95": 3.877,
-        "latency_ms_p99": 6.801,
+        "mean_latency_ms": 2.68,
+        "latency_ms_p50": 2.426,
+        "latency_ms_p95": 3.808,
+        "latency_ms_p99": 4.365,
         "latency_sample_count": 1000,
-        "latency_samples_sha256": "c179637a73e012efbd3f9090e50e41967a773ae5a837c025ca02ca5be6349dfb",
+        "latency_samples_sha256": "7a92883c9f3858a5e438ba527696c9955dd89113acf80876789ce961a056dc15",
         "ok": true
       },
       "50_tasks_7_days": {
         "hard_constraint_violations": 0,
         "deterministic": true,
         "scheduled_ratio": 0.56,
-        "mean_latency_ms": 37.726,
-        "latency_ms_p50": 35.247,
-        "latency_ms_p95": 52.35,
-        "latency_ms_p99": 61.399,
+        "mean_latency_ms": 37.702,
+        "latency_ms_p50": 34.662,
+        "latency_ms_p95": 53.861,
+        "latency_ms_p99": 66.106,
         "latency_sample_count": 1000,
-        "latency_samples_sha256": "0e2c320179edf489140db1f1e1105dc8a4774818885e491beb46c6131c6be421",
+        "latency_samples_sha256": "2770f2df3257b1e3562c28c19e2e5e14f443eee4dfdf29ece1d600abb9156610",
         "ok": true
       },
       "200_tasks_14_days": {
         "hard_constraint_violations": 0,
         "deterministic": true,
         "scheduled_ratio": 0.28,
-        "mean_latency_ms": 501.009,
-        "latency_ms_p50": 368.405,
-        "latency_ms_p95": 889.539,
-        "latency_ms_p99": 961.711,
+        "mean_latency_ms": 519.717,
+        "latency_ms_p50": 374.621,
+        "latency_ms_p95": 903.261,
+        "latency_ms_p99": 1030.834,
         "latency_sample_count": 1000,
-        "latency_samples_sha256": "3461ce63f00377b4389f9f2d65ff6ce4f7a84f3c40caeaa289022e6a73c3ceba",
+        "latency_samples_sha256": "f6669ec7b2ebe1c1634c25393018b3315846a4d858ea77c5af2774084c3be694",
         "ok": true
       }
     }

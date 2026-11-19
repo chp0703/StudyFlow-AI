@@ -496,3 +496,20 @@
 **Ghi chú**
 
 - Chưa gọi lại model, chạy acceptance/integration/pgTAP hoặc benchmark offline; số liệu latency và frame exact match là kết quả lịch sử.
+
+## 2026-11-18 — Chạy lại benchmark cho PR #48
+
+**Mục tiêu:** cập nhật số liệu Planner sau khi sửa metric và xác minh bằng DeepSeek live.
+
+**Đã làm**
+
+- Chạy `benchmark_f1.py` offline với 1.000 mẫu và 10 warm-up cho mỗi workload, rồi đo lại latency riêng sau khi kết thúc NLU live; cập nhật `results/offline.json`.
+- Chạy `benchmark_scheduler_quality.py` 100 ca CP-SAT, cập nhật `results/scheduler-quality.json`.
+- Chạy DeepSeek `deepseek-flash` 5 lượt cho dev 1, dev 2 và candidate 2; chạy lại dev 2/candidate 2 tuần tự sau khi lượt đồng thời gặp lỗi dịch vụ, cập nhật ba file `results/nlu-*.json` tương ứng.
+- Cập nhật `docs/features/planner/evaluation/README.md` với số liệu mới, cách tái lập và giới hạn của candidate 2.
+
+**Kết quả:** PR #48 (`test/f1-eval-benchmarks`); offline unit/contract/schema/scheduler pass; CP-SAT `OPTIMAL` 100/100; NLU worst-run dev 1 100%, dev 2 96,8%, candidate 2 95%, không có lỗi provider-unavailable trong các lượt giữ lại.
+
+**Ghi chú**
+
+- Held-out 1 giữ nguyên baseline lịch sử; candidate 2 đã là development data nên mức 95% không chứng minh khả năng khái quát.
