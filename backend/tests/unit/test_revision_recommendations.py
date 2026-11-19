@@ -37,6 +37,30 @@ class RevisionRecommendationTests(TestCase):
         self.rpc=Mock(side_effect=lambda ctx,op,args,**kw: _ok(ctx.request_id,'COMMITTED', self.pres if op=='create_revision_recommendation' else args['message']))
         self.ops=RevisionRecommendationOperations(self.rpc,lambda: datetime(2026,11,18,tzinfo=timezone.utc))
 
+    def test_recommendation_choices_are_required_and_bounded(self):
+        args = json.loads(
+            (ROOT / 'contracts/examples/valid/b7-create-recommendation-arguments.json').read_text(encoding='utf-8')
+        )
+        for schema, body in (
+            ('CreateRevisionRecommendationRequest', self.body),
+            ('CreateRevisionRecommendationArguments', args),
+        ):
+            for minutes, priority in ((15, 0.1), (20, 0.5), (240, 1)):
+                with self.subTest(schema=schema, minutes=minutes, priority=priority):
+                    self.assertTrue(contract.is_valid(schema, {**body, 'suggested_minutes': minutes, 'priority': priority}))
+            for field, value in (
+                ('suggested_minutes', None), ('priority', None),
+                ('suggested_minutes', 14), ('suggested_minutes', 241),
+                ('suggested_minutes', 20.5), ('priority', 0.7),
+            ):
+                with self.subTest(schema=schema, field=field, value=value):
+                    invalid = dict(body)
+                    if value is None:
+                        del invalid[field]
+                    else:
+                        invalid[field] = value
+                    self.assertFalse(contract.is_valid(schema, invalid))
+
     def test_creation_returns_complete_reference_and_signed_domain_inputs(self):
         status,reply=self.ops.create(self.ctx,self.receipt,'b7-unit-key-00001',self.body)
         self.assertEqual(status,200);self.assertTrue(contract.is_valid('OrchestratorReply',reply))

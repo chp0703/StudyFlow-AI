@@ -41,10 +41,14 @@ Creation and decisions return server-issued ActionPresentation with optional
 `revision_recommendation` and `revision_source_chunks`; both are required for B7
 and preserved for its linked CREATE_TASK. See the assessment feature README for
 the 50-attempt window, LOW confidence, structured candidate review and separate F1
-confirmation. CreateRevisionRecommendationArguments now accepts stable inputs and
-server IDs instead of a caller-supplied recommendation: `priority` and
-`suggested_minutes` are user choices, while evidence, owner and state are derived
-in the database. `decide_revision_recommendation` is a signed internal RPC.
+confirmation. Both `CreateRevisionRecommendationRequest` and the signed
+`CreateRevisionRecommendationArguments` require two learner-selected values.
+`suggested_minutes` is an integer from 15 through 240 inclusive, and `priority`
+is one of 0.1, 0.5, or 1. PostgreSQL stores the submitted choices alongside
+server-derived evidence, owner, and state. Acceptance copies the two choices
+to a Planner draft. Candidate review can edit `estimated_minutes` and `priority`
+for the separately confirmed task, while the recommendation retains its
+original values. `decide_revision_recommendation` is a signed internal RPC.
 
 Replaying a completed recommendation-create request with the same
 `Idempotency-Key` returns the original `ActionPresentation` and
