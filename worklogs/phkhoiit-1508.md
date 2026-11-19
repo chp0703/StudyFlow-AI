@@ -489,3 +489,13 @@
 - `backend/tests/unit/test_assessment_evaluation.py`: thêm test `1/32 -> 3.13`, `1/3`, `2/3`, `3/4`.
 
 **Kết quả:** trên mã của #57 (`81dcb1b`), oracle cũ khớp 9957/10000 ca (lệch ở ví dụ 9/32: 28.12 so với 28.13), oracle mới khớp 10000/10000. Chưa chạy lại `results/` và phần `db`; cần làm sau khi #57 vào `main`.
+
+## 2026-11-19 — Sửa hướng dẫn chạy demo local
+
+**Mục tiêu:** hướng dẫn trong `docs/local-demo.md` chạy được trên máy không có `psql` và `xxd`.
+
+**Đã làm**
+
+- Bước 2 đăng ký khóa ký RPC qua `docker exec` vào container `supabase_db`, đổi hex sang base64 bằng Python.
+
+**Kết quả:** các lệnh này đã được chạy thật trên Windows (Git Bash) và backend gọi `/v1/tasks` thành công với khóa vừa đăng ký.
