@@ -1,0 +1,1437 @@
+﻿question_id,case_id,topic,stem,options,answer_key,explanation,sources,answer_correct,answerable_from_source,single_correct_answer,on_topic,distractor_plausibility,clarity,note
+5b3f2d3c-3c06-4089-9012-1e4a663b4ddd,H1-newton:MCQ,Ba định luật Newton,Định luật I Newton còn được gọi là gì?,A: Định luật quán tính | B: Định luật lực hấp dẫn | C: Định luật bảo toàn động lượng | D: Định luật tương tác,A,Định luật I Newton mô tả xu hướng bảo toàn vận tốc của vật nên còn gọi là định luật quán tính.,"# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+08bddf5a-2113-461c-b61f-6f9cbf8d000d,H1-newton:MCQ,Ba định luật Newton,"Theo định luật I Newton, nếu hợp lực tác dụng lên vật bằng không thì vật đang chuyển động sẽ thế nào?",A: Tiếp tục chuyển động thẳng đều | B: Dừng lại ngay lập tức | C: Chuyển động nhanh dần đều | D: Chuyển động tròn đều,A,"Khi hợp lực bằng không, vật đang chuyển động tiếp tục chuyển động thẳng đều.","# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+77a57262-8a5d-4c68-8c93-b6e2e0491d8f,H1-newton:MCQ,Ba định luật Newton,Định luật I Newton chỉ đúng trong hệ quy chiếu nào?,A: Hệ quy chiếu quán tính | B: Hệ quy chiếu phi quán tính | C: Mọi hệ quy chiếu | D: Hệ quy chiếu quay đều,A,"Định luật I chỉ đúng trong hệ quy chiếu quán tính, tức hệ đứng yên hoặc chuyển động thẳng đều so với hệ quán tính khác.","# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+1ab545e3-c1f3-442d-937d-2fce256bbd45,H1-newton:MCQ,Ba định luật Newton,Biểu thức nào đúng của định luật II Newton?,A: F = m·a | B: F = m/a | C: a = m·F | D: F = a/m,A,"Định luật II Newton có biểu thức F = m·a, với F là hợp lực tác dụng lên vật.","# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+7328a685-b05b-4341-829c-b194ce0189bd,H1-newton:MCQ,Ba định luật Newton,"Theo định luật II Newton, độ lớn gia tốc của vật tỉ lệ nghịch với đại lượng nào?",A: Khối lượng của vật | B: Độ lớn của lực | C: Vận tốc của vật | D: Thời gian chuyển động,A,Gia tốc tỉ lệ thuận với độ lớn lực và tỉ lệ nghịch với khối lượng của vật.,"# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+c8598ab0-c24d-43ff-a7ff-5482c7ac8cca,H1-newton:MCQ,Ba định luật Newton,"Trong hệ SI, 1 niutơn (N) là lực truyền cho vật khối lượng 1 kg một gia tốc bằng bao nhiêu?","A: 1 m/s² | B: 9,8 m/s² | C: 1 cm/s² | D: 10 m/s²",A,1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².,"# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+62910d2b-eab9-4d0b-8c55-08d95a2cb0da,H1-newton:MCQ,Ba định luật Newton,Khối lượng là đại lượng đặc trưng cho tính chất nào của vật?,A: Mức quán tính | B: Trọng lượng | C: Thể tích | D: Nhiệt độ,A,Khối lượng đặc trưng cho mức quán tính: khối lượng càng lớn thì càng khó thay đổi vận tốc.,"# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+12d37772-6138-4005-b8dd-b07b101f52c4,H1-newton:MCQ,Ba định luật Newton,Công thức liên hệ giữa trọng lực và khối lượng của vật là gì?,A: P = m·g | B: P = m/g | C: P = g/m | D: P = m·g²,A,"Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do.","# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+f0402ce9-217b-4300-bb00-4e3d77d33442,H1-newton:MCQ,Ba định luật Newton,"Theo định luật III Newton, hai lực mà hai vật tác dụng lẫn nhau có đặc điểm gì?","A: Cùng giá, cùng độ lớn nhưng ngược chiều | B: Cùng giá, cùng độ lớn và cùng chiều | C: Khác giá, khác độ lớn và ngược chiều | D: Cùng chiều và cùng đặt vào một vật",A,"Lực và phản lực có cùng giá, cùng độ lớn nhưng ngược chiều, biểu diễn bằng F_AB = −F_BA.","# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+8849dad8-b381-443a-a042-826867f133e3,H1-newton:MCQ,Ba định luật Newton,Vì sao lực và phản lực không cân bằng nhau và không triệt tiêu lẫn nhau?,A: Vì chúng đặt vào hai vật khác nhau | B: Vì chúng có độ lớn khác nhau | C: Vì chúng không cùng giá | D: Vì chúng cùng chiều,A,Lực và phản lực đặt vào hai vật khác nhau nên không cân bằng và không triệt tiêu lẫn nhau.,"lực gọi là lực, lực kia gọi là phản lực.
+
+Lực và phản lực luôn xuất hiện và mất đi đồng thời, là hai lực cùng loại. Điểm quan trọng là chúng đặt vào hai vật khác nhau, nên chúng không cân bằng nhau và không triệt tiêu lẫn nhau. Ví dụ, khi bơi, người bơi đẩy nước về phía sau, nước đẩy người về phía trước. Khi súng bắn đạn, súng bị giật lùi về phía sau.
+
+## Tóm tắt
+
+Định luật I nói khi nào vận tốc không đổi; định luật II cho biết lực làm thay đổi vận tốc như thế nào; định luật III mô tả tương tác giữa hai vật luôn xảy ra theo cặp.",,,,,,,
+c7363290-03f0-40d9-9ce7-6e30a2fa58b9,H1-newton:TRUE_FALSE,Ba định luật Newton,Định luật I Newton còn được gọi là định luật quán tính.,TRUE: Đúng | FALSE: Sai,TRUE,"Tính chất bảo toàn vận tốc của vật gọi là quán tính, nên định luật I còn gọi là định luật quán tính.","# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+31590ee7-57ce-439f-876f-db13ca403d6d,H1-newton:TRUE_FALSE,Ba định luật Newton,"Định luật I Newton đúng trong mọi hệ quy chiếu, kể cả hệ quy chiếu phi quán tính.",TRUE: Đúng | FALSE: Sai,FALSE,Định luật I chỉ đúng trong hệ quy chiếu quán tính.,"# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+6ef6f7aa-c22a-47af-8c6b-7833e3aa6d08,H1-newton:TRUE_FALSE,Ba định luật Newton,"Theo định luật II Newton, gia tốc của vật tỉ lệ nghịch với độ lớn của hợp lực tác dụng lên vật.",TRUE: Đúng | FALSE: Sai,FALSE,Gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng.,"# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+db7ccf15-3e46-4dcf-be46-2650beb79b63,H1-newton:TRUE_FALSE,Ba định luật Newton,"Trong hệ SI, 1 niutơn là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².",TRUE: Đúng | FALSE: Sai,TRUE,Đây là định nghĩa niutơn nêu trong bài.,"# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+edcce509-3abe-476e-b0a1-1f60cd75507f,H1-newton:TRUE_FALSE,Ba định luật Newton,Khối lượng của một vật thay đổi khi mang vật lên Mặt Trăng.,TRUE: Đúng | FALSE: Sai,FALSE,"Khối lượng không đổi, chỉ trọng lượng giảm vì gia tốc rơi tự do nhỏ hơn.","# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+1f5047ba-f3db-41ce-b097-ca12c5513297,H1-newton:TRUE_FALSE,Ba định luật Newton,"Theo định luật III Newton, lực và phản lực là hai lực cùng giá, cùng độ lớn và ngược chiều.",TRUE: Đúng | FALSE: Sai,TRUE,"Định luật III phát biểu hai lực cùng giá, cùng độ lớn nhưng ngược chiều.","# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+222c6bac-923e-4205-b2fb-ef791470480f,H1-newton:TRUE_FALSE,Ba định luật Newton,Lực và phản lực đặt vào cùng một vật nên chúng cân bằng nhau.,TRUE: Đúng | FALSE: Sai,FALSE,Lực và phản lực đặt vào hai vật khác nhau nên không cân bằng và không triệt tiêu nhau.,"lực gọi là lực, lực kia gọi là phản lực.
+
+Lực và phản lực luôn xuất hiện và mất đi đồng thời, là hai lực cùng loại. Điểm quan trọng là chúng đặt vào hai vật khác nhau, nên chúng không cân bằng nhau và không triệt tiêu lẫn nhau. Ví dụ, khi bơi, người bơi đẩy nước về phía sau, nước đẩy người về phía trước. Khi súng bắn đạn, súng bị giật lùi về phía sau.
+
+## Tóm tắt
+
+Định luật I nói khi nào vận tốc không đổi; định luật II cho biết lực làm thay đổi vận tốc như thế nào; định luật III mô tả tương tác giữa hai vật luôn xảy ra theo cặp.",,,,,,,
+7a6be8db-1956-4d57-86f0-260b049baa82,H1-newton:TRUE_FALSE,Ba định luật Newton,"Lực và phản lực luôn xuất hiện và mất đi đồng thời, và là hai lực cùng loại.",TRUE: Đúng | FALSE: Sai,TRUE,"Bài nêu rõ lực và phản lực xuất hiện, mất đi đồng thời và cùng loại.","lực gọi là lực, lực kia gọi là phản lực.
+
+Lực và phản lực luôn xuất hiện và mất đi đồng thời, là hai lực cùng loại. Điểm quan trọng là chúng đặt vào hai vật khác nhau, nên chúng không cân bằng nhau và không triệt tiêu lẫn nhau. Ví dụ, khi bơi, người bơi đẩy nước về phía sau, nước đẩy người về phía trước. Khi súng bắn đạn, súng bị giật lùi về phía sau.
+
+## Tóm tắt
+
+Định luật I nói khi nào vận tốc không đổi; định luật II cho biết lực làm thay đổi vận tốc như thế nào; định luật III mô tả tương tác giữa hai vật luôn xảy ra theo cặp.",,,,,,,
+d43b06b3-7efb-44c3-854b-cc87e92887c0,H1-newton:TRUE_FALSE,Ba định luật Newton,"Khi xe buýt phanh gấp, hành khách bị ngả người về phía sau do quán tính.",TRUE: Đúng | FALSE: Sai,FALSE,"Khi phanh gấp, phần thân trên giữ vận tốc cũ nên hành khách chúi về phía trước.","# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+f25931bb-8e1f-4002-8450-ea0085e22066,H1-newton:TRUE_FALSE,Ba định luật Newton,"Khối lượng là đại lượng vô hướng, dương, không đổi đối với mỗi vật và có tính chất cộng.",TRUE: Đúng | FALSE: Sai,TRUE,"Bài nêu khối lượng là đại lượng vô hướng, dương, không đổi và có tính cộng.","# Ba định luật Newton
+
+## Định luật I: quán tính
+
+Định luật I Newton phát biểu: nếu một vật không chịu tác dụng của lực nào hoặc chịu tác dụng của các lực có hợp lực bằng không, thì vật đang đứng yên sẽ tiếp tục đứng yên, vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều. Tính chất của vật có xu hướng bảo toàn vận tốc cả về hướng và độ lớn gọi là quán tính. Vì vậy định luật I còn được gọi là định luật quán tính.
+
+Ví dụ, khi xe buýt đang chạy mà phanh gấp, hành khách bị chúi người về phía trước vì phần thân trên có xu hướng giữ nguyên vận tốc cũ. Ngược lại, khi xe đột ngột tăng tốc, hành khách bị ngả người về phía sau.
+
+Định luật I chỉ đúng trong hệ quy chiếu quán tính, là hệ quy chiếu đứng yên hoặc chuyển động thẳng đều so với một hệ quy chiếu quán tính khác.
+
+## Định luật II: lực, khối lượng và gia tốc
+
+Định luật II Newton phát biểu: gia tốc của một vật cùng hướng với lực tác dụng lên vật; độ lớn của gia tốc tỉ lệ thuận với độ lớn của lực và tỉ lệ nghịch với khối lượng của vật. Biểu thức là a = F/m, hay F = m·a, trong đó F là hợp lực tác dụng lên vật. Trong hệ SI, lực đo bằng niutơn (N); 1 N là lực truyền cho vật khối lượng 1 kg một gia tốc 1 m/s².
+
+Khối lượng là đại lượng đặc trưng cho mức quán tính của vật: vật có khối lượng càng lớn thì càng khó thay đổi vận tốc. Khối lượng là đại lượng vô hướng, dương và không đổi đối với mỗi vật, đồng thời có tính chất cộng.
+
+Trọng lực là lực hút của Trái Đất tác dụng lên vật. Áp dụng định luật II cho vật rơi tự do ta có P = m·g, với g là gia tốc rơi tự do, gần mặt đất g ≈ 9,8 m/s². Độ lớn của trọng lực gọi là trọng lượng. Cần phân biệt: khối lượng của một vật không đổi khi mang lên Mặt Trăng, nhưng trọng lượng của nó giảm vì gia tốc rơi tự do ở đó nhỏ hơn.
+
+## Định luật III: lực và phản lực
+
+Định luật III Newton phát biểu: trong mọi trường hợp, khi vật A tác dụng lên vật B một lực, thì vật B cũng tác dụng lại vật A một lực. Hai lực này có cùng giá, cùng độ lớn nhưng ngược chiều. Biểu thức: F_AB = −F_BA. Một trong hai ",,,,,,,
+f8f23a50-4342-481d-978f-8707d6267ee4,H2-lien-ket-hoa-hoc:TRUE_FALSE,Liên kết hóa học,Nguyên tử của các nguyên tố khác có xu hướng liên kết với nhau để đạt cấu hình electron bền vững giống khí hiếm.,TRUE: Đúng | FALSE: Sai,TRUE,"Theo quy tắc bát tử, nguyên tử nhường, nhận hoặc góp chung electron để đạt cấu hình bền vững giống khí hiếm.","# Liên kết hóa học
+
+## Vì sao nguyên tử liên kết
+
+Các nguyên tử của khí hiếm có lớp electron ngoài cùng bền vững với 8 electron (riêng heli có 2 electron), nên hầu như không tham gia phản ứng. Nguyên tử của các nguyên tố khác có xu hướng liên kết với nhau để đạt cấu hình electron bền vững giống khí hiếm, bằng cách nhường, nhận hoặc góp chung electron. Đây là nội dung của quy tắc bát tử.
+
+## Liên kết ion
+
+Liên kết ion được hình thành do lực hút tĩnh điện giữa các ion mang điện tích trái dấu. Nguyên tử kim loại điển hình dễ nhường electron để trở thành ion dương (cation), còn nguyên tử phi kim điển hình dễ nhận electron để trở thành ion âm (anion). Ví dụ, khi natri tác dụng với clo, mỗi nguyên tử Na nhường 1 electron thành ion Na+, mỗi nguyên tử Cl nhận 1 electron thành ion Cl−, hai ion hút nhau tạo thành natri clorua NaCl.
+
+Hợp chất ion thường ở dạng tinh thể, có nhiệt độ nóng chảy cao, và khi nóng chảy hoặc tan trong nước thì dẫn điện được.
+
+## Liên kết cộng hóa trị
+
+Liên kết cộng hóa trị được tạo nên giữa hai nguyên tử bằng một hay nhiều cặp electron dùng chung. Trong phân tử H2, mỗi nguyên tử hiđro góp 1 electron tạo thành một cặp electron chung, đó là liên kết đơn. Trong phân tử N2, hai nguyên tử nitơ góp chung ba cặp electron, tạo liên kết ba rất bền.
+
+Nếu cặp electron chung không lệch về phía nguyên tử nào, như trong H2, Cl2, ta có liên kết cộng hóa trị không cực. Nếu cặp electron chung lệch về phía nguyên tử có độ âm điện lớn hơn, như trong HCl, ta có liên kết cộng hóa trị có cực.
+
+## Độ âm điện và loại liên kết
+
+Độ âm điện là đại lượng đặc trưng cho khả năng hút electron của nguyên tử khi tạo liên kết. Flo là nguyên tố có độ âm điện lớn nhất, khoảng 3,98 theo thang Pauling. Có thể dựa vào hiệu độ âm điện Δχ giữa hai nguyên tử để dự đoán gần đúng loại liên kết: Δχ từ 0 đến dưới 0,4 là liên kết cộng hóa trị không cực; từ 0,4 đến dưới 1,7 là liên kết cộng hóa trị có cực; từ 1,7 trở lên thường là liên kết ion. Cách phân loại này chỉ mang tính tương đối.
+
+## Liên ",,,,,,,
+669f6cf9-c62a-4ff2-8027-d83664684597,H2-lien-ket-hoa-hoc:TRUE_FALSE,Liên kết hóa học,Liên kết ion được hình thành do lực hút tĩnh điện giữa các ion mang điện tích trái dấu.,TRUE: Đúng | FALSE: Sai,TRUE,Đây chính là định nghĩa liên kết ion trong tài liệu.,"# Liên kết hóa học
+
+## Vì sao nguyên tử liên kết
+
+Các nguyên tử của khí hiếm có lớp electron ngoài cùng bền vững với 8 electron (riêng heli có 2 electron), nên hầu như không tham gia phản ứng. Nguyên tử của các nguyên tố khác có xu hướng liên kết với nhau để đạt cấu hình electron bền vững giống khí hiếm, bằng cách nhường, nhận hoặc góp chung electron. Đây là nội dung của quy tắc bát tử.
+
+## Liên kết ion
+
+Liên kết ion được hình thành do lực hút tĩnh điện giữa các ion mang điện tích trái dấu. Nguyên tử kim loại điển hình dễ nhường electron để trở thành ion dương (cation), còn nguyên tử phi kim điển hình dễ nhận electron để trở thành ion âm (anion). Ví dụ, khi natri tác dụng với clo, mỗi nguyên tử Na nhường 1 electron thành ion Na+, mỗi nguyên tử Cl nhận 1 electron thành ion Cl−, hai ion hút nhau tạo thành natri clorua NaCl.
+
+Hợp chất ion thường ở dạng tinh thể, có nhiệt độ nóng chảy cao, và khi nóng chảy hoặc tan trong nước thì dẫn điện được.
+
+## Liên kết cộng hóa trị
+
+Liên kết cộng hóa trị được tạo nên giữa hai nguyên tử bằng một hay nhiều cặp electron dùng chung. Trong phân tử H2, mỗi nguyên tử hiđro góp 1 electron tạo thành một cặp electron chung, đó là liên kết đơn. Trong phân tử N2, hai nguyên tử nitơ góp chung ba cặp electron, tạo liên kết ba rất bền.
+
+Nếu cặp electron chung không lệch về phía nguyên tử nào, như trong H2, Cl2, ta có liên kết cộng hóa trị không cực. Nếu cặp electron chung lệch về phía nguyên tử có độ âm điện lớn hơn, như trong HCl, ta có liên kết cộng hóa trị có cực.
+
+## Độ âm điện và loại liên kết
+
+Độ âm điện là đại lượng đặc trưng cho khả năng hút electron của nguyên tử khi tạo liên kết. Flo là nguyên tố có độ âm điện lớn nhất, khoảng 3,98 theo thang Pauling. Có thể dựa vào hiệu độ âm điện Δχ giữa hai nguyên tử để dự đoán gần đúng loại liên kết: Δχ từ 0 đến dưới 0,4 là liên kết cộng hóa trị không cực; từ 0,4 đến dưới 1,7 là liên kết cộng hóa trị có cực; từ 1,7 trở lên thường là liên kết ion. Cách phân loại này chỉ mang tính tương đối.
+
+## Liên ",,,,,,,
+7d361a00-d135-45d6-9929-93922b58ae57,H2-lien-ket-hoa-hoc:TRUE_FALSE,Liên kết hóa học,"Trong phản ứng giữa natri và clo, nguyên tử Cl nhường 1 electron để thành ion Cl−.",TRUE: Đúng | FALSE: Sai,FALSE,"Cl nhận 1 electron để thành ion Cl−, còn Na mới là nguyên tử nhường electron.","# Liên kết hóa học
+
+## Vì sao nguyên tử liên kết
+
+Các nguyên tử của khí hiếm có lớp electron ngoài cùng bền vững với 8 electron (riêng heli có 2 electron), nên hầu như không tham gia phản ứng. Nguyên tử của các nguyên tố khác có xu hướng liên kết với nhau để đạt cấu hình electron bền vững giống khí hiếm, bằng cách nhường, nhận hoặc góp chung electron. Đây là nội dung của quy tắc bát tử.
+
+## Liên kết ion
+
+Liên kết ion được hình thành do lực hút tĩnh điện giữa các ion mang điện tích trái dấu. Nguyên tử kim loại điển hình dễ nhường electron để trở thành ion dương (cation), còn nguyên tử phi kim điển hình dễ nhận electron để trở thành ion âm (anion). Ví dụ, khi natri tác dụng với clo, mỗi nguyên tử Na nhường 1 electron thành ion Na+, mỗi nguyên tử Cl nhận 1 electron thành ion Cl−, hai ion hút nhau tạo thành natri clorua NaCl.
+
+Hợp chất ion thường ở dạng tinh thể, có nhiệt độ nóng chảy cao, và khi nóng chảy hoặc tan trong nước thì dẫn điện được.
+
+## Liên kết cộng hóa trị
+
+Liên kết cộng hóa trị được tạo nên giữa hai nguyên tử bằng một hay nhiều cặp electron dùng chung. Trong phân tử H2, mỗi nguyên tử hiđro góp 1 electron tạo thành một cặp electron chung, đó là liên kết đơn. Trong phân tử N2, hai nguyên tử nitơ góp chung ba cặp electron, tạo liên kết ba rất bền.
+
+Nếu cặp electron chung không lệch về phía nguyên tử nào, như trong H2, Cl2, ta có liên kết cộng hóa trị không cực. Nếu cặp electron chung lệch về phía nguyên tử có độ âm điện lớn hơn, như trong HCl, ta có liên kết cộng hóa trị có cực.
+
+## Độ âm điện và loại liên kết
+
+Độ âm điện là đại lượng đặc trưng cho khả năng hút electron của nguyên tử khi tạo liên kết. Flo là nguyên tố có độ âm điện lớn nhất, khoảng 3,98 theo thang Pauling. Có thể dựa vào hiệu độ âm điện Δχ giữa hai nguyên tử để dự đoán gần đúng loại liên kết: Δχ từ 0 đến dưới 0,4 là liên kết cộng hóa trị không cực; từ 0,4 đến dưới 1,7 là liên kết cộng hóa trị có cực; từ 1,7 trở lên thường là liên kết ion. Cách phân loại này chỉ mang tính tương đối.
+
+## Liên ",,,,,,,
+d06d539f-d175-44b9-b528-db1ff5ec29c7,H2-lien-ket-hoa-hoc:TRUE_FALSE,Liên kết hóa học,Hợp chất ion thường có nhiệt độ nóng chảy cao và dẫn điện khi nóng chảy hoặc tan trong nước.,TRUE: Đúng | FALSE: Sai,TRUE,Tài liệu nêu rõ tính chất này của hợp chất ion.,"# Liên kết hóa học
+
+## Vì sao nguyên tử liên kết
+
+Các nguyên tử của khí hiếm có lớp electron ngoài cùng bền vững với 8 electron (riêng heli có 2 electron), nên hầu như không tham gia phản ứng. Nguyên tử của các nguyên tố khác có xu hướng liên kết với nhau để đạt cấu hình electron bền vững giống khí hiếm, bằng cách nhường, nhận hoặc góp chung electron. Đây là nội dung của quy tắc bát tử.
+
+## Liên kết ion
+
+Liên kết ion được hình thành do lực hút tĩnh điện giữa các ion mang điện tích trái dấu. Nguyên tử kim loại điển hình dễ nhường electron để trở thành ion dương (cation), còn nguyên tử phi kim điển hình dễ nhận electron để trở thành ion âm (anion). Ví dụ, khi natri tác dụng với clo, mỗi nguyên tử Na nhường 1 electron thành ion Na+, mỗi nguyên tử Cl nhận 1 electron thành ion Cl−, hai ion hút nhau tạo thành natri clorua NaCl.
+
+Hợp chất ion thường ở dạng tinh thể, có nhiệt độ nóng chảy cao, và khi nóng chảy hoặc tan trong nước thì dẫn điện được.
+
+## Liên kết cộng hóa trị
+
+Liên kết cộng hóa trị được tạo nên giữa hai nguyên tử bằng một hay nhiều cặp electron dùng chung. Trong phân tử H2, mỗi nguyên tử hiđro góp 1 electron tạo thành một cặp electron chung, đó là liên kết đơn. Trong phân tử N2, hai nguyên tử nitơ góp chung ba cặp electron, tạo liên kết ba rất bền.
+
+Nếu cặp electron chung không lệch về phía nguyên tử nào, như trong H2, Cl2, ta có liên kết cộng hóa trị không cực. Nếu cặp electron chung lệch về phía nguyên tử có độ âm điện lớn hơn, như trong HCl, ta có liên kết cộng hóa trị có cực.
+
+## Độ âm điện và loại liên kết
+
+Độ âm điện là đại lượng đặc trưng cho khả năng hút electron của nguyên tử khi tạo liên kết. Flo là nguyên tố có độ âm điện lớn nhất, khoảng 3,98 theo thang Pauling. Có thể dựa vào hiệu độ âm điện Δχ giữa hai nguyên tử để dự đoán gần đúng loại liên kết: Δχ từ 0 đến dưới 0,4 là liên kết cộng hóa trị không cực; từ 0,4 đến dưới 1,7 là liên kết cộng hóa trị có cực; từ 1,7 trở lên thường là liên kết ion. Cách phân loại này chỉ mang tính tương đối.
+
+## Liên ",,,,,,,
+b4f52476-46a5-4b67-8f0b-ae6b258fcb6f,H2-lien-ket-hoa-hoc:TRUE_FALSE,Liên kết hóa học,"Trong phân tử N2, hai nguyên tử nitơ góp chung ba cặp electron tạo thành liên kết ba.",TRUE: Đúng | FALSE: Sai,TRUE,Tài liệu cho biết N2 có liên kết ba rất bền do góp chung ba cặp electron.,"# Liên kết hóa học
+
+## Vì sao nguyên tử liên kết
+
+Các nguyên tử của khí hiếm có lớp electron ngoài cùng bền vững với 8 electron (riêng heli có 2 electron), nên hầu như không tham gia phản ứng. Nguyên tử của các nguyên tố khác có xu hướng liên kết với nhau để đạt cấu hình electron bền vững giống khí hiếm, bằng cách nhường, nhận hoặc góp chung electron. Đây là nội dung của quy tắc bát tử.
+
+## Liên kết ion
+
+Liên kết ion được hình thành do lực hút tĩnh điện giữa các ion mang điện tích trái dấu. Nguyên tử kim loại điển hình dễ nhường electron để trở thành ion dương (cation), còn nguyên tử phi kim điển hình dễ nhận electron để trở thành ion âm (anion). Ví dụ, khi natri tác dụng với clo, mỗi nguyên tử Na nhường 1 electron thành ion Na+, mỗi nguyên tử Cl nhận 1 electron thành ion Cl−, hai ion hút nhau tạo thành natri clorua NaCl.
+
+Hợp chất ion thường ở dạng tinh thể, có nhiệt độ nóng chảy cao, và khi nóng chảy hoặc tan trong nước thì dẫn điện được.
+
+## Liên kết cộng hóa trị
+
+Liên kết cộng hóa trị được tạo nên giữa hai nguyên tử bằng một hay nhiều cặp electron dùng chung. Trong phân tử H2, mỗi nguyên tử hiđro góp 1 electron tạo thành một cặp electron chung, đó là liên kết đơn. Trong phân tử N2, hai nguyên tử nitơ góp chung ba cặp electron, tạo liên kết ba rất bền.
+
+Nếu cặp electron chung không lệch về phía nguyên tử nào, như trong H2, Cl2, ta có liên kết cộng hóa trị không cực. Nếu cặp electron chung lệch về phía nguyên tử có độ âm điện lớn hơn, như trong HCl, ta có liên kết cộng hóa trị có cực.
+
+## Độ âm điện và loại liên kết
+
+Độ âm điện là đại lượng đặc trưng cho khả năng hút electron của nguyên tử khi tạo liên kết. Flo là nguyên tố có độ âm điện lớn nhất, khoảng 3,98 theo thang Pauling. Có thể dựa vào hiệu độ âm điện Δχ giữa hai nguyên tử để dự đoán gần đúng loại liên kết: Δχ từ 0 đến dưới 0,4 là liên kết cộng hóa trị không cực; từ 0,4 đến dưới 1,7 là liên kết cộng hóa trị có cực; từ 1,7 trở lên thường là liên kết ion. Cách phân loại này chỉ mang tính tương đối.
+
+## Liên ",,,,,,,
+b5ba9687-e20d-426b-ab0e-1467d70f2950,H2-lien-ket-hoa-hoc:TRUE_FALSE,Liên kết hóa học,Liên kết trong phân tử HCl là liên kết cộng hóa trị không cực.,TRUE: Đúng | FALSE: Sai,FALSE,"Trong HCl, cặp electron chung lệch về phía Cl nên đây là liên kết cộng hóa trị có cực.","# Liên kết hóa học
+
+## Vì sao nguyên tử liên kết
+
+Các nguyên tử của khí hiếm có lớp electron ngoài cùng bền vững với 8 electron (riêng heli có 2 electron), nên hầu như không tham gia phản ứng. Nguyên tử của các nguyên tố khác có xu hướng liên kết với nhau để đạt cấu hình electron bền vững giống khí hiếm, bằng cách nhường, nhận hoặc góp chung electron. Đây là nội dung của quy tắc bát tử.
+
+## Liên kết ion
+
+Liên kết ion được hình thành do lực hút tĩnh điện giữa các ion mang điện tích trái dấu. Nguyên tử kim loại điển hình dễ nhường electron để trở thành ion dương (cation), còn nguyên tử phi kim điển hình dễ nhận electron để trở thành ion âm (anion). Ví dụ, khi natri tác dụng với clo, mỗi nguyên tử Na nhường 1 electron thành ion Na+, mỗi nguyên tử Cl nhận 1 electron thành ion Cl−, hai ion hút nhau tạo thành natri clorua NaCl.
+
+Hợp chất ion thường ở dạng tinh thể, có nhiệt độ nóng chảy cao, và khi nóng chảy hoặc tan trong nước thì dẫn điện được.
+
+## Liên kết cộng hóa trị
+
+Liên kết cộng hóa trị được tạo nên giữa hai nguyên tử bằng một hay nhiều cặp electron dùng chung. Trong phân tử H2, mỗi nguyên tử hiđro góp 1 electron tạo thành một cặp electron chung, đó là liên kết đơn. Trong phân tử N2, hai nguyên tử nitơ góp chung ba cặp electron, tạo liên kết ba rất bền.
+
+Nếu cặp electron chung không lệch về phía nguyên tử nào, như trong H2, Cl2, ta có liên kết cộng hóa trị không cực. Nếu cặp electron chung lệch về phía nguyên tử có độ âm điện lớn hơn, như trong HCl, ta có liên kết cộng hóa trị có cực.
+
+## Độ âm điện và loại liên kết
+
+Độ âm điện là đại lượng đặc trưng cho khả năng hút electron của nguyên tử khi tạo liên kết. Flo là nguyên tố có độ âm điện lớn nhất, khoảng 3,98 theo thang Pauling. Có thể dựa vào hiệu độ âm điện Δχ giữa hai nguyên tử để dự đoán gần đúng loại liên kết: Δχ từ 0 đến dưới 0,4 là liên kết cộng hóa trị không cực; từ 0,4 đến dưới 1,7 là liên kết cộng hóa trị có cực; từ 1,7 trở lên thường là liên kết ion. Cách phân loại này chỉ mang tính tương đối.
+
+## Liên ",,,,,,,
+71f2c0c8-4e73-4eb7-b0f5-8789ff5fef3c,H2-lien-ket-hoa-hoc:TRUE_FALSE,Liên kết hóa học,"Flo là nguyên tố có độ âm điện lớn nhất, khoảng 3,98 theo thang Pauling.",TRUE: Đúng | FALSE: Sai,TRUE,"Tài liệu khẳng định flo có độ âm điện lớn nhất khoảng 3,98 theo thang Pauling.","# Liên kết hóa học
+
+## Vì sao nguyên tử liên kết
+
+Các nguyên tử của khí hiếm có lớp electron ngoài cùng bền vững với 8 electron (riêng heli có 2 electron), nên hầu như không tham gia phản ứng. Nguyên tử của các nguyên tố khác có xu hướng liên kết với nhau để đạt cấu hình electron bền vững giống khí hiếm, bằng cách nhường, nhận hoặc góp chung electron. Đây là nội dung của quy tắc bát tử.
+
+## Liên kết ion
+
+Liên kết ion được hình thành do lực hút tĩnh điện giữa các ion mang điện tích trái dấu. Nguyên tử kim loại điển hình dễ nhường electron để trở thành ion dương (cation), còn nguyên tử phi kim điển hình dễ nhận electron để trở thành ion âm (anion). Ví dụ, khi natri tác dụng với clo, mỗi nguyên tử Na nhường 1 electron thành ion Na+, mỗi nguyên tử Cl nhận 1 electron thành ion Cl−, hai ion hút nhau tạo thành natri clorua NaCl.
+
+Hợp chất ion thường ở dạng tinh thể, có nhiệt độ nóng chảy cao, và khi nóng chảy hoặc tan trong nước thì dẫn điện được.
+
+## Liên kết cộng hóa trị
+
+Liên kết cộng hóa trị được tạo nên giữa hai nguyên tử bằng một hay nhiều cặp electron dùng chung. Trong phân tử H2, mỗi nguyên tử hiđro góp 1 electron tạo thành một cặp electron chung, đó là liên kết đơn. Trong phân tử N2, hai nguyên tử nitơ góp chung ba cặp electron, tạo liên kết ba rất bền.
+
+Nếu cặp electron chung không lệch về phía nguyên tử nào, như trong H2, Cl2, ta có liên kết cộng hóa trị không cực. Nếu cặp electron chung lệch về phía nguyên tử có độ âm điện lớn hơn, như trong HCl, ta có liên kết cộng hóa trị có cực.
+
+## Độ âm điện và loại liên kết
+
+Độ âm điện là đại lượng đặc trưng cho khả năng hút electron của nguyên tử khi tạo liên kết. Flo là nguyên tố có độ âm điện lớn nhất, khoảng 3,98 theo thang Pauling. Có thể dựa vào hiệu độ âm điện Δχ giữa hai nguyên tử để dự đoán gần đúng loại liên kết: Δχ từ 0 đến dưới 0,4 là liên kết cộng hóa trị không cực; từ 0,4 đến dưới 1,7 là liên kết cộng hóa trị có cực; từ 1,7 trở lên thường là liên kết ion. Cách phân loại này chỉ mang tính tương đối.
+
+## Liên ",,,,,,,
+572f7fbc-3e25-4e06-9928-6509667a9059,H2-lien-ket-hoa-hoc:TRUE_FALSE,Liên kết hóa học,"Theo cách dự đoán dựa vào hiệu độ âm điện, Δχ từ 1,7 trở lên thường là liên kết ion.",TRUE: Đúng | FALSE: Sai,TRUE,"Tài liệu nêu Δχ từ 1,7 trở lên thường là liên kết ion, tuy chỉ mang tính tương đối.","# Liên kết hóa học
+
+## Vì sao nguyên tử liên kết
+
+Các nguyên tử của khí hiếm có lớp electron ngoài cùng bền vững với 8 electron (riêng heli có 2 electron), nên hầu như không tham gia phản ứng. Nguyên tử của các nguyên tố khác có xu hướng liên kết với nhau để đạt cấu hình electron bền vững giống khí hiếm, bằng cách nhường, nhận hoặc góp chung electron. Đây là nội dung của quy tắc bát tử.
+
+## Liên kết ion
+
+Liên kết ion được hình thành do lực hút tĩnh điện giữa các ion mang điện tích trái dấu. Nguyên tử kim loại điển hình dễ nhường electron để trở thành ion dương (cation), còn nguyên tử phi kim điển hình dễ nhận electron để trở thành ion âm (anion). Ví dụ, khi natri tác dụng với clo, mỗi nguyên tử Na nhường 1 electron thành ion Na+, mỗi nguyên tử Cl nhận 1 electron thành ion Cl−, hai ion hút nhau tạo thành natri clorua NaCl.
+
+Hợp chất ion thường ở dạng tinh thể, có nhiệt độ nóng chảy cao, và khi nóng chảy hoặc tan trong nước thì dẫn điện được.
+
+## Liên kết cộng hóa trị
+
+Liên kết cộng hóa trị được tạo nên giữa hai nguyên tử bằng một hay nhiều cặp electron dùng chung. Trong phân tử H2, mỗi nguyên tử hiđro góp 1 electron tạo thành một cặp electron chung, đó là liên kết đơn. Trong phân tử N2, hai nguyên tử nitơ góp chung ba cặp electron, tạo liên kết ba rất bền.
+
+Nếu cặp electron chung không lệch về phía nguyên tử nào, như trong H2, Cl2, ta có liên kết cộng hóa trị không cực. Nếu cặp electron chung lệch về phía nguyên tử có độ âm điện lớn hơn, như trong HCl, ta có liên kết cộng hóa trị có cực.
+
+## Độ âm điện và loại liên kết
+
+Độ âm điện là đại lượng đặc trưng cho khả năng hút electron của nguyên tử khi tạo liên kết. Flo là nguyên tố có độ âm điện lớn nhất, khoảng 3,98 theo thang Pauling. Có thể dựa vào hiệu độ âm điện Δχ giữa hai nguyên tử để dự đoán gần đúng loại liên kết: Δχ từ 0 đến dưới 0,4 là liên kết cộng hóa trị không cực; từ 0,4 đến dưới 1,7 là liên kết cộng hóa trị có cực; từ 1,7 trở lên thường là liên kết ion. Cách phân loại này chỉ mang tính tương đối.
+
+## Liên ",,,,,,,
+4aa7f492-9837-4c98-b206-0ee93725dbe8,H2-lien-ket-hoa-hoc:TRUE_FALSE,Liên kết hóa học,Liên kết hiđro mạnh hơn liên kết ion và liên kết cộng hóa trị.,TRUE: Đúng | FALSE: Sai,FALSE,Liên kết hiđro yếu hơn nhiều so với liên kết ion và cộng hóa trị.,"kết hiđro
+
+Liên kết hiđro là lực hút tương đối yếu giữa nguyên tử hiđro đã liên kết với một nguyên tử có độ âm điện lớn (như O, N, F) và một nguyên tử có độ âm điện lớn khác ở phân tử bên cạnh. Liên kết hiđro yếu hơn nhiều so với liên kết ion và cộng hóa trị, nhưng giải thích được vì sao nước có nhiệt độ sôi cao bất thường so với H2S.",,,,,,,
+f2471557-4bed-4f9b-b33f-b5e4b9bbb77b,H2-lien-ket-hoa-hoc:TRUE_FALSE,Liên kết hóa học,Liên kết hiđro giải thích được vì sao nước có nhiệt độ sôi cao bất thường so với H2S.,TRUE: Đúng | FALSE: Sai,TRUE,Tài liệu nêu liên kết hiđro giải thích nhiệt độ sôi cao bất thường của nước so với H2S.,"kết hiđro
+
+Liên kết hiđro là lực hút tương đối yếu giữa nguyên tử hiđro đã liên kết với một nguyên tử có độ âm điện lớn (như O, N, F) và một nguyên tử có độ âm điện lớn khác ở phân tử bên cạnh. Liên kết hiđro yếu hơn nhiều so với liên kết ion và cộng hóa trị, nhưng giải thích được vì sao nước có nhiệt độ sôi cao bất thường so với H2S.",,,,,,,
+a5df7146-7200-4ce8-aca4-0dd9890a3885,H3-cung-cau:TRUE_FALSE,"Cung, cầu và giá cân bằng","Cầu là số lượng hàng hóa mà người mua sẵn sàng và có khả năng mua ở các mức giá khác nhau trong một khoảng thời gian nhất định, khi các yếu tố khác không đổi.",TRUE: Đúng | FALSE: Sai,TRUE,"Đây chính là định nghĩa cầu trong tài liệu; cầu đòi hỏi cả khả năng thanh toán, khác với nhu cầu.","# Cung, cầu và giá cân bằng
+
+## Cầu
+
+Cầu là số lượng hàng hóa hoặc dịch vụ mà người mua sẵn sàng và có khả năng mua ở các mức giá khác nhau trong một khoảng thời gian nhất định, khi các yếu tố khác không đổi. Cần phân biệt cầu với nhu cầu: nhu cầu là mong muốn, còn cầu đòi hỏi cả khả năng thanh toán.
+
+Quy luật cầu cho biết: khi giá của một hàng hóa tăng thì lượng cầu về hàng hóa đó giảm, và ngược lại, với điều kiện các yếu tố khác giữ nguyên. Vì vậy đường cầu thường dốc xuống từ trái sang phải.
+
+Khi giá của chính hàng hóa thay đổi, ta có sự di chuyển dọc theo đường cầu. Khi các yếu tố khác thay đổi, như thu nhập của người tiêu dùng, giá của hàng hóa liên quan, thị hiếu, kỳ vọng hay số lượng người mua, toàn bộ đường cầu dịch chuyển. Với hàng hóa thông thường, thu nhập tăng làm đường cầu dịch sang phải. Hàng hóa thay thế là hàng có thể dùng thay cho nhau, như trà và cà phê: giá cà phê tăng làm cầu về trà tăng. Hàng hóa bổ sung là hàng được dùng cùng nhau, như xe máy và xăng: giá xăng tăng làm cầu về xe máy giảm.
+
+## Cung
+
+Cung là số lượng hàng hóa hoặc dịch vụ mà người bán sẵn sàng và có khả năng bán ở các mức giá khác nhau trong một khoảng thời gian nhất định. Quy luật cung cho biết: khi giá tăng thì lượng cung tăng, các yếu tố khác không đổi, nên đường cung thường dốc lên.
+
+Các yếu tố làm dịch chuyển đường cung gồm công nghệ sản xuất, giá các yếu tố đầu vào, chính sách thuế và trợ cấp, kỳ vọng của người bán và số lượng người bán. Ví dụ, công nghệ mới làm giảm chi phí sản xuất khiến đường cung dịch sang phải; giá nguyên liệu tăng làm đường cung dịch sang trái.
+
+## Trạng thái cân bằng
+
+Giá cân bằng là mức giá tại đó lượng cầu bằng lượng cung; trên đồ thị là giao điểm của đường cung và đường cầu. Lượng hàng hóa được trao đổi ở mức giá này gọi là sản lượng cân bằng.
+
+Nếu giá cao hơn giá cân bằng, lượng cung lớn hơn lượng cầu và thị trường dư thừa hàng hóa; người bán phải hạ giá. Nếu giá thấp hơn giá cân bằng, lượng cầu lớn hơn lượng cung và thị trường thiếu hụt hàng ",,,,,,,
+e26d32be-2770-470d-8984-13430306bbb5,H3-cung-cau:TRUE_FALSE,"Cung, cầu và giá cân bằng","Theo quy luật cầu, khi giá của một hàng hóa tăng thì lượng cầu về hàng hóa đó cũng tăng, các yếu tố khác không đổi.",TRUE: Đúng | FALSE: Sai,FALSE,"Quy luật cầu cho biết giá tăng thì lượng cầu giảm, nên đường cầu dốc xuống.","# Cung, cầu và giá cân bằng
+
+## Cầu
+
+Cầu là số lượng hàng hóa hoặc dịch vụ mà người mua sẵn sàng và có khả năng mua ở các mức giá khác nhau trong một khoảng thời gian nhất định, khi các yếu tố khác không đổi. Cần phân biệt cầu với nhu cầu: nhu cầu là mong muốn, còn cầu đòi hỏi cả khả năng thanh toán.
+
+Quy luật cầu cho biết: khi giá của một hàng hóa tăng thì lượng cầu về hàng hóa đó giảm, và ngược lại, với điều kiện các yếu tố khác giữ nguyên. Vì vậy đường cầu thường dốc xuống từ trái sang phải.
+
+Khi giá của chính hàng hóa thay đổi, ta có sự di chuyển dọc theo đường cầu. Khi các yếu tố khác thay đổi, như thu nhập của người tiêu dùng, giá của hàng hóa liên quan, thị hiếu, kỳ vọng hay số lượng người mua, toàn bộ đường cầu dịch chuyển. Với hàng hóa thông thường, thu nhập tăng làm đường cầu dịch sang phải. Hàng hóa thay thế là hàng có thể dùng thay cho nhau, như trà và cà phê: giá cà phê tăng làm cầu về trà tăng. Hàng hóa bổ sung là hàng được dùng cùng nhau, như xe máy và xăng: giá xăng tăng làm cầu về xe máy giảm.
+
+## Cung
+
+Cung là số lượng hàng hóa hoặc dịch vụ mà người bán sẵn sàng và có khả năng bán ở các mức giá khác nhau trong một khoảng thời gian nhất định. Quy luật cung cho biết: khi giá tăng thì lượng cung tăng, các yếu tố khác không đổi, nên đường cung thường dốc lên.
+
+Các yếu tố làm dịch chuyển đường cung gồm công nghệ sản xuất, giá các yếu tố đầu vào, chính sách thuế và trợ cấp, kỳ vọng của người bán và số lượng người bán. Ví dụ, công nghệ mới làm giảm chi phí sản xuất khiến đường cung dịch sang phải; giá nguyên liệu tăng làm đường cung dịch sang trái.
+
+## Trạng thái cân bằng
+
+Giá cân bằng là mức giá tại đó lượng cầu bằng lượng cung; trên đồ thị là giao điểm của đường cung và đường cầu. Lượng hàng hóa được trao đổi ở mức giá này gọi là sản lượng cân bằng.
+
+Nếu giá cao hơn giá cân bằng, lượng cung lớn hơn lượng cầu và thị trường dư thừa hàng hóa; người bán phải hạ giá. Nếu giá thấp hơn giá cân bằng, lượng cầu lớn hơn lượng cung và thị trường thiếu hụt hàng ",,,,,,,
+84ff2a61-7eec-4d4f-8215-67f0a09d0a02,H3-cung-cau:TRUE_FALSE,"Cung, cầu và giá cân bằng","Khi giá của chính hàng hóa thay đổi, toàn bộ đường cầu dịch chuyển sang phải hoặc sang trái.",TRUE: Đúng | FALSE: Sai,FALSE,Giá của chính hàng hóa thay đổi gây di chuyển dọc theo đường cầu; chỉ khi các yếu tố khác thay đổi thì đường cầu mới dịch chuyển.,"# Cung, cầu và giá cân bằng
+
+## Cầu
+
+Cầu là số lượng hàng hóa hoặc dịch vụ mà người mua sẵn sàng và có khả năng mua ở các mức giá khác nhau trong một khoảng thời gian nhất định, khi các yếu tố khác không đổi. Cần phân biệt cầu với nhu cầu: nhu cầu là mong muốn, còn cầu đòi hỏi cả khả năng thanh toán.
+
+Quy luật cầu cho biết: khi giá của một hàng hóa tăng thì lượng cầu về hàng hóa đó giảm, và ngược lại, với điều kiện các yếu tố khác giữ nguyên. Vì vậy đường cầu thường dốc xuống từ trái sang phải.
+
+Khi giá của chính hàng hóa thay đổi, ta có sự di chuyển dọc theo đường cầu. Khi các yếu tố khác thay đổi, như thu nhập của người tiêu dùng, giá của hàng hóa liên quan, thị hiếu, kỳ vọng hay số lượng người mua, toàn bộ đường cầu dịch chuyển. Với hàng hóa thông thường, thu nhập tăng làm đường cầu dịch sang phải. Hàng hóa thay thế là hàng có thể dùng thay cho nhau, như trà và cà phê: giá cà phê tăng làm cầu về trà tăng. Hàng hóa bổ sung là hàng được dùng cùng nhau, như xe máy và xăng: giá xăng tăng làm cầu về xe máy giảm.
+
+## Cung
+
+Cung là số lượng hàng hóa hoặc dịch vụ mà người bán sẵn sàng và có khả năng bán ở các mức giá khác nhau trong một khoảng thời gian nhất định. Quy luật cung cho biết: khi giá tăng thì lượng cung tăng, các yếu tố khác không đổi, nên đường cung thường dốc lên.
+
+Các yếu tố làm dịch chuyển đường cung gồm công nghệ sản xuất, giá các yếu tố đầu vào, chính sách thuế và trợ cấp, kỳ vọng của người bán và số lượng người bán. Ví dụ, công nghệ mới làm giảm chi phí sản xuất khiến đường cung dịch sang phải; giá nguyên liệu tăng làm đường cung dịch sang trái.
+
+## Trạng thái cân bằng
+
+Giá cân bằng là mức giá tại đó lượng cầu bằng lượng cung; trên đồ thị là giao điểm của đường cung và đường cầu. Lượng hàng hóa được trao đổi ở mức giá này gọi là sản lượng cân bằng.
+
+Nếu giá cao hơn giá cân bằng, lượng cung lớn hơn lượng cầu và thị trường dư thừa hàng hóa; người bán phải hạ giá. Nếu giá thấp hơn giá cân bằng, lượng cầu lớn hơn lượng cung và thị trường thiếu hụt hàng ",,,,,,,
+d5caa16f-379e-4b96-94c0-2c1bf2dcf69c,H3-cung-cau:TRUE_FALSE,"Cung, cầu và giá cân bằng",Trà và cà phê là ví dụ về hàng hóa thay thế: khi giá cà phê tăng thì cầu về trà tăng.,TRUE: Đúng | FALSE: Sai,TRUE,Tài liệu nêu trà và cà phê là hàng hóa thay thế; giá cà phê tăng làm cầu về trà tăng.,"# Cung, cầu và giá cân bằng
+
+## Cầu
+
+Cầu là số lượng hàng hóa hoặc dịch vụ mà người mua sẵn sàng và có khả năng mua ở các mức giá khác nhau trong một khoảng thời gian nhất định, khi các yếu tố khác không đổi. Cần phân biệt cầu với nhu cầu: nhu cầu là mong muốn, còn cầu đòi hỏi cả khả năng thanh toán.
+
+Quy luật cầu cho biết: khi giá của một hàng hóa tăng thì lượng cầu về hàng hóa đó giảm, và ngược lại, với điều kiện các yếu tố khác giữ nguyên. Vì vậy đường cầu thường dốc xuống từ trái sang phải.
+
+Khi giá của chính hàng hóa thay đổi, ta có sự di chuyển dọc theo đường cầu. Khi các yếu tố khác thay đổi, như thu nhập của người tiêu dùng, giá của hàng hóa liên quan, thị hiếu, kỳ vọng hay số lượng người mua, toàn bộ đường cầu dịch chuyển. Với hàng hóa thông thường, thu nhập tăng làm đường cầu dịch sang phải. Hàng hóa thay thế là hàng có thể dùng thay cho nhau, như trà và cà phê: giá cà phê tăng làm cầu về trà tăng. Hàng hóa bổ sung là hàng được dùng cùng nhau, như xe máy và xăng: giá xăng tăng làm cầu về xe máy giảm.
+
+## Cung
+
+Cung là số lượng hàng hóa hoặc dịch vụ mà người bán sẵn sàng và có khả năng bán ở các mức giá khác nhau trong một khoảng thời gian nhất định. Quy luật cung cho biết: khi giá tăng thì lượng cung tăng, các yếu tố khác không đổi, nên đường cung thường dốc lên.
+
+Các yếu tố làm dịch chuyển đường cung gồm công nghệ sản xuất, giá các yếu tố đầu vào, chính sách thuế và trợ cấp, kỳ vọng của người bán và số lượng người bán. Ví dụ, công nghệ mới làm giảm chi phí sản xuất khiến đường cung dịch sang phải; giá nguyên liệu tăng làm đường cung dịch sang trái.
+
+## Trạng thái cân bằng
+
+Giá cân bằng là mức giá tại đó lượng cầu bằng lượng cung; trên đồ thị là giao điểm của đường cung và đường cầu. Lượng hàng hóa được trao đổi ở mức giá này gọi là sản lượng cân bằng.
+
+Nếu giá cao hơn giá cân bằng, lượng cung lớn hơn lượng cầu và thị trường dư thừa hàng hóa; người bán phải hạ giá. Nếu giá thấp hơn giá cân bằng, lượng cầu lớn hơn lượng cung và thị trường thiếu hụt hàng ",,,,,,,
+3403efc4-08d6-4da2-bd93-e400f37a8a1f,H3-cung-cau:TRUE_FALSE,"Cung, cầu và giá cân bằng","Xe máy và xăng là hàng hóa bổ sung, nên khi giá xăng tăng thì cầu về xe máy giảm.",TRUE: Đúng | FALSE: Sai,TRUE,Tài liệu nêu xe máy và xăng là hàng hóa bổ sung; giá xăng tăng làm cầu về xe máy giảm.,"# Cung, cầu và giá cân bằng
+
+## Cầu
+
+Cầu là số lượng hàng hóa hoặc dịch vụ mà người mua sẵn sàng và có khả năng mua ở các mức giá khác nhau trong một khoảng thời gian nhất định, khi các yếu tố khác không đổi. Cần phân biệt cầu với nhu cầu: nhu cầu là mong muốn, còn cầu đòi hỏi cả khả năng thanh toán.
+
+Quy luật cầu cho biết: khi giá của một hàng hóa tăng thì lượng cầu về hàng hóa đó giảm, và ngược lại, với điều kiện các yếu tố khác giữ nguyên. Vì vậy đường cầu thường dốc xuống từ trái sang phải.
+
+Khi giá của chính hàng hóa thay đổi, ta có sự di chuyển dọc theo đường cầu. Khi các yếu tố khác thay đổi, như thu nhập của người tiêu dùng, giá của hàng hóa liên quan, thị hiếu, kỳ vọng hay số lượng người mua, toàn bộ đường cầu dịch chuyển. Với hàng hóa thông thường, thu nhập tăng làm đường cầu dịch sang phải. Hàng hóa thay thế là hàng có thể dùng thay cho nhau, như trà và cà phê: giá cà phê tăng làm cầu về trà tăng. Hàng hóa bổ sung là hàng được dùng cùng nhau, như xe máy và xăng: giá xăng tăng làm cầu về xe máy giảm.
+
+## Cung
+
+Cung là số lượng hàng hóa hoặc dịch vụ mà người bán sẵn sàng và có khả năng bán ở các mức giá khác nhau trong một khoảng thời gian nhất định. Quy luật cung cho biết: khi giá tăng thì lượng cung tăng, các yếu tố khác không đổi, nên đường cung thường dốc lên.
+
+Các yếu tố làm dịch chuyển đường cung gồm công nghệ sản xuất, giá các yếu tố đầu vào, chính sách thuế và trợ cấp, kỳ vọng của người bán và số lượng người bán. Ví dụ, công nghệ mới làm giảm chi phí sản xuất khiến đường cung dịch sang phải; giá nguyên liệu tăng làm đường cung dịch sang trái.
+
+## Trạng thái cân bằng
+
+Giá cân bằng là mức giá tại đó lượng cầu bằng lượng cung; trên đồ thị là giao điểm của đường cung và đường cầu. Lượng hàng hóa được trao đổi ở mức giá này gọi là sản lượng cân bằng.
+
+Nếu giá cao hơn giá cân bằng, lượng cung lớn hơn lượng cầu và thị trường dư thừa hàng hóa; người bán phải hạ giá. Nếu giá thấp hơn giá cân bằng, lượng cầu lớn hơn lượng cung và thị trường thiếu hụt hàng ",,,,,,,
+2bbf053a-d3c8-4004-ad60-c283db7a6760,H3-cung-cau:TRUE_FALSE,"Cung, cầu và giá cân bằng","Theo quy luật cung, khi giá tăng thì lượng cung tăng với điều kiện các yếu tố khác không đổi, nên đường cung thường dốc lên.",TRUE: Đúng | FALSE: Sai,TRUE,Đây là nội dung quy luật cung được trình bày trong tài liệu.,"# Cung, cầu và giá cân bằng
+
+## Cầu
+
+Cầu là số lượng hàng hóa hoặc dịch vụ mà người mua sẵn sàng và có khả năng mua ở các mức giá khác nhau trong một khoảng thời gian nhất định, khi các yếu tố khác không đổi. Cần phân biệt cầu với nhu cầu: nhu cầu là mong muốn, còn cầu đòi hỏi cả khả năng thanh toán.
+
+Quy luật cầu cho biết: khi giá của một hàng hóa tăng thì lượng cầu về hàng hóa đó giảm, và ngược lại, với điều kiện các yếu tố khác giữ nguyên. Vì vậy đường cầu thường dốc xuống từ trái sang phải.
+
+Khi giá của chính hàng hóa thay đổi, ta có sự di chuyển dọc theo đường cầu. Khi các yếu tố khác thay đổi, như thu nhập của người tiêu dùng, giá của hàng hóa liên quan, thị hiếu, kỳ vọng hay số lượng người mua, toàn bộ đường cầu dịch chuyển. Với hàng hóa thông thường, thu nhập tăng làm đường cầu dịch sang phải. Hàng hóa thay thế là hàng có thể dùng thay cho nhau, như trà và cà phê: giá cà phê tăng làm cầu về trà tăng. Hàng hóa bổ sung là hàng được dùng cùng nhau, như xe máy và xăng: giá xăng tăng làm cầu về xe máy giảm.
+
+## Cung
+
+Cung là số lượng hàng hóa hoặc dịch vụ mà người bán sẵn sàng và có khả năng bán ở các mức giá khác nhau trong một khoảng thời gian nhất định. Quy luật cung cho biết: khi giá tăng thì lượng cung tăng, các yếu tố khác không đổi, nên đường cung thường dốc lên.
+
+Các yếu tố làm dịch chuyển đường cung gồm công nghệ sản xuất, giá các yếu tố đầu vào, chính sách thuế và trợ cấp, kỳ vọng của người bán và số lượng người bán. Ví dụ, công nghệ mới làm giảm chi phí sản xuất khiến đường cung dịch sang phải; giá nguyên liệu tăng làm đường cung dịch sang trái.
+
+## Trạng thái cân bằng
+
+Giá cân bằng là mức giá tại đó lượng cầu bằng lượng cung; trên đồ thị là giao điểm của đường cung và đường cầu. Lượng hàng hóa được trao đổi ở mức giá này gọi là sản lượng cân bằng.
+
+Nếu giá cao hơn giá cân bằng, lượng cung lớn hơn lượng cầu và thị trường dư thừa hàng hóa; người bán phải hạ giá. Nếu giá thấp hơn giá cân bằng, lượng cầu lớn hơn lượng cung và thị trường thiếu hụt hàng ",,,,,,,
+948692f9-b809-49c1-a1c8-306cb82e8159,H3-cung-cau:TRUE_FALSE,"Cung, cầu và giá cân bằng",Công nghệ sản xuất mới làm giảm chi phí sản xuất sẽ khiến đường cung dịch sang trái.,TRUE: Đúng | FALSE: Sai,FALSE,"Công nghệ mới làm giảm chi phí sản xuất khiến đường cung dịch sang phải, không phải sang trái.","# Cung, cầu và giá cân bằng
+
+## Cầu
+
+Cầu là số lượng hàng hóa hoặc dịch vụ mà người mua sẵn sàng và có khả năng mua ở các mức giá khác nhau trong một khoảng thời gian nhất định, khi các yếu tố khác không đổi. Cần phân biệt cầu với nhu cầu: nhu cầu là mong muốn, còn cầu đòi hỏi cả khả năng thanh toán.
+
+Quy luật cầu cho biết: khi giá của một hàng hóa tăng thì lượng cầu về hàng hóa đó giảm, và ngược lại, với điều kiện các yếu tố khác giữ nguyên. Vì vậy đường cầu thường dốc xuống từ trái sang phải.
+
+Khi giá của chính hàng hóa thay đổi, ta có sự di chuyển dọc theo đường cầu. Khi các yếu tố khác thay đổi, như thu nhập của người tiêu dùng, giá của hàng hóa liên quan, thị hiếu, kỳ vọng hay số lượng người mua, toàn bộ đường cầu dịch chuyển. Với hàng hóa thông thường, thu nhập tăng làm đường cầu dịch sang phải. Hàng hóa thay thế là hàng có thể dùng thay cho nhau, như trà và cà phê: giá cà phê tăng làm cầu về trà tăng. Hàng hóa bổ sung là hàng được dùng cùng nhau, như xe máy và xăng: giá xăng tăng làm cầu về xe máy giảm.
+
+## Cung
+
+Cung là số lượng hàng hóa hoặc dịch vụ mà người bán sẵn sàng và có khả năng bán ở các mức giá khác nhau trong một khoảng thời gian nhất định. Quy luật cung cho biết: khi giá tăng thì lượng cung tăng, các yếu tố khác không đổi, nên đường cung thường dốc lên.
+
+Các yếu tố làm dịch chuyển đường cung gồm công nghệ sản xuất, giá các yếu tố đầu vào, chính sách thuế và trợ cấp, kỳ vọng của người bán và số lượng người bán. Ví dụ, công nghệ mới làm giảm chi phí sản xuất khiến đường cung dịch sang phải; giá nguyên liệu tăng làm đường cung dịch sang trái.
+
+## Trạng thái cân bằng
+
+Giá cân bằng là mức giá tại đó lượng cầu bằng lượng cung; trên đồ thị là giao điểm của đường cung và đường cầu. Lượng hàng hóa được trao đổi ở mức giá này gọi là sản lượng cân bằng.
+
+Nếu giá cao hơn giá cân bằng, lượng cung lớn hơn lượng cầu và thị trường dư thừa hàng hóa; người bán phải hạ giá. Nếu giá thấp hơn giá cân bằng, lượng cầu lớn hơn lượng cung và thị trường thiếu hụt hàng ",,,,,,,
+1aa83a12-22c8-405b-91ba-13a9a7239cb9,H3-cung-cau:TRUE_FALSE,"Cung, cầu và giá cân bằng","Giá cân bằng là mức giá tại đó lượng cầu bằng lượng cung, tương ứng với giao điểm của đường cung và đường cầu.",TRUE: Đúng | FALSE: Sai,TRUE,"Tài liệu định nghĩa giá cân bằng là mức giá tại đó lượng cầu bằng lượng cung, là giao điểm của hai đường.","# Cung, cầu và giá cân bằng
+
+## Cầu
+
+Cầu là số lượng hàng hóa hoặc dịch vụ mà người mua sẵn sàng và có khả năng mua ở các mức giá khác nhau trong một khoảng thời gian nhất định, khi các yếu tố khác không đổi. Cần phân biệt cầu với nhu cầu: nhu cầu là mong muốn, còn cầu đòi hỏi cả khả năng thanh toán.
+
+Quy luật cầu cho biết: khi giá của một hàng hóa tăng thì lượng cầu về hàng hóa đó giảm, và ngược lại, với điều kiện các yếu tố khác giữ nguyên. Vì vậy đường cầu thường dốc xuống từ trái sang phải.
+
+Khi giá của chính hàng hóa thay đổi, ta có sự di chuyển dọc theo đường cầu. Khi các yếu tố khác thay đổi, như thu nhập của người tiêu dùng, giá của hàng hóa liên quan, thị hiếu, kỳ vọng hay số lượng người mua, toàn bộ đường cầu dịch chuyển. Với hàng hóa thông thường, thu nhập tăng làm đường cầu dịch sang phải. Hàng hóa thay thế là hàng có thể dùng thay cho nhau, như trà và cà phê: giá cà phê tăng làm cầu về trà tăng. Hàng hóa bổ sung là hàng được dùng cùng nhau, như xe máy và xăng: giá xăng tăng làm cầu về xe máy giảm.
+
+## Cung
+
+Cung là số lượng hàng hóa hoặc dịch vụ mà người bán sẵn sàng và có khả năng bán ở các mức giá khác nhau trong một khoảng thời gian nhất định. Quy luật cung cho biết: khi giá tăng thì lượng cung tăng, các yếu tố khác không đổi, nên đường cung thường dốc lên.
+
+Các yếu tố làm dịch chuyển đường cung gồm công nghệ sản xuất, giá các yếu tố đầu vào, chính sách thuế và trợ cấp, kỳ vọng của người bán và số lượng người bán. Ví dụ, công nghệ mới làm giảm chi phí sản xuất khiến đường cung dịch sang phải; giá nguyên liệu tăng làm đường cung dịch sang trái.
+
+## Trạng thái cân bằng
+
+Giá cân bằng là mức giá tại đó lượng cầu bằng lượng cung; trên đồ thị là giao điểm của đường cung và đường cầu. Lượng hàng hóa được trao đổi ở mức giá này gọi là sản lượng cân bằng.
+
+Nếu giá cao hơn giá cân bằng, lượng cung lớn hơn lượng cầu và thị trường dư thừa hàng hóa; người bán phải hạ giá. Nếu giá thấp hơn giá cân bằng, lượng cầu lớn hơn lượng cung và thị trường thiếu hụt hàng ",,,,,,,
+ff67a3d4-ea3d-469e-9ad4-e22ce985dff1,H3-cung-cau:TRUE_FALSE,"Cung, cầu và giá cân bằng","Khi giá thị trường cao hơn giá cân bằng, lượng cung lớn hơn lượng cầu và thị trường rơi vào tình trạng thiếu hụt hàng hóa.",TRUE: Đúng | FALSE: Sai,FALSE,"Giá cao hơn giá cân bằng gây dư thừa hàng hóa (cung lớn hơn cầu), không phải thiếu hụt.","# Cung, cầu và giá cân bằng
+
+## Cầu
+
+Cầu là số lượng hàng hóa hoặc dịch vụ mà người mua sẵn sàng và có khả năng mua ở các mức giá khác nhau trong một khoảng thời gian nhất định, khi các yếu tố khác không đổi. Cần phân biệt cầu với nhu cầu: nhu cầu là mong muốn, còn cầu đòi hỏi cả khả năng thanh toán.
+
+Quy luật cầu cho biết: khi giá của một hàng hóa tăng thì lượng cầu về hàng hóa đó giảm, và ngược lại, với điều kiện các yếu tố khác giữ nguyên. Vì vậy đường cầu thường dốc xuống từ trái sang phải.
+
+Khi giá của chính hàng hóa thay đổi, ta có sự di chuyển dọc theo đường cầu. Khi các yếu tố khác thay đổi, như thu nhập của người tiêu dùng, giá của hàng hóa liên quan, thị hiếu, kỳ vọng hay số lượng người mua, toàn bộ đường cầu dịch chuyển. Với hàng hóa thông thường, thu nhập tăng làm đường cầu dịch sang phải. Hàng hóa thay thế là hàng có thể dùng thay cho nhau, như trà và cà phê: giá cà phê tăng làm cầu về trà tăng. Hàng hóa bổ sung là hàng được dùng cùng nhau, như xe máy và xăng: giá xăng tăng làm cầu về xe máy giảm.
+
+## Cung
+
+Cung là số lượng hàng hóa hoặc dịch vụ mà người bán sẵn sàng và có khả năng bán ở các mức giá khác nhau trong một khoảng thời gian nhất định. Quy luật cung cho biết: khi giá tăng thì lượng cung tăng, các yếu tố khác không đổi, nên đường cung thường dốc lên.
+
+Các yếu tố làm dịch chuyển đường cung gồm công nghệ sản xuất, giá các yếu tố đầu vào, chính sách thuế và trợ cấp, kỳ vọng của người bán và số lượng người bán. Ví dụ, công nghệ mới làm giảm chi phí sản xuất khiến đường cung dịch sang phải; giá nguyên liệu tăng làm đường cung dịch sang trái.
+
+## Trạng thái cân bằng
+
+Giá cân bằng là mức giá tại đó lượng cầu bằng lượng cung; trên đồ thị là giao điểm của đường cung và đường cầu. Lượng hàng hóa được trao đổi ở mức giá này gọi là sản lượng cân bằng.
+
+Nếu giá cao hơn giá cân bằng, lượng cung lớn hơn lượng cầu và thị trường dư thừa hàng hóa; người bán phải hạ giá. Nếu giá thấp hơn giá cân bằng, lượng cầu lớn hơn lượng cung và thị trường thiếu hụt hàng 
+---
+hóa; giá có xu hướng tăng. Nhờ cơ chế này, thị trường có xu hướng quay về trạng thái cân bằng.
+
+## Can thiệp của nhà nước
+
+Giá trần là mức giá tối đa nhà nước cho phép; nếu đặt thấp hơn giá cân bằng sẽ gây thiếu hụt. Giá sàn là mức giá tối thiểu; nếu đặt cao hơn giá cân bằng sẽ gây dư thừa. Ví dụ, giá sàn nông sản nhằm bảo vệ thu nhập của nông dân có thể dẫn đến tình trạng dư thừa nông sản.",,,,,,,
+2a63a94f-c230-42aa-8b7a-2565f5b9a73d,H3-cung-cau:TRUE_FALSE,"Cung, cầu và giá cân bằng","Giá trần đặt thấp hơn giá cân bằng sẽ gây thiếu hụt, còn giá sàn đặt cao hơn giá cân bằng sẽ gây dư thừa.",TRUE: Đúng | FALSE: Sai,TRUE,Tài liệu nêu giá trần dưới giá cân bằng gây thiếu hụt và giá sàn trên giá cân bằng gây dư thừa.,"hóa; giá có xu hướng tăng. Nhờ cơ chế này, thị trường có xu hướng quay về trạng thái cân bằng.
+
+## Can thiệp của nhà nước
+
+Giá trần là mức giá tối đa nhà nước cho phép; nếu đặt thấp hơn giá cân bằng sẽ gây thiếu hụt. Giá sàn là mức giá tối thiểu; nếu đặt cao hơn giá cân bằng sẽ gây dư thừa. Ví dụ, giá sàn nông sản nhằm bảo vệ thu nhập của nông dân có thể dẫn đến tình trạng dư thừa nông sản.",,,,,,,
+647c52b4-2ed0-467b-a02d-83d8e0056452,H4-stack-queue:TRUE_FALSE,Ngăn xếp và hàng đợi,Ngăn xếp hoạt động theo nguyên tắc vào sau ra trước (LIFO).,TRUE: Đúng | FALSE: Sai,TRUE,Ngăn xếp là cấu trúc LIFO: phần tử thêm vào sau cùng được lấy ra đầu tiên.,"# Ngăn xếp và hàng đợi
+
+## Ngăn xếp (stack)
+
+Ngăn xếp là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào sau ra trước, viết tắt LIFO (Last In, First Out). Phần tử được thêm vào sau cùng sẽ được lấy ra đầu tiên, giống như một chồng đĩa: ta đặt đĩa mới lên trên cùng và cũng lấy đĩa từ trên cùng.
+
+Các thao tác cơ bản trên ngăn xếp gồm: push để thêm một phần tử vào đỉnh, pop để lấy và xóa phần tử ở đỉnh, peek (hay top) để xem phần tử ở đỉnh mà không xóa, và isEmpty để kiểm tra ngăn xếp rỗng. Khi cài đặt bằng mảng động hoặc danh sách liên kết, các thao tác push và pop đều có độ phức tạp thời gian O(1). Gọi pop trên ngăn xếp rỗng là lỗi tràn dưới (underflow); thêm vào ngăn xếp có kích thước cố định đã đầy là lỗi tràn (overflow).
+
+Ứng dụng của ngăn xếp: lưu các lời gọi hàm trong chương trình (call stack), cài đặt chức năng hoàn tác (undo) trong trình soạn thảo, kiểm tra dấu ngoặc cân bằng trong biểu thức, tính giá trị biểu thức hậu tố, và duyệt đồ thị theo chiều sâu (DFS) khi cài đặt không dùng đệ quy.
+
+Ví dụ kiểm tra ngoặc: duyệt chuỗi từ trái sang phải, gặp ngoặc mở thì push vào ngăn xếp, gặp ngoặc đóng thì pop và kiểm tra hai ngoặc có cùng loại hay không. Chuỗi hợp lệ khi duyệt xong mà ngăn xếp rỗng và không có lần so khớp nào thất bại.
+
+## Hàng đợi (queue)
+
+Hàng đợi là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào trước ra trước, viết tắt FIFO (First In, First Out). Phần tử được thêm vào ở cuối hàng (rear) và lấy ra ở đầu hàng (front), giống như một hàng người xếp chờ mua vé.
+
+Các thao tác cơ bản gồm enqueue để thêm vào cuối hàng và dequeue để lấy ra ở đầu hàng. Nếu cài đặt bằng mảng thông thường và dời tất cả phần tử mỗi lần dequeue thì thao tác này tốn O(n). Hàng đợi vòng (circular queue) khắc phục điều đó bằng cách dùng hai chỉ số đầu và cuối quay vòng theo phép chia lấy dư cho kích thước mảng, nhờ vậy cả enqueue và dequeue đều là O(1).
+
+Ứng dụng của hàng đợi: lập lịch tiến trình trong hệ điều hành, hàng đợi in, bộ đệm dữ liệu khi truyền qua ",,,,,,,
+f35b507b-3b4f-4dbf-8ac5-5cadded9a35b,H4-stack-queue:TRUE_FALSE,Ngăn xếp và hàng đợi,Thao tác peek trên ngăn xếp lấy và xóa phần tử ở đỉnh.,TRUE: Đúng | FALSE: Sai,FALSE,Peek (hay top) chỉ xem phần tử ở đỉnh mà không xóa; pop mới lấy và xóa.,"# Ngăn xếp và hàng đợi
+
+## Ngăn xếp (stack)
+
+Ngăn xếp là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào sau ra trước, viết tắt LIFO (Last In, First Out). Phần tử được thêm vào sau cùng sẽ được lấy ra đầu tiên, giống như một chồng đĩa: ta đặt đĩa mới lên trên cùng và cũng lấy đĩa từ trên cùng.
+
+Các thao tác cơ bản trên ngăn xếp gồm: push để thêm một phần tử vào đỉnh, pop để lấy và xóa phần tử ở đỉnh, peek (hay top) để xem phần tử ở đỉnh mà không xóa, và isEmpty để kiểm tra ngăn xếp rỗng. Khi cài đặt bằng mảng động hoặc danh sách liên kết, các thao tác push và pop đều có độ phức tạp thời gian O(1). Gọi pop trên ngăn xếp rỗng là lỗi tràn dưới (underflow); thêm vào ngăn xếp có kích thước cố định đã đầy là lỗi tràn (overflow).
+
+Ứng dụng của ngăn xếp: lưu các lời gọi hàm trong chương trình (call stack), cài đặt chức năng hoàn tác (undo) trong trình soạn thảo, kiểm tra dấu ngoặc cân bằng trong biểu thức, tính giá trị biểu thức hậu tố, và duyệt đồ thị theo chiều sâu (DFS) khi cài đặt không dùng đệ quy.
+
+Ví dụ kiểm tra ngoặc: duyệt chuỗi từ trái sang phải, gặp ngoặc mở thì push vào ngăn xếp, gặp ngoặc đóng thì pop và kiểm tra hai ngoặc có cùng loại hay không. Chuỗi hợp lệ khi duyệt xong mà ngăn xếp rỗng và không có lần so khớp nào thất bại.
+
+## Hàng đợi (queue)
+
+Hàng đợi là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào trước ra trước, viết tắt FIFO (First In, First Out). Phần tử được thêm vào ở cuối hàng (rear) và lấy ra ở đầu hàng (front), giống như một hàng người xếp chờ mua vé.
+
+Các thao tác cơ bản gồm enqueue để thêm vào cuối hàng và dequeue để lấy ra ở đầu hàng. Nếu cài đặt bằng mảng thông thường và dời tất cả phần tử mỗi lần dequeue thì thao tác này tốn O(n). Hàng đợi vòng (circular queue) khắc phục điều đó bằng cách dùng hai chỉ số đầu và cuối quay vòng theo phép chia lấy dư cho kích thước mảng, nhờ vậy cả enqueue và dequeue đều là O(1).
+
+Ứng dụng của hàng đợi: lập lịch tiến trình trong hệ điều hành, hàng đợi in, bộ đệm dữ liệu khi truyền qua ",,,,,,,
+9304917f-1b52-48ad-9d35-f530c5595124,H4-stack-queue:TRUE_FALSE,Ngăn xếp và hàng đợi,"Khi cài đặt bằng mảng động hoặc danh sách liên kết, push và pop trên ngăn xếp đều có độ phức tạp O(1).",TRUE: Đúng | FALSE: Sai,TRUE,Văn bản nêu rõ push và pop đều O(1) với mảng động hoặc danh sách liên kết.,"# Ngăn xếp và hàng đợi
+
+## Ngăn xếp (stack)
+
+Ngăn xếp là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào sau ra trước, viết tắt LIFO (Last In, First Out). Phần tử được thêm vào sau cùng sẽ được lấy ra đầu tiên, giống như một chồng đĩa: ta đặt đĩa mới lên trên cùng và cũng lấy đĩa từ trên cùng.
+
+Các thao tác cơ bản trên ngăn xếp gồm: push để thêm một phần tử vào đỉnh, pop để lấy và xóa phần tử ở đỉnh, peek (hay top) để xem phần tử ở đỉnh mà không xóa, và isEmpty để kiểm tra ngăn xếp rỗng. Khi cài đặt bằng mảng động hoặc danh sách liên kết, các thao tác push và pop đều có độ phức tạp thời gian O(1). Gọi pop trên ngăn xếp rỗng là lỗi tràn dưới (underflow); thêm vào ngăn xếp có kích thước cố định đã đầy là lỗi tràn (overflow).
+
+Ứng dụng của ngăn xếp: lưu các lời gọi hàm trong chương trình (call stack), cài đặt chức năng hoàn tác (undo) trong trình soạn thảo, kiểm tra dấu ngoặc cân bằng trong biểu thức, tính giá trị biểu thức hậu tố, và duyệt đồ thị theo chiều sâu (DFS) khi cài đặt không dùng đệ quy.
+
+Ví dụ kiểm tra ngoặc: duyệt chuỗi từ trái sang phải, gặp ngoặc mở thì push vào ngăn xếp, gặp ngoặc đóng thì pop và kiểm tra hai ngoặc có cùng loại hay không. Chuỗi hợp lệ khi duyệt xong mà ngăn xếp rỗng và không có lần so khớp nào thất bại.
+
+## Hàng đợi (queue)
+
+Hàng đợi là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào trước ra trước, viết tắt FIFO (First In, First Out). Phần tử được thêm vào ở cuối hàng (rear) và lấy ra ở đầu hàng (front), giống như một hàng người xếp chờ mua vé.
+
+Các thao tác cơ bản gồm enqueue để thêm vào cuối hàng và dequeue để lấy ra ở đầu hàng. Nếu cài đặt bằng mảng thông thường và dời tất cả phần tử mỗi lần dequeue thì thao tác này tốn O(n). Hàng đợi vòng (circular queue) khắc phục điều đó bằng cách dùng hai chỉ số đầu và cuối quay vòng theo phép chia lấy dư cho kích thước mảng, nhờ vậy cả enqueue và dequeue đều là O(1).
+
+Ứng dụng của hàng đợi: lập lịch tiến trình trong hệ điều hành, hàng đợi in, bộ đệm dữ liệu khi truyền qua ",,,,,,,
+426afea4-b25f-443f-9281-f23203312030,H4-stack-queue:TRUE_FALSE,Ngăn xếp và hàng đợi,Gọi pop trên ngăn xếp rỗng gây ra lỗi tràn (overflow).,TRUE: Đúng | FALSE: Sai,FALSE,Pop trên ngăn xếp rỗng là lỗi tràn dưới (underflow); overflow là khi thêm vào ngăn xếp đầy.,"# Ngăn xếp và hàng đợi
+
+## Ngăn xếp (stack)
+
+Ngăn xếp là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào sau ra trước, viết tắt LIFO (Last In, First Out). Phần tử được thêm vào sau cùng sẽ được lấy ra đầu tiên, giống như một chồng đĩa: ta đặt đĩa mới lên trên cùng và cũng lấy đĩa từ trên cùng.
+
+Các thao tác cơ bản trên ngăn xếp gồm: push để thêm một phần tử vào đỉnh, pop để lấy và xóa phần tử ở đỉnh, peek (hay top) để xem phần tử ở đỉnh mà không xóa, và isEmpty để kiểm tra ngăn xếp rỗng. Khi cài đặt bằng mảng động hoặc danh sách liên kết, các thao tác push và pop đều có độ phức tạp thời gian O(1). Gọi pop trên ngăn xếp rỗng là lỗi tràn dưới (underflow); thêm vào ngăn xếp có kích thước cố định đã đầy là lỗi tràn (overflow).
+
+Ứng dụng của ngăn xếp: lưu các lời gọi hàm trong chương trình (call stack), cài đặt chức năng hoàn tác (undo) trong trình soạn thảo, kiểm tra dấu ngoặc cân bằng trong biểu thức, tính giá trị biểu thức hậu tố, và duyệt đồ thị theo chiều sâu (DFS) khi cài đặt không dùng đệ quy.
+
+Ví dụ kiểm tra ngoặc: duyệt chuỗi từ trái sang phải, gặp ngoặc mở thì push vào ngăn xếp, gặp ngoặc đóng thì pop và kiểm tra hai ngoặc có cùng loại hay không. Chuỗi hợp lệ khi duyệt xong mà ngăn xếp rỗng và không có lần so khớp nào thất bại.
+
+## Hàng đợi (queue)
+
+Hàng đợi là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào trước ra trước, viết tắt FIFO (First In, First Out). Phần tử được thêm vào ở cuối hàng (rear) và lấy ra ở đầu hàng (front), giống như một hàng người xếp chờ mua vé.
+
+Các thao tác cơ bản gồm enqueue để thêm vào cuối hàng và dequeue để lấy ra ở đầu hàng. Nếu cài đặt bằng mảng thông thường và dời tất cả phần tử mỗi lần dequeue thì thao tác này tốn O(n). Hàng đợi vòng (circular queue) khắc phục điều đó bằng cách dùng hai chỉ số đầu và cuối quay vòng theo phép chia lấy dư cho kích thước mảng, nhờ vậy cả enqueue và dequeue đều là O(1).
+
+Ứng dụng của hàng đợi: lập lịch tiến trình trong hệ điều hành, hàng đợi in, bộ đệm dữ liệu khi truyền qua ",,,,,,,
+c03f222d-b82f-4b8c-a8ca-ce958263b403,H4-stack-queue:TRUE_FALSE,Ngăn xếp và hàng đợi,Ngăn xếp được dùng để cài đặt chức năng hoàn tác (undo) và lưu các lời gọi hàm (call stack).,TRUE: Đúng | FALSE: Sai,TRUE,Văn bản liệt kê call stack và undo là ứng dụng của ngăn xếp.,"# Ngăn xếp và hàng đợi
+
+## Ngăn xếp (stack)
+
+Ngăn xếp là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào sau ra trước, viết tắt LIFO (Last In, First Out). Phần tử được thêm vào sau cùng sẽ được lấy ra đầu tiên, giống như một chồng đĩa: ta đặt đĩa mới lên trên cùng và cũng lấy đĩa từ trên cùng.
+
+Các thao tác cơ bản trên ngăn xếp gồm: push để thêm một phần tử vào đỉnh, pop để lấy và xóa phần tử ở đỉnh, peek (hay top) để xem phần tử ở đỉnh mà không xóa, và isEmpty để kiểm tra ngăn xếp rỗng. Khi cài đặt bằng mảng động hoặc danh sách liên kết, các thao tác push và pop đều có độ phức tạp thời gian O(1). Gọi pop trên ngăn xếp rỗng là lỗi tràn dưới (underflow); thêm vào ngăn xếp có kích thước cố định đã đầy là lỗi tràn (overflow).
+
+Ứng dụng của ngăn xếp: lưu các lời gọi hàm trong chương trình (call stack), cài đặt chức năng hoàn tác (undo) trong trình soạn thảo, kiểm tra dấu ngoặc cân bằng trong biểu thức, tính giá trị biểu thức hậu tố, và duyệt đồ thị theo chiều sâu (DFS) khi cài đặt không dùng đệ quy.
+
+Ví dụ kiểm tra ngoặc: duyệt chuỗi từ trái sang phải, gặp ngoặc mở thì push vào ngăn xếp, gặp ngoặc đóng thì pop và kiểm tra hai ngoặc có cùng loại hay không. Chuỗi hợp lệ khi duyệt xong mà ngăn xếp rỗng và không có lần so khớp nào thất bại.
+
+## Hàng đợi (queue)
+
+Hàng đợi là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào trước ra trước, viết tắt FIFO (First In, First Out). Phần tử được thêm vào ở cuối hàng (rear) và lấy ra ở đầu hàng (front), giống như một hàng người xếp chờ mua vé.
+
+Các thao tác cơ bản gồm enqueue để thêm vào cuối hàng và dequeue để lấy ra ở đầu hàng. Nếu cài đặt bằng mảng thông thường và dời tất cả phần tử mỗi lần dequeue thì thao tác này tốn O(n). Hàng đợi vòng (circular queue) khắc phục điều đó bằng cách dùng hai chỉ số đầu và cuối quay vòng theo phép chia lấy dư cho kích thước mảng, nhờ vậy cả enqueue và dequeue đều là O(1).
+
+Ứng dụng của hàng đợi: lập lịch tiến trình trong hệ điều hành, hàng đợi in, bộ đệm dữ liệu khi truyền qua ",,,,,,,
+13f9618c-62ea-4c86-8a9e-40b7acd9a2d5,H4-stack-queue:TRUE_FALSE,Ngăn xếp và hàng đợi,Hàng đợi hoạt động theo nguyên tắc vào trước ra trước (FIFO).,TRUE: Đúng | FALSE: Sai,TRUE,"Hàng đợi là cấu trúc FIFO: thêm ở cuối hàng, lấy ra ở đầu hàng.","# Ngăn xếp và hàng đợi
+
+## Ngăn xếp (stack)
+
+Ngăn xếp là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào sau ra trước, viết tắt LIFO (Last In, First Out). Phần tử được thêm vào sau cùng sẽ được lấy ra đầu tiên, giống như một chồng đĩa: ta đặt đĩa mới lên trên cùng và cũng lấy đĩa từ trên cùng.
+
+Các thao tác cơ bản trên ngăn xếp gồm: push để thêm một phần tử vào đỉnh, pop để lấy và xóa phần tử ở đỉnh, peek (hay top) để xem phần tử ở đỉnh mà không xóa, và isEmpty để kiểm tra ngăn xếp rỗng. Khi cài đặt bằng mảng động hoặc danh sách liên kết, các thao tác push và pop đều có độ phức tạp thời gian O(1). Gọi pop trên ngăn xếp rỗng là lỗi tràn dưới (underflow); thêm vào ngăn xếp có kích thước cố định đã đầy là lỗi tràn (overflow).
+
+Ứng dụng của ngăn xếp: lưu các lời gọi hàm trong chương trình (call stack), cài đặt chức năng hoàn tác (undo) trong trình soạn thảo, kiểm tra dấu ngoặc cân bằng trong biểu thức, tính giá trị biểu thức hậu tố, và duyệt đồ thị theo chiều sâu (DFS) khi cài đặt không dùng đệ quy.
+
+Ví dụ kiểm tra ngoặc: duyệt chuỗi từ trái sang phải, gặp ngoặc mở thì push vào ngăn xếp, gặp ngoặc đóng thì pop và kiểm tra hai ngoặc có cùng loại hay không. Chuỗi hợp lệ khi duyệt xong mà ngăn xếp rỗng và không có lần so khớp nào thất bại.
+
+## Hàng đợi (queue)
+
+Hàng đợi là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào trước ra trước, viết tắt FIFO (First In, First Out). Phần tử được thêm vào ở cuối hàng (rear) và lấy ra ở đầu hàng (front), giống như một hàng người xếp chờ mua vé.
+
+Các thao tác cơ bản gồm enqueue để thêm vào cuối hàng và dequeue để lấy ra ở đầu hàng. Nếu cài đặt bằng mảng thông thường và dời tất cả phần tử mỗi lần dequeue thì thao tác này tốn O(n). Hàng đợi vòng (circular queue) khắc phục điều đó bằng cách dùng hai chỉ số đầu và cuối quay vòng theo phép chia lấy dư cho kích thước mảng, nhờ vậy cả enqueue và dequeue đều là O(1).
+
+Ứng dụng của hàng đợi: lập lịch tiến trình trong hệ điều hành, hàng đợi in, bộ đệm dữ liệu khi truyền qua ",,,,,,,
+257cdf9e-2927-4927-9dbd-ddb8cedcdb56,H4-stack-queue:TRUE_FALSE,Ngăn xếp và hàng đợi,Nếu cài đặt hàng đợi bằng mảng thông thường và dời tất cả phần tử mỗi lần dequeue thì thao tác dequeue tốn O(n).,TRUE: Đúng | FALSE: Sai,TRUE,Văn bản nêu rõ cách cài đặt này khiến dequeue tốn O(n).,"# Ngăn xếp và hàng đợi
+
+## Ngăn xếp (stack)
+
+Ngăn xếp là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào sau ra trước, viết tắt LIFO (Last In, First Out). Phần tử được thêm vào sau cùng sẽ được lấy ra đầu tiên, giống như một chồng đĩa: ta đặt đĩa mới lên trên cùng và cũng lấy đĩa từ trên cùng.
+
+Các thao tác cơ bản trên ngăn xếp gồm: push để thêm một phần tử vào đỉnh, pop để lấy và xóa phần tử ở đỉnh, peek (hay top) để xem phần tử ở đỉnh mà không xóa, và isEmpty để kiểm tra ngăn xếp rỗng. Khi cài đặt bằng mảng động hoặc danh sách liên kết, các thao tác push và pop đều có độ phức tạp thời gian O(1). Gọi pop trên ngăn xếp rỗng là lỗi tràn dưới (underflow); thêm vào ngăn xếp có kích thước cố định đã đầy là lỗi tràn (overflow).
+
+Ứng dụng của ngăn xếp: lưu các lời gọi hàm trong chương trình (call stack), cài đặt chức năng hoàn tác (undo) trong trình soạn thảo, kiểm tra dấu ngoặc cân bằng trong biểu thức, tính giá trị biểu thức hậu tố, và duyệt đồ thị theo chiều sâu (DFS) khi cài đặt không dùng đệ quy.
+
+Ví dụ kiểm tra ngoặc: duyệt chuỗi từ trái sang phải, gặp ngoặc mở thì push vào ngăn xếp, gặp ngoặc đóng thì pop và kiểm tra hai ngoặc có cùng loại hay không. Chuỗi hợp lệ khi duyệt xong mà ngăn xếp rỗng và không có lần so khớp nào thất bại.
+
+## Hàng đợi (queue)
+
+Hàng đợi là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào trước ra trước, viết tắt FIFO (First In, First Out). Phần tử được thêm vào ở cuối hàng (rear) và lấy ra ở đầu hàng (front), giống như một hàng người xếp chờ mua vé.
+
+Các thao tác cơ bản gồm enqueue để thêm vào cuối hàng và dequeue để lấy ra ở đầu hàng. Nếu cài đặt bằng mảng thông thường và dời tất cả phần tử mỗi lần dequeue thì thao tác này tốn O(n). Hàng đợi vòng (circular queue) khắc phục điều đó bằng cách dùng hai chỉ số đầu và cuối quay vòng theo phép chia lấy dư cho kích thước mảng, nhờ vậy cả enqueue và dequeue đều là O(1).
+
+Ứng dụng của hàng đợi: lập lịch tiến trình trong hệ điều hành, hàng đợi in, bộ đệm dữ liệu khi truyền qua ",,,,,,,
+c807db5e-1eda-4d97-8033-0b126fe4276f,H4-stack-queue:TRUE_FALSE,Ngăn xếp và hàng đợi,"Hàng đợi vòng dùng hai chỉ số đầu và cuối quay vòng theo phép chia lấy dư, nhờ đó enqueue và dequeue đều là O(1).",TRUE: Đúng | FALSE: Sai,TRUE,Hàng đợi vòng khắc phục chi phí O(n) và đạt O(1) cho cả enqueue lẫn dequeue.,"# Ngăn xếp và hàng đợi
+
+## Ngăn xếp (stack)
+
+Ngăn xếp là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào sau ra trước, viết tắt LIFO (Last In, First Out). Phần tử được thêm vào sau cùng sẽ được lấy ra đầu tiên, giống như một chồng đĩa: ta đặt đĩa mới lên trên cùng và cũng lấy đĩa từ trên cùng.
+
+Các thao tác cơ bản trên ngăn xếp gồm: push để thêm một phần tử vào đỉnh, pop để lấy và xóa phần tử ở đỉnh, peek (hay top) để xem phần tử ở đỉnh mà không xóa, và isEmpty để kiểm tra ngăn xếp rỗng. Khi cài đặt bằng mảng động hoặc danh sách liên kết, các thao tác push và pop đều có độ phức tạp thời gian O(1). Gọi pop trên ngăn xếp rỗng là lỗi tràn dưới (underflow); thêm vào ngăn xếp có kích thước cố định đã đầy là lỗi tràn (overflow).
+
+Ứng dụng của ngăn xếp: lưu các lời gọi hàm trong chương trình (call stack), cài đặt chức năng hoàn tác (undo) trong trình soạn thảo, kiểm tra dấu ngoặc cân bằng trong biểu thức, tính giá trị biểu thức hậu tố, và duyệt đồ thị theo chiều sâu (DFS) khi cài đặt không dùng đệ quy.
+
+Ví dụ kiểm tra ngoặc: duyệt chuỗi từ trái sang phải, gặp ngoặc mở thì push vào ngăn xếp, gặp ngoặc đóng thì pop và kiểm tra hai ngoặc có cùng loại hay không. Chuỗi hợp lệ khi duyệt xong mà ngăn xếp rỗng và không có lần so khớp nào thất bại.
+
+## Hàng đợi (queue)
+
+Hàng đợi là cấu trúc dữ liệu tuyến tính hoạt động theo nguyên tắc vào trước ra trước, viết tắt FIFO (First In, First Out). Phần tử được thêm vào ở cuối hàng (rear) và lấy ra ở đầu hàng (front), giống như một hàng người xếp chờ mua vé.
+
+Các thao tác cơ bản gồm enqueue để thêm vào cuối hàng và dequeue để lấy ra ở đầu hàng. Nếu cài đặt bằng mảng thông thường và dời tất cả phần tử mỗi lần dequeue thì thao tác này tốn O(n). Hàng đợi vòng (circular queue) khắc phục điều đó bằng cách dùng hai chỉ số đầu và cuối quay vòng theo phép chia lấy dư cho kích thước mảng, nhờ vậy cả enqueue và dequeue đều là O(1).
+
+Ứng dụng của hàng đợi: lập lịch tiến trình trong hệ điều hành, hàng đợi in, bộ đệm dữ liệu khi truyền qua ",,,,,,,
+7659c078-1c17-4d29-a6dd-17cf0e332d16,H4-stack-queue:TRUE_FALSE,Ngăn xếp và hàng đợi,"Trong BFS, hàng đợi giúp các đỉnh được thăm theo thứ tự khoảng cách tăng dần tính theo số cạnh.",TRUE: Đúng | FALSE: Sai,TRUE,BFS dùng hàng đợi nên thăm đỉnh theo khoảng cách tăng dần theo số cạnh.,"mạng, và duyệt đồ thị theo chiều rộng (BFS). Trong BFS, đỉnh xuất phát được đưa vào hàng đợi; mỗi lần lấy một đỉnh ra, ta đưa các đỉnh kề chưa thăm vào cuối hàng, nhờ đó các đỉnh được thăm theo thứ tự khoảng cách tăng dần tính theo số cạnh.
+
+## Hàng đợi hai đầu và hàng đợi ưu tiên
+
+Hàng đợi hai đầu (deque) cho phép thêm và xóa ở cả hai đầu. Hàng đợi ưu tiên không tuân theo FIFO: phần tử có độ ưu tiên cao nhất được lấy ra trước; nó thường được cài đặt bằng đống nhị phân (binary heap), với thao tác thêm và lấy ra có độ phức tạp O(log n).",,,,,,,
+bb429d10-726c-4f30-ac59-b1662e8a9210,H4-stack-queue:TRUE_FALSE,Ngăn xếp và hàng đợi,"Hàng đợi ưu tiên tuân theo nguyên tắc FIFO và thường được cài đặt bằng đống nhị phân với thao tác thêm, lấy ra có độ phức tạp O(log n).",TRUE: Đúng | FALSE: Sai,FALSE,"Hàng đợi ưu tiên không tuân theo FIFO; phần tử có độ ưu tiên cao nhất được lấy ra trước, dù cài đặt bằng đống nhị phân với O(log n) là đúng.","mạng, và duyệt đồ thị theo chiều rộng (BFS). Trong BFS, đỉnh xuất phát được đưa vào hàng đợi; mỗi lần lấy một đỉnh ra, ta đưa các đỉnh kề chưa thăm vào cuối hàng, nhờ đó các đỉnh được thăm theo thứ tự khoảng cách tăng dần tính theo số cạnh.
+
+## Hàng đợi hai đầu và hàng đợi ưu tiên
+
+Hàng đợi hai đầu (deque) cho phép thêm và xóa ở cả hai đầu. Hàng đợi ưu tiên không tuân theo FIFO: phần tử có độ ưu tiên cao nhất được lấy ra trước; nó thường được cài đặt bằng đống nhị phân (binary heap), với thao tác thêm và lấy ra có độ phức tạp O(log n).",,,,,,,
+394669fc-0546-4301-9d3b-1ba0afdbcd7e,H5-khi-hau-vn:MCQ,Khí hậu Việt Nam,"Việt Nam nằm hoàn toàn trong vùng nào của bán cầu Bắc, khiến khí hậu nhận được lượng bức xạ mặt trời lớn?",A: Vùng ngoại chí tuyến | B: Vùng nội chí tuyến | C: Vùng ôn đới | D: Vùng hàn đới,B,Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc nên nhận lượng bức xạ mặt trời lớn.,"# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+b186b3ec-7832-4ef7-984b-453197de3e77,H5-khi-hau-vn:MCQ,Khí hậu Việt Nam,Nhiệt độ trung bình năm của phần lớn lãnh thổ nước ta là bao nhiêu?,A: Dưới 15°C | B: Trên 20°C | C: Khoảng 10°C | D: Trên 30°C,B,Phần lớn lãnh thổ có nhiệt độ trung bình năm trên 20°C.,"# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+1552410a-d7e7-4c67-ac6c-566a44102631,H5-khi-hau-vn:MCQ,Khí hậu Việt Nam,Lượng mưa trung bình năm phổ biến ở nước ta là bao nhiêu?,A: 500–1000 mm | B: 1000–1200 mm | C: 1500–2000 mm | D: 2500–3000 mm,C,Lượng mưa trung bình năm từ 1500 đến 2000 mm.,"# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+16876811-23aa-4ff8-984c-6aeb91412b4c,H5-khi-hau-vn:MCQ,Khí hậu Việt Nam,Độ ẩm không khí trung bình ở nước ta thường ở mức nào?,A: Trên 80% | B: Khoảng 60% | C: Dưới 50% | D: Khoảng 70%,A,"Độ ẩm không khí cao, trên 80%.","# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+34559f9e-2aa1-49d9-a06c-98375c751a40,H5-khi-hau-vn:MCQ,Khí hậu Việt Nam,Gió mùa mùa đông ở nước ta xuất phát từ áp cao nào?,A: Áp cao Hawaii | B: Áp cao Xibia | C: Áp cao Bắc Ấn Độ Dương | D: Áp cao Nam Ấn Độ Dương,B,"Gió mùa Đông Bắc xuất phát từ áp cao Xibia, mang không khí lạnh.","# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+160fa443-62e6-4262-a41f-0f3f0ca98304,H5-khi-hau-vn:MCQ,Khí hậu Việt Nam,Gió mùa Đông Bắc gần như bị chặn lại ở dãy núi nào?,A: Dãy Trường Sơn | B: Dãy Hoàng Liên Sơn | C: Dãy Bạch Mã | D: Dãy Tam Đảo,C,"Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu và gần như bị chặn lại ở dãy Bạch Mã.","# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+b45122db-e015-4015-9ab5-73248bf0a569,H5-khi-hau-vn:MCQ,Khí hậu Việt Nam,Gió mùa mùa hạ hoạt động chủ yếu trong khoảng thời gian nào?,A: Tháng 11 đến tháng 4 năm sau | B: Tháng 5 đến tháng 10 | C: Tháng 1 đến tháng 3 | D: Tháng 12 đến tháng 2,B,Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10.,"# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+c06f2126-a8fc-4fd9-8ea4-c65bf2154e11,H5-khi-hau-vn:MCQ,Khí hậu Việt Nam,Hiện tượng gió khô nóng ở Bắc Trung Bộ và phía nam Tây Bắc thường được gọi là gì?,A: Gió mùa Đông Bắc | B: Gió Tây ôn đới | C: Gió Lào | D: Gió mậu dịch,C,"Hiệu ứng phơn gây gió khô nóng, ở Bắc Trung Bộ và phía nam Tây Bắc thường gọi là gió Lào.","# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+8d39570a-2dbf-49ce-a202-007ef9230af1,H5-khi-hau-vn:MCQ,Khí hậu Việt Nam,Phía nam dãy Bạch Mã có nhiệt độ trung bình năm như thế nào?,A: Dưới 20°C | B: Trên 25°C | C: Khoảng 18°C | D: Dưới 15°C,B,"Phía nam dãy Bạch Mã nóng quanh năm, nhiệt độ trung bình năm trên 25°C.","# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+cae43d3b-36cc-4bfd-a07c-d4e1ff66a823,H5-khi-hau-vn:MCQ,Khí hậu Việt Nam,Mùa bão ở nước ta thường diễn ra trong khoảng thời gian nào?,A: Tháng 1 đến tháng 5 | B: Tháng 3 đến tháng 8 | C: Tháng 6 đến tháng 12 | D: Tháng 9 đến tháng 3 năm sau,C,Mùa bão ở nước ta thường từ tháng 6 đến tháng 12.,"Ảnh hưởng đến sản xuất và đời sống
+
+Khí hậu nhiệt đới ẩm giúp cây trồng sinh trưởng quanh năm, có thể trồng nhiều vụ trong năm và đa dạng cơ cấu cây trồng. Tuy nhiên nước ta cũng chịu nhiều thiên tai như bão, lũ lụt, hạn hán, rét đậm rét hại và sương muối. Mùa bão ở nước ta thường từ tháng 6 đến tháng 12, và bão có xu hướng đổ bộ muộn dần từ Bắc vào Nam.",,,,,,,
+2d00f9c7-ce5c-416a-8bbe-51e84b976158,H5-khi-hau-vn:TRUE_FALSE,Khí hậu Việt Nam,Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao.,TRUE: Đúng | FALSE: Sai,TRUE,"Chunk nêu rõ Việt Nam nằm hoàn toàn trong vùng nội chí tuyến bán cầu Bắc, nhận bức xạ lớn, nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C.","# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+b658a194-223f-4a79-82e3-9b860c233699,H5-khi-hau-vn:TRUE_FALSE,Khí hậu Việt Nam,Lượng mưa trung bình năm của nước ta phổ biến từ 1500 đến 2000 mm và độ ẩm không khí cao trên 80%.,TRUE: Đúng | FALSE: Sai,TRUE,Chunk cho biết lượng mưa trung bình năm 1500–2000 mm và độ ẩm không khí trên 80%.,"# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+f8347a44-2892-4819-b4d8-4ab3964cae53,H5-khi-hau-vn:TRUE_FALSE,Khí hậu Việt Nam,Gió mùa mùa đông ở nước ta hoạt động từ khoảng tháng 5 đến tháng 10.,TRUE: Đúng | FALSE: Sai,FALSE,Gió mùa mùa đông hoạt động từ khoảng tháng 11 đến tháng 4 năm sau; tháng 5 đến tháng 10 là thời gian gió mùa mùa hạ.,"# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+b0415c5e-168b-4b3a-81f5-2e0c342d1b07,H5-khi-hau-vn:TRUE_FALSE,Khí hậu Việt Nam,Gió mùa Đông Bắc xuất phát từ áp cao Xibia và khi di chuyển xuống phía nam gần như bị chặn lại ở dãy Bạch Mã.,TRUE: Đúng | FALSE: Sai,TRUE,"Chunk nêu gió mùa Đông Bắc xuất phát từ áp cao Xibia, suy yếu dần khi xuống nam và gần như bị chặn ở dãy Bạch Mã.","# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+2a97a135-ef97-4ea9-b844-caaf825472c9,H5-khi-hau-vn:TRUE_FALSE,Khí hậu Việt Nam,"Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên.",TRUE: Đúng | FALSE: Sai,TRUE,Chunk ghi rõ đầu mùa hạ khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên.,"# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+a20bee47-8b56-4537-9d7d-173ce5a2771c,H5-khi-hau-vn:TRUE_FALSE,Khí hậu Việt Nam,Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền Bắc và Nam của nước ta.,TRUE: Đúng | FALSE: Sai,TRUE,Chunk khẳng định dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền.,"# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+d34c089d-94aa-41d2-b350-279c6aa6f391,H5-khi-hau-vn:TRUE_FALSE,Khí hậu Việt Nam,Phía nam dãy Bạch Mã có khí hậu nhiệt đới gió mùa với mùa đông lạnh và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C.,TRUE: Đúng | FALSE: Sai,FALSE,"Đặc điểm mùa đông lạnh và 2–3 tháng dưới 18°C thuộc phía bắc dãy Bạch Mã; phía nam mang tính cận xích đạo, nóng quanh năm.","# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+201985f1-81dd-4234-bcf5-6207b4a173be,H5-khi-hau-vn:TRUE_FALSE,Khí hậu Việt Nam,"Càng lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, nên các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.",TRUE: Đúng | FALSE: Sai,TRUE,"Chunk nêu quy luật giảm 0,6°C mỗi 100 m và dẫn chứng Sa Pa, Đà Lạt có khí hậu mát mẻ quanh năm.","# Khí hậu Việt Nam
+
+## Tính chất nhiệt đới ẩm gió mùa
+
+Việt Nam nằm hoàn toàn trong vùng nội chí tuyến của bán cầu Bắc, nên nhận được lượng bức xạ mặt trời lớn và có nhiệt độ trung bình năm cao, phần lớn lãnh thổ trên 20°C. Nhờ giáp Biển Đông, các khối khí đi qua biển mang lại lượng mưa lớn, trung bình năm từ 1500 đến 2000 mm, và độ ẩm không khí cao, trên 80%. Những nơi đón gió biển hoặc có địa hình chắn gió có thể mưa tới 3500–4000 mm mỗi năm. Khí hậu nước ta vì vậy mang tính chất nhiệt đới ẩm gió mùa.
+
+## Gió mùa
+
+Nước ta chịu tác động của hai loại gió mùa chính. Gió mùa mùa đông, còn gọi là gió mùa Đông Bắc, hoạt động từ khoảng tháng 11 đến tháng 4 năm sau. Gió này xuất phát từ áp cao Xibia, mang không khí lạnh làm miền Bắc có một mùa đông lạnh. Nửa đầu mùa đông thời tiết lạnh khô; nửa sau mùa đông lạnh ẩm, có mưa phùn ở ven biển và đồng bằng Bắc Bộ. Khi di chuyển xuống phía nam, gió mùa Đông Bắc suy yếu dần và gần như bị chặn lại ở dãy Bạch Mã.
+
+Gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, thổi theo hướng tây nam là chủ yếu, mang lại lượng mưa lớn cho cả nước. Đầu mùa hạ, khối khí nhiệt đới từ Bắc Ấn Độ Dương gây mưa lớn cho Nam Bộ và Tây Nguyên. Khi vượt dãy Trường Sơn sang sườn đông, khối khí này trở nên khô nóng, gây hiệu ứng phơn; ở Bắc Trung Bộ và phía nam khu vực Tây Bắc, gió này thường được gọi là gió Lào.
+
+## Sự phân hóa theo không gian
+
+Dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền. Phía bắc dãy Bạch Mã có khí hậu nhiệt đới gió mùa có mùa đông lạnh, nhiệt độ trung bình năm thường trên 20°C và có từ hai đến ba tháng nhiệt độ trung bình dưới 18°C; biên độ nhiệt năm lớn. Phía nam dãy Bạch Mã mang tính chất cận xích đạo gió mùa, nóng quanh năm, nhiệt độ trung bình năm trên 25°C, không có tháng nào dưới 20°C, biên độ nhiệt năm nhỏ, và có hai mùa mưa và khô rõ rệt.
+
+Khí hậu còn phân hóa theo độ cao: lên cao trung bình 100 m thì nhiệt độ giảm khoảng 0,6°C, vì vậy các vùng núi cao như Sa Pa hay Đà Lạt có khí hậu mát mẻ quanh năm.
+
+## ",,,,,,,
+b7e8de46-4447-468e-b376-74946cd1418e,H5-khi-hau-vn:TRUE_FALSE,Khí hậu Việt Nam,Mùa bão ở nước ta thường từ tháng 6 đến tháng 12 và bão có xu hướng đổ bộ muộn dần từ Bắc vào Nam.,TRUE: Đúng | FALSE: Sai,TRUE,"Chunk cho biết mùa bão thường từ tháng 6 đến tháng 12, bão đổ bộ muộn dần từ Bắc vào Nam.","Ảnh hưởng đến sản xuất và đời sống
+
+Khí hậu nhiệt đới ẩm giúp cây trồng sinh trưởng quanh năm, có thể trồng nhiều vụ trong năm và đa dạng cơ cấu cây trồng. Tuy nhiên nước ta cũng chịu nhiều thiên tai như bão, lũ lụt, hạn hán, rét đậm rét hại và sương muối. Mùa bão ở nước ta thường từ tháng 6 đến tháng 12, và bão có xu hướng đổ bộ muộn dần từ Bắc vào Nam.",,,,,,,
+dc305e0b-569d-499b-88ad-7ea9c61ef068,H5-khi-hau-vn:TRUE_FALSE,Khí hậu Việt Nam,"Khí hậu nhiệt đới ẩm chỉ gây khó khăn cho sản xuất nông nghiệp, không giúp cây trồng sinh trưởng quanh năm hay trồng nhiều vụ.",TRUE: Đúng | FALSE: Sai,FALSE,"Chunk nêu khí hậu nhiệt đới ẩm giúp cây trồng sinh trưởng quanh năm, trồng nhiều vụ và đa dạng cơ cấu cây trồng, bên cạnh việc gây thiên tai.","Ảnh hưởng đến sản xuất và đời sống
+
+Khí hậu nhiệt đới ẩm giúp cây trồng sinh trưởng quanh năm, có thể trồng nhiều vụ trong năm và đa dạng cơ cấu cây trồng. Tuy nhiên nước ta cũng chịu nhiều thiên tai như bão, lũ lụt, hạn hán, rét đậm rét hại và sương muối. Mùa bão ở nước ta thường từ tháng 6 đến tháng 12, và bão có xu hướng đổ bộ muộn dần từ Bắc vào Nam.",,,,,,,
+2783a5d6-0cf7-473b-9e63-23b6408876a3,H6-truyen-kieu:TRUE_FALSE,Truyện Kiều của Nguyễn Du,Nguyễn Du sinh năm 1765 và mất năm 1820.,TRUE: Đúng | FALSE: Sai,TRUE,Văn bản ghi Nguyễn Du (1765–1820).,"# Truyện Kiều của Nguyễn Du
+
+## Tác giả
+
+Nguyễn Du (1765–1820), tên chữ là Tố Như, hiệu là Thanh Hiên, quê ở làng Tiên Điền, huyện Nghi Xuân, tỉnh Hà Tĩnh. Ông sinh ra trong một gia đình đại quý tộc có truyền thống khoa bảng và văn chương. Cuộc đời Nguyễn Du trải qua nhiều biến động của thời cuối Lê, Tây Sơn và đầu Nguyễn; ông từng sống nhiều năm phiêu bạt, gần gũi với đời sống nhân dân. Dưới triều Nguyễn, ông làm quan và từng được cử làm chánh sứ sang Trung Quốc. Nguyễn Du để lại các tập thơ chữ Hán như Thanh Hiên thi tập, Nam trung tạp ngâm, Bắc hành tạp lục, và các tác phẩm chữ Nôm, nổi tiếng nhất là Truyện Kiều.
+
+## Tác phẩm
+
+Truyện Kiều có tên gốc là Đoạn trường tân thanh, nghĩa là tiếng kêu mới về nỗi đau đứt ruột. Tác phẩm được viết bằng chữ Nôm, theo thể thơ lục bát, gồm 3254 câu. Nguyễn Du dựa vào cốt truyện của tiểu thuyết Kim Vân Kiều truyện của Thanh Tâm Tài Nhân ở Trung Quốc, nhưng sáng tạo lại sâu sắc về nghệ thuật kể chuyện, miêu tả nhân vật và ngôn ngữ, biến câu chuyện thành một kiệt tác của văn học dân tộc.
+
+## Tóm tắt
+
+Truyện có thể chia thành ba phần: gặp gỡ và đính ước, gia biến và lưu lạc, đoàn tụ. Thúy Kiều là người con gái tài sắc vẹn toàn. Trong dịp tiết Thanh minh, Kiều gặp Kim Trọng và hai người thề nguyền đính ước. Khi Kim Trọng về quê chịu tang chú, gia đình Kiều bị vu oan; để có tiền cứu cha và em, Kiều bán mình cho Mã Giám Sinh và nhờ em gái là Thúy Vân thay mình kết duyên với Kim Trọng.
+
+Từ đó Kiều trải qua mười lăm năm lưu lạc: bị Tú Bà ép làm kĩ nữ, được Thúc Sinh chuộc ra rồi bị Hoạn Thư, vợ cả của Thúc Sinh, đày đọa; được Từ Hải cứu và giúp báo ân báo oán, nhưng sau đó Kiều bị Hồ Tôn Hiến lừa, khuyên Từ Hải ra hàng khiến Từ Hải chết đứng. Đau đớn, Kiều trầm mình ở sông Tiền Đường và được sư Giác Duyên cứu. Cuối cùng Kiều đoàn tụ với gia đình và Kim Trọng, nhưng nàng xin được giữ tình bạn thay cho tình vợ chồng.
+
+## Giá trị
+
+Về nội dung, Truyện Kiều có giá trị hiện thực khi phơi bày bộ mặt tàn bạo của xã hội phong kiến, nơi đồng ",,,,,,,
+23be7b84-d25f-484e-80e9-80e6850b2e3f,H6-truyen-kieu:TRUE_FALSE,Truyện Kiều của Nguyễn Du,"Nguyễn Du quê ở làng Tiên Điền, huyện Nghi Xuân, tỉnh Hà Tĩnh.",TRUE: Đúng | FALSE: Sai,TRUE,"Văn bản nêu rõ quê quán của Nguyễn Du tại làng Tiên Điền, huyện Nghi Xuân, tỉnh Hà Tĩnh.","# Truyện Kiều của Nguyễn Du
+
+## Tác giả
+
+Nguyễn Du (1765–1820), tên chữ là Tố Như, hiệu là Thanh Hiên, quê ở làng Tiên Điền, huyện Nghi Xuân, tỉnh Hà Tĩnh. Ông sinh ra trong một gia đình đại quý tộc có truyền thống khoa bảng và văn chương. Cuộc đời Nguyễn Du trải qua nhiều biến động của thời cuối Lê, Tây Sơn và đầu Nguyễn; ông từng sống nhiều năm phiêu bạt, gần gũi với đời sống nhân dân. Dưới triều Nguyễn, ông làm quan và từng được cử làm chánh sứ sang Trung Quốc. Nguyễn Du để lại các tập thơ chữ Hán như Thanh Hiên thi tập, Nam trung tạp ngâm, Bắc hành tạp lục, và các tác phẩm chữ Nôm, nổi tiếng nhất là Truyện Kiều.
+
+## Tác phẩm
+
+Truyện Kiều có tên gốc là Đoạn trường tân thanh, nghĩa là tiếng kêu mới về nỗi đau đứt ruột. Tác phẩm được viết bằng chữ Nôm, theo thể thơ lục bát, gồm 3254 câu. Nguyễn Du dựa vào cốt truyện của tiểu thuyết Kim Vân Kiều truyện của Thanh Tâm Tài Nhân ở Trung Quốc, nhưng sáng tạo lại sâu sắc về nghệ thuật kể chuyện, miêu tả nhân vật và ngôn ngữ, biến câu chuyện thành một kiệt tác của văn học dân tộc.
+
+## Tóm tắt
+
+Truyện có thể chia thành ba phần: gặp gỡ và đính ước, gia biến và lưu lạc, đoàn tụ. Thúy Kiều là người con gái tài sắc vẹn toàn. Trong dịp tiết Thanh minh, Kiều gặp Kim Trọng và hai người thề nguyền đính ước. Khi Kim Trọng về quê chịu tang chú, gia đình Kiều bị vu oan; để có tiền cứu cha và em, Kiều bán mình cho Mã Giám Sinh và nhờ em gái là Thúy Vân thay mình kết duyên với Kim Trọng.
+
+Từ đó Kiều trải qua mười lăm năm lưu lạc: bị Tú Bà ép làm kĩ nữ, được Thúc Sinh chuộc ra rồi bị Hoạn Thư, vợ cả của Thúc Sinh, đày đọa; được Từ Hải cứu và giúp báo ân báo oán, nhưng sau đó Kiều bị Hồ Tôn Hiến lừa, khuyên Từ Hải ra hàng khiến Từ Hải chết đứng. Đau đớn, Kiều trầm mình ở sông Tiền Đường và được sư Giác Duyên cứu. Cuối cùng Kiều đoàn tụ với gia đình và Kim Trọng, nhưng nàng xin được giữ tình bạn thay cho tình vợ chồng.
+
+## Giá trị
+
+Về nội dung, Truyện Kiều có giá trị hiện thực khi phơi bày bộ mặt tàn bạo của xã hội phong kiến, nơi đồng ",,,,,,,
+72c49a24-cbcb-4780-b36e-85cb4c4cf982,H6-truyen-kieu:TRUE_FALSE,Truyện Kiều của Nguyễn Du,Truyện Kiều có tên gốc là Đoạn trường tân thanh.,TRUE: Đúng | FALSE: Sai,TRUE,Văn bản cho biết tên gốc của Truyện Kiều là Đoạn trường tân thanh.,"# Truyện Kiều của Nguyễn Du
+
+## Tác giả
+
+Nguyễn Du (1765–1820), tên chữ là Tố Như, hiệu là Thanh Hiên, quê ở làng Tiên Điền, huyện Nghi Xuân, tỉnh Hà Tĩnh. Ông sinh ra trong một gia đình đại quý tộc có truyền thống khoa bảng và văn chương. Cuộc đời Nguyễn Du trải qua nhiều biến động của thời cuối Lê, Tây Sơn và đầu Nguyễn; ông từng sống nhiều năm phiêu bạt, gần gũi với đời sống nhân dân. Dưới triều Nguyễn, ông làm quan và từng được cử làm chánh sứ sang Trung Quốc. Nguyễn Du để lại các tập thơ chữ Hán như Thanh Hiên thi tập, Nam trung tạp ngâm, Bắc hành tạp lục, và các tác phẩm chữ Nôm, nổi tiếng nhất là Truyện Kiều.
+
+## Tác phẩm
+
+Truyện Kiều có tên gốc là Đoạn trường tân thanh, nghĩa là tiếng kêu mới về nỗi đau đứt ruột. Tác phẩm được viết bằng chữ Nôm, theo thể thơ lục bát, gồm 3254 câu. Nguyễn Du dựa vào cốt truyện của tiểu thuyết Kim Vân Kiều truyện của Thanh Tâm Tài Nhân ở Trung Quốc, nhưng sáng tạo lại sâu sắc về nghệ thuật kể chuyện, miêu tả nhân vật và ngôn ngữ, biến câu chuyện thành một kiệt tác của văn học dân tộc.
+
+## Tóm tắt
+
+Truyện có thể chia thành ba phần: gặp gỡ và đính ước, gia biến và lưu lạc, đoàn tụ. Thúy Kiều là người con gái tài sắc vẹn toàn. Trong dịp tiết Thanh minh, Kiều gặp Kim Trọng và hai người thề nguyền đính ước. Khi Kim Trọng về quê chịu tang chú, gia đình Kiều bị vu oan; để có tiền cứu cha và em, Kiều bán mình cho Mã Giám Sinh và nhờ em gái là Thúy Vân thay mình kết duyên với Kim Trọng.
+
+Từ đó Kiều trải qua mười lăm năm lưu lạc: bị Tú Bà ép làm kĩ nữ, được Thúc Sinh chuộc ra rồi bị Hoạn Thư, vợ cả của Thúc Sinh, đày đọa; được Từ Hải cứu và giúp báo ân báo oán, nhưng sau đó Kiều bị Hồ Tôn Hiến lừa, khuyên Từ Hải ra hàng khiến Từ Hải chết đứng. Đau đớn, Kiều trầm mình ở sông Tiền Đường và được sư Giác Duyên cứu. Cuối cùng Kiều đoàn tụ với gia đình và Kim Trọng, nhưng nàng xin được giữ tình bạn thay cho tình vợ chồng.
+
+## Giá trị
+
+Về nội dung, Truyện Kiều có giá trị hiện thực khi phơi bày bộ mặt tàn bạo của xã hội phong kiến, nơi đồng ",,,,,,,
+6204c8ed-fbaa-4039-9d38-d097d16a7ac1,H6-truyen-kieu:TRUE_FALSE,Truyện Kiều của Nguyễn Du,Truyện Kiều được viết bằng chữ Hán theo thể thơ lục bát.,TRUE: Đúng | FALSE: Sai,FALSE,"Truyện Kiều được viết bằng chữ Nôm, không phải chữ Hán.","# Truyện Kiều của Nguyễn Du
+
+## Tác giả
+
+Nguyễn Du (1765–1820), tên chữ là Tố Như, hiệu là Thanh Hiên, quê ở làng Tiên Điền, huyện Nghi Xuân, tỉnh Hà Tĩnh. Ông sinh ra trong một gia đình đại quý tộc có truyền thống khoa bảng và văn chương. Cuộc đời Nguyễn Du trải qua nhiều biến động của thời cuối Lê, Tây Sơn và đầu Nguyễn; ông từng sống nhiều năm phiêu bạt, gần gũi với đời sống nhân dân. Dưới triều Nguyễn, ông làm quan và từng được cử làm chánh sứ sang Trung Quốc. Nguyễn Du để lại các tập thơ chữ Hán như Thanh Hiên thi tập, Nam trung tạp ngâm, Bắc hành tạp lục, và các tác phẩm chữ Nôm, nổi tiếng nhất là Truyện Kiều.
+
+## Tác phẩm
+
+Truyện Kiều có tên gốc là Đoạn trường tân thanh, nghĩa là tiếng kêu mới về nỗi đau đứt ruột. Tác phẩm được viết bằng chữ Nôm, theo thể thơ lục bát, gồm 3254 câu. Nguyễn Du dựa vào cốt truyện của tiểu thuyết Kim Vân Kiều truyện của Thanh Tâm Tài Nhân ở Trung Quốc, nhưng sáng tạo lại sâu sắc về nghệ thuật kể chuyện, miêu tả nhân vật và ngôn ngữ, biến câu chuyện thành một kiệt tác của văn học dân tộc.
+
+## Tóm tắt
+
+Truyện có thể chia thành ba phần: gặp gỡ và đính ước, gia biến và lưu lạc, đoàn tụ. Thúy Kiều là người con gái tài sắc vẹn toàn. Trong dịp tiết Thanh minh, Kiều gặp Kim Trọng và hai người thề nguyền đính ước. Khi Kim Trọng về quê chịu tang chú, gia đình Kiều bị vu oan; để có tiền cứu cha và em, Kiều bán mình cho Mã Giám Sinh và nhờ em gái là Thúy Vân thay mình kết duyên với Kim Trọng.
+
+Từ đó Kiều trải qua mười lăm năm lưu lạc: bị Tú Bà ép làm kĩ nữ, được Thúc Sinh chuộc ra rồi bị Hoạn Thư, vợ cả của Thúc Sinh, đày đọa; được Từ Hải cứu và giúp báo ân báo oán, nhưng sau đó Kiều bị Hồ Tôn Hiến lừa, khuyên Từ Hải ra hàng khiến Từ Hải chết đứng. Đau đớn, Kiều trầm mình ở sông Tiền Đường và được sư Giác Duyên cứu. Cuối cùng Kiều đoàn tụ với gia đình và Kim Trọng, nhưng nàng xin được giữ tình bạn thay cho tình vợ chồng.
+
+## Giá trị
+
+Về nội dung, Truyện Kiều có giá trị hiện thực khi phơi bày bộ mặt tàn bạo của xã hội phong kiến, nơi đồng ",,,,,,,
+17ee4ee7-0730-496a-af1b-a6292bdec8e2,H6-truyen-kieu:TRUE_FALSE,Truyện Kiều của Nguyễn Du,Truyện Kiều gồm 3254 câu thơ lục bát.,TRUE: Đúng | FALSE: Sai,TRUE,Văn bản ghi tác phẩm gồm 3254 câu.,"# Truyện Kiều của Nguyễn Du
+
+## Tác giả
+
+Nguyễn Du (1765–1820), tên chữ là Tố Như, hiệu là Thanh Hiên, quê ở làng Tiên Điền, huyện Nghi Xuân, tỉnh Hà Tĩnh. Ông sinh ra trong một gia đình đại quý tộc có truyền thống khoa bảng và văn chương. Cuộc đời Nguyễn Du trải qua nhiều biến động của thời cuối Lê, Tây Sơn và đầu Nguyễn; ông từng sống nhiều năm phiêu bạt, gần gũi với đời sống nhân dân. Dưới triều Nguyễn, ông làm quan và từng được cử làm chánh sứ sang Trung Quốc. Nguyễn Du để lại các tập thơ chữ Hán như Thanh Hiên thi tập, Nam trung tạp ngâm, Bắc hành tạp lục, và các tác phẩm chữ Nôm, nổi tiếng nhất là Truyện Kiều.
+
+## Tác phẩm
+
+Truyện Kiều có tên gốc là Đoạn trường tân thanh, nghĩa là tiếng kêu mới về nỗi đau đứt ruột. Tác phẩm được viết bằng chữ Nôm, theo thể thơ lục bát, gồm 3254 câu. Nguyễn Du dựa vào cốt truyện của tiểu thuyết Kim Vân Kiều truyện của Thanh Tâm Tài Nhân ở Trung Quốc, nhưng sáng tạo lại sâu sắc về nghệ thuật kể chuyện, miêu tả nhân vật và ngôn ngữ, biến câu chuyện thành một kiệt tác của văn học dân tộc.
+
+## Tóm tắt
+
+Truyện có thể chia thành ba phần: gặp gỡ và đính ước, gia biến và lưu lạc, đoàn tụ. Thúy Kiều là người con gái tài sắc vẹn toàn. Trong dịp tiết Thanh minh, Kiều gặp Kim Trọng và hai người thề nguyền đính ước. Khi Kim Trọng về quê chịu tang chú, gia đình Kiều bị vu oan; để có tiền cứu cha và em, Kiều bán mình cho Mã Giám Sinh và nhờ em gái là Thúy Vân thay mình kết duyên với Kim Trọng.
+
+Từ đó Kiều trải qua mười lăm năm lưu lạc: bị Tú Bà ép làm kĩ nữ, được Thúc Sinh chuộc ra rồi bị Hoạn Thư, vợ cả của Thúc Sinh, đày đọa; được Từ Hải cứu và giúp báo ân báo oán, nhưng sau đó Kiều bị Hồ Tôn Hiến lừa, khuyên Từ Hải ra hàng khiến Từ Hải chết đứng. Đau đớn, Kiều trầm mình ở sông Tiền Đường và được sư Giác Duyên cứu. Cuối cùng Kiều đoàn tụ với gia đình và Kim Trọng, nhưng nàng xin được giữ tình bạn thay cho tình vợ chồng.
+
+## Giá trị
+
+Về nội dung, Truyện Kiều có giá trị hiện thực khi phơi bày bộ mặt tàn bạo của xã hội phong kiến, nơi đồng ",,,,,,,
+56bf9140-4730-4859-ae6a-a2d7085038a0,H6-truyen-kieu:TRUE_FALSE,Truyện Kiều của Nguyễn Du,"Nguyễn Du sáng tác Truyện Kiều hoàn toàn độc lập, không dựa vào tác phẩm nào của Trung Quốc.",TRUE: Đúng | FALSE: Sai,FALSE,Nguyễn Du dựa vào cốt truyện Kim Vân Kiều truyện của Thanh Tâm Tài Nhân.,"# Truyện Kiều của Nguyễn Du
+
+## Tác giả
+
+Nguyễn Du (1765–1820), tên chữ là Tố Như, hiệu là Thanh Hiên, quê ở làng Tiên Điền, huyện Nghi Xuân, tỉnh Hà Tĩnh. Ông sinh ra trong một gia đình đại quý tộc có truyền thống khoa bảng và văn chương. Cuộc đời Nguyễn Du trải qua nhiều biến động của thời cuối Lê, Tây Sơn và đầu Nguyễn; ông từng sống nhiều năm phiêu bạt, gần gũi với đời sống nhân dân. Dưới triều Nguyễn, ông làm quan và từng được cử làm chánh sứ sang Trung Quốc. Nguyễn Du để lại các tập thơ chữ Hán như Thanh Hiên thi tập, Nam trung tạp ngâm, Bắc hành tạp lục, và các tác phẩm chữ Nôm, nổi tiếng nhất là Truyện Kiều.
+
+## Tác phẩm
+
+Truyện Kiều có tên gốc là Đoạn trường tân thanh, nghĩa là tiếng kêu mới về nỗi đau đứt ruột. Tác phẩm được viết bằng chữ Nôm, theo thể thơ lục bát, gồm 3254 câu. Nguyễn Du dựa vào cốt truyện của tiểu thuyết Kim Vân Kiều truyện của Thanh Tâm Tài Nhân ở Trung Quốc, nhưng sáng tạo lại sâu sắc về nghệ thuật kể chuyện, miêu tả nhân vật và ngôn ngữ, biến câu chuyện thành một kiệt tác của văn học dân tộc.
+
+## Tóm tắt
+
+Truyện có thể chia thành ba phần: gặp gỡ và đính ước, gia biến và lưu lạc, đoàn tụ. Thúy Kiều là người con gái tài sắc vẹn toàn. Trong dịp tiết Thanh minh, Kiều gặp Kim Trọng và hai người thề nguyền đính ước. Khi Kim Trọng về quê chịu tang chú, gia đình Kiều bị vu oan; để có tiền cứu cha và em, Kiều bán mình cho Mã Giám Sinh và nhờ em gái là Thúy Vân thay mình kết duyên với Kim Trọng.
+
+Từ đó Kiều trải qua mười lăm năm lưu lạc: bị Tú Bà ép làm kĩ nữ, được Thúc Sinh chuộc ra rồi bị Hoạn Thư, vợ cả của Thúc Sinh, đày đọa; được Từ Hải cứu và giúp báo ân báo oán, nhưng sau đó Kiều bị Hồ Tôn Hiến lừa, khuyên Từ Hải ra hàng khiến Từ Hải chết đứng. Đau đớn, Kiều trầm mình ở sông Tiền Đường và được sư Giác Duyên cứu. Cuối cùng Kiều đoàn tụ với gia đình và Kim Trọng, nhưng nàng xin được giữ tình bạn thay cho tình vợ chồng.
+
+## Giá trị
+
+Về nội dung, Truyện Kiều có giá trị hiện thực khi phơi bày bộ mặt tàn bạo của xã hội phong kiến, nơi đồng ",,,,,,,
+3212a283-8c2b-47b4-8cbb-a06aa59ba624,H6-truyen-kieu:TRUE_FALSE,Truyện Kiều của Nguyễn Du,"Để có tiền cứu cha và em, Thúy Kiều đã bán mình cho Mã Giám Sinh.",TRUE: Đúng | FALSE: Sai,TRUE,Văn bản kể Kiều bán mình cho Mã Giám Sinh để cứu gia đình.,"# Truyện Kiều của Nguyễn Du
+
+## Tác giả
+
+Nguyễn Du (1765–1820), tên chữ là Tố Như, hiệu là Thanh Hiên, quê ở làng Tiên Điền, huyện Nghi Xuân, tỉnh Hà Tĩnh. Ông sinh ra trong một gia đình đại quý tộc có truyền thống khoa bảng và văn chương. Cuộc đời Nguyễn Du trải qua nhiều biến động của thời cuối Lê, Tây Sơn và đầu Nguyễn; ông từng sống nhiều năm phiêu bạt, gần gũi với đời sống nhân dân. Dưới triều Nguyễn, ông làm quan và từng được cử làm chánh sứ sang Trung Quốc. Nguyễn Du để lại các tập thơ chữ Hán như Thanh Hiên thi tập, Nam trung tạp ngâm, Bắc hành tạp lục, và các tác phẩm chữ Nôm, nổi tiếng nhất là Truyện Kiều.
+
+## Tác phẩm
+
+Truyện Kiều có tên gốc là Đoạn trường tân thanh, nghĩa là tiếng kêu mới về nỗi đau đứt ruột. Tác phẩm được viết bằng chữ Nôm, theo thể thơ lục bát, gồm 3254 câu. Nguyễn Du dựa vào cốt truyện của tiểu thuyết Kim Vân Kiều truyện của Thanh Tâm Tài Nhân ở Trung Quốc, nhưng sáng tạo lại sâu sắc về nghệ thuật kể chuyện, miêu tả nhân vật và ngôn ngữ, biến câu chuyện thành một kiệt tác của văn học dân tộc.
+
+## Tóm tắt
+
+Truyện có thể chia thành ba phần: gặp gỡ và đính ước, gia biến và lưu lạc, đoàn tụ. Thúy Kiều là người con gái tài sắc vẹn toàn. Trong dịp tiết Thanh minh, Kiều gặp Kim Trọng và hai người thề nguyền đính ước. Khi Kim Trọng về quê chịu tang chú, gia đình Kiều bị vu oan; để có tiền cứu cha và em, Kiều bán mình cho Mã Giám Sinh và nhờ em gái là Thúy Vân thay mình kết duyên với Kim Trọng.
+
+Từ đó Kiều trải qua mười lăm năm lưu lạc: bị Tú Bà ép làm kĩ nữ, được Thúc Sinh chuộc ra rồi bị Hoạn Thư, vợ cả của Thúc Sinh, đày đọa; được Từ Hải cứu và giúp báo ân báo oán, nhưng sau đó Kiều bị Hồ Tôn Hiến lừa, khuyên Từ Hải ra hàng khiến Từ Hải chết đứng. Đau đớn, Kiều trầm mình ở sông Tiền Đường và được sư Giác Duyên cứu. Cuối cùng Kiều đoàn tụ với gia đình và Kim Trọng, nhưng nàng xin được giữ tình bạn thay cho tình vợ chồng.
+
+## Giá trị
+
+Về nội dung, Truyện Kiều có giá trị hiện thực khi phơi bày bộ mặt tàn bạo của xã hội phong kiến, nơi đồng ",,,,,,,
+605ead09-b2ef-4e39-8e0e-ffdbc3e57f0a,H6-truyen-kieu:TRUE_FALSE,Truyện Kiều của Nguyễn Du,Thúy Kiều đã nhờ em gái là Thúy Vân thay mình kết duyên với Kim Trọng.,TRUE: Đúng | FALSE: Sai,TRUE,Văn bản nêu Kiều nhờ Thúy Vân thay mình kết duyên với Kim Trọng.,"# Truyện Kiều của Nguyễn Du
+
+## Tác giả
+
+Nguyễn Du (1765–1820), tên chữ là Tố Như, hiệu là Thanh Hiên, quê ở làng Tiên Điền, huyện Nghi Xuân, tỉnh Hà Tĩnh. Ông sinh ra trong một gia đình đại quý tộc có truyền thống khoa bảng và văn chương. Cuộc đời Nguyễn Du trải qua nhiều biến động của thời cuối Lê, Tây Sơn và đầu Nguyễn; ông từng sống nhiều năm phiêu bạt, gần gũi với đời sống nhân dân. Dưới triều Nguyễn, ông làm quan và từng được cử làm chánh sứ sang Trung Quốc. Nguyễn Du để lại các tập thơ chữ Hán như Thanh Hiên thi tập, Nam trung tạp ngâm, Bắc hành tạp lục, và các tác phẩm chữ Nôm, nổi tiếng nhất là Truyện Kiều.
+
+## Tác phẩm
+
+Truyện Kiều có tên gốc là Đoạn trường tân thanh, nghĩa là tiếng kêu mới về nỗi đau đứt ruột. Tác phẩm được viết bằng chữ Nôm, theo thể thơ lục bát, gồm 3254 câu. Nguyễn Du dựa vào cốt truyện của tiểu thuyết Kim Vân Kiều truyện của Thanh Tâm Tài Nhân ở Trung Quốc, nhưng sáng tạo lại sâu sắc về nghệ thuật kể chuyện, miêu tả nhân vật và ngôn ngữ, biến câu chuyện thành một kiệt tác của văn học dân tộc.
+
+## Tóm tắt
+
+Truyện có thể chia thành ba phần: gặp gỡ và đính ước, gia biến và lưu lạc, đoàn tụ. Thúy Kiều là người con gái tài sắc vẹn toàn. Trong dịp tiết Thanh minh, Kiều gặp Kim Trọng và hai người thề nguyền đính ước. Khi Kim Trọng về quê chịu tang chú, gia đình Kiều bị vu oan; để có tiền cứu cha và em, Kiều bán mình cho Mã Giám Sinh và nhờ em gái là Thúy Vân thay mình kết duyên với Kim Trọng.
+
+Từ đó Kiều trải qua mười lăm năm lưu lạc: bị Tú Bà ép làm kĩ nữ, được Thúc Sinh chuộc ra rồi bị Hoạn Thư, vợ cả của Thúc Sinh, đày đọa; được Từ Hải cứu và giúp báo ân báo oán, nhưng sau đó Kiều bị Hồ Tôn Hiến lừa, khuyên Từ Hải ra hàng khiến Từ Hải chết đứng. Đau đớn, Kiều trầm mình ở sông Tiền Đường và được sư Giác Duyên cứu. Cuối cùng Kiều đoàn tụ với gia đình và Kim Trọng, nhưng nàng xin được giữ tình bạn thay cho tình vợ chồng.
+
+## Giá trị
+
+Về nội dung, Truyện Kiều có giá trị hiện thực khi phơi bày bộ mặt tàn bạo của xã hội phong kiến, nơi đồng ",,,,,,,
+2f0cbdb4-d69a-4484-ac0c-6d4571b083f9,H6-truyen-kieu:TRUE_FALSE,Truyện Kiều của Nguyễn Du,Từ Hải chết đứng vì bị Thúc Sinh lừa ra hàng.,TRUE: Đúng | FALSE: Sai,FALSE,"Người lừa khiến Từ Hải ra hàng là Hồ Tôn Hiến, không phải Thúc Sinh.","# Truyện Kiều của Nguyễn Du
+
+## Tác giả
+
+Nguyễn Du (1765–1820), tên chữ là Tố Như, hiệu là Thanh Hiên, quê ở làng Tiên Điền, huyện Nghi Xuân, tỉnh Hà Tĩnh. Ông sinh ra trong một gia đình đại quý tộc có truyền thống khoa bảng và văn chương. Cuộc đời Nguyễn Du trải qua nhiều biến động của thời cuối Lê, Tây Sơn và đầu Nguyễn; ông từng sống nhiều năm phiêu bạt, gần gũi với đời sống nhân dân. Dưới triều Nguyễn, ông làm quan và từng được cử làm chánh sứ sang Trung Quốc. Nguyễn Du để lại các tập thơ chữ Hán như Thanh Hiên thi tập, Nam trung tạp ngâm, Bắc hành tạp lục, và các tác phẩm chữ Nôm, nổi tiếng nhất là Truyện Kiều.
+
+## Tác phẩm
+
+Truyện Kiều có tên gốc là Đoạn trường tân thanh, nghĩa là tiếng kêu mới về nỗi đau đứt ruột. Tác phẩm được viết bằng chữ Nôm, theo thể thơ lục bát, gồm 3254 câu. Nguyễn Du dựa vào cốt truyện của tiểu thuyết Kim Vân Kiều truyện của Thanh Tâm Tài Nhân ở Trung Quốc, nhưng sáng tạo lại sâu sắc về nghệ thuật kể chuyện, miêu tả nhân vật và ngôn ngữ, biến câu chuyện thành một kiệt tác của văn học dân tộc.
+
+## Tóm tắt
+
+Truyện có thể chia thành ba phần: gặp gỡ và đính ước, gia biến và lưu lạc, đoàn tụ. Thúy Kiều là người con gái tài sắc vẹn toàn. Trong dịp tiết Thanh minh, Kiều gặp Kim Trọng và hai người thề nguyền đính ước. Khi Kim Trọng về quê chịu tang chú, gia đình Kiều bị vu oan; để có tiền cứu cha và em, Kiều bán mình cho Mã Giám Sinh và nhờ em gái là Thúy Vân thay mình kết duyên với Kim Trọng.
+
+Từ đó Kiều trải qua mười lăm năm lưu lạc: bị Tú Bà ép làm kĩ nữ, được Thúc Sinh chuộc ra rồi bị Hoạn Thư, vợ cả của Thúc Sinh, đày đọa; được Từ Hải cứu và giúp báo ân báo oán, nhưng sau đó Kiều bị Hồ Tôn Hiến lừa, khuyên Từ Hải ra hàng khiến Từ Hải chết đứng. Đau đớn, Kiều trầm mình ở sông Tiền Đường và được sư Giác Duyên cứu. Cuối cùng Kiều đoàn tụ với gia đình và Kim Trọng, nhưng nàng xin được giữ tình bạn thay cho tình vợ chồng.
+
+## Giá trị
+
+Về nội dung, Truyện Kiều có giá trị hiện thực khi phơi bày bộ mặt tàn bạo của xã hội phong kiến, nơi đồng ",,,,,,,
+59ad2467-5a37-4e70-996c-8f3aa7ead7f7,H6-truyen-kieu:TRUE_FALSE,Truyện Kiều của Nguyễn Du,"Năm 2015, UNESCO vinh danh Nguyễn Du nhân kỉ niệm 250 năm năm sinh của ông.",TRUE: Đúng | FALSE: Sai,TRUE,Văn bản cho biết năm 2015 UNESCO vinh danh Nguyễn Du nhân kỉ niệm 250 năm năm sinh.,"tiền và cường quyền chà đạp con người; và có giá trị nhân đạo sâu sắc khi cảm thông với số phận người phụ nữ, trân trọng vẻ đẹp, tài năng và khát vọng tình yêu, tự do, công lí của con người.
+
+Về nghệ thuật, Nguyễn Du đã đưa thể thơ lục bát và ngôn ngữ văn học tiếng Việt đến đỉnh cao. Ông đặc biệt thành công ở bút pháp tả cảnh ngụ tình, nghệ thuật miêu tả nhân vật bằng bút pháp ước lệ và khắc họa tâm lí nhân vật. Năm 2015, UNESCO vinh danh Nguyễn Du nhân kỉ niệm 250 năm năm sinh của ông.",,,,,,,
