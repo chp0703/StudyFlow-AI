@@ -40,7 +40,8 @@ Run live datasets sequentially; one concurrent attempt hit provider errors and w
 ## Interpretation limits
 
 - The 40-case development set (`nlu_eval_vi.json`) and the 63-case development set 2 (`nlu_dev2_vi.json`) were used while editing the prompt and are not held out.
-- Held-out set 1 (`nlu_heldout_vi.json`) was run once and failed; its per-case outcomes were deliberately not inspected. It stays a baseline and must not be used to claim quality after the prompt changed.
+- Held-out set 1 (`nlu_heldout_vi.json`) was run once and failed. Its aggregate failure categories were seen (failures were in slots), and its per-case result file is in the repository. The prompt rules added afterwards (default `valid_from`, weekday numbering, exclusive `end_at`, verbatim text, `view`, `deadline_timezone`) match its largest failure categories, so influence on those rules cannot be excluded; the development sets may have shown the same failures. It stays a historical baseline, is no longer a held-out set, and must not be used to claim quality after the prompt changed.
+- Held-out set 1 and candidate set 2 are both spent. A quality claim needs a new set written by someone who has not seen the prompt or these results.
 - Candidate set 2 (`nlu_heldout2_vi.json`) was written by one author after the prompt rules were known; it has no recorded human approval. Two labels (US02, US05) are arguably ambiguous, and its outcomes were read. It was rerun only after becoming development data.
 - With one author or approver, inter-annotator agreement is unavailable.
 - A claim of ≥95% accuracy needs a new set written by someone who has not seen the prompt, about 200 cases, run once: 197/200 gives a Wilson lower bound near 95.8%, while 95/100 gives about 88.8%.

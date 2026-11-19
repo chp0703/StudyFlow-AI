@@ -586,3 +586,14 @@
 **Ghi chú**
 
 - Không gọi lại DeepSeek hoặc benchmark; `git_commit` trong báo cáo vẫn ghi đúng commit lịch sử đã chạy.
+
+## 2026-11-19 — Làm rõ trạng thái held-out 1 trong evaluation F1
+
+**Mục tiêu:** README không được khẳng định điều không kiểm chứng được về held-out 1.
+
+**Đã làm**
+
+- `docs/features/planner/evaluation/README.md`: thay câu "kết quả từng ca được cố ý không xem" bằng mô tả đúng: đã xem tổng hợp theo nhóm lỗi, file kết quả từng ca nằm trong repo, các quy tắc prompt thêm sau trùng với nhóm lỗi lớn nhất của held-out 1 nên không loại trừ được ảnh hưởng; bộ này và candidate 2 đều không còn là held-out.
+- Đẩy tag `eval-run-39aa48f` trỏ vào commit chạy benchmark để lệnh `git diff` trong README tái lập được.
+
+**Kết quả:** chỉ thay đổi tài liệu và tag. Số liệu không đổi.
