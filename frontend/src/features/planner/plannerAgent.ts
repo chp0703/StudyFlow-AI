@@ -1,3 +1,4 @@
+import { TASK_COLOR_SUFFIX } from "./clarification.ts"
 import type { PlannerIssue, TimeWindow } from "../../types/planner.ts"
 
 import type { Task } from "../../types/task.ts"
@@ -179,7 +180,11 @@ export function runPlannerCommand(
 
   availability: TimeWindow[] = [],
 ): PlannerCommandResult {
-  const text = input.trim().toLocaleLowerCase("vi")
+  const color = input.match(TASK_COLOR_SUFFIX)?.[1].toUpperCase()
+  const text = input
+    .replace(TASK_COLOR_SUFFIX, "")
+    .trim()
+    .toLocaleLowerCase("vi")
 
   const unchanged = (reply: string) => ({ tasks, availability, reply })
 
@@ -387,6 +392,8 @@ export function runPlannerCommand(
 
       priority: 0.5,
 
+      ...(color ? { color } : {}),
+
       deadline: date,
     }
 
@@ -440,6 +447,8 @@ export function runPlannerCommand(
       effort: 60,
 
       priority: 0.5,
+
+      ...(color ? { color } : {}),
 
       deadline: date,
 

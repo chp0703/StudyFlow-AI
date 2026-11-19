@@ -1,0 +1,93 @@
+.topbar,
+.sidebar {
+  box-shadow: 0 8px 32px -18px #51406d50;
+}
+
+.nav-item.active {
+  background: linear-gradient(105deg, var(--nav-tint), #fff);
+  color: var(--nav-ink);
+  box-shadow: inset 3px 0 0 var(--nav-ink);
+}
+
+.nav-item > svg {
+  color: var(--nav-ink);
+}
+
+.nav-item[data-page="Assistant"] {
+  --nav-tint: var(--pastel-lavender);
+  --nav-ink: var(--indigo);
+}
+
+.nav-item[data-page="Planner"] {
+  --nav-tint: var(--pastel-sky);
+  --nav-ink: #254c88;
+}
+
+.nav-item[data-page="Study"] {
+  --nav-tint: var(--pastel-mint);
+  --nav-ink: #24654e;
+}
+
+.home-layout .assistant-shell {
+  background: var(--bg-card-solid);
+}
+
+.home-layout .assistant-shell.is-empty {
+  background: var(--bg-ambient) fixed;
+}
+
+.assistant-welcome-logo {
+  display: block;
+  width: clamp(180px, 37vw, 340px);
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto 18px;
+}
+
+@media (max-height: 560px) {
+  .assistant-welcome-logo {
+    width: 180px;
+    margin-bottom: 10px;
+  }
+}
+
+.assistant-composer {
+  box-shadow: 0 12px 34px -16px #4d397953;
+}
+
+.from-user .assistant-bubble {
+  background: var(--pastel-lavender);
+  border-color: var(--border);
+}
+
+.planner-calendar > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-sky), #fff 85%);
+}
+
+.task-panel > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-periwinkle), #fff 85%);
+}
+
+.study-quiz-card > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-lavender), #fff 85%);
+}
+
+.study-materials-card > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-aqua), #fff 85%);
+}
+
+.study-qa-card > .card-heading {
+  background: linear-gradient(110deg, var(--pastel-peach), #fff 85%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .assistant-welcome-logo {
+    animation: welcome-float 4.5s ease-in-out 3;
+  }
+
+  @keyframes welcome-float {
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+}

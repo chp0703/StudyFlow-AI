@@ -39,3 +39,33 @@
 - DB test chạy trên Docker/PostgreSQL thật với Supabase CLI 3.2.0, project local cô lập `studyflow-b6-validation`; integration dùng auth/DB thật và mock model.
 - Không chạy DeepSeek thật vì B6 không gọi model.
 - Commit dùng `thanhhuong107 <224420045+thanhhuong107@users.noreply.github.com>` theo tài khoản được người dùng chỉ định.
+
+## 2026-11-18 — Giao diện pastel và nhãn màu trên lịch
+
+**Mục tiêu:** giúp người dùng phân biệt nhóm công việc trên lịch và làm mới giao diện StudyFlow AI.
+
+**Đã làm**
+
+- Mở rộng bảng màu pastel, thêm điểm nhấn cho các màn hình và đưa logo StudyFlow AI vào màn chào.
+- Thêm lựa chọn nhãn màu khi tạo công việc, hiển thị nhãn trong bảng công việc và dùng chữ đậm cùng tông trên lịch tuần và lịch tháng.
+
+**Kết quả:** nhánh `fix/planner-event-color-contrast`. Build frontend, TypeScript và 81 bài kiểm thử đạt.
+
+**Ghi chú**
+
+- Kiểm thử màu bằng luồng demo và render lịch. Chưa xác minh lưu màu qua API thật.
+
+## 2026-11-18 — Hoàn thiện giao diện và đưa thay đổi vào PR
+
+**Mục tiêu:** đưa giao diện đã chỉnh và tính năng nhãn màu lên nhánh để nhóm xem xét.
+
+**Đã làm**
+
+- Khôi phục nền xanh ngọc và vàng nhạt cùng kiểu ba thẻ tổng quan ban đầu.
+- Giữ logo gốc của StudyFlow AI và nhãn màu công việc trên lịch tuần, lịch tháng.
+
+**Kết quả:** nhánh `style/restore-original-summary-cards`. Build frontend, TypeScript và 81 bài kiểm thử đạt.
+
+**Ghi chú**
+
+- Chưa xác minh lưu nhãn màu qua API thật.

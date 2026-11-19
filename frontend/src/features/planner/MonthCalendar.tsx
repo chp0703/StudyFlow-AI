@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type CSSProperties } from "react"
 
 import { X } from "lucide-react"
 
@@ -8,7 +8,11 @@ import type { TaskChange, TimeWindow } from "../../types/planner"
 
 import type { ApiTimeWindow } from "../../api/types"
 
-import { eventStart, orderedDayEvents } from "./calendarEvents"
+import {
+  calendarEventColors,
+  eventStart,
+  orderedDayEvents,
+} from "./calendarEvents"
 
 import { visibleSegments } from "./workingTime"
 
@@ -18,9 +22,6 @@ const weekdays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
 
 const clock = (minutes: number) =>
   `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
-
-const color = (event: Task) =>
-  event.color && /^#[0-9a-fA-F]{6}$/.test(event.color) ? event.color : undefined
 
 export default function MonthCalendar({
   month,
@@ -148,7 +149,9 @@ export default function MonthCalendar({
                       changeOf.get(item.id) === "removed" ? " is-removed" : ""
                     }`}
                     style={
-                      color(item) ? { borderLeftColor: color(item) } : undefined
+                      calendarEventColors(
+                        item.color,
+                      ) as CSSProperties | undefined
                     }
                     aria-label={`${item.title}, ${item.time}`}
                     onClick={() => {
@@ -218,7 +221,7 @@ export default function MonthCalendar({
                   changeOf.has(item.id) ? " is-proposed" : ""
                 }`}
                 style={
-                  color(item) ? { borderLeftColor: color(item) } : undefined
+                  calendarEventColors(item.color) as CSSProperties | undefined
                 }
                 onClick={() => setSelectedEventId(item.id)}
               >
