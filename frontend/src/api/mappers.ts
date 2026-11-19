@@ -513,7 +513,7 @@ function windowDetails(
 
 // Title and rows describing what an approval would do, from the server-issued presentation.
 
-export function summarize(
+function summarizeBase(
   p: ActionPresentation,
 
   windows: ApiTimeWindow[] = [],
@@ -638,55 +638,80 @@ export function summarize(
 
   if (p.question_drafts?.items?.length) {
     const items = p.question_drafts.items
+
     const chunks = p.question_drafts.source_chunks ?? []
+
     const chunkById = new Map(chunks.map((c) => [c.chunk_id, c]))
+
     const first = items[0]
+
     const types = Array.from(
       new Set(items.map((item) => item.question_type)),
     ).join(", ")
+
     const details: {
       label: string
+
       value: string
     }[] = [
       { label: "Số câu hỏi", value: String(items.length) },
+
       { label: "Chủ đề", value: first.topic },
+
       { label: "Loại câu hỏi", value: types },
     ]
+
     items.forEach((item, index) => {
       const n = index + 1
+
       details.push({ label: `Câu ${n}`, value: item.stem })
+
       details.push({
         label: `Lựa chọn câu ${n}`,
+
         value: item.options
+
           .map((opt) => `${opt.option_id}: ${opt.text}`)
+
           .join(" | "),
       })
+
       const matchedOpt = item.options.find(
         (opt) => opt.option_id === item.answer_key,
       )
+
       details.push({
         label: `Đáp án đề xuất câu ${n}`,
+
         value: matchedOpt
           ? `${item.answer_key} (${matchedOpt.text})`
           : item.answer_key,
       })
+
       if (item.explanation) {
         details.push({ label: `Giải thích câu ${n}`, value: item.explanation })
       }
+
       const refs = item.source_chunk_ids.map((cid) => {
         const c = chunkById.get(cid)
+
         return c ? `Trang ${c.page} (${c.topic})` : cid
       })
+
       details.push({ label: `Nguồn câu ${n}`, value: refs.join(", ") })
     })
+
     chunks.forEach((chunk, index) => {
       details.push({
         label: `Đoạn nguồn #${index + 1} (Trang ${chunk.page} - ${chunk.topic})`,
+
         value: chunk.text,
       })
     })
+
     return {
       title: "Bộ câu hỏi nháp chờ xác nhận",
+
       details,
     }
   }
@@ -699,4 +724,50 @@ export function summarize(
     }
 
   return { title: "Thao tác đang chờ", details: [] }
+}
+
+export function summarize(
+  p: ActionPresentation,
+  windows: ApiTimeWindow[] = [],
+): Summary {
+  const base = summarizeBase(p, windows)
+
+  const r = p.revision_recommendation
+
+  if (!r) return base
+
+  return {
+    ...base,
+
+    title: p.candidate ? base.title : "Gợi ý ôn tập chờ xác nhận",
+
+    details: [
+      ...base.details,
+
+      { label: "Chủ đề", value: r.topic },
+
+      {
+        label: "Kết quả quan sát",
+        value: `${r.evidence.error_count}/${r.evidence.valid_response_count} câu sai (${Math.round(r.evidence.error_rate * 100)}%)`,
+      },
+
+      { label: "Lý do", value: r.reason_summary },
+
+      {
+        label: "Giới hạn tin cậy",
+        value: `${r.confidence_limit.level}: ${r.confidence_limit.limitations.join(" ")}`,
+      },
+
+      { label: "Lượt làm bài", value: r.evidence.attempt_ids.join(", ") },
+
+      { label: "Thời lượng do bạn chọn", value: `${r.suggested_minutes} phút` },
+
+      { label: "Ưu tiên do bạn chọn", value: String(r.priority) },
+
+      ...(p.revision_source_chunks ?? []).map((c) => ({
+        label: `Nguồn trang ${c.page} (${c.chunk_id})`,
+        value: c.text,
+      })),
+    ],
+  }
 }

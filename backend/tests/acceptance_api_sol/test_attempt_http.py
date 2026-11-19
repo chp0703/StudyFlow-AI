@@ -7,6 +7,7 @@ import copy
 import json
 import threading
 import unittest
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid5
 
@@ -15,7 +16,7 @@ import jwt
 from cryptography.hazmat.primitives.asymmetric import ec
 from fastapi.testclient import TestClient
 
-from backend.app.clients.rpc import iso
+from backend.app.clients.rpc import child_key, iso
 from backend.app.core import contract
 from backend.app.core.config import Settings
 from backend.app.main import create_app
@@ -96,6 +97,10 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
         self.idempotency: dict[tuple[str, str, str], dict] = {}
         self.attempts: dict[str, dict] = {}
         self.responses: dict[tuple[str, str], dict] = {}
+        self.response_versions: dict[str, int] = {}
+        self.before_context_snapshot: Callable[[], None] | None = None
+        self.before_submit: Callable[[], None] | None = None
+        self._in_before_submit = False
         self.materials = {
             MAT_A: {"material_id": MAT_A, "user_id": USER_A, "status": "READY"},
             MAT_B: {"material_id": MAT_B, "user_id": USER_B, "status": "READY"},
@@ -176,7 +181,15 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
             },
         )
 
-    def _rpc_err(self, req_id: str, code: str, message: str) -> httpx.Response:
+    def _rpc_err(
+        self,
+        req_id: str,
+        code: str,
+        message: str,
+        *,
+        field: str | None = None,
+        retryable: bool = False,
+    ) -> httpx.Response:
         return httpx.Response(
             200,
             json={
@@ -187,9 +200,9 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
                 "error": {
                     "code": code,
                     "message": message,
-                    "field": None,
+                    "field": field,
                     "details": {},
-                    "retryable": False,
+                    "retryable": retryable,
                 },
                 "warnings": [],
             },
@@ -203,8 +216,50 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
         idem_key = env["execution_context"]["idempotency_key"]
         args = env["arguments"]
 
+        hook: Callable[[], None] | None = None
+        if op == "get_quiz_attempt_context":
+            hook = self.before_context_snapshot
+        elif op == "submit_quiz_attempt":
+            with self.lock:
+                if self.before_submit is not None and not self._in_before_submit:
+                    self._in_before_submit = True
+                    hook = self.before_submit
+        if hook is not None:
+            try:
+                hook()
+            finally:
+                if op == "submit_quiz_attempt":
+                    with self.lock:
+                        self._in_before_submit = False
+
         with self.lock:
             self.rpc_calls.append((op, copy.deepcopy(env)))
+
+            if op == "lookup_operation_result":
+                if not contract.is_valid("LookupOperationResultArguments", args):
+                    return self._rpc_err(req_id, "INVALID_PARAMETER", "Invalid lookup_operation_result arguments.")
+                existing = self.idempotency.get((uid, args["operation"], args["idempotency_key"]))
+                if existing is not None and existing["fp"] != args["request_fingerprint"]:
+                    return self._rpc_err(req_id, "IDEMPOTENCY_CONFLICT", "Conflicting idempotency key.")
+                stored = None if existing is None else self._rpc_ok(req_id, "COMMITTED", copy.deepcopy(existing["data"])).json()
+                return self._rpc_ok(req_id, "READ", {"result": stored})
+
+            if op == "get_quiz_attempt_context":
+                attempt = self.attempts.get(args["attempt_id"])
+                if attempt is None or attempt["user_id"] != uid:
+                    return self._rpc_err(req_id, "ENTITY_NOT_FOUND", "Attempt not found.")
+                questions = [copy.deepcopy(self.questions[qid]) for qid in attempt["question_ids"]]
+                responses = [
+                    copy.deepcopy(self.responses[(attempt["attempt_id"], qid)])
+                    for qid in attempt["question_ids"]
+                    if (attempt["attempt_id"], qid) in self.responses
+                ]
+                return self._rpc_ok(req_id, "READ", {
+                    "attempt": copy.deepcopy(attempt),
+                    "questions": questions,
+                    "responses": responses,
+                    "response_version": self.response_versions.get(attempt["attempt_id"], 0),
+                })
 
             if op == "list_questions":
                 items = [
@@ -257,16 +312,22 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
                     "updated_at": stamp,
                 }
                 self.attempts[attempt["attempt_id"]] = copy.deepcopy(attempt)
+                self.response_versions[attempt["attempt_id"]] = 0
                 self.idempotency[(uid, op, idem_key)] = {"fp": fp, "data": copy.deepcopy(attempt)}
                 return self._rpc_ok(req_id, "COMMITTED", attempt)
 
             if op == "save_quiz_response":
-                fp = contract.sha256_hex(args)
+                fp_args = {k: v for k, v in args.items() if k != "include_replay_status"}
+                fp = contract.sha256_hex({
+                    "schema_version": "1.1", "user_id": uid, "operation": op,
+                    "arguments": fp_args, "decision_binding": None,
+                })
                 existing = self.idempotency.get((uid, op, idem_key))
                 if existing is not None:
                     if existing["fp"] != fp:
                         return self._rpc_err(req_id, "IDEMPOTENCY_CONFLICT", "Conflicting idempotency key.")
-                    return self._rpc_ok(req_id, "COMMITTED", copy.deepcopy(existing["data"]))
+                    outcome = "READ" if args.get("include_replay_status") else "COMMITTED"
+                    return self._rpc_ok(req_id, outcome, copy.deepcopy(existing["data"]))
 
                 attempt = self.attempts.get(args["attempt_id"])
                 if attempt is None or attempt["user_id"] != uid:
@@ -295,22 +356,35 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
                     "updated_at": stamp,
                 }
                 self.responses[(args["attempt_id"], args["question_id"])] = copy.deepcopy(resp)
+                self.response_versions[args["attempt_id"]] = self.response_versions.get(args["attempt_id"], 0) + 1
                 self.idempotency[(uid, op, idem_key)] = {"fp": fp, "data": copy.deepcopy(resp)}
                 return self._rpc_ok(req_id, "COMMITTED", resp)
 
             if op == "submit_quiz_attempt":
-                fp = contract.sha256_hex({"attempt_id": args["attempt_id"]})
+                fp = contract.sha256_hex({
+                    "schema_version": "1.1", "user_id": uid, "operation": op,
+                    "arguments": {"attempt_id": args["attempt_id"]}, "decision_binding": None,
+                })
                 existing = self.idempotency.get((uid, op, idem_key))
                 if existing is not None:
                     if existing["fp"] != fp:
                         return self._rpc_err(req_id, "IDEMPOTENCY_CONFLICT", "Conflicting idempotency key.")
-                    return self._rpc_ok(req_id, "COMMITTED", copy.deepcopy(existing["data"]))
+                    outcome = "READ" if args.get("include_replay_status") else "COMMITTED"
+                    return self._rpc_ok(req_id, outcome, copy.deepcopy(existing["data"]))
 
                 attempt = self.attempts.get(args["attempt_id"])
                 if attempt is None or attempt["user_id"] != uid:
                     return self._rpc_err(req_id, "ENTITY_NOT_FOUND", "Attempt not found.")
                 if attempt["status"] == "SUBMITTED":
                     return self._rpc_err(req_id, "STALE_ENTITY_VERSION", "Attempt already submitted.")
+                expected_version = args.get("expected_response_version")
+                if expected_version is not None and expected_version != self.response_versions.get(attempt["attempt_id"], 0):
+                    return self._rpc_err(
+                        req_id,
+                        "STALE_ENTITY_VERSION",
+                        "Attempt responses changed before submit.",
+                        field="expected_response_version",
+                    )
 
                 updated_attempt = {
                     **attempt,
@@ -395,7 +469,7 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
             headers=self._headers("resp-save-0000001"),
             json={"schema_version": "1.1", "selected_option_id": "B"},
         )
-        self.assertEqual(s1_replay.status_code, 200)
+        self.assertEqual(s1_replay.status_code, 200, s1_replay.text)
         self.assertEqual(s1_replay.headers.get("Idempotency-Replayed"), "true")
 
         # Save wrong option on Q_VERIFIED_2
@@ -418,11 +492,12 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
         self.assertIsNone(s3.json()["data"]["is_correct"])
 
         # 4. Submit and grade attempt
-        sub = self.client.post(
-            f"/v1/assessment/attempts/{attempt_id}/submit",
-            headers=self._headers("attempt-submit-0001"),
-            json={"schema_version": "1.1"},
-        )
+        with self._new_client() as restarted:
+            sub = restarted.post(
+                f"/v1/assessment/attempts/{attempt_id}/submit",
+                headers=self._headers("attempt-submit-0001"),
+                json={"schema_version": "1.1"},
+            )
         self.assertEqual(sub.status_code, 200)
         self.assertEqual(sub.headers.get("Idempotency-Replayed"), "false")
         sub_body = sub.json()
@@ -538,6 +613,307 @@ class AttemptHttpAcceptanceTests(unittest.TestCase):
         )
         self.assertEqual(cross_submit.status_code, 404)
         self.assertEqual(cross_submit.json()["error"]["code"], "ENTITY_NOT_FOUND")
+
+    def test_save_replay_owns_idempotency_and_response_version(self):
+        created = self.client.post(
+            "/v1/assessment/attempts",
+            headers=self._headers("attempt-save-ver-0001"),
+            json={
+                "schema_version": "1.1",
+                "material_id": MAT_A,
+                "question_ids": [Q_VERIFIED_1],
+                "origin": "MANUAL",
+                "session_outcome_id": None,
+            },
+        )
+        self.assertEqual(created.status_code, 200)
+        attempt_id = created.json()["data"]["attempt_id"]
+        self.assertEqual(self.response_versions[attempt_id], 0)
+
+        self.rpc_calls.clear()
+        save1 = self.client.put(
+            f"/v1/assessment/attempts/{attempt_id}/responses/{Q_VERIFIED_1}",
+            headers=self._headers("resp-ver-save-000001"),
+            json={"schema_version": "1.1", "selected_option_id": "B"},
+        )
+        self.assertEqual(save1.status_code, 200)
+        self.assertEqual(save1.headers.get("Idempotency-Replayed"), "false")
+        self.assertTrue(contract.is_valid("QuizResponseResult", save1.json()))
+        self.assertEqual(self.response_versions[attempt_id], 1)
+
+        save1_replay = self.client.put(
+            f"/v1/assessment/attempts/{attempt_id}/responses/{Q_VERIFIED_1}",
+            headers=self._headers("resp-ver-save-000001"),
+            json={"schema_version": "1.1", "selected_option_id": "B"},
+        )
+        self.assertEqual(save1_replay.status_code, 200)
+        self.assertEqual(save1_replay.headers.get("Idempotency-Replayed"), "true")
+        self.assertTrue(contract.is_valid("QuizResponseResult", save1_replay.json()))
+        self.assertEqual(save1_replay.json()["outcome"], "COMMITTED")
+        self.assertEqual(self.response_versions[attempt_id], 1)
+
+        save2 = self.client.put(
+            f"/v1/assessment/attempts/{attempt_id}/responses/{Q_VERIFIED_1}",
+            headers=self._headers("resp-ver-save-000002"),
+            json={"schema_version": "1.1", "selected_option_id": "A"},
+        )
+        self.assertEqual(save2.status_code, 200)
+        self.assertEqual(save2.headers.get("Idempotency-Replayed"), "false")
+        self.assertEqual(self.response_versions[attempt_id], 2)
+
+        self.assertEqual([op for op, _ in self.rpc_calls if op == "lookup_operation_result"], [])
+        save_envs = [env for op, env in self.rpc_calls if op == "save_quiz_response"]
+        self.assertEqual(len(save_envs), 3)
+        self.assertTrue(all(env["arguments"].get("include_replay_status") is True for env in save_envs))
+
+    def test_submit_same_key_race_replays_when_second_commits_before_first_snapshot(self):
+        created = self.client.post(
+            "/v1/assessment/attempts",
+            headers=self._headers("attempt-submit-race-c1"),
+            json={
+                "schema_version": "1.1",
+                "material_id": MAT_A,
+                "question_ids": [Q_VERIFIED_1, Q_VERIFIED_2],
+                "origin": "MANUAL",
+                "session_outcome_id": None,
+            },
+        )
+        self.assertEqual(created.status_code, 200)
+        attempt_id = created.json()["data"]["attempt_id"]
+
+        saved = self.client.put(
+            f"/v1/assessment/attempts/{attempt_id}/responses/{Q_VERIFIED_1}",
+            headers=self._headers("resp-submit-race-0001"),
+            json={"schema_version": "1.1", "selected_option_id": "B"},
+        )
+        self.assertEqual(saved.status_code, 200)
+
+        race_key = "attempt-submit-race-k1"
+        self.rpc_calls.clear()
+        first_at_snapshot = threading.Event()
+        second_committed = threading.Event()
+        hook_lock = threading.Lock()
+        hook_armed = True
+
+        def pause_first_snapshot():
+            nonlocal hook_armed
+            with hook_lock:
+                if not hook_armed:
+                    return
+                hook_armed = False
+            first_at_snapshot.set()
+            if not second_committed.wait(timeout=5):
+                raise AssertionError("Timed out waiting for second submit commit.")
+
+        first_result: dict[str, object] = {}
+
+        def run_first():
+            try:
+                first_result["response"] = self.client.post(
+                    f"/v1/assessment/attempts/{attempt_id}/submit",
+                    headers=self._headers(race_key),
+                    json={"schema_version": "1.1"},
+                )
+            except BaseException as exc:  # pragma: no cover - surfaced below
+                first_result["error"] = exc
+            finally:
+                first_at_snapshot.set()
+
+        self.before_context_snapshot = pause_first_snapshot
+        t1 = threading.Thread(target=run_first, daemon=True)
+        t1.start()
+        try:
+            self.assertTrue(first_at_snapshot.wait(timeout=5))
+            self.assertIsNone(first_result.get("error"))
+            with self._new_client() as second_client:
+                try:
+                    r2 = second_client.post(
+                        f"/v1/assessment/attempts/{attempt_id}/submit",
+                        headers=self._headers(race_key),
+                        json={"schema_version": "1.1"},
+                    )
+                finally:
+                    second_committed.set()
+            t1.join(timeout=5)
+            self.assertFalse(t1.is_alive())
+        finally:
+            second_committed.set()
+            self.before_context_snapshot = None
+
+        self.assertIsNone(first_result.get("error"))
+        r1 = first_result["response"]
+        self.assertIsNotNone(r1)
+        self.assertEqual(r1.status_code, 200)
+        self.assertEqual(r2.status_code, 200)
+
+        replayed_headers = [r1.headers.get("Idempotency-Replayed"), r2.headers.get("Idempotency-Replayed")]
+        self.assertEqual(replayed_headers, ["true", "false"])
+
+        body1 = r1.json()
+        body2 = r2.json()
+        self.assertTrue(contract.is_valid("QuizAttemptSubmissionResult", body1))
+        self.assertTrue(contract.is_valid("QuizAttemptSubmissionResult", body2))
+        self.assertEqual(body1["outcome"], "COMMITTED")
+        self.assertEqual(body2["outcome"], "COMMITTED")
+        self.assertEqual(body1["data"], body2["data"])
+
+        submit_envs = [env for op, env in self.rpc_calls if op == "submit_quiz_attempt"]
+        self.assertEqual(len(submit_envs), 1)
+        self.assertTrue(submit_envs[0]["arguments"].get("include_replay_status"))
+        lookup_calls = [op for op, _ in self.rpc_calls if op == "lookup_operation_result"]
+        self.assertEqual(len(lookup_calls), 3)
+
+    def test_submit_recovers_from_stale_response_version_and_resubmits_same_key(self):
+        created = self.client.post(
+            "/v1/assessment/attempts",
+            headers=self._headers("attempt-autosave-rec-c1"),
+            json={
+                "schema_version": "1.1",
+                "material_id": MAT_A,
+                "question_ids": [Q_VERIFIED_1, Q_VERIFIED_2],
+                "origin": "MANUAL",
+                "session_outcome_id": None,
+            },
+        )
+        self.assertEqual(created.status_code, 200)
+        attempt_id = created.json()["data"]["attempt_id"]
+
+        initial_save = self.client.put(
+            f"/v1/assessment/attempts/{attempt_id}/responses/{Q_VERIFIED_1}",
+            headers=self._headers("resp-autosave-rec-001"),
+            json={"schema_version": "1.1", "selected_option_id": "A"},
+        )
+        self.assertEqual(initial_save.status_code, 200)
+        self.assertEqual(self.response_versions[attempt_id], 1)
+
+        autosave_calls = 0
+
+        def autosave_once_before_submit():
+            nonlocal autosave_calls
+            if autosave_calls > 0:
+                return
+            autosave_calls += 1
+            with self._new_client() as autosave_client:
+                saved = autosave_client.put(
+                    f"/v1/assessment/attempts/{attempt_id}/responses/{Q_VERIFIED_1}",
+                    headers=self._headers("resp-autosave-rec-002"),
+                    json={"schema_version": "1.1", "selected_option_id": "B"},
+                )
+            self.assertEqual(saved.status_code, 200)
+
+        submit_key = "attempt-submit-recover-1"
+        self.rpc_calls.clear()
+        self.before_submit = autosave_once_before_submit
+        try:
+            res = self.client.post(
+                f"/v1/assessment/attempts/{attempt_id}/submit",
+                headers=self._headers(submit_key),
+                json={"schema_version": "1.1"},
+            )
+        finally:
+            self.before_submit = None
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.headers.get("Idempotency-Replayed"), "false")
+        body = res.json()
+        self.assertTrue(contract.is_valid("QuizAttemptSubmissionResult", body))
+        self.assertEqual(body["outcome"], "COMMITTED")
+        graded_attempt = body["data"]["attempt"]
+        self.assertEqual(graded_attempt["status"], "SUBMITTED")
+        self.assertEqual(graded_attempt["valid_response_count"], 1)
+        self.assertEqual(graded_attempt["correct_count"], 1)
+        self.assertEqual(graded_attempt["incorrect_count"], 0)
+        self.assertEqual(graded_attempt["omitted_count"], 1)
+        self.assertEqual(graded_attempt["score_percent"], 100)
+        self.assertEqual(self.response_versions[attempt_id], 2)
+
+        submit_envs = [env for op, env in self.rpc_calls if op == "submit_quiz_attempt"]
+        self.assertEqual(len(submit_envs), 2)
+        self.assertEqual([env["arguments"]["expected_response_version"] for env in submit_envs], [1, 2])
+        expected_idem = child_key(submit_key, "submit-quiz-attempt")
+        self.assertTrue(all(env["execution_context"]["idempotency_key"] == expected_idem for env in submit_envs))
+
+        lookup_calls = [op for op, _ in self.rpc_calls if op == "lookup_operation_result"]
+        self.assertEqual(len(lookup_calls), 1)
+
+    def test_submit_returns_503_after_three_stale_attempts_then_same_key_succeeds(self):
+        created = self.client.post(
+            "/v1/assessment/attempts",
+            headers=self._headers("attempt-autosave-503-c1"),
+            json={
+                "schema_version": "1.1",
+                "material_id": MAT_A,
+                "question_ids": [Q_VERIFIED_1, Q_VERIFIED_2],
+                "origin": "MANUAL",
+                "session_outcome_id": None,
+            },
+        )
+        self.assertEqual(created.status_code, 200)
+        attempt_id = created.json()["data"]["attempt_id"]
+        self.assertEqual(self.response_versions[attempt_id], 0)
+
+        churn_count = 0
+
+        def churn_before_submit():
+            nonlocal churn_count
+            churn_count += 1
+            option = "A" if churn_count % 2 == 1 else "B"
+            with self._new_client() as autosave_client:
+                saved = autosave_client.put(
+                    f"/v1/assessment/attempts/{attempt_id}/responses/{Q_VERIFIED_1}",
+                    headers=self._headers(f"resp-churn-0000000{churn_count}"),
+                    json={"schema_version": "1.1", "selected_option_id": option},
+                )
+            self.assertEqual(saved.status_code, 200)
+
+        submit_key = "attempt-submit-churn-01"
+        expected_idem = child_key(submit_key, "submit-quiz-attempt")
+        self.rpc_calls.clear()
+        self.before_submit = churn_before_submit
+        try:
+            r_fail = self.client.post(
+                f"/v1/assessment/attempts/{attempt_id}/submit",
+                headers=self._headers(submit_key),
+                json={"schema_version": "1.1"},
+            )
+        finally:
+            self.before_submit = None
+
+        self.assertEqual(r_fail.status_code, 503)
+        self.assertEqual(r_fail.headers.get("Retry-After"), "1")
+        self.assertEqual(r_fail.headers.get("Idempotency-Replayed"), "false")
+        err_body = r_fail.json()
+        self.assertEqual(err_body["state"], "ERROR")
+        self.assertEqual(err_body["error"]["code"], "SERVICE_UNAVAILABLE")
+        self.assertTrue(err_body["error"]["retryable"])
+        self.assertEqual(churn_count, 3)
+        self.assertEqual(self.response_versions[attempt_id], 3)
+        self.assertEqual(self.attempts[attempt_id]["status"], "IN_PROGRESS")
+        self.assertNotIn((USER_A, "submit_quiz_attempt", expected_idem), self.idempotency)
+
+        submit_envs = [env for op, env in self.rpc_calls if op == "submit_quiz_attempt"]
+        self.assertEqual(len(submit_envs), 3)
+        self.assertEqual([env["arguments"]["expected_response_version"] for env in submit_envs], [0, 1, 2])
+        self.assertTrue(all(env["execution_context"]["idempotency_key"] == expected_idem for env in submit_envs))
+
+        self.rpc_calls.clear()
+        r_ok = self.client.post(
+            f"/v1/assessment/attempts/{attempt_id}/submit",
+            headers=self._headers(submit_key),
+            json={"schema_version": "1.1"},
+        )
+        self.assertEqual(r_ok.status_code, 200)
+        self.assertEqual(r_ok.headers.get("Idempotency-Replayed"), "false")
+        ok_body = r_ok.json()
+        self.assertTrue(contract.is_valid("QuizAttemptSubmissionResult", ok_body))
+        self.assertEqual(ok_body["data"]["attempt"]["status"], "SUBMITTED")
+        self.assertEqual(ok_body["data"]["attempt"]["incorrect_count"], 1)
+        self.assertEqual(ok_body["data"]["attempt"]["score_percent"], 0)
+        self.assertIn((USER_A, "submit_quiz_attempt", expected_idem), self.idempotency)
+
+        followup_submits = [env for op, env in self.rpc_calls if op == "submit_quiz_attempt"]
+        self.assertEqual(len(followup_submits), 1)
+        self.assertEqual(followup_submits[0]["arguments"]["expected_response_version"], 3)
 
 
 if __name__ == "__main__":

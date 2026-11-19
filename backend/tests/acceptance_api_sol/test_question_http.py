@@ -709,7 +709,7 @@ class QuestionHttpAcceptance(unittest.TestCase):
         self.assertEqual(rejected.json()["result"]["outcome"], "REJECTED")
         self.assertEqual(rejected.json()["result"]["data"]["items"][0]["status"], "REJECTED")
 
-    def test_model_failures_complete_error_receipt_and_replay_without_retrying_model(self):
+    def test_model_failures_release_receipt_and_allow_retry(self):
         body = {
             "schema_version": "1.1",
             "conversation_id": CONV_A,
@@ -731,8 +731,8 @@ class QuestionHttpAcceptance(unittest.TestCase):
 
             replay = self.client.post("/v1/assessment/drafts", headers=self._jwks_token_headers(key), json=body)
             self.assertEqual(replay.status_code, 503)
-            self.assertEqual(replay.headers["Idempotency-Replayed"], "true")
-            self.assertEqual(len(self.llm_calls), 1, f"{mode} repeat key must replay error receipt with no second model call")
+            self.assertEqual(replay.headers["Idempotency-Replayed"], "false")
+            self.assertEqual(len(self.llm_calls), 2, f"{mode} retry must be allowed to call the transient model again")
 
     def test_uppercase_uuid_inputs_and_padded_topic_preserve_canonical_replay(self):
         upper_body = {

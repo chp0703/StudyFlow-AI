@@ -43,6 +43,9 @@ class ReceiptProcessor:
         except Exception:
             self._release(ctx, binding, key, conversation)  # lỗi tạm thời hoặc ngoài dự kiến: cho phép lần gửi lại nhận lại lease
             raise
+        if status in (429, 503):
+            self._release(ctx, binding, key, conversation)
+            return ReceiptResult(answer, status)
         done = self.rpc(ctx, "complete_api_receipt", {**binding, "http_status": status, "response": answer},
                             conversation_id=conversation, idempotency_key=child_key(key, "complete"))
         if done.get("outcome") == "ERROR":

@@ -47,4 +47,38 @@ This feature owns source-grounded question preparation, verified answer keys, qu
 
 The Study page keeps its in-memory illustrative quiz in Demo Mode. API Mode uses the assessment endpoints for a single material per browser session: upload a TXT/Markdown/PDF file (10 MB maximum), supply one topic (the current B2 handler requires exactly one), review generated drafts and their source pages, decide using the server-issued action reference, take a quiz using only server-listed VERIFIED questions, and read topic stats. Responses are saved before submission. The UI does not retain uploaded content in browser storage.
 
-The versioned contract includes `POST /v1/assessment/recommendations`, but the current backend route registry does not expose it. The frontend therefore shows that recommendation creation is unavailable. Live API and DeepSeek behavior remains to be verified against a configured local backend. There is no material-list or attempt-resume endpoint in the current contract, so the workspace retains those selections only while the page is open.
+Live API and DeepSeek behavior remains to be verified against a configured local backend. There is no material-list endpoint in the current contract, so the workspace retains its material selection only while the page is open.
+
+## Revision recommendations (B7)
+
+`POST /v1/assessment/recommendations` creates a durable review action from the latest
+50 submitted attempts containing valid graded responses for the selected material/topic.
+Counts are calculated before joining source links; citations include at most 50 distinct
+chunks from incorrect answers. This window can differ from B6 lifetime statistics.
+The immutable snapshot always reports LOW confidence and its sample/coverage limits;
+minutes and priority are user choices. No eligible responses or no observed errors
+returns 422 without a recommendation. Creation does not change Planner workload.
+
+
+### Decisions and Planner handoff
+
+`POST /v1/decisions` with the unchanged PENDING_ACTION reference accepts/rejects
+recommendations. Acceptance atomically creates one DRAFT TaskCandidate and a F1
+CREATE_TASK action in AWAITING_CLARIFICATION. It does not save an AcademicTask or
+change the schedule. Rejection creates no candidate. Evidence remains the original
+snapshot even if another quiz is submitted. Cancelling the candidate later leaves
+the recommendation ACCEPTED and the candidate CANCELLED.
+
+To complete that draft, POST `/v1/actions/{action_id}/review` with the existing
+conversation/action version plus both `candidate_patch` (CandidateTaskFields) and
+`expected_candidate_version`. Only fields supplied are merged; null clears a field.
+An explicit date-only deadline is normalized to the next local midnight. Start time
+alone never invents a deadline. Incomplete drafts return NEEDS_CLARIFICATION; complete
+drafts return AWAITING_APPROVAL with a fresh TASK_CANDIDATE reference. Confirm that
+reference separately through `/v1/decisions` to save the task. Planning/plan approval
+remain separate. Ordinary review requests without a patch retain their existing form.
+
+Internal creation arguments contain material/topic, user-selected minutes/priority,
+and stable server IDs. The database generates the evidence and recommendation; the
+result contains ActionPresentation. `decide_revision_recommendation` is a signed,
+non-LLM RPC returning the completed recommendation or F1 draft presentation.

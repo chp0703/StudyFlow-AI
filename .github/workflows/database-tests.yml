@@ -78,6 +78,29 @@ jobs:
       - name: Show local service status
         run: supabase status
 
+      - name: Guard against duplicate migration versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t migration_files < <(LC_ALL=C find supabase/migrations -maxdepth 1 -type f -name '*.sql' -printf '%f\n' | LC_ALL=C sort)
+          if [ "${#migration_files[@]}" -eq 0 ]; then
+            echo "ERROR: no migration files found in supabase/migrations"
+            exit 1
+          fi
+          printf '%s\n' "${migration_files[@]}"
+          non_matching=$(printf '%s\n' "${migration_files[@]}" | grep -Ev '^[0-9]+_.+\.sql$' || true)
+          if [ -n "$non_matching" ]; then
+            echo "ERROR: migration file missing numeric version prefix:"
+            printf '%s\n' "$non_matching"
+            exit 1
+          fi
+          dups=$(printf '%s\n' "${migration_files[@]}" | sed 's/_.*//' | LC_ALL=C sort | uniq -d)
+          if [ -n "$dups" ]; then
+            echo "ERROR: duplicate migration numeric version prefix detected:"
+            printf '%s\n' "$dups"
+            exit 1
+          fi
+
       - name: Replay migrations and seed locally
         run: supabase db reset --yes
 
@@ -98,6 +121,16 @@ jobs:
           upgraded=$(dump)
           test "$clean" = "$upgraded"
 
+      - name: Verify B6 to B7 upgrade matches clean replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          dump() { supabase db dump --local --schema app_private,app_api | grep -v '^--' | sha256sum | cut -d' ' -f1; }
+          clean=$(dump)
+          supabase db reset --version 202611190001 --yes
+          supabase migration up --yes
+          test "$clean" = "$(dump)"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -112,12 +145,28 @@ jobs:
           eval "$(supabase status -o env | sed 's/^/export /')"
           F1_LOCAL_SUPABASE_URL="$API_URL" F1_LOCAL_PUBLISHABLE_KEY="$PUBLISHABLE_KEY"           F1_LOCAL_SERVICE_KEY="$SECRET_KEY" F1_DB_TEST_DSN="$DB_URL"             python -B -m unittest discover -s backend/tests/integration -t . -v
 
+      - name: Verify quiz attempt upgrade preserves persisted data and schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          dump() { supabase db dump --local --schema app_private,app_api | grep -v '^--' | sha256sum | cut -d' ' -f1; }
+          clean=$(dump)
+          supabase db reset --version 202611200004 --yes
+          eval "$(supabase status -o env | sed 's/^/export /')"
+          F1_LOCAL_SUPABASE_URL="$API_URL" F1_LOCAL_PUBLISHABLE_KEY="$PUBLISHABLE_KEY" \
+          F1_LOCAL_SERVICE_KEY="$SECRET_KEY" F1_DB_TEST_DSN="$DB_URL" \
+            python -B backend/tests/integration/check_quiz_attempt_upgrade.py
+          upgraded=$(dump)
+          if [ "$clean" != "$upgraded" ]; then
+            echo "ERROR: upgraded app_private/app_api schema hash ($upgraded) does not match clean hash ($clean)"
+            exit 1
+          fi
+
       - name: Run real-PostgreSQL concurrency tests
         shell: bash
         run: |
           set -euo pipefail
           supabase db reset --yes
-          python -m pip install --disable-pip-version-check -r supabase/tests_concurrency/requirements.txt
           F1_DB_TEST_DSN='postgresql://postgres:postgres@127.0.0.1:54322/postgres'             python -B -m unittest discover -s supabase/tests_concurrency -v
 
   backend-contract-validation:

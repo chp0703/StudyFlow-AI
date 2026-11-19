@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 
 import httpx
 
-from ..clients.rpc import child_key, iso
+from ..clients.rpc import child_key, iso, operation_fingerprint
 from ..core import contract
 from ..orchestrator.workflow_ports import WorkflowError
 from ..orchestrator.workflow_shared import Terminal, _ok, reply
@@ -232,15 +232,19 @@ class DeepSeekQuestionGenerator:
             ],
         }
         try:
-            response = self.http.post(
+            with self.http.stream(
+                "POST",
                 self.url,
                 headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
                 json=body,
-            )
-            response.raise_for_status()
-            if len(response.content) > self.max_response_bytes:
-                raise ValueError("response too large")
-            envelope = response.json()
+            ) as response:
+                response.raise_for_status()
+                content = bytearray()
+                for chunk in response.iter_bytes():
+                    if len(content) + len(chunk) > self.max_response_bytes:
+                        raise ValueError("response too large")
+                    content.extend(chunk)
+            envelope = json.loads(content)
             if not isinstance(envelope, dict):
                 raise ValueError("envelope must be dict")
             choices = envelope.get("choices")
@@ -329,16 +333,10 @@ class AssessmentQuestionOperations:
         generation_params = {"topic": topic, "question_type": question_type, "count": count}
 
         # Check saved idempotent domain result BEFORE calling DeepSeek (lost-HTTP retry safety).
-        domain_fp = contract.sha256_hex({
-            "schema_version": "1.1",
-            "user_id": ctx.user_id,
-            "operation": "create_question_drafts",
-            "arguments": {
-                "conversation_id": conversation_id,
-                "material_id": material_id,
-                "generation_params": generation_params,
-            },
-            "decision_binding": None,
+        domain_fp = operation_fingerprint(ctx.user_id, "create_question_drafts", {
+            "conversation_id": conversation_id,
+            "material_id": material_id,
+            "generation_params": generation_params,
         })
         create_key = child_key(key, "create_drafts")
         lookup = self._rpc_or_raise(ctx, "lookup_operation_result", {

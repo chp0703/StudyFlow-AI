@@ -459,3 +459,61 @@
 - `README.md`: liên kết tới hướng dẫn và ghi rõ backend chỉ đọc biến môi trường của shell.
 
 **Kết quả:** chỉ thay đổi tài liệu và file mẫu. Các lệnh trong hướng dẫn chưa được chạy lại từ một bản clone sạch.
+
+## 2026-11-18 — Evaluation Learning Assessment F2
+
+**Mục tiêu:** có số đo chất lượng F2 chạy lại được, theo cùng khuôn với evaluation F1, với metric có nguồn trích dẫn.
+
+**Đã làm**
+
+- Thêm metric và oracle (`backend/app/assessment/evaluation.py`) cùng runner `backend/scripts/evaluate_assessment.py` (`offline`, `retrieval-local`, `generate`, `judge`, `score`, `retrieval`), kèm 10 unit test.
+- Viết corpus tiếng Việt gốc gồm 10 tài liệu (4 dev / 6 held-out), 80 truy vấn có nhãn và 6 tài liệu prompt injection (`backend/tests/fixtures/assessment_eval/corpus_vi.json`), đóng băng SHA-256 trước khi chạy held-out.
+- Viết protocol, rubric và kết quả trong `docs/features/assessment/evaluation/`; lưu items sinh ra và bảng chấm trong `results/annotations/`.
+
+**Kết quả:** nhánh `test/f2-evaluation`. Chấm điểm khớp oracle 10.000/10.000; pgTAP 618 pass; tìm kiếm Recall@5 0,70 (từ khóa 1,00, câu hỏi tự nhiên 0,69, không dấu 0,00); held-out 80/120 câu sinh được, 79/80 đạt rubric (Wilson 93,3–99,8%); injection 0/18 vi phạm. Backend unit 140 test pass.
+
+**Ghi chú**
+
+- Chưa có người chấm thật: người chấm A là AI (Claude), người chấm B là `deepseek-flash`, cùng model sinh câu hỏi. Corpus cũng do AI viết.
+- VMLU chưa chạy vì không công bố giấy phép.
+- Phát hiện cần sửa ở PR riêng: `QUESTION_MAX_TOKENS=2048` không đủ cho `count=10`; tìm kiếm không dấu và câu hỏi tự nhiên trả rỗng; sinh câu hỏi chỉ dùng 12 chunk đầu; đáp án MCQ lệch vị trí.
+- Bổ sung VMLU (dữ liệu do chủ dự án đăng nhập và tải từ vmlu.ai, không commit): `deepseek-flash` đạt 83,6% trên Vi-MQA `valid` (744 câu); sinh 90/90 câu từ 30 đoạn Vi-SQuAD, 89/90 đạt rubric theo một người chấm AI. Judge DeepSeek chạy lại sau khi nạp tiền: hai người chấm AI đồng ý 90/90 về việc câu có đạt hay không (cùng loại câu 40).
+
+## 2026-11-19 — Oracle chấm điểm làm tròn half-up như PostgreSQL
+
+**Mục tiêu:** oracle GRD-C01 phải độc lập với `grade_attempt`; trước đây cả hai cùng dùng `round(x, 2)` của Python (half-even trên float) nên che mất lệch so với PostgreSQL (half-up).
+
+**Đã làm**
+
+- `backend/app/assessment/evaluation.py`: `oracle_grade` làm tròn half-up bằng số nguyên (không dùng `Decimal` để không trùng cách cài của `grade_attempt` ở #57).
+- `backend/tests/unit/test_assessment_evaluation.py`: thêm test `1/32 -> 3.13`, `1/3`, `2/3`, `3/4`.
+
+**Kết quả:** trên mã của #57 (`81dcb1b`), oracle cũ khớp 9957/10000 ca (lệch ở ví dụ 9/32: 28.12 so với 28.13), oracle mới khớp 10000/10000. Chưa chạy lại `results/` và phần `db`; cần làm sau khi #57 vào `main`.
+
+## 2026-11-19 — Sửa hướng dẫn chạy demo local
+
+**Mục tiêu:** hướng dẫn trong `docs/local-demo.md` chạy được trên máy không có `psql` và `xxd`.
+
+**Đã làm**
+
+- Bước 2 đăng ký khóa ký RPC qua `docker exec` vào container `supabase_db`, đổi hex sang base64 bằng Python.
+
+**Kết quả:** các lệnh này đã được chạy thật trên Windows (Git Bash) và backend gọi `/v1/tasks` thành công với khóa vừa đăng ký.
+
+## 2026-11-19 — Việc nhỏ sau review #57
+
+**Mục tiêu:** xử lý các góp ý nhỏ của review #57 và hai lỗi môi trường đã gặp khi chạy lại evaluation.
+
+**Đã làm**
+
+- `backend/app/clients/rpc.py`: thêm `operation_fingerprint`; `attempts.py` và `questions.py` dùng chung thay vì tự dựng lại dấu vân tay (tránh lệch khi công thức đổi).
+- `backend/tests/integration/test_recommendations_local_supabase.py`: thêm kiểm tra `candidate_patch` không mở lại action đã hoàn tất (409).
+- `backend/tests/integration/check_quiz_attempt_upgrade.py`: gọi Supabase CLI qua `shutil.which` để chạy được trên Windows (`supabase.cmd`).
+- `.gitattributes`: ép LF cho corpus và CSV đánh giá, vì SHA-256 của chúng được ghi trong kết quả.
+
+**Kết quả:** unit 146/146; acceptance `test_question_http` 5/5 và `test_attempt_http` 6/6; integration recommendations 7/7, attempts 3/3; `check_quiz_attempt_upgrade.py` đạt trên Windows. Corpus checkout ra SHA-256 `19f9c3a9…` đúng giá trị đóng băng.
+
+**Ghi chú**
+
+- Góp ý "UNAUTHENTICATED không nên là lỗi thử lại" ở review #57 là sai: lỗi này đến từ chứng thực RPC của backend và cả `actions.py` của F1 xử lý như vậy; không đổi.
+- Chưa làm: quy tắc suy ra `priority`/`suggested_minutes` từ evidence (cần quyết định sản phẩm, migration và pgTAP).

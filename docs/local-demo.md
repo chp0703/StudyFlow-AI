@@ -2,7 +2,7 @@
 
 Dùng Supabase **local** (Docker). Không dùng dự án cloud `phomrutsdhdgejlskwcb`. Chạy từ thư mục gốc repo, trong Git Bash/WSL/macOS/Linux.
 
-Cần: Docker Desktop, Supabase CLI, Python 3.12+, Node 22, `psql`, `openssl`. Muốn dùng trợ lý chat hoặc sinh câu hỏi F2 thì cần thêm `DEEPSEEK_API_KEY` của riêng bạn; không có key thì chỉ các endpoint có cấu trúc chạy, `POST /v1/messages` trả 503.
+Cần: Docker Desktop, Supabase CLI, Python 3.12+, Node 22, `openssl` (không cần cài `psql`: bước 2 chạy trong container). Muốn dùng trợ lý chat hoặc sinh câu hỏi F2 thì cần thêm `DEEPSEEK_API_KEY` của riêng bạn; không có key thì chỉ các endpoint có cấu trúc chạy, `POST /v1/messages` trả 503.
 
 ## 1. Database
 
@@ -19,10 +19,10 @@ Sinh một secret ngẫu nhiên, đăng ký vào DB và giữ lại cùng giá t
 
 ```bash
 SECRET_HEX=$(openssl rand -hex 32)
-psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
-  -v key_id=f1-dev-1 -v secret_hex="$SECRET_HEX" -f supabase/scripts/register_dev_key.sql
+docker exec -i "$(docker ps --format '{{.Names}}' | grep -m1 supabase_db)" psql -U postgres \
+  -v key_id=f1-dev-1 -v secret_hex="$SECRET_HEX" < supabase/scripts/register_dev_key.sql
 export RPC_SIGNING_KEY_ID=f1-dev-1
-export RPC_SIGNING_SECRET_BASE64=$(printf '%s' "$SECRET_HEX" | xxd -r -p | base64)
+export RPC_SIGNING_SECRET_BASE64=$(printf '%s' "$SECRET_HEX" | python -c "import sys,base64,binascii;print(base64.b64encode(binascii.unhexlify(sys.stdin.read())).decode())")
 ```
 
 Khóa hết hạn sau 30 ngày; chạy lại bước này nếu backend báo khóa không hợp lệ.
