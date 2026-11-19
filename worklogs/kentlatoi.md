@@ -234,3 +234,21 @@
 **Ghi chú**
 - Upload E2E trên Chrome bị chặn vì extension chưa được bật quyền truy cập file URL; chưa gọi DeepSeek trả phí. Các bước sau upload được bảo vệ bởi test contract/state nhưng chưa QA lại trực quan trong phiên này.
 - Console còn cảnh báo GSAP target/scope từ App shell đã có sau merge; không có JavaScript error. Vite vẫn cảnh báo bundle JS trên 500 kB.
+
+## 2026-11-19 — Resolve PR #55 assessment review blockers
+
+**Mục tiêu:** Đồng bộ PR #55 với B7 trên main và sửa an toàn bốn blocker về quyết định, giới hạn quiz, nguồn đối chiếu và đề xuất ôn tập.
+
+**Đã làm**
+- Merge `origin/main` (`2d0a9f3`) vào `feat/f2-assessment-frontend-kent`, giữ F2 redesign và hợp nhất tài liệu recommendation/durability.
+- Giữ draft, chỉ mục duyệt và ActionReference khi kết quả decision bất định; dùng một idempotency key cho cùng quyết định, khóa đổi APPROVE/REJECT và tách decision thành công khỏi lỗi tải lại câu hỏi.
+- Giới hạn request tạo quiz ở 50 câu VERIFIED theo thứ tự máy chủ; hiển thị rõ tổng số và giới hạn khi có nhiều hơn 50 câu.
+- Hiển thị đúng văn bản từng source chunk được trích dẫn bằng `details/summary`, gồm tài liệu, trang, chỉ mục và trạng thái thiếu nguồn.
+- Tích hợp B7 từ tạo recommendation đến duyệt đề xuất, bổ sung thời gian TaskCandidate và xác nhận công việc riêng; giữ nguyên reference/provenance và không tự lập lịch.
+- Bổ sung regression tests cho 503/network/unknown/non-retryable, stable key/reference, partial success, 0–68 câu, source lookup, request 50 câu, fixture recommendation và UI recovery.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; 96/96 frontend tests, TypeScript và Vite production build đạt. Contract check đạt 194 definitions/135 fixtures; generated schema check đạt; 13/13 backend B7/assessment unit tests đạt.
+
+**Ghi chú**
+- Browser local chỉ tới màn hình đăng nhập; chưa có phiên Supabase/backend có dữ liệu để QA E2E F2. Viewport in-app bị kẹp ở 487px nên chưa xác nhận trực quan 390/768/1440; failure states được kiểm tra bằng mocks xác định.
+- Không chạy DeepSeek trả phí, Supabase reset/integration hay database tests. Console không có error nhưng còn warning GSAP target/scope đã tồn tại ở App shell/login; Vite vẫn cảnh báo bundle JS trên 500 kB.

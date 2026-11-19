@@ -155,6 +155,7 @@ test("createApiClient supports idempotent PUT requests and question_drafts prese
       intent: "VERIFY_QUESTION_DRAFTS",
       state: "AWAITING_APPROVAL",
       action_id: "act-1",
+      version: 1,
     },
 
     candidate: null,

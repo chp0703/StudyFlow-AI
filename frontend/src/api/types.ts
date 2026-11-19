@@ -96,6 +96,8 @@ export type PendingActionRef = {
   state: string
 
   action_id: string
+
+  version: number
 }
 
 export type Page<T,> = {

@@ -1,12 +1,25 @@
-import { useState, type DragEvent, type FormEvent } from "react"
+import { useRef, useState, type DragEvent, type FormEvent } from "react"
 import { api } from "../../api"
+import { ApiError } from "../../api/client"
 import Button from "../../components/ui/Button"
 import Card from "../../components/ui/Card"
+import DecisionActions from "./DecisionActions"
 import {
   assessmentStageState,
   type AssessmentStage,
 } from "./assessmentProgress"
 import { eligibleQuestions } from "./eligibleQuestions"
+import {
+  createQuizFromVerified,
+  decisionFingerprint,
+  operationFor,
+  referencedSources,
+  recommendationFromReply,
+  revisionCandidatePatch,
+  submitQuestionDecision,
+  uncertainDecisionMessage,
+  type PendingOperation,
+} from "./assessmentWorkflow"
 import type {
   ActionPresentation,
   ActionReference,
@@ -76,6 +89,33 @@ export default function AssessmentWorkspace() {
   const [reviewIndex, setReviewIndex] = useState(0)
   const [quizIndex, setQuizIndex] = useState(0)
   const [statsLoaded, setStatsLoaded] = useState(false)
+  const [decisionState, setDecisionState] =
+    useState<"idle" | "uncertain" | "blocked">("idle")
+  const [questionRefreshNeeded, setQuestionRefreshNeeded] = useState(false)
+  const decisionOperation = useRef<PendingOperation & {
+    decision: "APPROVE" | "REJECT"
+  } | null>(null)
+  const decisionInFlight = useRef(false)
+  const [recommendation, setRecommendation] =
+    useState<ActionPresentation | null>(null)
+  const [recommendationReference, setRecommendationReference] =
+    useState<ActionReference | null>(null)
+  const [recommendationState, setRecommendationState] =
+    useState<"ready" | "insufficient" | "awaiting_review" | "candidate_details" | "candidate_review" | "confirmed" | "rejected" | "stale">(
+      "ready",
+    )
+  const [suggestedMinutes, setSuggestedMinutes] = useState("60")
+  const [recommendationPriority, setRecommendationPriority] =
+    useState<"0.1" | "0.5" | "1">("0.5")
+  const [candidateTimes, setCandidateTimes] = useState({
+    startDate: "",
+    startTime: "09:00",
+    deadlineDate: "",
+    deadlineTime: "23:59",
+  })
+  const recommendationOperation = useRef<PendingOperation & {
+    decision?: "APPROVE" | "REJECT"
+  } | null>(null)
   const current = material?.material
   const verified = current
     ? eligibleQuestions(questions, current.material_id)
@@ -92,6 +132,10 @@ export default function AssessmentWorkspace() {
   const activeQuestion = activeQuestionId
     ? verified.find((item) => item.question_id === activeQuestionId)
     : null
+  const observedTopic = stats.find((item) => item.topic === current?.topics[0])
+  const hasRecommendationEvidence = Boolean(
+    observedTopic?.status === "AVAILABLE" && observedTopic.error_count > 0,
+  )
 
   function selectFile(nextFile: File | null) {
     setFile(nextFile)
@@ -111,10 +155,6 @@ export default function AssessmentWorkspace() {
     try {
       await operation()
     } catch (cause) {
-      if (label === "decide") {
-        setReference(null)
-        setDrafts([])
-      }
       setError(
         cause instanceof Error
           ? cause.message
@@ -165,6 +205,13 @@ export default function AssessmentWorkspace() {
       setStatsLoaded(false)
       setReviewIndex(0)
       setQuizIndex(0)
+      setDecisionState("idle")
+      decisionOperation.current = null
+      setQuestionRefreshNeeded(false)
+      setRecommendation(null)
+      setRecommendationReference(null)
+      setRecommendationState("ready")
+      recommendationOperation.current = null
       setNotice(
         response.data.material.status === "READY"
           ? "Tài liệu đã sẵn sàng."
@@ -219,30 +266,97 @@ export default function AssessmentWorkspace() {
     })
   }
 
-  function decide(decision: "APPROVE" | "REJECT") {
-    if (!current || !reference || !drafts.length) return
-    const original = reference
-    void run("decide", async () => {
-      const reply = await api.decide(
-        conversationId,
-        original,
-        decision,
-        crypto.randomUUID(),
+  async function decide(decision: "APPROVE" | "REJECT") {
+    if (!current || !reference || !drafts.length || decisionInFlight.current)
+      return
+    const fingerprint = decisionFingerprint(reference, decision)
+    if (
+      decisionOperation.current &&
+      decisionOperation.current.fingerprint !== fingerprint
+    ) {
+      setError(
+        "Không thể đổi quyết định khi kết quả lần gửi trước chưa rõ. Hãy thử lại đúng quyết định cũ hoặc kiểm tra trạng thái.",
       )
-      if (reply.state !== "SUCCEEDED")
+      return
+    }
+
+    const operation = operationFor(
+      decisionOperation.current,
+      fingerprint,
+    ) as PendingOperation & { decision: "APPROVE" | "REJECT" }
+    operation.decision = decision
+    decisionOperation.current = operation
+    decisionInFlight.current = true
+    setBusy("decide")
+    setError("")
+    setNotice("")
+    const outcome = await submitQuestionDecision(
+      api,
+      conversationId,
+      current.material_id,
+      reference,
+      decision,
+      operation.key,
+    )
+    decisionInFlight.current = false
+    setBusy("")
+
+    if (outcome.kind === "uncertain") {
+      setDecisionState("uncertain")
+      setError(outcome.message)
+      return
+    }
+    if (outcome.kind === "blocked") {
+      setDecisionState("blocked")
+      setError(outcome.message)
+      return
+    }
+
+    decisionOperation.current = null
+    setDecisionState("idle")
+    setReference(null)
+    setDrafts([])
+    setReviewIndex(0)
+    setNotice(
+      decision === "APPROVE"
+        ? "Câu hỏi đã được xác minh."
+        : "Đã từ chối bản nháp.",
+    )
+    if (outcome.kind === "resolved_refresh_failed") {
+      setQuestionRefreshNeeded(true)
+      setError(
+        "Quyết định đã được lưu, nhưng chưa tải lại được danh sách câu hỏi. Hãy làm mới; không cần gửi lại quyết định.",
+      )
+      return
+    }
+    setQuestions(outcome.questions)
+    setQuestionRefreshNeeded(false)
+    if (decision === "APPROVE") setStage("practice")
+  }
+
+  async function reconcileDecision() {
+    if (!current || !drafts.length) return
+    await run("reconcile", async () => {
+      const saved = await api.listAssessmentQuestions({
+        material_id: current.material_id,
+      })
+      setQuestions(saved)
+      const draftIds = new Set(drafts.map((draft) => draft.question_id))
+      const unresolved = saved.some(
+        (item) => draftIds.has(item.question_id) && item.status === "DRAFT",
+      )
+      if (unresolved) {
+        setDecisionState("blocked")
         throw new Error(
-          reply.error?.message ??
-            "Quyết định chưa được lưu. Hãy xem lại bản nháp mới.",
+          "Bản nháp vẫn đang chờ duyệt trên máy chủ. Giữ nguyên dữ liệu để tránh gửi một quyết định khác.",
         )
+      }
+      decisionOperation.current = null
+      setDecisionState("idle")
       setReference(null)
       setDrafts([])
-      await loadQuestions(current.material_id)
-      setNotice(
-        decision === "APPROVE"
-          ? "Câu hỏi đã được xác minh."
-          : "Đã từ chối bản nháp.",
-      )
-      if (decision === "APPROVE") setStage("practice")
+      setReviewIndex(0)
+      setNotice("Đã đồng bộ trạng thái duyệt từ máy chủ.")
     })
   }
 
@@ -250,11 +364,10 @@ export default function AssessmentWorkspace() {
     if (!current || !verified.length) return
     void run("start", async () => {
       // Only server-listed VERIFIED IDs are sent. The backend checks again.
-      const response = await api.createQuizAttempt(
+      const response = await createQuizFromVerified(
+        api,
         current.material_id,
-        verified.map((item) => item.question_id),
-        "MANUAL",
-        null,
+        questions,
         crypto.randomUUID(),
       )
       setAttempt(response.data)
@@ -263,6 +376,233 @@ export default function AssessmentWorkspace() {
       setQuizIndex(0)
       setStage("practice")
     })
+  }
+
+  async function requestRecommendation() {
+    if (!current || busy || !hasRecommendationEvidence) return
+    const minutes = Number(suggestedMinutes)
+    if (!Number.isInteger(minutes) || minutes < 15 || minutes > 240) {
+      setError("Thời lượng ôn tập phải từ 15 đến 240 phút.")
+      return
+    }
+    const priority = Number(recommendationPriority) as 0.1 | 0.5 | 1
+    const fingerprint = JSON.stringify({
+      materialId: current.material_id,
+      topic: current.topics[0],
+      minutes,
+      priority,
+    })
+    if (
+      recommendationOperation.current &&
+      recommendationOperation.current.fingerprint !== fingerprint
+    ) {
+      setError(
+        "Kết quả yêu cầu trước chưa rõ. Giữ nguyên thời lượng và ưu tiên để thử lại an toàn.",
+      )
+      return
+    }
+    const operation = operationFor(recommendationOperation.current, fingerprint)
+    recommendationOperation.current = operation
+    setBusy("recommendation")
+    setError("")
+    setNotice("")
+    try {
+      const reply = await api.createRevisionRecommendation(
+        conversationId,
+        current.material_id,
+        current.topics[0],
+        minutes,
+        priority,
+        operation.key,
+      )
+      const created = recommendationFromReply(reply)
+      if (!created)
+        throw new Error(
+          "Máy chủ chưa trả về đề xuất ôn tập có thể xác nhận an toàn.",
+        )
+      recommendationOperation.current = null
+      setRecommendation(created.presentation)
+      setRecommendationReference(created.reference)
+      setRecommendationState("awaiting_review")
+      setNotice("Đề xuất ôn tập đã sẵn sàng để bạn xem xét.")
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 422) {
+        recommendationOperation.current = null
+        setRecommendationState("insufficient")
+        setError(
+          "Chưa đủ bằng chứng sai hợp lệ để tạo đề xuất ôn tập cho chủ đề này.",
+        )
+      } else if (!(cause instanceof ApiError) || cause.retryable) {
+        setError(
+          "Chưa xác nhận được kết quả tạo đề xuất. Bạn có thể thử lại an toàn với cùng lựa chọn.",
+        )
+      } else {
+        recommendationOperation.current = null
+        setError(cause.message)
+      }
+    } finally {
+      setBusy("")
+    }
+  }
+
+  async function decideRecommendation(decision: "APPROVE" | "REJECT") {
+    if (!recommendationReference || busy) return
+    const fingerprint = decisionFingerprint(recommendationReference, decision)
+    if (
+      recommendationOperation.current &&
+      recommendationOperation.current.fingerprint !== fingerprint
+    ) {
+      setError(
+        "Không thể đổi quyết định khi kết quả lần gửi trước chưa rõ. Hãy thử lại đúng quyết định cũ.",
+      )
+      return
+    }
+    const operation = operationFor(
+      recommendationOperation.current,
+      fingerprint,
+    ) as PendingOperation & { decision?: "APPROVE" | "REJECT" }
+    operation.decision = decision
+    recommendationOperation.current = operation
+    setBusy("recommendation-decision")
+    setError("")
+    try {
+      const reply = await api.decide(
+        conversationId,
+        recommendationReference,
+        decision,
+        operation.key,
+      )
+      const presentation = reply.result?.data as ActionPresentation | undefined
+
+      if (recommendationState === "candidate_review") {
+        if (reply.state !== "SUCCEEDED")
+          throw new Error(
+            reply.error?.message ?? "Chưa xác nhận được công việc ôn tập.",
+          )
+        recommendationOperation.current = null
+        setRecommendationReference(null)
+        setRecommendationState(
+          decision === "APPROVE" ? "confirmed" : "rejected",
+        )
+        setNotice(
+          decision === "APPROVE"
+            ? "Công việc ôn tập đã được xác nhận. Lịch học chưa bị thay đổi."
+            : "Đã hủy công việc ôn tập nháp.",
+        )
+        return
+      }
+
+      if (decision === "REJECT") {
+        if (reply.state !== "SUCCEEDED")
+          throw new Error(reply.error?.message ?? "Chưa từ chối được đề xuất.")
+        recommendationOperation.current = null
+        setRecommendationReference(null)
+        setRecommendationState("rejected")
+        setNotice("Đã từ chối đề xuất ôn tập.")
+        return
+      }
+
+      if (
+        reply.state !== "NEEDS_CLARIFICATION" ||
+        !presentation?.candidate ||
+        presentation.pending_action.state !== "AWAITING_CLARIFICATION"
+      )
+        throw new Error(
+          "Đề xuất đã được chấp nhận nhưng chưa nhận được biểu mẫu công việc hợp lệ.",
+        )
+      recommendationOperation.current = null
+      setRecommendation(presentation)
+      setRecommendationReference(null)
+      setRecommendationState("candidate_details")
+      setNotice(
+        "Đề xuất đã được chấp nhận. Hãy bổ sung thời gian trước khi xác nhận công việc.",
+      )
+    } catch (cause) {
+      if (!(cause instanceof ApiError) || cause.retryable) {
+        setError(uncertainDecisionMessage)
+      } else {
+        setRecommendationState("stale")
+        setError(cause.message)
+      }
+    } finally {
+      setBusy("")
+    }
+  }
+
+  async function reviewRecommendationCandidate(event: FormEvent) {
+    event.preventDefault()
+    const candidate = recommendation?.candidate
+    const pending = recommendation?.pending_action
+    if (!candidate || !pending || typeof pending.version !== "number" || busy)
+      return
+    const patch = revisionCandidatePatch(
+      candidate.version,
+      candidateTimes.startDate,
+      candidateTimes.startTime,
+      candidateTimes.deadlineDate,
+      candidateTimes.deadlineTime,
+    )
+    if (!patch) {
+      setError("Chọn thời gian bắt đầu trước hạn hoàn thành.")
+      return
+    }
+    const fingerprint = JSON.stringify({
+      actionId: pending.action_id,
+      actionVersion: pending.version,
+      patch,
+    })
+    if (
+      recommendationOperation.current &&
+      recommendationOperation.current.fingerprint !== fingerprint
+    ) {
+      setError(
+        "Kết quả cập nhật trước chưa rõ. Giữ nguyên thời gian để thử lại an toàn.",
+      )
+      return
+    }
+    const operation = operationFor(recommendationOperation.current, fingerprint)
+    recommendationOperation.current = operation
+    setBusy("candidate-review")
+    setError("")
+    try {
+      const reply = await api.reviewAction(
+        conversationId,
+        pending.action_id,
+        pending.version,
+        operation.key,
+        patch,
+      )
+      const presentation = reply.result?.data as ActionPresentation | undefined
+      const nextReference = reply.action_reference
+      if (
+        reply.state !== "AWAITING_APPROVAL" ||
+        !presentation?.candidate ||
+        !nextReference ||
+        nextReference.target_type !== "TASK_CANDIDATE" ||
+        nextReference.target_id !== presentation.candidate.candidate_id ||
+        nextReference.target_version !== presentation.candidate.version
+      )
+        throw new Error(
+          "Máy chủ chưa trả về công việc ôn tập có thể xác nhận an toàn.",
+        )
+      recommendationOperation.current = null
+      setRecommendation(presentation)
+      setRecommendationReference(nextReference)
+      setRecommendationState("candidate_review")
+      setNotice("Công việc nháp đã sẵn sàng để xác nhận lần cuối.")
+    } catch (cause) {
+      if (!(cause instanceof ApiError) || cause.retryable) {
+        setError(
+          "Chưa xác nhận được kết quả cập nhật công việc. Bạn có thể thử lại an toàn.",
+        )
+      } else {
+        recommendationOperation.current = null
+        setRecommendationState("stale")
+        setError(cause.message)
+      }
+    } finally {
+      setBusy("")
+    }
   }
 
   function submit() {
@@ -485,6 +825,21 @@ export default function AssessmentWorkspace() {
                 <p>Chỉ câu hỏi được xác minh mới có thể vào bài luyện tập.</p>
               </div>
               <div className="assessment-actions">
+                {questionRefreshNeeded && (
+                  <Button
+                    className="secondary"
+                    onClick={() =>
+                      void run("refresh", async () => {
+                        await loadQuestions(current.material_id)
+                        setQuestionRefreshNeeded(false)
+                        setNotice("Đã tải lại danh sách câu hỏi.")
+                      })
+                    }
+                    disabled={Boolean(busy)}
+                  >
+                    Tải lại sau khi duyệt
+                  </Button>
+                )}
                 <Button
                   className="secondary"
                   onClick={() =>
@@ -542,21 +897,27 @@ export default function AssessmentWorkspace() {
                     <strong>Giải thích</strong>
                     <p>{activeDraft.explanation || "Chưa có giải thích."}</p>
                   </div>
-                  <div>
+                  <div className="assessment-source-list">
                     <strong>Nguồn đối chiếu</strong>
-                    <p>
-                      {current.filename} ·{" "}
-                      {activeDraft.source_chunk_ids
-                        .map((id) => {
-                          const chunk = material?.chunks.find(
-                            (item) => item.chunk_id === id,
-                          )
-                          return chunk
-                            ? `trang ${chunk.page}, đoạn ${chunk.chunk_index + 1}`
-                            : "nguồn không xác định"
-                        })
-                        .join("; ")}
-                    </p>
+                    {referencedSources(activeDraft, material?.chunks ?? []).map(
+                      ({ chunkId, chunk }) => (
+                        <details key={chunkId}>
+                          <summary>
+                            {chunk
+                              ? `${current.filename} · trang ${chunk.page}, đoạn ${chunk.chunk_index + 1}`
+                              : `Không tìm thấy đoạn nguồn ${chunkId}`}
+                          </summary>
+                          {chunk ? (
+                            <p>{chunk.text}</p>
+                          ) : (
+                            <p>
+                              Máy chủ không trả về nội dung cho mã nguồn này.
+                              Không có văn bản thay thế được tạo.
+                            </p>
+                          )}
+                        </details>
+                      ),
+                    )}
                   </div>
                 </div>
                 <div className="assessment-review-navigation">
@@ -589,26 +950,15 @@ export default function AssessmentWorkspace() {
                     Câu sau
                   </Button>
                 </div>
-                <div className="assessment-decision-bar">
-                  <div>
-                    <strong>Áp dụng cho cả {drafts.length} câu nháp</strong>
-                    <small>Quyết định này cần xác nhận rõ ràng.</small>
-                  </div>
-                  <Button
-                    className="secondary assessment-reject"
-                    onClick={() => decide("REJECT")}
-                    disabled={Boolean(busy) || !reference}
-                  >
-                    Từ chối
-                  </Button>
-                  <Button
-                    className="primary"
-                    onClick={() => decide("APPROVE")}
-                    disabled={Boolean(busy) || !reference}
-                  >
-                    Xác minh câu hỏi
-                  </Button>
-                </div>
+                <DecisionActions
+                  count={drafts.length}
+                  state={decisionState}
+                  pendingDecision={decisionOperation.current?.decision ?? null}
+                  busy={Boolean(busy)}
+                  referencePresent={Boolean(reference)}
+                  onDecision={(decision) => void decide(decision)}
+                  onReconcile={() => void reconcileDecision()}
+                />
               </section>
             ) : (
               <div className="assessment-empty is-compact">
@@ -658,7 +1008,9 @@ export default function AssessmentWorkspace() {
               </h2>
               <p>
                 {verified.length
-                  ? "Bài làm được chấm điểm xác định bởi máy chủ. Bạn có thể để trống câu chưa chắc chắn."
+                  ? verified.length > 50
+                    ? `Hiện có ${verified.length} câu hỏi đã xác minh. Bài luyện tập này sử dụng tối đa 50 câu.`
+                    : "Bài làm được chấm điểm xác định bởi máy chủ. Bạn có thể để trống câu chưa chắc chắn."
                   : "Quay lại bước Câu hỏi và xác minh bản nháp trước khi luyện tập."}
               </p>
               {verified.length > 0 && (
@@ -911,13 +1263,328 @@ export default function AssessmentWorkspace() {
                 Máy chủ chưa trả về thống kê cho tài liệu này.
               </p>
             )}
-            <div className="assessment-unavailable">
-              <strong>Đề xuất ôn tập chưa khả dụng</strong>
-              <p>
-                Backend hiện chưa cung cấp route đề xuất ôn tập. Không có khuyến
-                nghị giả lập được hiển thị.
-              </p>
-            </div>
+            <section
+              className="assessment-recommendation"
+              aria-labelledby="assessment-recommendation-heading"
+            >
+              <div>
+                <span className="assessment-kicker">Ôn tập thích ứng</span>
+                <h3 id="assessment-recommendation-heading">Đề xuất ôn tập</h3>
+                <p>
+                  Máy chủ tạo đề xuất từ kết quả đã chấm. Mọi công việc vẫn cần
+                  bạn xác nhận rõ ràng và chưa tự động thay đổi lịch.
+                </p>
+              </div>
+
+              {!recommendation && (
+                <>
+                  {!statsLoaded ? (
+                    <p className="assessment-help">
+                      Tải thống kê để kiểm tra bằng chứng trước khi yêu cầu đề
+                      xuất.
+                    </p>
+                  ) : recommendationState === "insufficient" ? (
+                    <div className="assessment-recommendation-state">
+                      <strong>Máy chủ báo chưa đủ dữ liệu</strong>
+                      <p>
+                        Chưa có đủ câu trả lời sai hợp lệ để tạo đề xuất. Đây
+                        không phải lỗi kết nối; hãy luyện tập thêm rồi tải lại
+                        thống kê.
+                      </p>
+                    </div>
+                  ) : !hasRecommendationEvidence ? (
+                    <div className="assessment-recommendation-state">
+                      <strong>Chưa đủ bằng chứng</strong>
+                      <p>
+                        Cần ít nhất một câu trả lời sai hợp lệ trong chủ đề đã
+                        xác nhận. Trạng thái này khác với lỗi kết nối API.
+                      </p>
+                    </div>
+                  ) : (
+                    <form
+                      className="assessment-recommendation-form"
+                      onSubmit={(event) => {
+                        event.preventDefault()
+                        void requestRecommendation()
+                      }}
+                    >
+                      <label>
+                        <span>Thời lượng đề xuất</span>
+                        <select
+                          value={suggestedMinutes}
+                          onChange={(event) =>
+                            setSuggestedMinutes(event.target.value)
+                          }
+                          disabled={Boolean(busy)}
+                        >
+                          {[30, 45, 60, 90, 120, 180, 240].map((minutes) => (
+                            <option key={minutes} value={minutes}>
+                              {minutes} phút
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        <span>Mức ưu tiên</span>
+                        <select
+                          value={recommendationPriority}
+                          onChange={(event) =>
+                            setRecommendationPriority(
+                              event.target.value as "0.1" | "0.5" | "1",
+                            )
+                          }
+                          disabled={Boolean(busy)}
+                        >
+                          <option value="0.1">Thấp</option>
+                          <option value="0.5">Trung bình</option>
+                          <option value="1">Cao</option>
+                        </select>
+                      </label>
+                      <Button
+                        className="primary"
+                        type="submit"
+                        disabled={Boolean(busy)}
+                      >
+                        {busy === "recommendation"
+                          ? "Đang tạo đề xuất…"
+                          : "Đề xuất ôn tập"}
+                      </Button>
+                    </form>
+                  )}
+                </>
+              )}
+
+              {recommendation?.revision_recommendation && (
+                <article className="assessment-recommendation-review">
+                  <div className="assessment-recommendation-summary">
+                    <span className="assessment-status is-pending">
+                      {recommendation.revision_recommendation.status}
+                    </span>
+                    <h4>{recommendation.revision_recommendation.topic}</h4>
+                    <p>
+                      {recommendation.revision_recommendation.reason_summary}
+                    </p>
+                    <dl>
+                      <div>
+                        <dt>Bằng chứng</dt>
+                        <dd>
+                          {
+                            recommendation.revision_recommendation.evidence
+                              .error_count
+                          }
+                          /
+                          {
+                            recommendation.revision_recommendation.evidence
+                              .valid_response_count
+                          }{" "}
+                          câu sai
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Thời lượng</dt>
+                        <dd>
+                          {
+                            recommendation.revision_recommendation
+                              .suggested_minutes
+                          }{" "}
+                          phút
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Độ tin cậy</dt>
+                        <dd>
+                          {
+                            recommendation.revision_recommendation
+                              .confidence_limit.level
+                          }
+                        </dd>
+                      </div>
+                    </dl>
+                    <ul>
+                      {recommendation.revision_recommendation.confidence_limit.limitations.map(
+                        (limitation) => (
+                          <li key={limitation}>{limitation}</li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+
+                  {(recommendation.revision_source_chunks ?? []).map(
+                    (chunk) => (
+                      <details key={chunk.chunk_id}>
+                        <summary>
+                          {current.filename} · trang {chunk.page}, đoạn{" "}
+                          {chunk.chunk_index + 1}
+                        </summary>
+                        <p>{chunk.text}</p>
+                      </details>
+                    ),
+                  )}
+
+                  {recommendationState === "awaiting_review" && (
+                    <div className="assessment-decision-bar">
+                      <div>
+                        <strong>Đề xuất đang chờ bạn duyệt</strong>
+                        <small>
+                          Chấp nhận chỉ tạo TaskCandidate nháp; chưa tạo lịch.
+                        </small>
+                      </div>
+                      <Button
+                        className="secondary assessment-reject"
+                        onClick={() => void decideRecommendation("REJECT")}
+                        disabled={
+                          Boolean(busy) ||
+                          recommendationOperation.current?.decision ===
+                            "APPROVE"
+                        }
+                      >
+                        Từ chối đề xuất
+                      </Button>
+                      <Button
+                        className="primary"
+                        onClick={() => void decideRecommendation("APPROVE")}
+                        disabled={
+                          Boolean(busy) ||
+                          recommendationOperation.current?.decision === "REJECT"
+                        }
+                      >
+                        Chấp nhận đề xuất
+                      </Button>
+                    </div>
+                  )}
+
+                  {recommendationState === "candidate_details" && (
+                    <form
+                      className="assessment-candidate-form"
+                      onSubmit={reviewRecommendationCandidate}
+                    >
+                      <h4>Bổ sung thời gian cho công việc nháp</h4>
+                      <div>
+                        <label>
+                          <span>Ngày bắt đầu</span>
+                          <input
+                            type="date"
+                            value={candidateTimes.startDate}
+                            onChange={(event) =>
+                              setCandidateTimes((value) => ({
+                                ...value,
+                                startDate: event.target.value,
+                              }))
+                            }
+                            required
+                          />
+                        </label>
+                        <label>
+                          <span>Giờ bắt đầu</span>
+                          <input
+                            type="time"
+                            value={candidateTimes.startTime}
+                            onChange={(event) =>
+                              setCandidateTimes((value) => ({
+                                ...value,
+                                startTime: event.target.value,
+                              }))
+                            }
+                            required
+                          />
+                        </label>
+                        <label>
+                          <span>Ngày hoàn thành</span>
+                          <input
+                            type="date"
+                            value={candidateTimes.deadlineDate}
+                            onChange={(event) =>
+                              setCandidateTimes((value) => ({
+                                ...value,
+                                deadlineDate: event.target.value,
+                              }))
+                            }
+                            required
+                          />
+                        </label>
+                        <label>
+                          <span>Giờ hoàn thành</span>
+                          <input
+                            type="time"
+                            value={candidateTimes.deadlineTime}
+                            onChange={(event) =>
+                              setCandidateTimes((value) => ({
+                                ...value,
+                                deadlineTime: event.target.value,
+                              }))
+                            }
+                            required
+                          />
+                        </label>
+                      </div>
+                      <Button
+                        className="primary"
+                        type="submit"
+                        disabled={Boolean(busy)}
+                      >
+                        Xem công việc trước khi xác nhận
+                      </Button>
+                    </form>
+                  )}
+
+                  {recommendationState === "candidate_review" &&
+                    recommendation.candidate && (
+                      <div className="assessment-decision-bar">
+                        <div>
+                          <strong>
+                            {recommendation.candidate.slots.title ??
+                              "Công việc ôn tập"}
+                          </strong>
+                          <small>
+                            Xác nhận sẽ lưu công việc vào Planner nhưng không tự
+                            động xếp lịch.
+                          </small>
+                        </div>
+                        <Button
+                          className="secondary assessment-reject"
+                          onClick={() => void decideRecommendation("REJECT")}
+                          disabled={
+                            Boolean(busy) ||
+                            recommendationOperation.current?.decision ===
+                              "APPROVE"
+                          }
+                        >
+                          Hủy công việc
+                        </Button>
+                        <Button
+                          className="primary"
+                          onClick={() => void decideRecommendation("APPROVE")}
+                          disabled={
+                            Boolean(busy) ||
+                            recommendationOperation.current?.decision ===
+                              "REJECT"
+                          }
+                        >
+                          Xác nhận công việc
+                        </Button>
+                      </div>
+                    )}
+
+                  {recommendationState === "confirmed" && (
+                    <p className="assessment-recommendation-state">
+                      Công việc ôn tập đã được xác nhận; lịch học vẫn chưa thay
+                      đổi.
+                    </p>
+                  )}
+                  {recommendationState === "rejected" && (
+                    <p className="assessment-recommendation-state">
+                      Đề xuất hoặc công việc nháp đã bị từ chối.
+                    </p>
+                  )}
+                  {recommendationState === "stale" && (
+                    <p className="assessment-recommendation-state" role="alert">
+                      Thao tác đã cũ hoặc không còn chờ duyệt. Hãy tải lại dữ
+                      liệu trước khi tạo đề xuất mới.
+                    </p>
+                  )}
+                </article>
+              )}
+            </section>
           </Card>
         </div>
       )}
