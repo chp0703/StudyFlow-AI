@@ -570,3 +570,19 @@
 **Ghi chú**
 
 - Held-out 1 giữ nguyên baseline lịch sử; candidate 2 đã là development data nên mức 95% không chứng minh khả năng khái quát.
+
+## 2026-11-18 — Chuẩn hóa provenance của benchmark F1
+
+**Mục tiêu:** để hash fixture NLU tái lập được trên Windows/Linux và giải thích commit benchmark trước rebase.
+
+**Đã làm**
+
+- Thêm quy tắc LF cho `backend/tests/fixtures/nlu_*.json` trong `.gitattributes`.
+- Sửa `metadata.dataset.sha256` của bốn báo cáo bị ảnh hưởng theo Git blob LF; giữ hash CRLF ban đầu trong `sha256_at_run`, không đổi prediction hay metric.
+- Cập nhật `docs/features/planner/evaluation/README.md`: hash LF của candidate 2, nguồn gốc commit `39aa48f` và lệnh đối chiếu với `804dd113` sau rebase.
+
+**Kết quả:** PR #48 (`test/f1-eval-benchmarks`); bốn hash báo cáo khớp fixture LF, diff provenance bằng 0; 163 backend unit tests pass.
+
+**Ghi chú**
+
+- Không gọi lại DeepSeek hoặc benchmark; `git_commit` trong báo cáo vẫn ghi đúng commit lịch sử đã chạy.

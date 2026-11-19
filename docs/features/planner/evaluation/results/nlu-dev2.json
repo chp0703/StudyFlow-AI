@@ -11,7 +11,8 @@
     },
     "dataset": {
       "path": "backend\\tests\\fixtures\\nlu_dev2_vi.json",
-      "sha256": "e0ecac12c4d68d06db858b02a9630011a04ac01de691651d82e2d3aa32c9b1e3"
+      "sha256": "e620a969393d42e2e36872aee6c0a7b286ed41d1387ff548a1f2cf2fec0ca911",
+      "sha256_at_run": "e0ecac12c4d68d06db858b02a9630011a04ac01de691651d82e2d3aa32c9b1e3"
     },
     "prompt_sha256": "891dfa2a494ec0f5af84db1fa94393d635edf36807446e41e79d8efc90392e14",
     "source_sha256": {

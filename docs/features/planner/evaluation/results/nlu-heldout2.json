@@ -11,7 +11,8 @@
     },
     "dataset": {
       "path": "backend\\tests\\fixtures\\nlu_heldout2_vi.json",
-      "sha256": "e30b0582667aa7f7e2b09098524d2974abe66e5967d5b8bb21d9245578ece7ed"
+      "sha256": "050328d62271131802796d51bf5550bd6287caeb263ef99a079a875bacaff224",
+      "sha256_at_run": "e30b0582667aa7f7e2b09098524d2974abe66e5967d5b8bb21d9245578ece7ed"
     },
     "prompt_sha256": "891dfa2a494ec0f5af84db1fa94393d635edf36807446e41e79d8efc90392e14",
     "source_sha256": {

@@ -20,6 +20,8 @@ The development set uses partial assertions and must not be called exact match. 
 
 Slot metrics count `null`, `[]`, and `{}` as values after the same normalization used for frame exact match. Development 2 and candidate set 2 were rerun live with this scorer. The historical held-out 1 result was rescored from saved predictions; its `slot_metrics_rescored_with` identifies the new scorer, while `source_sha256` identifies the original live run.
 
+All four NLU fixtures use LF bytes on every platform via `.gitattributes`; their published SHA-256 values refer to those Git blobs. The original Windows CRLF hashes for development 1, development 2 and candidate 2 remain in result metadata as `dataset.sha256_at_run`. Only the dataset hash metadata was normalized after the runs; predictions and scores were not changed.
+
 ## Reproduction
 
 ```powershell
@@ -49,7 +51,7 @@ Run live datasets sequentially; one concurrent attempt hit provider errors and w
 
 ## Results
 
-Offline scheduler evidence was generated from clean commits. NLU live results are in the section below and in `results/nlu-*.json`.
+Offline scheduler evidence was generated from clean commits. NLU live results are in the section below and in `results/nlu-*.json`. The five refreshed reports retain `39aa48f` as the clean run commit, although that commit left the branch history after a rebase. `git diff --exit-code 39aa48f 804dd113 -- backend/app/f1/scheduler backend/app/nlu backend/app/orchestrator/chat.py backend/scripts/benchmark_f1.py backend/scripts/benchmark_scheduler_quality.py backend/tests/fixtures/nlu_*.json` found no changes in the evaluation code or inputs; the recorded source and prompt hashes also match the rebased worktree. The `git_commit` fields describe when the measurements ran, not the current branch head.
 
 | Scheduler workload | Scheduled ratio | Mean | p50 | p95 | p99 |
 |---|---:|---:|---:|---:|---:|
@@ -70,9 +72,9 @@ CP-SAT proved `OPTIMAL` for all 100 subset workloads at clean commit `39aa48f`. 
 | Held-out 1, historical baseline (`nlu_heldout_vi.json`) | 100 | 70% | 71.4% | **not met** |
 | Candidate 2, now development data (`nlu_heldout2_vi.json`) | 100 | 95% | 96.6% | met on this set |
 
-- Held-out 1 (SHA-256 `86c84628df2c9c8ed5d65153f63b6932b6f3068f13117d020ce9a6eb6f7a9d93` for LF bytes, approved by `phkhoiit-1508` on `2026-11-16`) ran against the original prompt. Windows CRLF checkout changes the byte hash only. Intent order was 97–100% correct; the failures were in slots.
+- Held-out 1 (SHA-256 `86c84628df2c9c8ed5d65153f63b6932b6f3068f13117d020ce9a6eb6f7a9d93`, approved by `phkhoiit-1508` on `2026-11-16`) ran against the original prompt. Intent order was 97–100% correct; the failures were in slots.
 - Between the two held-out runs the prompt gained explicit period conventions (exclusive `end_at`, whole day/week for GET, GENERATE never starts in the past), mandatory `deadline_timezone`/`view`/`valid_from`, verbatim title/query text and UNSUPPORTED rules. Development 2 rose from 50.8% to 96.8% worst-run after these changes.
-- Candidate 2 (SHA-256 `e30b0582667aa7f7e2b09098524d2974abe66e5967d5b8bb21d9245578ece7ed`, no recorded approval) originally ran before the server began defaulting `valid_from` and `view` and before the "plain confirmation is UNKNOWN" prompt fix. The current result uses those fixes and includes one model-format `ExtractionError` counted as a failed case.
+- Candidate 2 (LF SHA-256 `050328d62271131802796d51bf5550bd6287caeb263ef99a079a875bacaff224`, no recorded approval) originally ran before the server began defaulting `valid_from` and `view` and before the "plain confirmation is UNKNOWN" prompt fix. The current result uses those fixes and includes one model-format `ExtractionError` counted as a failed case.
 - Development 1, development 2 and candidate 2 were rerun at clean commit `39aa48f`, with no provider-unavailable errors in the retained results. Development 2 and candidate 2 were run sequentially after a concurrent trial of development 2 had 107 provider-unavailable cases; that trial was excluded from quality measurement.
 - Wilson 95% intervals for the single-run frame exact match are stored per run in each result file.
 
