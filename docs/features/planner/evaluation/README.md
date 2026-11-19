@@ -25,7 +25,7 @@ Mapping of metrics to quality characteristics and AI-risk functions (by intent; 
 | SCH-C02 | Reliability | Measure |
 | PERF-01 | Performance efficiency | Measure |
 | Usability protocol (SUS) [9] | Interaction capability | Measure |
-| Authorization and approval-boundary tests (outside this directory) | Security | Manage |
+| Authorization and approval-boundary tests (outside this directory) | Security | Measure (tests) / Manage (approval control) |
 
 The 40-case development set (`nlu_eval_vi.json`) uses partial assertions and must not be called exact match; development set 2 (`nlu_dev2_vi.json`) is scored in exact mode, so its case pass rate equals its frame exact match. The candidate set is strict after documented equivalences: missing SEARCH_TASKS `query`/`status_filter` equals `null`/`[]`, and optional display-only `window.label` is ignored. Other extra slots are false positives. `raw_expressions` is excluded from semantic scoring; model output must still pass the contract. A 95/100 point estimate has a Wilson lower bound near 88.8%, so it must not be described as proof that population accuracy is at least 95%.
 
@@ -98,4 +98,4 @@ CP-SAT proved `OPTIMAL` for all 100 subset workloads at clean commit `eb9362b`. 
 8. Hyndman, R. J. & Fan, Y. (1996), “Sample Quantiles in Statistical Packages,” *The American Statistician*, 50(4), 361–365. https://doi.org/10.1080/00031305.1996.10473566
 9. Brooke, J. (1996), “SUS: A ‘quick and dirty’ usability scale,” in Jordan, P. W., Thomas, B., Weerdmeester, B. A. & McClelland, I. L. (eds.), *Usability Evaluation in Industry*, Taylor & Francis, London, pp. 189–194.
 10. Jones, C., Wilkes, J. & Murphy, N., with Smith, C. (2016), “Service Level Objectives,” ch. 4 in Beyer, B., Jones, C., Petoff, J. & Murphy, N. R. (eds.), *Site Reliability Engineering: How Google Runs Production Systems*, O’Reilly Media. https://sre.google/sre-book/service-level-objectives/
-11. Perron, L. & Didier, F., *OR-Tools CP-SAT* v9.14, Google. https://developers.google.com/optimization/cp/cp_solver (version as pinned in `backend/requirements-evaluation.txt`).
+11. Perron, L. & Didier, F., *CP-SAT* v9.14, Google. https://developers.google.com/optimization/cp/cp_solver (version as pinned in `backend/requirements-evaluation.txt`).
