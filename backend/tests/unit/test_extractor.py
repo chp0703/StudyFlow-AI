@@ -45,6 +45,26 @@ class DeepSeekExtractorTests(unittest.TestCase):
             with self.subTest(content=content), self.assertRaises(ExtractionError):
                 self.run_extract(answer(content))
 
+    def test_string_ambiguities_become_issues_but_blank_ones_are_still_rejected(self):
+        def with_notes(notes):
+            return json.dumps({"intents": [{"intent": "UNKNOWN", "slots": {}, "raw_expressions": {}, "ambiguities": notes}]})
+
+        got = self.run_extract(answer(with_notes(["không rõ"])))
+        self.assertEqual(got["intents"][0]["ambiguities"],
+                         [{"code": "AMBIGUOUS", "message": "không rõ", "field": None, "details": {}}])
+        with self.assertRaises(ExtractionError):
+            self.run_extract(answer(with_notes(["  "])))
+
+    def test_missing_valid_from_and_view_get_deterministic_defaults(self):
+        window = {"kind": "BUSY", "recurrence": "WEEKLY", "timezone": "Asia/Ho_Chi_Minh", "weekday": 2,
+                  "start_time": "08:00", "end_time": "10:00"}
+        content = json.dumps({"intents": [
+            {"intent": "SET_BUSY_INTERVAL", "slots": {"change_type": "ADD", "window": window}, "raw_expressions": {}, "ambiguities": []},
+            {"intent": "GET_STUDY_PLAN", "slots": {}, "raw_expressions": {}, "ambiguities": []}]})
+        got = self.run_extract(answer(content))["intents"]
+        self.assertEqual(got[0]["slots"]["window"]["valid_from"], "2026-11-05")
+        self.assertEqual(got[1]["slots"]["view"], "CURRENT")
+
     def test_transport_failures_are_unavailable_not_extraction_errors(self):
         def boom(request):
             raise httpx.ConnectError("down")

@@ -8,4 +8,5 @@
 
 # Evaluation inputs are hashed (SHA-256); keep them byte-identical across platforms.
 backend/tests/fixtures/assessment_eval/*.json text eol=lf
+backend/tests/fixtures/nlu_*.json text eol=lf
 docs/features/assessment/evaluation/results/annotations/*.csv text eol=lf

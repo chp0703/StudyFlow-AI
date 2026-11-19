@@ -517,3 +517,83 @@
 
 - Góp ý "UNAUTHENTICATED không nên là lỗi thử lại" ở review #57 là sai: lỗi này đến từ chứng thực RPC của backend và cả `actions.py` của F1 xử lý như vậy; không đổi.
 - Chưa làm: quy tắc suy ra `priority`/`suggested_minutes` từ evidence (cần quyết định sản phẩm, migration và pgTAP).
+## 2026-11-18 — Đánh giá NLU live và dev/held-out set mới cho F1
+
+**Mục tiêu:** đo chất lượng NLU của Planner bằng bộ held-out có số liệu thật và sửa các lỗi trích xuất lặp lại mà đo được.
+
+**Đã làm**
+
+- Chạy live NLU (DeepSeek, 5 lần mỗi bộ) cho dev set 1 và held-out 1; held-out 1 đạt 70% worst-run nên chỉ giữ làm baseline.
+- Thêm `backend/tests/fixtures/nlu_dev2_vi.json` (63 ca) và sửa prompt trong `backend/app/nlu/extractor.py`: `end_at` loại trừ, GET lấy cả ngày/tuần, GENERATE không bắt đầu trong quá khứ, luôn có `deadline_timezone`, giữ nguyên không dấu, UNSUPPORTED cho báo thức và cố ghi đè quy tắc.
+- Thêm `_fill_defaults` trong `extractor.py`: server điền `valid_from` (hôm nay) cho lịch lặp và `view=CURRENT` cho GET khi mô hình bỏ sót; thêm test trong `backend/tests/unit/test_extractor.py`.
+- Thêm `backend/tests/fixtures/nlu_heldout2_vi.json` (100 ca) và chạy một lần.
+- Cập nhật `docs/features/planner/evaluation/README.md` (lệnh live, bảng kết quả, giới hạn diễn giải) và ánh xạ priority trong `annotation-guide.md`; lưu kết quả vào `results/nlu-*.json`.
+- Chạy local (Supabase local, backend, frontend) và sửa `backend/app/orchestrator/chat.py`: `operation_for` bù các khóa nullable còn thiếu của cửa sổ rảnh/bận để không bị contract từ chối; thêm `backend/tests/unit/test_chat_window_defaults.py`.
+
+**Kết quả:** nhánh `test/f1-eval-benchmarks`; 99 backend unit test pass; thử qua API local: "Mỗi thứ sáu bận 7h-9h", "Ngày mai rảnh từ 8h đến 11h" và yêu cầu tối đa 45 phút đều vào hàng chờ xác nhận. NLU worst-run: dev 1 100%, dev 2 96,8%, held-out 1 70%, held-out 2 93% (hai bộ held-out chưa đạt ngưỡng 95%).
+
+**Ghi chú**
+
+- Held-out 2 do một tác giả viết sau khi biết prompt, chạy trước khi thêm `_fill_defaults`, chưa có người duyệt và đã bị đọc kết quả nên coi là dev data; muốn tuyên bố ≥95% cần bộ mới khoảng 200 ca do người khác viết.
+- Chưa chạy lại contract check, benchmark offline, integration/pgTAP; kết quả dev 1 và 2 chạy khi working tree còn thay đổi chưa commit.
+
+## 2026-11-18 — Xử lý review PR #48
+
+**Mục tiêu:** sửa hai sai lệch metric để kết quả đánh giá Planner phản ánh đúng từng task và từng slot.
+
+**Đã làm**
+
+- Giới hạn coverage theo từng task trong `backend/app/f1/scheduler/evaluation.py`; thêm regression với task có retained block vượt số phút còn lại và task chưa được xếp.
+- Chấm `null`, `[]`, `{}` nhất quán giữa slot metrics và frame exact match trong `backend/app/nlu/evaluation.py`; thêm regression cho các slot rỗng ngoài dự đoán.
+- Tính lại slot metrics của 15 run exact-scored từ prediction đã lưu, ghi dấu scorer trong `docs/features/planner/evaluation/results/nlu-*.json` và giải thích nguồn số liệu trong README.
+- Merge `main` mới nhất vào nhánh PR và hợp nhất hai mục worklog bị conflict.
+
+**Kết quả:** PR #48 (`test/f1-eval-benchmarks`); 141 backend unit tests, contract check và generated schema check pass; 15 run đã lưu khớp scorer mới.
+
+**Ghi chú**
+
+- Chưa gọi lại model, chạy acceptance/integration/pgTAP hoặc benchmark offline; số liệu latency và frame exact match là kết quả lịch sử.
+
+## 2026-11-18 — Chạy lại benchmark cho PR #48
+
+**Mục tiêu:** cập nhật số liệu Planner sau khi sửa metric và xác minh bằng DeepSeek live.
+
+**Đã làm**
+
+- Chạy `benchmark_f1.py` offline với 1.000 mẫu và 10 warm-up cho mỗi workload, rồi đo lại latency riêng sau khi kết thúc NLU live; cập nhật `results/offline.json`.
+- Chạy `benchmark_scheduler_quality.py` 100 ca CP-SAT, cập nhật `results/scheduler-quality.json`.
+- Chạy DeepSeek `deepseek-flash` 5 lượt cho dev 1, dev 2 và candidate 2; chạy lại dev 2/candidate 2 tuần tự sau khi lượt đồng thời gặp lỗi dịch vụ, cập nhật ba file `results/nlu-*.json` tương ứng.
+- Cập nhật `docs/features/planner/evaluation/README.md` với số liệu mới, cách tái lập và giới hạn của candidate 2.
+
+**Kết quả:** PR #48 (`test/f1-eval-benchmarks`); offline unit/contract/schema/scheduler pass; CP-SAT `OPTIMAL` 100/100; NLU worst-run dev 1 100%, dev 2 96,8%, candidate 2 95%, không có lỗi provider-unavailable trong các lượt giữ lại.
+
+**Ghi chú**
+
+- Held-out 1 giữ nguyên baseline lịch sử; candidate 2 đã là development data nên mức 95% không chứng minh khả năng khái quát.
+
+## 2026-11-18 — Chuẩn hóa provenance của benchmark F1
+
+**Mục tiêu:** để hash fixture NLU tái lập được trên Windows/Linux và giải thích commit benchmark trước rebase.
+
+**Đã làm**
+
+- Thêm quy tắc LF cho `backend/tests/fixtures/nlu_*.json` trong `.gitattributes`.
+- Sửa `metadata.dataset.sha256` của bốn báo cáo bị ảnh hưởng theo Git blob LF; giữ hash CRLF ban đầu trong `sha256_at_run`, không đổi prediction hay metric.
+- Cập nhật `docs/features/planner/evaluation/README.md`: hash LF của candidate 2, nguồn gốc commit `39aa48f` và lệnh đối chiếu với `804dd113` sau rebase.
+
+**Kết quả:** PR #48 (`test/f1-eval-benchmarks`); bốn hash báo cáo khớp fixture LF, diff provenance bằng 0; 163 backend unit tests pass.
+
+**Ghi chú**
+
+- Không gọi lại DeepSeek hoặc benchmark; `git_commit` trong báo cáo vẫn ghi đúng commit lịch sử đã chạy.
+
+## 2026-11-19 — Làm rõ trạng thái held-out 1 trong evaluation F1
+
+**Mục tiêu:** README không được khẳng định điều không kiểm chứng được về held-out 1.
+
+**Đã làm**
+
+- `docs/features/planner/evaluation/README.md`: thay câu "kết quả từng ca được cố ý không xem" bằng mô tả đúng: đã xem tổng hợp theo nhóm lỗi, file kết quả từng ca nằm trong repo, các quy tắc prompt thêm sau trùng với nhóm lỗi lớn nhất của held-out 1 nên không loại trừ được ảnh hưởng; bộ này và candidate 2 đều không còn là held-out.
+- Đẩy tag `eval-run-39aa48f` trỏ vào commit chạy benchmark để lệnh `git diff` trong README tái lập được.
+
+**Kết quả:** chỉ thay đổi tài liệu và tag. Số liệu không đổi.

@@ -101,6 +101,9 @@ def main() -> None:
             "unallocated_minutes": metrics.unallocated_minutes,
             "generated_block_count": metrics.generated_block_count,
             "mean_latency_ms": round(metrics.mean_latency_ms, 4),
+            "latency_ms_p50": round(metrics.latency_p50_ms, 4),
+            "latency_ms_p95": round(metrics.latency_p95_ms, 4),
+            "latency_ms_p99": round(metrics.latency_p99_ms, 4),
             "deterministic": metrics.deterministic,
         }
     print(json.dumps(report, ensure_ascii=False, indent=2))
