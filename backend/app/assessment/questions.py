@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 
 import httpx
 
-from ..clients.rpc import child_key, iso
+from ..clients.rpc import child_key, iso, operation_fingerprint
 from ..core import contract
 from ..orchestrator.workflow_ports import WorkflowError
 from ..orchestrator.workflow_shared import Terminal, _ok, reply
@@ -333,16 +333,10 @@ class AssessmentQuestionOperations:
         generation_params = {"topic": topic, "question_type": question_type, "count": count}
 
         # Check saved idempotent domain result BEFORE calling DeepSeek (lost-HTTP retry safety).
-        domain_fp = contract.sha256_hex({
-            "schema_version": "1.1",
-            "user_id": ctx.user_id,
-            "operation": "create_question_drafts",
-            "arguments": {
-                "conversation_id": conversation_id,
-                "material_id": material_id,
-                "generation_params": generation_params,
-            },
-            "decision_binding": None,
+        domain_fp = operation_fingerprint(ctx.user_id, "create_question_drafts", {
+            "conversation_id": conversation_id,
+            "material_id": material_id,
+            "generation_params": generation_params,
         })
         create_key = child_key(key, "create_drafts")
         lookup = self._rpc_or_raise(ctx, "lookup_operation_result", {

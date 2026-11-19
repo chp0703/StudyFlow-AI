@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -119,7 +120,7 @@ class QuizAttemptUpgradeCheck(unittest.TestCase):
         resp_id = legacy["response_id"]
         self.assertEqual((legacy["attempt_id"], legacy["question_id"], legacy["selected_option_id"], legacy["validity"], legacy["is_correct"], legacy["graded_at"]), (attempt_id, qid, "B", "VALID", None, None))
 
-        proc = subprocess.run(["supabase", "migration", "up", "--local", "--yes"], cwd=ROOT, check=False, timeout=180)
+        proc = subprocess.run([shutil.which("supabase") or "supabase", "migration", "up", "--local", "--yes"], cwd=ROOT, check=False, timeout=180)
         self.assertEqual(proc.returncode, 0, f"supabase migration up --local --yes failed ({proc.returncode})")
 
         ctx = self.ok(_wait_for_context(self.settings, token=token, user_id=user_id, attempt_id=attempt_id), schema="QuizAttemptContextResult", outcome="READ")["data"]
