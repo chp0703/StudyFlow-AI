@@ -100,8 +100,19 @@ class EvaluationSetTests(unittest.TestCase):
         metrics = evaluation.exact_metrics(dataset, [{"prediction": prediction}])
         self.assertEqual(metrics["intent_macro_f1"], 1.0)
         self.assertLess(metrics["slot_precision"], 1.0)
-        self.assertEqual(metrics["slot_recall"], 1.0)
+        self.assertLess(metrics["slot_recall"], 1.0)
         self.assertEqual(metrics["frame_exact_match_rate"], 0.0)
+
+    def test_exact_metrics_count_extra_empty_slots_as_false_positives(self):
+        case = {"intents": [{"intent": "SET_BUSY_INTERVAL", "slots": {"window": {"kind": "BUSY"}}}]}
+        for field, value in (("valid_until", None), ("weekdays", []), ("recurrence", {})):
+            with self.subTest(field=field):
+                prediction = {"intents": [{"intent": "SET_BUSY_INTERVAL", "slots": {
+                    "window": {"kind": "BUSY", field: value}}}]}
+                metrics = evaluation.exact_metrics({"cases": [case]}, [{"prediction": prediction}])
+                self.assertEqual(metrics["frame_exact_match_rate"], 0.0)
+                self.assertLess(metrics["slot_precision"], 1.0)
+                self.assertLess(metrics["slot_micro_f1"], 1.0)
 
     def test_intent_macro_f1_keeps_errors_on_their_original_cases(self):
         dataset = {"cases": [

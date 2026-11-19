@@ -114,11 +114,9 @@ def _pairs(intents: list[dict]) -> Counter:
     pairs: Counter = Counter()
 
     def flatten(index: int, intent: str, value, path: str = "") -> None:
-        if isinstance(value, dict):
+        if isinstance(value, dict) and value:
             for key, item in value.items():
                 flatten(index, intent, item, f"{path}.{key}" if path else key)
-        elif value is None or value == []:
-            return
         else:
             canonical = _canonical(path, value)
             pairs[(index, intent, path, json.dumps(canonical, ensure_ascii=False, sort_keys=True))] += 1
