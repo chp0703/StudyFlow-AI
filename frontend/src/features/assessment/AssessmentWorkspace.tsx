@@ -1,9 +1,16 @@
-import { useRef, useState, type DragEvent, type FormEvent } from "react"
+import {
+  useEffect,
+  useRef,
+  useState,
+  type DragEvent,
+  type FormEvent,
+} from "react"
 import { api } from "../../api"
 import { ApiError } from "../../api/client"
 import Button from "../../components/ui/Button"
 import Card from "../../components/ui/Card"
 import DecisionActions from "./DecisionActions"
+import QuizOverview from "./QuizOverview"
 import {
   assessmentStageState,
   type AssessmentStage,
@@ -11,12 +18,21 @@ import {
 import { eligibleQuestions } from "./eligibleQuestions"
 import {
   createQuizFromVerified,
+  DEFAULT_GENERATION_COUNT,
+  defaultQuizQuestionCount,
   decisionFingerprint,
+  generateQuestionDraftBatch,
+  generationResultMessage,
+  MAX_GENERATION_COUNT,
+  MAX_QUIZ_QUESTION_COUNT,
   operationFor,
+  quizAnswerSummary,
+  quizQuestionCount,
   referencedSources,
   recommendationFromReply,
   revisionCandidatePatch,
   submitQuestionDecision,
+  runGenerationOnce,
   uncertainDecisionMessage,
   type PendingOperation,
 } from "./assessmentWorkflow"
@@ -88,6 +104,11 @@ export default function AssessmentWorkspace() {
   const [isDragging, setIsDragging] = useState(false)
   const [reviewIndex, setReviewIndex] = useState(0)
   const [quizIndex, setQuizIndex] = useState(0)
+  const [generationCount, setGenerationCount] = useState(
+    DEFAULT_GENERATION_COUNT,
+  )
+  const [selectedQuizCount, setSelectedQuizCount] = useState(0)
+  const [showSubmitConfirmation, setShowSubmitConfirmation] = useState(false)
   const [statsLoaded, setStatsLoaded] = useState(false)
   const [decisionState, setDecisionState] =
     useState<"idle" | "uncertain" | "blocked">("idle")
@@ -96,6 +117,7 @@ export default function AssessmentWorkspace() {
     decision: "APPROVE" | "REJECT"
   } | null>(null)
   const decisionInFlight = useRef(false)
+  const generationInFlight = useRef(false)
   const [recommendation, setRecommendation] =
     useState<ActionPresentation | null>(null)
   const [recommendationReference, setRecommendationReference] =
@@ -120,6 +142,10 @@ export default function AssessmentWorkspace() {
   const verified = current
     ? eligibleQuestions(questions, current.material_id)
     : []
+  const maxSelectableQuizCount = Math.min(
+    MAX_QUIZ_QUESTION_COUNT,
+    verified.length,
+  )
   const stageState = assessmentStageState({
     materialReady: current?.status === "READY",
     verifiedCount: verified.length,
@@ -132,10 +158,15 @@ export default function AssessmentWorkspace() {
   const activeQuestion = activeQuestionId
     ? verified.find((item) => item.question_id === activeQuestionId)
     : null
+  const answerSummary = quizAnswerSummary(attempt?.question_ids ?? [], answers)
   const observedTopic = stats.find((item) => item.topic === current?.topics[0])
   const hasRecommendationEvidence = Boolean(
     observedTopic?.status === "AVAILABLE" && observedTopic.error_count > 0,
   )
+
+  useEffect(() => {
+    setSelectedQuizCount(defaultQuizQuestionCount(verified.length))
+  }, [current?.material_id, verified.length])
 
   function selectFile(nextFile: File | null) {
     setFile(nextFile)
@@ -222,48 +253,52 @@ export default function AssessmentWorkspace() {
 
   function generate() {
     if (!current || current.status !== "READY") return
-    void run("generate", async () => {
-      const reply = await api.generateQuestionDrafts(
-        conversationId,
-        current.material_id,
-        current.topics[0],
-        "MCQ",
-        5,
-        crypto.randomUUID(),
-      )
-      const presentation = reply.result?.data as ActionPresentation | undefined
-      const batch = presentation?.question_drafts
-      const ref = reply.action_reference
-      if (
-        reply.state !== "AWAITING_APPROVAL" ||
-        !batch?.items.length ||
-        !ref ||
-        ref.target_type !== "PENDING_ACTION" ||
-        ref.target_id !== ref.action_id ||
-        ref.target_version !== ref.action_version ||
-        ref.action_version < 1 ||
-        ref.action_id !== presentation?.pending_action.action_id ||
-        batch.items.some(
-          (item) =>
-            item.status !== "DRAFT" ||
-            item.material_id !== current.material_id ||
-            item.topic !== current.topics[0] ||
-            item.version < 1 ||
-            item.source_chunk_ids.some(
-              (id) => !material?.chunks.some((chunk) => chunk.chunk_id === id),
-            ),
+    void runGenerationOnce(generationInFlight, () =>
+      run("generate", async () => {
+        const reply = await generateQuestionDraftBatch(
+          api,
+          conversationId,
+          current.material_id,
+          current.topics[0],
+          generationCount,
+          crypto.randomUUID(),
         )
-      ) {
-        throw new Error(
-          "Không thể xác định an toàn bản nháp cần duyệt. Hãy tải lại và tạo yêu cầu mới.",
-        )
-      }
-      setDrafts(batch.items)
-      setReviewIndex(0)
-      setReference(ref)
-      setNotice(reply.message)
-      setStage("questions")
-    })
+        const presentation = reply.result
+          ?.data as ActionPresentation | undefined
+        const batch = presentation?.question_drafts
+        const ref = reply.action_reference
+        if (
+          reply.state !== "AWAITING_APPROVAL" ||
+          !batch?.items.length ||
+          !ref ||
+          ref.target_type !== "PENDING_ACTION" ||
+          ref.target_id !== ref.action_id ||
+          ref.target_version !== ref.action_version ||
+          ref.action_version < 1 ||
+          ref.action_id !== presentation?.pending_action.action_id ||
+          batch.items.some(
+            (item) =>
+              item.status !== "DRAFT" ||
+              item.material_id !== current.material_id ||
+              item.topic !== current.topics[0] ||
+              item.version < 1 ||
+              item.source_chunk_ids.some(
+                (id) =>
+                  !material?.chunks.some((chunk) => chunk.chunk_id === id),
+              ),
+          )
+        ) {
+          throw new Error(
+            "Không thể xác định an toàn bản nháp cần duyệt. Hãy tải lại và tạo yêu cầu mới.",
+          )
+        }
+        setDrafts(batch.items)
+        setReviewIndex(0)
+        setReference(ref)
+        setNotice(generationResultMessage(generationCount, batch.items.length))
+        setStage("questions")
+      }),
+    )
   }
 
   async function decide(decision: "APPROVE" | "REJECT") {
@@ -361,19 +396,22 @@ export default function AssessmentWorkspace() {
   }
 
   function start() {
-    if (!current || !verified.length) return
+    const count = quizQuestionCount(selectedQuizCount, verified.length)
+    if (!current || !count) return
     void run("start", async () => {
       // Only server-listed VERIFIED IDs are sent. The backend checks again.
       const response = await createQuizFromVerified(
         api,
         current.material_id,
         questions,
+        count,
         crypto.randomUUID(),
       )
       setAttempt(response.data)
       setResult(null)
       setAnswers({})
       setQuizIndex(0)
+      setShowSubmitConfirmation(false)
       setStage("practice")
     })
   }
@@ -607,6 +645,7 @@ export default function AssessmentWorkspace() {
 
   function submit() {
     if (!attempt) return
+    setShowSubmitConfirmation(false)
     void run("submit", async () => {
       for (const questionId of attempt.question_ids) {
         await api.saveQuizResponse(
@@ -630,15 +669,25 @@ export default function AssessmentWorkspace() {
   }
 
   return (
-    <div className="assessment-workspace">
+    <div
+      className={`assessment-workspace ${
+        attempt && !result ? "is-quiz-active" : ""
+      }`}
+    >
       <header className="assessment-hero">
         <div>
           <span className="assessment-eyebrow">Không gian đánh giá</span>
-          <h1>Học từ tài liệu, kiểm tra bằng dữ liệu thật</h1>
-          <p>
-            Tải tài liệu, duyệt câu hỏi do hệ thống đề xuất và luyện tập với
-            những câu đã được bạn xác minh.
-          </p>
+          <h1>
+            {attempt && !result
+              ? "Luyện tập từ câu hỏi đã xác minh"
+              : "Học từ tài liệu, kiểm tra bằng dữ liệu thật"}
+          </h1>
+          {(!attempt || result) && (
+            <p>
+              Tải tài liệu, duyệt câu hỏi do hệ thống đề xuất và luyện tập với
+              những câu đã được bạn xác minh.
+            </p>
+          )}
         </div>
         <span className="assessment-session-note">Phiên làm việc hiện tại</span>
       </header>
@@ -851,17 +900,42 @@ export default function AssessmentWorkspace() {
                 >
                   Làm mới
                 </Button>
-                <Button
-                  className="primary"
-                  onClick={generate}
-                  disabled={
-                    Boolean(busy) ||
-                    Boolean(reference) ||
-                    current.status !== "READY"
-                  }
-                >
-                  Tạo 5 câu nháp
-                </Button>
+                <div className="assessment-generation-controls">
+                  <label htmlFor="assessment-generation-count">
+                    <span>Số câu muốn tạo</span>
+                    <select
+                      id="assessment-generation-count"
+                      value={generationCount}
+                      onChange={(event) =>
+                        setGenerationCount(Number(event.target.value))
+                      }
+                      disabled={Boolean(busy) || Boolean(reference)}
+                    >
+                      {Array.from(
+                        { length: MAX_GENERATION_COUNT },
+                        (_, index) => index + 1,
+                      ).map((count) => (
+                        <option key={count} value={count}>
+                          {count}
+                        </option>
+                      ))}
+                    </select>
+                    <small>Tối đa 10 câu mỗi lần</small>
+                  </label>
+                  <Button
+                    className="primary"
+                    onClick={generate}
+                    disabled={
+                      Boolean(busy) ||
+                      Boolean(reference) ||
+                      current.status !== "READY"
+                    }
+                  >
+                    {busy === "generate"
+                      ? "Đang tạo câu hỏi…"
+                      : `Tạo ${generationCount} câu hỏi`}
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -1014,13 +1088,44 @@ export default function AssessmentWorkspace() {
                   : "Quay lại bước Câu hỏi và xác minh bản nháp trước khi luyện tập."}
               </p>
               {verified.length > 0 && (
-                <Button
-                  className="primary"
-                  onClick={start}
-                  disabled={Boolean(busy)}
-                >
-                  Bắt đầu luyện tập
-                </Button>
+                <div className="assessment-quiz-size-control">
+                  <div>
+                    <strong>Đã xác minh: {verified.length} câu</strong>
+                    <span>
+                      Bạn sẽ làm {selectedQuizCount}/{verified.length} câu đã
+                      xác minh.
+                    </span>
+                  </div>
+                  <label htmlFor="assessment-quiz-count">
+                    <span>Số câu luyện tập</span>
+                    <select
+                      id="assessment-quiz-count"
+                      value={selectedQuizCount}
+                      onChange={(event) =>
+                        setSelectedQuizCount(Number(event.target.value))
+                      }
+                      disabled={Boolean(busy)}
+                    >
+                      {Array.from(
+                        { length: maxSelectableQuizCount },
+                        (_, index) => index + 1,
+                      ).map((count) => (
+                        <option key={count} value={count}>
+                          {count}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <Button
+                    className="primary"
+                    onClick={start}
+                    disabled={Boolean(busy) || selectedQuizCount < 1}
+                  >
+                    {busy === "start"
+                      ? "Đang tạo bài…"
+                      : `Bắt đầu ${selectedQuizCount} câu`}
+                  </Button>
+                </div>
               )}
               {!verified.length && (
                 <Button
@@ -1033,103 +1138,122 @@ export default function AssessmentWorkspace() {
             </div>
           )}
           {attempt && !result && (
-            <section className="assessment-quiz" aria-label="Bài kiểm tra">
-              <div className="assessment-quiz-header">
-                <div>
-                  <span className="assessment-kicker">Luyện tập</span>
-                  <h2>
-                    Câu {quizIndex + 1} / {attempt.question_ids.length}
-                  </h2>
-                </div>
-                <span>{Object.keys(answers).length} đã trả lời</span>
-              </div>
-              <div className="assessment-progress" aria-hidden="true">
-                <span
-                  style={{
-                    width: `${((quizIndex + 1) / attempt.question_ids.length) * 100}%`,
-                  }}
+            <>
+              <div className="assessment-quiz-dashboard">
+                <section
+                  className="assessment-quiz assessment-quiz-main"
+                  aria-label="Câu hỏi hiện tại"
+                >
+                  <div className="assessment-quiz-header">
+                    <div>
+                      <span className="assessment-kicker">Luyện tập</span>
+                      <h2>
+                        Câu {quizIndex + 1} / {attempt.question_ids.length}
+                      </h2>
+                    </div>
+                    <span>
+                      {answerSummary.answered}/{answerSummary.total} đã trả lời
+                    </span>
+                  </div>
+                  <div
+                    className="assessment-progress"
+                    role="progressbar"
+                    aria-label={`Tiến độ câu hỏi: câu ${quizIndex + 1} trên ${attempt.question_ids.length}`}
+                    aria-valuemin={1}
+                    aria-valuemax={attempt.question_ids.length}
+                    aria-valuenow={quizIndex + 1}
+                  >
+                    <span
+                      style={{
+                        width: `${((quizIndex + 1) / attempt.question_ids.length) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  {activeQuestion ? (
+                    <fieldset>
+                      <legend>{activeQuestion.stem}</legend>
+                      <div className="assessment-quiz-options">
+                        {activeQuestion.options.map((option) => (
+                          <label
+                            key={option.option_id}
+                            className={
+                              answers[activeQuestion.question_id] ===
+                              option.option_id
+                                ? "is-selected"
+                                : ""
+                            }
+                          >
+                            <input
+                              type="radio"
+                              name={activeQuestion.question_id}
+                              value={option.option_id}
+                              checked={
+                                answers[activeQuestion.question_id] ===
+                                option.option_id
+                              }
+                              onChange={() =>
+                                setAnswers((previous) => ({
+                                  ...previous,
+                                  [activeQuestion.question_id]:
+                                    option.option_id,
+                                }))
+                              }
+                            />
+                            <span>{option.option_id}</span>
+                            <p>{option.text}</p>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  ) : (
+                    <p role="alert">
+                      Câu hỏi không còn khả dụng. Hãy tải lại danh sách.
+                    </p>
+                  )}
+                  <p className="assessment-help">
+                    Câu chưa chọn sẽ được gửi dưới dạng bỏ qua, không tự động
+                    chuyển thành câu trả lời sai.
+                  </p>
+                  <div className="assessment-quiz-navigation">
+                    <Button
+                      className="secondary"
+                      onClick={() =>
+                        setQuizIndex((value) => Math.max(0, value - 1))
+                      }
+                      disabled={quizIndex === 0}
+                    >
+                      Câu trước
+                    </Button>
+                    <Button
+                      className="primary"
+                      onClick={() =>
+                        setQuizIndex((value) =>
+                          Math.min(attempt.question_ids.length - 1, value + 1),
+                        )
+                      }
+                      disabled={quizIndex === attempt.question_ids.length - 1}
+                    >
+                      Câu tiếp theo
+                    </Button>
+                  </div>
+                </section>
+
+                <QuizOverview
+                  questionIds={attempt.question_ids}
+                  answers={answers}
+                  currentIndex={quizIndex}
+                  busy={busy === "submit"}
+                  canSubmit={attempt.question_ids.every((id) =>
+                    verified.some((question) => question.question_id === id),
+                  )}
+                  showConfirmation={showSubmitConfirmation}
+                  onNavigate={setQuizIndex}
+                  onRequestSubmit={() => setShowSubmitConfirmation(true)}
+                  onCancelSubmit={() => setShowSubmitConfirmation(false)}
+                  onConfirmSubmit={submit}
                 />
               </div>
-              {activeQuestion ? (
-                <fieldset>
-                  <legend>{activeQuestion.stem}</legend>
-                  <div className="assessment-quiz-options">
-                    {activeQuestion.options.map((option) => (
-                      <label
-                        key={option.option_id}
-                        className={
-                          answers[activeQuestion.question_id] ===
-                          option.option_id
-                            ? "is-selected"
-                            : ""
-                        }
-                      >
-                        <input
-                          type="radio"
-                          name={activeQuestion.question_id}
-                          value={option.option_id}
-                          checked={
-                            answers[activeQuestion.question_id] ===
-                            option.option_id
-                          }
-                          onChange={() =>
-                            setAnswers((previous) => ({
-                              ...previous,
-                              [activeQuestion.question_id]: option.option_id,
-                            }))
-                          }
-                        />
-                        <span>{option.option_id}</span>
-                        <p>{option.text}</p>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-              ) : (
-                <p role="alert">
-                  Câu hỏi không còn khả dụng. Hãy tải lại danh sách.
-                </p>
-              )}
-              <p className="assessment-help">
-                Câu chưa chọn sẽ được gửi dưới dạng bỏ qua, không tự động chuyển
-                thành câu trả lời sai.
-              </p>
-              <div className="assessment-quiz-navigation">
-                <Button
-                  className="secondary"
-                  onClick={() =>
-                    setQuizIndex((value) => Math.max(0, value - 1))
-                  }
-                  disabled={quizIndex === 0}
-                >
-                  Câu trước
-                </Button>
-                {quizIndex < attempt.question_ids.length - 1 ? (
-                  <Button
-                    className="primary"
-                    onClick={() => setQuizIndex((value) => value + 1)}
-                  >
-                    Câu tiếp theo
-                  </Button>
-                ) : (
-                  <Button
-                    className="primary"
-                    onClick={submit}
-                    disabled={
-                      Boolean(busy) ||
-                      attempt.question_ids.some(
-                        (id) =>
-                          !verified.some(
-                            (question) => question.question_id === id,
-                          ),
-                      )
-                    }
-                  >
-                    {busy === "submit" ? "Đang nộp…" : "Nộp bài"}
-                  </Button>
-                )}
-              </div>
-            </section>
+            </>
           )}
         </Card>
       )}

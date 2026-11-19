@@ -11,13 +11,22 @@ import type {
 import {
   attemptQuestionIds,
   createQuizFromVerified,
+  DEFAULT_GENERATION_COUNT,
+  defaultQuizQuestionCount,
   decisionFingerprint,
+  generateQuestionDraftBatch,
+  generationResultMessage,
+  MAX_GENERATION_COUNT,
   operationFor,
+  quizAnswerSummary,
+  quizQuestionCount,
   recommendationFromReply,
   referencedSources,
   revisionCandidatePatch,
+  runGenerationOnce,
   submitQuestionDecision,
   uncertainDecisionMessage,
+  validGenerationCount,
 } from "./assessmentWorkflow.ts"
 
 const reference: ActionReference = {
@@ -67,6 +76,95 @@ test("attempt IDs are stable, VERIFIED-only, capped at 50 and do not mutate inpu
   )
 })
 
+test("generation count follows the approved 1-10 contract", () => {
+  assert.equal(DEFAULT_GENERATION_COUNT, 5)
+  assert.equal(MAX_GENERATION_COUNT, 10)
+  for (const value of [1, 5, 10]) {
+    assert.equal(validGenerationCount(value), true)
+  }
+  for (const value of [0, -1, 1.5, 11, Number.NaN]) {
+    assert.equal(validGenerationCount(value), false)
+  }
+  assert.equal(
+    generationResultMessage(5, 5),
+    "Đã nhận 5 câu nháp để bạn duyệt.",
+  )
+  assert.equal(
+    generationResultMessage(10, 7),
+    "Đã nhận 7 câu nháp từ yêu cầu 10 câu.",
+  )
+})
+
+test("selected generation count reaches the API and invalid values never do", async () => {
+  const calls: unknown[][] = []
+  const assessmentApi = {
+    generateQuestionDrafts: async (...args: unknown[]) => {
+      calls.push(args)
+      return {} as never
+    },
+  }
+  for (const count of [1, 5, 10])
+    await generateQuestionDraftBatch(
+      assessmentApi as never,
+      "conversation-1",
+      "material-1",
+      "topic",
+      count,
+      `key-${count}`,
+    )
+  assert.deepEqual(
+    calls.map((call) => call[4]),
+    [1, 5, 10],
+  )
+  assert.throws(
+    () =>
+      generateQuestionDraftBatch(
+        assessmentApi as never,
+        "conversation-1",
+        "material-1",
+        "topic",
+        11,
+        "invalid-key",
+      ),
+    RangeError,
+  )
+  assert.equal(calls.length, 3)
+})
+
+test("generation lock prevents duplicate paid requests", async () => {
+  const lock = { current: false }
+  let release = () => {}
+  const waiting = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  let requests = 0
+  const first = runGenerationOnce(lock, async () => {
+    requests += 1
+    await waiting
+  })
+  const duplicate = await runGenerationOnce(lock, async () => {
+    requests += 1
+  })
+  assert.equal(duplicate, false)
+  assert.equal(requests, 1)
+  release()
+  assert.equal(await first, true)
+  assert.equal(lock.current, false)
+})
+
+test("quiz count defaults to five and stays within availability and contract bounds", () => {
+  assert.deepEqual(
+    [0, 1, 5, 20, 68].map(defaultQuizQuestionCount),
+    [0, 1, 5, 5, 5],
+  )
+  assert.equal(quizQuestionCount(1, 5), 1)
+  assert.equal(quizQuestionCount(5, 5), 5)
+  assert.equal(quizQuestionCount(20, 20), 20)
+  assert.equal(quizQuestionCount(50, 68), 50)
+  for (const count of [0, -1, 1.5, 51, 69])
+    assert.equal(quizQuestionCount(count, 68), 0)
+})
+
 test("the actual quiz request body never contains more than 50 IDs", async () => {
   let sent: string[] = []
   await createQuizFromVerified(
@@ -78,6 +176,7 @@ test("the actual quiz request body never contains more than 50 IDs", async () =>
     } as never,
     "material-1",
     Array.from({ length: 68 }, (_, i) => question(`q-${i}`)),
+    50,
     "attempt-key",
   )
   assert.equal(sent.length, 50)
@@ -85,6 +184,40 @@ test("the actual quiz request body never contains more than 50 IDs", async () =>
     sent,
     Array.from({ length: 50 }, (_, i) => `q-${i}`),
   )
+})
+
+test("selected quiz count reaches the request without stale or ineligible IDs", async () => {
+  let sent: string[] = []
+  await createQuizFromVerified(
+    {
+      createQuizAttempt: async (_materialId: string, questionIds: string[]) => {
+        sent = questionIds
+        return { data: {} as never }
+      },
+    } as never,
+    "material-1",
+    [
+      question("q-1"),
+      question("draft", { status: "DRAFT" }),
+      question("q-2"),
+      question("other", { material_id: "material-2" }),
+      question("q-3"),
+    ],
+    2,
+    "attempt-key",
+  )
+  assert.deepEqual(sent, ["q-1", "q-2"])
+})
+
+test("answer summary counts only IDs in the active server attempt", () => {
+  const answers = { q1: "A", stale: "B", q3: "C" }
+  const before = structuredClone(answers)
+  assert.deepEqual(quizAnswerSummary(["q1", "q2", "q3"], answers), {
+    total: 3,
+    answered: 2,
+    unanswered: 1,
+  })
+  assert.deepEqual(answers, before)
 })
 
 test("referenced source lookup preserves IDs and reports missing chunks", () => {

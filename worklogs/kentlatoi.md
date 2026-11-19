@@ -252,3 +252,21 @@
 **Ghi chú**
 - Browser local chỉ tới màn hình đăng nhập; chưa có phiên Supabase/backend có dữ liệu để QA E2E F2. Viewport in-app bị kẹp ở 487px nên chưa xác nhận trực quan 390/768/1440; failure states được kiểm tra bằng mocks xác định.
 - Không chạy DeepSeek trả phí, Supabase reset/integration hay database tests. Console không có error nhưng còn warning GSAP target/scope đã tồn tại ở App shell/login; Vite vẫn cảnh báo bundle JS trên 500 kB.
+
+## 2026-11-19 — Polish F2 question controls and quiz dashboard
+
+**Mục tiêu:** Cho người học chọn số câu AI và số câu luyện tập đúng giới hạn contract, đồng thời làm giao diện quiz gọn, dễ điều hướng và truy cập tốt hơn.
+
+**Đã làm**
+- Thay số câu nháp cố định bằng select 1–10, mặc định 5; kiểm tra count trước API, khóa request trùng và báo đúng số draft server thực trả.
+- Cho chọn 1–50 câu luyện tập theo số câu VERIFIED của material, mặc định tối đa 5; request giữ thứ tự ổn định, chỉ lấy đúng material và đúng số đã chọn.
+- Thiết kế quiz thành dashboard hai cột với tiến độ, navigator theo question IDs của attempt, số đã/chưa trả lời và trạng thái hiện tại không tiết lộ chấm điểm.
+- Thêm modal xác nhận nộp bài, hiển thị số omissions, giữ radio/answer theo question ID và dùng lại quy trình submit/grading của server.
+- Thu gọn hero/stepper khi đang làm bài; thêm responsive stack, mobile collapsible overview, touch target, focus và aria semantics.
+- Bổ sung test contract count, partial batch, duplicate generation, selected quiz payload, active-attempt answer count, navigator và confirmation markup.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; 104/104 frontend tests, TypeScript, Vite production build và `git diff --check` đạt.
+
+**Ghi chú**
+- Browser authenticated đạt ở viewport hiện tại 1680×828, không horizontal overflow và không có JavaScript console error. HMR làm mất material state chỉ lưu trong phiên; active quiz tại 390/768/1366/1440 chưa tái kiểm tra và không gọi DeepSeek trả phí để dựng dữ liệu mới.
+- Vite vẫn cảnh báo bundle JavaScript trên 500 kB; SSR tests in cảnh báo HMR port 24678 đã được dùng nhưng toàn bộ assertion đạt.

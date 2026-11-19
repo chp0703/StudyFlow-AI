@@ -18,6 +18,67 @@ export type PendingOperation = {
   key: string
 }
 
+export const DEFAULT_GENERATION_COUNT = 5
+export const MAX_GENERATION_COUNT = 10
+export const MAX_QUIZ_QUESTION_COUNT = 50
+
+export function validGenerationCount(value: number) {
+  return Number.isInteger(value) && value >= 1 && value <= MAX_GENERATION_COUNT
+}
+
+export function defaultQuizQuestionCount(available: number) {
+  return Math.min(
+    DEFAULT_GENERATION_COUNT,
+    Math.max(0, available),
+    MAX_QUIZ_QUESTION_COUNT,
+  )
+}
+
+export function quizQuestionCount(value: number, available: number) {
+  const maximum = Math.min(Math.max(0, available), MAX_QUIZ_QUESTION_COUNT)
+  return Number.isInteger(value) && value >= 1 && value <= maximum ? value : 0
+}
+
+export function generationResultMessage(requested: number, actual: number) {
+  return actual === requested
+    ? `Đã nhận ${actual} câu nháp để bạn duyệt.`
+    : `Đã nhận ${actual} câu nháp từ yêu cầu ${requested} câu.`
+}
+
+export function generateQuestionDraftBatch(
+  assessmentApi: Pick<Endpoints, "generateQuestionDrafts">,
+  conversationId: string,
+  materialId: string,
+  topic: string,
+  count: number,
+  idempotencyKey: string,
+) {
+  if (!validGenerationCount(count))
+    throw new RangeError("Question count must be an integer from 1 to 10.")
+  return assessmentApi.generateQuestionDrafts(
+    conversationId,
+    materialId,
+    topic,
+    "MCQ",
+    count,
+    idempotencyKey,
+  )
+}
+
+export async function runGenerationOnce(
+  lock: { current: boolean },
+  operation: () => Promise<void>,
+) {
+  if (lock.current) return false
+  lock.current = true
+  try {
+    await operation()
+    return true
+  } finally {
+    lock.current = false
+  }
+}
+
 export function operationFor(
   existing: PendingOperation | null,
   fingerprint: string,
@@ -38,9 +99,10 @@ export function decisionFingerprint(
 export function attemptQuestionIds(
   questions: QuestionDraft[],
   materialId: string,
+  selectedCount = MAX_QUIZ_QUESTION_COUNT,
 ) {
   return eligibleQuestions(questions, materialId)
-    .slice(0, 50)
+    .slice(0, Math.min(MAX_QUIZ_QUESTION_COUNT, Math.max(0, selectedCount)))
     .map((question) => question.question_id)
 }
 
@@ -48,15 +110,28 @@ export function createQuizFromVerified(
   assessmentApi: Pick<Endpoints, "createQuizAttempt">,
   materialId: string,
   questions: QuestionDraft[],
+  selectedCount: number,
   idempotencyKey: string,
 ) {
   return assessmentApi.createQuizAttempt(
     materialId,
-    attemptQuestionIds(questions, materialId),
+    attemptQuestionIds(questions, materialId, selectedCount),
     "MANUAL",
     null,
     idempotencyKey,
   )
+}
+
+export function quizAnswerSummary(
+  questionIds: string[],
+  answers: Record<string, string>,
+) {
+  const answered = questionIds.filter((id) => Boolean(answers[id])).length
+  return {
+    total: questionIds.length,
+    answered,
+    unanswered: questionIds.length - answered,
+  }
 }
 
 export function referencedSources(
