@@ -467,3 +467,20 @@
 
 - Held-out 2 do một tác giả viết sau khi biết prompt, chạy trước khi thêm `_fill_defaults`, chưa có người duyệt và đã bị đọc kết quả nên coi là dev data; muốn tuyên bố ≥95% cần bộ mới khoảng 200 ca do người khác viết.
 - Chưa chạy lại contract check, benchmark offline, integration/pgTAP; kết quả dev 1 và 2 chạy khi working tree còn thay đổi chưa commit.
+
+## 2026-11-18 — Xử lý review PR #48
+
+**Mục tiêu:** sửa hai sai lệch metric để kết quả đánh giá Planner phản ánh đúng từng task và từng slot.
+
+**Đã làm**
+
+- Giới hạn coverage theo từng task trong `backend/app/f1/scheduler/evaluation.py`; thêm regression với task có retained block vượt số phút còn lại và task chưa được xếp.
+- Chấm `null`, `[]`, `{}` nhất quán giữa slot metrics và frame exact match trong `backend/app/nlu/evaluation.py`; thêm regression cho các slot rỗng ngoài dự đoán.
+- Tính lại slot metrics của 15 run exact-scored từ prediction đã lưu, ghi dấu scorer trong `docs/features/planner/evaluation/results/nlu-*.json` và giải thích nguồn số liệu trong README.
+- Merge `main` hiện tại vào nhánh PR; worklog không còn conflict.
+
+**Kết quả:** PR #48 (`test/f1-eval-benchmarks`); 141 backend unit tests, contract check và generated schema check pass; 15 run đã lưu khớp scorer mới.
+
+**Ghi chú**
+
+- Chưa gọi lại model, chạy acceptance/integration/pgTAP hoặc benchmark offline; số liệu latency và frame exact match là kết quả lịch sử.

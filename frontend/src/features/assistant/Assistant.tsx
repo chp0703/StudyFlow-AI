@@ -1238,6 +1238,13 @@ export default function Assistant({
         </div>
         {messages.length === 0 ? (
           <div className="assistant-welcome">
+            <img
+              className="assistant-welcome-logo"
+              src="/brand/logo-horizontal-light-transparent.png"
+              alt="StudyFlow AI"
+              width={1840}
+              height={366}
+            />
             <h1 ref={welcomeRef} data-assistant-heading tabIndex={-1}>
               Hôm nay bạn muốn làm gì?
             </h1>

@@ -1,0 +1,24 @@
+{
+  "assessment_version": "1.0.0",
+  "material_id": "00000000-0000-4000-8000-000000000201",
+  "items": [
+    {
+      "material_id": "00000000-0000-4000-8000-000000000201",
+      "topic": "Kỳ vọng và phương sai",
+      "status": "AVAILABLE",
+      "valid_response_count": 4,
+      "error_count": 3,
+      "error_rate": 0.75,
+      "last_attempt_at": "2026-11-16T08:15:00Z"
+    },
+    {
+      "material_id": "00000000-0000-4000-8000-000000000201",
+      "topic": "Biến ngẫu nhiên rời rạc",
+      "status": "INSUFFICIENT_DATA",
+      "valid_response_count": 0,
+      "error_count": 0,
+      "error_rate": null,
+      "last_attempt_at": null
+    }
+  ]
+}
