@@ -78,10 +78,10 @@ Run on 2026-11-18. Model `deepseek-flash`, prompt `f2-question-v1`.
 
 | Metric | Result | Evidence |
 |---|---|---|
-| GRD-C01 | **100%** (10,000/10,000 random attempts match the oracle) | `offline.json`, seed 20261118, clean commit `0635199` |
+| GRD-C01 | **100%** (10,000/10,000 random attempts match the oracle) | `offline.json`, seed 20261118, clean commit `6cbd2e0`; the oracle rounds half-up like PostgreSQL (an earlier half-even oracle matched only 9,957/10,000 against the durable `grade_attempt`) |
 | GRD-C02 | **100%** | same |
 | STAT-C01, REC-C01, REC-C02 | **pass**: 618/618 pgTAP assertions after `supabase db reset` | local stack |
-| RET-01, all 80 queries | Recall@5 0.70, MRR 0.69, nDCG@10 0.70 | `retrieval.json`, clean commit `3f010ef` |
+| RET-01, all 80 queries | Recall@5 0.70, MRR 0.69, nDCG@10 0.70 | `retrieval.json`, clean commit `6cbd2e0` (rerun on the merged #57 schema, numbers unchanged) |
 | RET-01, keyword (25) | Recall@5 **1.00**, MRR 0.98, 0% empty results | same |
 | RET-01, natural question (45) | Recall@5 **0.69**, 31% empty results | same |
 | RET-01, no diacritics (10) | Recall@5 **0.00**, 100% empty results | same |
