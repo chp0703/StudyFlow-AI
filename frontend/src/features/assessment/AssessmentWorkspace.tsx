@@ -1,7 +1,11 @@
-import { useState, type FormEvent } from "react"
+import { useState, type DragEvent, type FormEvent } from "react"
 import { api } from "../../api"
 import Button from "../../components/ui/Button"
 import Card from "../../components/ui/Card"
+import {
+  assessmentStageState,
+  type AssessmentStage,
+} from "./assessmentProgress"
 import { eligibleQuestions } from "./eligibleQuestions"
 import type {
   ActionPresentation,
@@ -15,6 +19,24 @@ import type {
 
 const allowedTypes = ["text/plain", "text/markdown", "application/pdf"] as const
 const maxBytes = 10 * 1024 * 1024
+type StageDefinition = {
+  id: AssessmentStage
+  label: string
+  hint: string
+}
+
+const stages: StageDefinition[] = [
+  { id: "materials", label: "Tài liệu", hint: "Tải lên và kiểm tra" },
+  { id: "questions", label: "Câu hỏi", hint: "Tạo và xác minh" },
+  { id: "practice", label: "Luyện tập", hint: "Làm bài kiểm tra" },
+  { id: "results", label: "Kết quả", hint: "Xem thống kê" },
+]
+
+function formatBytes(bytes: number) {
+  return bytes >= 1024 * 1024
+    ? `${(bytes / 1024 / 1024).toFixed(1)} MB`
+    : `${Math.max(1, Math.round(bytes / 1024))} KB`
+}
 
 function materialMime(file: File) {
   if (file.name.toLowerCase().endsWith(".md")) return "text/markdown"
@@ -49,10 +71,38 @@ export default function AssessmentWorkspace() {
   const [busy, setBusy] = useState("")
   const [error, setError] = useState("")
   const [notice, setNotice] = useState("")
+  const [stage, setStage] = useState<AssessmentStage>("materials")
+  const [isDragging, setIsDragging] = useState(false)
+  const [reviewIndex, setReviewIndex] = useState(0)
+  const [quizIndex, setQuizIndex] = useState(0)
+  const [statsLoaded, setStatsLoaded] = useState(false)
   const current = material?.material
   const verified = current
     ? eligibleQuestions(questions, current.material_id)
     : []
+  const stageState = assessmentStageState({
+    materialReady: current?.status === "READY",
+    verifiedCount: verified.length,
+    hasAttempt: Boolean(attempt),
+    hasResult: Boolean(result),
+    statsLoaded,
+  })
+  const activeDraft = drafts[reviewIndex]
+  const activeQuestionId = attempt?.question_ids[quizIndex]
+  const activeQuestion = activeQuestionId
+    ? verified.find((item) => item.question_id === activeQuestionId)
+    : null
+
+  function selectFile(nextFile: File | null) {
+    setFile(nextFile)
+    setError("")
+  }
+
+  function dropFile(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault()
+    setIsDragging(false)
+    selectFile(event.dataTransfer.files[0] ?? null)
+  }
 
   async function run(label: string, operation: () => Promise<void>) {
     setBusy(label)
@@ -112,6 +162,9 @@ export default function AssessmentWorkspace() {
       setAttempt(null)
       setResult(null)
       setStats([])
+      setStatsLoaded(false)
+      setReviewIndex(0)
+      setQuizIndex(0)
       setNotice(
         response.data.material.status === "READY"
           ? "Tài liệu đã sẵn sàng."
@@ -159,8 +212,10 @@ export default function AssessmentWorkspace() {
         )
       }
       setDrafts(batch.items)
+      setReviewIndex(0)
       setReference(ref)
       setNotice(reply.message)
+      setStage("questions")
     })
   }
 
@@ -187,6 +242,7 @@ export default function AssessmentWorkspace() {
           ? "Câu hỏi đã được xác minh."
           : "Đã từ chối bản nháp.",
       )
+      if (decision === "APPROVE") setStage("practice")
     })
   }
 
@@ -204,6 +260,8 @@ export default function AssessmentWorkspace() {
       setAttempt(response.data)
       setResult(null)
       setAnswers({})
+      setQuizIndex(0)
+      setStage("practice")
     })
   }
 
@@ -226,62 +284,207 @@ export default function AssessmentWorkspace() {
       setAttempt(submission.data.attempt)
       if (current)
         setStats((await api.getTopicStats(current.material_id)).data.items)
+      setStatsLoaded(Boolean(current))
+      setStage("results")
     })
   }
 
   return (
-    <div className="study-left-col">
-      <Card className="study-card study-quiz-card" title="Đánh giá học tập">
-        <form onSubmit={upload} className="assessment-stack">
+    <div className="assessment-workspace">
+      <header className="assessment-hero">
+        <div>
+          <span className="assessment-eyebrow">Không gian đánh giá</span>
+          <h1>Học từ tài liệu, kiểm tra bằng dữ liệu thật</h1>
           <p>
-            Tải tài liệu TXT, Markdown hoặc PDF (tối đa 10 MB). Đặt một chủ đề
-            cho tài liệu.
+            Tải tài liệu, duyệt câu hỏi do hệ thống đề xuất và luyện tập với
+            những câu đã được bạn xác minh.
           </p>
-          <label htmlFor="assessment-file">Tài liệu học tập</label>
-          <input
-            id="assessment-file"
-            type="file"
-            accept=".txt,.md,.pdf,text/plain,text/markdown,application/pdf"
-            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-          />
-          <label htmlFor="assessment-topic">Chủ đề</label>
-          <input
-            id="assessment-topic"
-            value={topic}
-            maxLength={120}
-            onChange={(event) => setTopic(event.target.value)}
-            required
-          />
-          <Button
-            type="submit"
-            className="primary"
-            disabled={Boolean(busy) || !file}
+        </div>
+        <span className="assessment-session-note">Phiên làm việc hiện tại</span>
+      </header>
+
+      <nav className="assessment-steps" aria-label="Các bước đánh giá">
+        {stages.map((item, index) => {
+          const state = stageState[item.id]
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={`assessment-step ${
+                stage === item.id ? "is-active" : ""
+              } ${state.completed ? "is-complete" : ""}`}
+              onClick={() => state.available && setStage(item.id)}
+              disabled={!state.available}
+              aria-current={stage === item.id ? "step" : undefined}
+            >
+              <span className="assessment-step-number">
+                {state.completed ? "✓" : index + 1}
+              </span>
+              <span>
+                <strong>{item.label}</strong>
+                <small>{item.hint}</small>
+              </span>
+            </button>
+          )
+        })}
+      </nav>
+
+      {busy && (
+        <div className="assessment-banner is-loading" role="status">
+          <span className="assessment-spinner" aria-hidden="true" />
+          Đang xử lý yêu cầu. Vui lòng giữ trang này mở…
+        </div>
+      )}
+      {error && (
+        <div className="assessment-banner is-error" role="alert">
+          <strong>Chưa thể hoàn tất.</strong> {error}
+        </div>
+      )}
+      {notice && !busy && (
+        <div className="assessment-banner is-success" role="status">
+          {notice}
+        </div>
+      )}
+
+      {stage === "materials" && (
+        <div className="assessment-layout">
+          <Card className="study-card assessment-panel">
+            <div className="assessment-section-heading">
+              <span className="assessment-kicker">Bước 1</span>
+              <h2>Thêm tài liệu học tập</h2>
+              <p>Hệ thống hiện hỗ trợ TXT, Markdown và PDF, tối đa 10 MB.</p>
+            </div>
+            <form onSubmit={upload} className="assessment-form">
+              <label
+                htmlFor="assessment-file"
+                className={`assessment-dropzone ${
+                  isDragging ? "is-dragging" : ""
+                }`}
+                onDragEnter={(event) => {
+                  event.preventDefault()
+                  setIsDragging(true)
+                }}
+                onDragOver={(event) => event.preventDefault()}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={dropFile}
+              >
+                <span className="assessment-upload-icon" aria-hidden="true">
+                  ↑
+                </span>
+                <strong>Thả tệp vào đây hoặc chọn từ máy</strong>
+                <span>TXT, MD, PDF · tối đa 10 MB</span>
+                <input
+                  id="assessment-file"
+                  type="file"
+                  accept=".txt,.md,.pdf,text/plain,text/markdown,application/pdf"
+                  onChange={(event) =>
+                    selectFile(event.target.files?.[0] ?? null)
+                  }
+                />
+              </label>
+              {file && (
+                <div className="assessment-file-preview">
+                  <span aria-hidden="true">▤</span>
+                  <div>
+                    <strong title={file.name}>{file.name}</strong>
+                    <small>{formatBytes(file.size)}</small>
+                  </div>
+                  <button type="button" onClick={() => selectFile(null)}>
+                    Xóa
+                  </button>
+                </div>
+              )}
+              <label className="assessment-field" htmlFor="assessment-topic">
+                <span>Chủ đề chính</span>
+                <input
+                  id="assessment-topic"
+                  value={topic}
+                  maxLength={120}
+                  placeholder="Ví dụ: Cấu trúc dữ liệu và giải thuật"
+                  onChange={(event) => setTopic(event.target.value)}
+                  required
+                />
+                <small>Dùng để nhóm câu hỏi và thống kê kết quả.</small>
+              </label>
+              <Button
+                type="submit"
+                className="primary assessment-primary-action"
+                disabled={Boolean(busy) || !file}
+              >
+                {busy === "upload" ? "Đang tải và xử lý…" : "Tải tài liệu"}
+              </Button>
+            </form>
+          </Card>
+
+          <aside
+            className="assessment-summary-card"
+            aria-label="Tóm tắt tài liệu"
           >
-            {" "}
-            {busy === "upload" ? "Đang tải và xử lý…" : "Tải tài liệu"}{" "}
-          </Button>
-        </form>
-        {error && <p role="alert">{error}</p>}
-        {notice && <p role="status">{notice}</p>}
-        {current && (
-          <div className="assessment-stack">
-            <h3>{current.filename}</h3>
-            <p>
-              Trạng thái: {current.status} · Chủ đề: {current.topics.join(", ")}
-            </p>
-            <p>
-              {current.page_count} trang · {material?.chunks.length ?? 0} đoạn
-              nguồn
-            </p>
-            {current.status === "READY" && (
+            <span className="assessment-kicker">Tài liệu hiện tại</span>
+            {current ? (
               <>
-                <Button
-                  className="secondary"
-                  onClick={generate}
-                  disabled={Boolean(busy) || Boolean(reference)}
+                <h2 title={current.filename}>{current.filename}</h2>
+                <span
+                  className={`assessment-status is-${current.status.toLowerCase()}`}
                 >
-                  Tạo 5 câu hỏi nháp
-                </Button>
+                  {current.status}
+                </span>
+                <dl className="assessment-metadata">
+                  <div>
+                    <dt>Chủ đề</dt>
+                    <dd>{current.topics.join(", ")}</dd>
+                  </div>
+                  <div>
+                    <dt>Số trang</dt>
+                    <dd>{current.page_count}</dd>
+                  </div>
+                  <div>
+                    <dt>Đoạn nguồn</dt>
+                    <dd>{material?.chunks.length ?? 0}</dd>
+                  </div>
+                  <div>
+                    <dt>Đã xác minh</dt>
+                    <dd>{verified.length} câu</dd>
+                  </div>
+                </dl>
+                {current.status === "READY" ? (
+                  <Button
+                    className="secondary"
+                    onClick={() => setStage("questions")}
+                  >
+                    Tiếp tục với câu hỏi
+                  </Button>
+                ) : (
+                  <p className="assessment-help">
+                    {current.status === "FAILED"
+                      ? "Xử lý thất bại. Hãy chọn lại tệp hợp lệ."
+                      : "Tài liệu đang được xử lý; các bước tiếp theo chưa khả dụng."}
+                  </p>
+                )}
+              </>
+            ) : (
+              <div className="assessment-empty">
+                <span aria-hidden="true">◫</span>
+                <h2>Chưa có tài liệu</h2>
+                <p>
+                  Tóm tắt và hành động tiếp theo sẽ xuất hiện sau khi tải lên.
+                </p>
+              </div>
+            )}
+          </aside>
+        </div>
+      )}
+
+      {stage === "questions" && current && (
+        <div className="assessment-stage-grid">
+          <Card className="study-card assessment-panel">
+            <div className="assessment-section-heading is-row">
+              <div>
+                <span className="assessment-kicker">Bước 2</span>
+                <h2>Duyệt câu hỏi</h2>
+                <p>Chỉ câu hỏi được xác minh mới có thể vào bài luyện tập.</p>
+              </div>
+              <div className="assessment-actions">
                 <Button
                   className="secondary"
                   onClick={() =>
@@ -291,192 +494,433 @@ export default function AssessmentWorkspace() {
                   }
                   disabled={Boolean(busy)}
                 >
-                  Tải lại câu hỏi
+                  Làm mới
                 </Button>
-              </>
-            )}
-          </div>
-        )}
-        {questions.length > 0 && (
-          <section className="assessment-stack" aria-label="Trạng thái câu hỏi">
-            <h3>Trạng thái câu hỏi</h3>
-            {questions.map((question) => (
-              <p key={question.question_id}>
-                {question.status} · phiên bản {question.version} ·{" "}
-                {question.topic}: {question.stem}
-              </p>
-            ))}
-          </section>
-        )}
-        {drafts.length > 0 && (
-          <section className="assessment-stack" aria-label="Duyệt câu hỏi nháp">
-            <h3>Kiểm tra bản nháp trước khi xác minh</h3>
-            {drafts.map((question) => (
-              <article key={question.question_id}>
-                <strong>
-                  Nháp · phiên bản {question.version} · {question.topic}
-                </strong>
-                <p>{question.stem}</p>
-                <ul>
-                  {question.options.map((option) => (
-                    <li key={option.option_id}>
-                      {option.option_id}: {option.text}
-                    </li>
+                <Button
+                  className="primary"
+                  onClick={generate}
+                  disabled={
+                    Boolean(busy) ||
+                    Boolean(reference) ||
+                    current.status !== "READY"
+                  }
+                >
+                  Tạo 5 câu nháp
+                </Button>
+              </div>
+            </div>
+
+            {activeDraft ? (
+              <section
+                className="assessment-review"
+                aria-label="Duyệt câu hỏi nháp"
+              >
+                <div className="assessment-review-toolbar">
+                  <span>
+                    Nháp {reviewIndex + 1}/{drafts.length}
+                  </span>
+                  <span className="assessment-status is-draft">DRAFT</span>
+                </div>
+                <h3>{activeDraft.stem}</h3>
+                <div className="assessment-review-options">
+                  {activeDraft.options.map((option) => (
+                    <div
+                      key={option.option_id}
+                      className={
+                        option.option_id === activeDraft.answer_key
+                          ? "is-answer"
+                          : ""
+                      }
+                    >
+                      <span>{option.option_id}</span>
+                      <p>{option.text}</p>
+                    </div>
                   ))}
-                </ul>
-                <p>Đáp án đề xuất: {question.answer_key}</p>
-                {question.explanation && (
-                  <p>Giải thích: {question.explanation}</p>
-                )}
-                <p>
-                  Nguồn: {current?.filename};{" "}
-                  {question.source_chunk_ids
-                    .map((id) => {
-                      const chunk = material?.chunks.find(
-                        (item) => item.chunk_id === id,
+                </div>
+                <div className="assessment-evidence-grid">
+                  <div>
+                    <strong>Giải thích</strong>
+                    <p>{activeDraft.explanation || "Chưa có giải thích."}</p>
+                  </div>
+                  <div>
+                    <strong>Nguồn đối chiếu</strong>
+                    <p>
+                      {current.filename} ·{" "}
+                      {activeDraft.source_chunk_ids
+                        .map((id) => {
+                          const chunk = material?.chunks.find(
+                            (item) => item.chunk_id === id,
+                          )
+                          return chunk
+                            ? `trang ${chunk.page}, đoạn ${chunk.chunk_index + 1}`
+                            : "nguồn không xác định"
+                        })
+                        .join("; ")}
+                    </p>
+                  </div>
+                </div>
+                <div className="assessment-review-navigation">
+                  <Button
+                    className="secondary"
+                    onClick={() =>
+                      setReviewIndex((value) => Math.max(0, value - 1))
+                    }
+                    disabled={reviewIndex === 0}
+                  >
+                    Câu trước
+                  </Button>
+                  <div className="assessment-dots" aria-hidden="true">
+                    {drafts.map((item, index) => (
+                      <span
+                        key={item.question_id}
+                        className={index === reviewIndex ? "is-active" : ""}
+                      />
+                    ))}
+                  </div>
+                  <Button
+                    className="secondary"
+                    onClick={() =>
+                      setReviewIndex((value) =>
+                        Math.min(drafts.length - 1, value + 1),
                       )
-                      return chunk ? `trang ${chunk.page}` : "không xác định"
-                    })
-                    .join(", ")}
+                    }
+                    disabled={reviewIndex === drafts.length - 1}
+                  >
+                    Câu sau
+                  </Button>
+                </div>
+                <div className="assessment-decision-bar">
+                  <div>
+                    <strong>Áp dụng cho cả {drafts.length} câu nháp</strong>
+                    <small>Quyết định này cần xác nhận rõ ràng.</small>
+                  </div>
+                  <Button
+                    className="secondary assessment-reject"
+                    onClick={() => decide("REJECT")}
+                    disabled={Boolean(busy) || !reference}
+                  >
+                    Từ chối
+                  </Button>
+                  <Button
+                    className="primary"
+                    onClick={() => decide("APPROVE")}
+                    disabled={Boolean(busy) || !reference}
+                  >
+                    Xác minh câu hỏi
+                  </Button>
+                </div>
+              </section>
+            ) : (
+              <div className="assessment-empty is-compact">
+                <span aria-hidden="true">?</span>
+                <h3>Chưa có bản nháp cần duyệt</h3>
+                <p>Tạo câu hỏi mới hoặc làm mới để xem các câu đã lưu.</p>
+              </div>
+            )}
+          </Card>
+
+          <aside className="assessment-question-list">
+            <div className="assessment-list-heading">
+              <h2>Câu hỏi đã lưu</h2>
+              <span>{questions.length}</span>
+            </div>
+            {questions.length ? (
+              questions.map((question, index) => (
+                <article key={question.question_id}>
+                  <span
+                    className={`assessment-status is-${question.status.toLowerCase()}`}
+                  >
+                    {question.status}
+                  </span>
+                  <strong>Câu {index + 1}</strong>
+                  <p>{question.stem}</p>
+                  <small>
+                    {question.topic} · phiên bản {question.version}
+                  </small>
+                </article>
+              ))
+            ) : (
+              <p className="assessment-help">Chưa có câu hỏi trên máy chủ.</p>
+            )}
+          </aside>
+        </div>
+      )}
+
+      {stage === "practice" && current && (
+        <Card className="study-card assessment-panel assessment-practice">
+          {!attempt && (
+            <div className="assessment-empty assessment-practice-intro">
+              <span aria-hidden="true">✓</span>
+              <h2>
+                {verified.length
+                  ? `${verified.length} câu đã sẵn sàng`
+                  : "Chưa có câu hỏi VERIFIED"}
+              </h2>
+              <p>
+                {verified.length
+                  ? "Bài làm được chấm điểm xác định bởi máy chủ. Bạn có thể để trống câu chưa chắc chắn."
+                  : "Quay lại bước Câu hỏi và xác minh bản nháp trước khi luyện tập."}
+              </p>
+              {verified.length > 0 && (
+                <Button
+                  className="primary"
+                  onClick={start}
+                  disabled={Boolean(busy)}
+                >
+                  Bắt đầu luyện tập
+                </Button>
+              )}
+              {!verified.length && (
+                <Button
+                  className="secondary"
+                  onClick={() => setStage("questions")}
+                >
+                  Quay lại duyệt câu hỏi
+                </Button>
+              )}
+            </div>
+          )}
+          {attempt && !result && (
+            <section className="assessment-quiz" aria-label="Bài kiểm tra">
+              <div className="assessment-quiz-header">
+                <div>
+                  <span className="assessment-kicker">Luyện tập</span>
+                  <h2>
+                    Câu {quizIndex + 1} / {attempt.question_ids.length}
+                  </h2>
+                </div>
+                <span>{Object.keys(answers).length} đã trả lời</span>
+              </div>
+              <div className="assessment-progress" aria-hidden="true">
+                <span
+                  style={{
+                    width: `${((quizIndex + 1) / attempt.question_ids.length) * 100}%`,
+                  }}
+                />
+              </div>
+              {activeQuestion ? (
+                <fieldset>
+                  <legend>{activeQuestion.stem}</legend>
+                  <div className="assessment-quiz-options">
+                    {activeQuestion.options.map((option) => (
+                      <label
+                        key={option.option_id}
+                        className={
+                          answers[activeQuestion.question_id] ===
+                          option.option_id
+                            ? "is-selected"
+                            : ""
+                        }
+                      >
+                        <input
+                          type="radio"
+                          name={activeQuestion.question_id}
+                          value={option.option_id}
+                          checked={
+                            answers[activeQuestion.question_id] ===
+                            option.option_id
+                          }
+                          onChange={() =>
+                            setAnswers((previous) => ({
+                              ...previous,
+                              [activeQuestion.question_id]: option.option_id,
+                            }))
+                          }
+                        />
+                        <span>{option.option_id}</span>
+                        <p>{option.text}</p>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              ) : (
+                <p role="alert">
+                  Câu hỏi không còn khả dụng. Hãy tải lại danh sách.
                 </p>
-              </article>
-            ))}
-            <Button
-              className="primary"
-              onClick={() => decide("APPROVE")}
-              disabled={Boolean(busy) || !reference}
-            >
-              Xác minh câu hỏi
-            </Button>
-            <Button
-              className="secondary"
-              onClick={() => decide("REJECT")}
-              disabled={Boolean(busy) || !reference}
-            >
-              Từ chối bản nháp
-            </Button>
-          </section>
-        )}
-        {current && (
-          <section
-            className="assessment-stack"
-            aria-label="Câu hỏi đã xác minh"
-          >
-            <h3>Câu hỏi đã xác minh: {verified.length}</h3>
-            {verified.length > 0 && !attempt && (
+              )}
+              <p className="assessment-help">
+                Câu chưa chọn sẽ được gửi dưới dạng bỏ qua, không tự động chuyển
+                thành câu trả lời sai.
+              </p>
+              <div className="assessment-quiz-navigation">
+                <Button
+                  className="secondary"
+                  onClick={() =>
+                    setQuizIndex((value) => Math.max(0, value - 1))
+                  }
+                  disabled={quizIndex === 0}
+                >
+                  Câu trước
+                </Button>
+                {quizIndex < attempt.question_ids.length - 1 ? (
+                  <Button
+                    className="primary"
+                    onClick={() => setQuizIndex((value) => value + 1)}
+                  >
+                    Câu tiếp theo
+                  </Button>
+                ) : (
+                  <Button
+                    className="primary"
+                    onClick={submit}
+                    disabled={
+                      Boolean(busy) ||
+                      attempt.question_ids.some(
+                        (id) =>
+                          !verified.some(
+                            (question) => question.question_id === id,
+                          ),
+                      )
+                    }
+                  >
+                    {busy === "submit" ? "Đang nộp…" : "Nộp bài"}
+                  </Button>
+                )}
+              </div>
+            </section>
+          )}
+        </Card>
+      )}
+
+      {stage === "results" && current && (
+        <div className="assessment-results">
+          {result ? (
+            <Card className="study-card assessment-panel">
+              <div className="assessment-result-hero">
+                <div>
+                  <span className="assessment-kicker">Kết quả gần nhất</span>
+                  <h2>
+                    {result.attempt.score_percent === null
+                      ? "—"
+                      : `${result.attempt.score_percent}%`}
+                  </h2>
+                  <p>Điểm do máy chủ chấm từ câu trả lời hợp lệ.</p>
+                </div>
+                <dl>
+                  <div>
+                    <dt>Đúng</dt>
+                    <dd>{result.attempt.correct_count}</dd>
+                  </div>
+                  <div>
+                    <dt>Sai</dt>
+                    <dd>{result.attempt.incorrect_count}</dd>
+                  </div>
+                  <div>
+                    <dt>Bỏ qua</dt>
+                    <dd>{result.attempt.omitted_count}</dd>
+                  </div>
+                  <div>
+                    <dt>Hợp lệ</dt>
+                    <dd>{result.attempt.valid_response_count}</dd>
+                  </div>
+                </dl>
+              </div>
+              <div className="assessment-result-actions">
+                <Button
+                  className="secondary"
+                  onClick={() => {
+                    setAttempt(null)
+                    setResult(null)
+                    setStage("practice")
+                  }}
+                >
+                  Làm bài khác
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <div className="assessment-empty assessment-results-empty">
+              <span aria-hidden="true">◔</span>
+              <h2>Chưa có kết quả bài làm</h2>
+              <p>
+                Hoàn thành một bài luyện tập để xem số câu đúng, sai và bỏ qua.
+              </p>
+              {verified.length > 0 && (
+                <Button
+                  className="primary"
+                  onClick={() => setStage("practice")}
+                >
+                  Đi đến luyện tập
+                </Button>
+              )}
+            </div>
+          )}
+
+          <Card className="study-card assessment-panel">
+            <div className="assessment-section-heading is-row">
+              <div>
+                <span className="assessment-kicker">Theo chủ đề</span>
+                <h2>Thống kê lỗi</h2>
+                <p>Chỉ hiển thị dữ liệu máy chủ đã quan sát.</p>
+              </div>
               <Button
-                className="primary"
-                onClick={start}
+                className="secondary"
+                onClick={() =>
+                  void run("stats", async () => {
+                    setStats(
+                      (await api.getTopicStats(current.material_id)).data.items,
+                    )
+                    setStatsLoaded(true)
+                  })
+                }
                 disabled={Boolean(busy)}
               >
-                Bắt đầu bài kiểm tra
+                Tải thống kê
               </Button>
-            )}
-          </section>
-        )}
-        {attempt && !result && (
-          <section className="assessment-stack" aria-label="Bài kiểm tra">
-            {attempt.question_ids.map((id, index) => {
-              const question = verified.find((item) => item.question_id === id)
-              if (!question)
-                return (
-                  <p key={id} role="alert">
-                    Câu {index + 1} không còn khả dụng. Hãy tải lại câu hỏi.
-                  </p>
-                )
-              return (
-                <fieldset key={id}>
-                  <legend>
-                    Câu {index + 1}: {question.stem}
-                  </legend>
-                  {question.options.map((option) => (
-                    <label key={option.option_id} className="assessment-option">
-                      <input
-                        type="radio"
-                        name={id}
-                        value={option.option_id}
-                        checked={answers[id] === option.option_id}
-                        onChange={() =>
-                          setAnswers((previous) => ({
-                            ...previous,
-                            [id]: option.option_id,
-                          }))
-                        }
-                      />
-                      {option.text}
-                    </label>
-                  ))}
-                </fieldset>
-              )
-            })}
-            <Button
-              className="primary"
-              onClick={submit}
-              disabled={
-                Boolean(busy) ||
-                attempt.question_ids.some(
-                  (id) =>
-                    !verified.some((question) => question.question_id === id),
-                )
-              }
-            >
-              Nộp bài
-            </Button>
-          </section>
-        )}
-        {result && (
-          <section aria-label="Kết quả bài kiểm tra">
-            <h3>Kết quả</h3>
-            <p>
-              Đúng {result.attempt.correct_count}/
-              {result.attempt.total_questions};{" "}
-              {result.attempt.score_percent ?? 0}%.
-            </p>
-            <p>
-              Bỏ qua: {result.attempt.omitted_count}; câu hợp lệ:{" "}
-              {result.attempt.valid_response_count}.
-            </p>
-            <Button
-              className="secondary"
-              onClick={() => {
-                setAttempt(null)
-                setResult(null)
-              }}
-            >
-              Làm bài khác
-            </Button>
-          </section>
-        )}
-        {current && (
-          <Button
-            className="secondary"
-            onClick={() =>
-              void run("stats", async () =>
-                setStats(
-                  (await api.getTopicStats(current.material_id)).data.items,
-                ),
-              )
-            }
-            disabled={Boolean(busy)}
-          >
-            Xem thống kê chủ đề
-          </Button>
-        )}
-        {stats.length > 0 && (
-          <section aria-label="Thống kê chủ đề">
-            <h3>Thống kê chủ đề</h3>
-            {stats.map((item) => (
-              <p key={`${item.material_id}:${item.topic}`}>
-                {item.topic}:{" "}
-                {item.status === "INSUFFICIENT_DATA"
-                  ? "Chưa đủ dữ liệu"
-                  : `${item.error_count}/${item.valid_response_count} câu sai (${Math.round((item.error_rate ?? 0) * 100)}%)`}
+            </div>
+            {!statsLoaded ? (
+              <p className="assessment-help">
+                Chọn “Tải thống kê” để xem dữ liệu mới nhất.
               </p>
-            ))}
-            <p>Đề xuất ôn tập từ máy chủ hiện chưa khả dụng.</p>
-          </section>
-        )}
-      </Card>
+            ) : stats.length ? (
+              <div className="assessment-stats-list">
+                {stats.map((item) => (
+                  <article key={`${item.material_id}:${item.topic}`}>
+                    <div>
+                      <strong>{item.topic}</strong>
+                      <span
+                        className={`assessment-status ${
+                          item.status === "INSUFFICIENT_DATA"
+                            ? "is-pending"
+                            : "is-ready"
+                        }`}
+                      >
+                        {item.status === "INSUFFICIENT_DATA"
+                          ? "CHƯA ĐỦ DỮ LIỆU"
+                          : "ĐÃ QUAN SÁT"}
+                      </span>
+                    </div>
+                    {item.status === "INSUFFICIENT_DATA" ? (
+                      <p>
+                        Cần thêm câu trả lời hợp lệ trước khi tính tỷ lệ lỗi.
+                      </p>
+                    ) : (
+                      <p>
+                        <strong>
+                          {Math.round((item.error_rate ?? 0) * 100)}%
+                        </strong>{" "}
+                        tỷ lệ lỗi · {item.error_count}/
+                        {item.valid_response_count} câu sai
+                      </p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="assessment-help">
+                Máy chủ chưa trả về thống kê cho tài liệu này.
+              </p>
+            )}
+            <div className="assessment-unavailable">
+              <strong>Đề xuất ôn tập chưa khả dụng</strong>
+              <p>
+                Backend hiện chưa cung cấp route đề xuất ôn tập. Không có khuyến
+                nghị giả lập được hiển thị.
+              </p>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

@@ -252,6 +252,24 @@ export default function DemoQuiz() {
           </div>
         }
       >
+        <div className="demo-quiz-notice" role="note">
+          <span>Bản minh họa</span>
+          Nội dung mẫu, không sử dụng tài liệu hoặc kết quả từ API.
+        </div>
+        <div
+          className="demo-quiz-progress"
+          role="progressbar"
+          aria-label="Tiến độ bài trắc nghiệm"
+          aria-valuemin={1}
+          aria-valuemax={quizQuestions.length}
+          aria-valuenow={quizIndex + 1}
+        >
+          <span
+            style={{
+              width: `${((quizIndex + 1) / quizQuestions.length) * 100}%`,
+            }}
+          />
+        </div>
         {/* Hộp giải thích đúng/sai hiện ngay trong thẻ */}
         {isAnswerChecked && showExplanationPopup && (
           <div
@@ -377,7 +395,8 @@ export default function DemoQuiz() {
                     className={optionClass}
                     onClick={() => handleSelectOption(idx)}
                     disabled={isAnswerChecked}
-                    aria-pressed={isSelected}
+                    role="radio"
+                    aria-checked={isSelected}
                   >
                     <span className="option-letter">{optionLetter}</span>
                     <span className="option-label">{optionText}</span>
@@ -460,8 +479,8 @@ export default function DemoQuiz() {
               {Math.round((score / quizQuestions.length) * 100)}%).
             </p>
             <p className="results-subtext">
-              Kiến thức được tổng hợp từ các tài liệu học tập của bạn. Hãy luyện
-              tập thường xuyên để ghi nhớ sâu hơn!
+              Đây là kết quả từ bộ câu hỏi minh họa, không phải dữ liệu tài liệu
+              hoặc thống kê học tập của bạn.
             </p>
             <Button className="primary restart-btn" onClick={handleRestartQuiz}>
               <RotateCcw size={16} aria-hidden="true" /> Làm lại bài kiểm tra

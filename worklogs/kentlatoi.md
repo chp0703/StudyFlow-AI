@@ -218,3 +218,19 @@
 **Ghi chú**
 - Chưa chạy browser QA hoặc E2E với backend/DeepSeek có cấu hình.
 - Backend main chưa đăng ký route recommendations; giao diện báo chưa khả dụng. Contract chưa có danh sách tài liệu hoặc khôi phục attempt.
+
+## 2026-11-19 — Redesign F2 Study workspace
+
+**Mục tiêu:** Đồng bộ PR #55 với `main` và biến trang Study API Mode thành workspace đánh giá rõ giai đoạn, dễ đọc và dùng tốt trên nhiều kích thước màn hình.
+
+**Đã làm**
+- Merge `origin/main` vào `feat/f2-assessment-frontend-kent` không xung đột; giữ App shell, design token và Planner mới cùng toàn bộ luồng F2.
+- Thiết kế lại `AssessmentWorkspace`: bốn bước Tài liệu/Câu hỏi/Luyện tập/Kết quả, drop zone và tóm tắt tài liệu, duyệt từng draft, quiz có tiến độ, kết quả và thống kê trung thực.
+- Giữ ActionReference do server cấp, duyệt rõ ràng, chỉ dùng câu VERIFIED, grading từ backend và câu bỏ trống; thêm test khóa/mở bước từ trạng thái backend.
+- Làm rõ Demo Quiz là dữ liệu minh họa, thêm tiến độ và trạng thái radio truy cập được; bổ sung responsive, focus và reduced-motion trong `study.css`.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; 83/83 Node tests, TypeScript, Vite build và `git diff --check` đạt. Browser QA API Mode đã đăng nhập đạt ở 360, 390, 430, 768, 1024, 1280, 1440 và 1920 px, không tràn ngang.
+
+**Ghi chú**
+- Upload E2E trên Chrome bị chặn vì extension chưa được bật quyền truy cập file URL; chưa gọi DeepSeek trả phí. Các bước sau upload được bảo vệ bởi test contract/state nhưng chưa QA lại trực quan trong phiên này.
+- Console còn cảnh báo GSAP target/scope từ App shell đã có sau merge; không có JavaScript error. Vite vẫn cảnh báo bundle JS trên 500 kB.
