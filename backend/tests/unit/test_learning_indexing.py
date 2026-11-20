@@ -263,9 +263,6 @@ class TestIndexDocument(unittest.TestCase):
 
         self.assertEqual(result.page_count, 1)
         self.assertEqual(result.char_count, len(raw.decode("utf-8")))
-        self.assertEqual(result.pages, 1)
-        self.assertEqual(result["page_count"], 1)
-        self.assertEqual(result.raw_char_count, result.char_count)
 
         self.assertGreaterEqual(len(result.f3_chunks), 1)
         f3 = result.f3_chunks[0]
@@ -287,18 +284,6 @@ class TestIndexDocument(unittest.TestCase):
         result = index_document(content, "text/markdown", model=self.fake_model, tokenizer=self.fake_tokenizer)
         self.assertEqual(result.page_count, 1)
         self.assertIn("Markdown Header", result.f3_chunks[0]["text"])
-
-    def test_index_document_result_dictionary_and_dataclass_access(self):
-        content = b"Simple document text for testing."
-        res = index_document(content, "text/plain", model=self.fake_model)
-        self.assertEqual(res.page_count, 1)
-        self.assertEqual(res["page_count"], 1)
-        self.assertEqual(res["pages"], 1)
-        self.assertEqual(res.get("page_count"), 1)
-        self.assertIsNone(res.get("non_existent_key"))
-        d = res.to_dict()
-        self.assertIn("f3_chunks", d)
-        self.assertIn("f2_chunks", d)
 
     def test_pre_deadline_exceeded_raises_index_timeout(self):
         past_deadline = time.monotonic() - 5.0

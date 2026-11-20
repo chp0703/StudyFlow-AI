@@ -10,7 +10,6 @@ from .embedding import (
     clear_embedding_cache,
     embed_passages,
     get_embedding_model,
-    get_tokenizer,
     set_cached_model,
 )
 from .exceptions import (
@@ -34,7 +33,6 @@ __all__ = [
     "count_passage_tokens",
     "embed_passages",
     "get_embedding_model",
-    "get_tokenizer",
     "set_cached_model",
     "clear_embedding_cache",
 ]

@@ -15,7 +15,6 @@ DEFAULT_BATCH_SIZE = 16
 E5_PREFIX = "passage: "
 
 _MODEL_CACHE: dict[str, Any] = {}
-_TOKENIZER_CACHE: dict[str, Any] = {}
 _CACHE_LOCK = threading.Lock()
 
 
@@ -59,45 +58,16 @@ def get_embedding_model(model_name: str = LEARNING_EMBEDDING_MODEL) -> Any:
             ) from exc
 
 
-def get_tokenizer(model_name: str = LEARNING_EMBEDDING_MODEL) -> Any:
-    """Lazily load and cache tokenizer for chunk budget checks."""
-    if model_name in _TOKENIZER_CACHE:
-        return _TOKENIZER_CACHE[model_name]
-    with _CACHE_LOCK:
-        if model_name in _TOKENIZER_CACHE:
-            return _TOKENIZER_CACHE[model_name]
-        if model_name in _MODEL_CACHE and hasattr(_MODEL_CACHE[model_name], "tokenizer"):
-            tok = _MODEL_CACHE[model_name].tokenizer
-            _TOKENIZER_CACHE[model_name] = tok
-            return tok
-        try:
-            from transformers import AutoTokenizer
-            tok = AutoTokenizer.from_pretrained(model_name)
-            _TOKENIZER_CACHE[model_name] = tok
-            return tok
-        except ImportError as exc:
-            raise IndexUnavailableError(
-                f"Chưa cài đặt thư viện tokenizer: {exc}"
-            ) from exc
-        except Exception as exc:
-            raise IndexUnavailableError(
-                f"Không thể khởi tạo tokenizer {model_name}: {exc}"
-            ) from exc
-
-
-def set_cached_model(model_name: str, model: Any, tokenizer: Any = None) -> None:
+def set_cached_model(model_name: str, model: Any) -> None:
     """Register pre-instantiated or fake model/tokenizer into the cache."""
     with _CACHE_LOCK:
         _MODEL_CACHE[model_name] = model
-        if tokenizer is not None:
-            _TOKENIZER_CACHE[model_name] = tokenizer
 
 
 def clear_embedding_cache() -> None:
     """Clear cached models and tokenizers (useful in tests)."""
     with _CACHE_LOCK:
         _MODEL_CACHE.clear()
-        _TOKENIZER_CACHE.clear()
 
 
 def embed_passages(

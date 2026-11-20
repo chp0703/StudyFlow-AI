@@ -8,7 +8,7 @@ alter table app_private.materials
     add column learning_origin boolean not null default false,
     add column learning_claim uuid,
     add column learning_deadline timestamptz,
-    add constraint materials_learning_error_check check (
+    add constraint materials_learning_failure_shape check (
         (learning_status is not distinct from 'FAILED') = (learning_error is not null)
     ),
     add constraint materials_learning_claim_check check (
