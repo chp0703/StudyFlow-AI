@@ -1,0 +1,604 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "StudyFlow Daily AI Learning",
+    "version": "1.0.0",
+    "description": "F3 contract extension. The shared decision endpoint dispatches F3 only for server-issued save_session_outcome actions."
+  },
+  "security": [
+    {
+      "SupabaseBearer": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "SupabaseBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "IdempotencyKey": {
+        "in": "header",
+        "name": "Idempotency-Key",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$"
+        }
+      },
+      "ResourceId": {
+        "in": "path",
+        "name": "id",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "responses": {
+      "InvalidRequest": {
+        "description": "Invalid request parameters or body.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+            }
+          }
+        }
+      },
+      "Unauthenticated": {
+        "description": "Missing or invalid Supabase JWT.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "State, version, quota or idempotency conflict.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+            }
+          }
+        }
+      },
+      "PayloadTooLarge": {
+        "description": "Upload exceeds the allowed size.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+            }
+          }
+        }
+      },
+      "UnsupportedMedia": {
+        "description": "Unsupported material format.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Rate limit exceeded.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+            }
+          }
+        }
+      },
+      "Unavailable": {
+        "description": "A backend dependency is temporarily unavailable.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource unavailable to the authenticated user.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v1/materials": {
+      "post": {
+        "operationId": "upload_learning_material",
+        "summary": "Upload material and return its indexing state",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/f1.schema.json#/$defs/DailyMaterialUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upload material and return its indexing state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/DailyMaterialUploadResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMedia"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "description": "Invalid encoding, media type or decoded size is rejected before storage. Once a material exists, indexing failures return HTTP 200 with its ID, FAILED status and error code. See LEARNING.md for retry semantics."
+      },
+      "get": {
+        "operationId": "list_learning_materials",
+        "summary": "List owned materials",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "\\S"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List owned materials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/DailyMaterialListResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/materials/{id}": {
+      "get": {
+        "operationId": "get_learning_material",
+        "summary": "Read material and indexing state",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ResourceId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Read material and indexing state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/DailyMaterialReadResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_learning_material",
+        "summary": "Delete material and chunks while preserving citation history",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ResourceId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete material and chunks while preserving citation history.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/DailyMaterialDeleteResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "description": "Returns 409 with error.details.reason MATERIAL_IN_USE when the material or its chunks are referenced by Assessment. Deletion leaves all rows unchanged in this case."
+      }
+    },
+    "/v1/learning/sessions": {
+      "post": {
+        "operationId": "create_learning_session",
+        "summary": "Start a session with owned ready material",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/f1.schema.json#/$defs/DailyLearningSessionCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Start a session with owned ready material.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/DailyLearningSessionCreateResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/learning/sessions/{id}": {
+      "get": {
+        "operationId": "get_learning_session",
+        "summary": "Read a session and its ordered turns",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ResourceId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Read a session and its ordered turns.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/DailyLearningSessionReadResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/learning/sessions/{id}/turns": {
+      "post": {
+        "operationId": "add_learning_turn",
+        "summary": "Submit a question or request the next hint",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ResourceId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/f1.schema.json#/$defs/DailyLearningTurnRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Submit a question or request the next hint.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/DailyLearningTurnResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/learning/sessions/{id}/summary": {
+      "post": {
+        "operationId": "prepare_learning_summary",
+        "summary": "Generate a summary draft and an action reference",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ResourceId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/f1.schema.json#/$defs/DailyLearningSummaryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generate a summary draft and an action reference.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/DailyLearningSummaryResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/decisions": {
+      "post": {
+        "operationId": "decide_learning_session_outcome",
+        "summary": "Approve or reject a pending session outcome",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/f1.schema.json#/$defs/DailyLearningOutcomeDecisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Approve or reject a pending session outcome.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/DailyLearningOutcomeDecisionResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters or body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Supabase JWT.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource unavailable to the authenticated user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "State, version, quota or idempotency conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A backend dependency is temporarily unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

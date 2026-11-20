@@ -1,0 +1,14 @@
+{
+  "turn_id": "d3110000-0000-4000-8000-000000000007",
+  "session_id": "d3110000-0000-4000-8000-000000000004",
+  "owner_id": "d3110000-0000-4000-8000-000000000002",
+  "ordinal": 2,
+  "role": "ASSISTANT",
+  "kind": "ASK",
+  "hint_level": null,
+  "content": "Tổng hai số chẵn là số chẵn.",
+  "citations": [],
+  "supported": true,
+  "model": "deepseek-flash",
+  "prompt_version": "f3-v1"
+}

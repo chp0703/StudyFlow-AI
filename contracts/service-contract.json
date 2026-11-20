@@ -475,6 +475,16 @@
         }
       ],
       "approval_boundary": "Generated questions remain DRAFT until verified through POST /v1/decisions with an intact action_reference; revision recommendations create Planner pending actions and never mutate StudyPlan directly."
+    },
+    "learning": {
+      "version": "1.0.0",
+      "openapi": "learning-openapi.yaml",
+      "decision": {
+        "operation": "save_session_outcome",
+        "path": "/v1/decisions",
+        "request_schema": "DailyLearningOutcomeDecisionRequest",
+        "result_schema": "DailyLearningOutcomeDecisionResult"
+      }
     }
   }
 }

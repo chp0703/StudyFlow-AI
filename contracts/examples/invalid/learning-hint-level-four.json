@@ -1,0 +1,21 @@
+{
+  "turn_id": "d3110000-0000-4000-8000-000000000007",
+  "session_id": "d3110000-0000-4000-8000-000000000004",
+  "owner_id": "d3110000-0000-4000-8000-000000000002",
+  "ordinal": 2,
+  "role": "ASSISTANT",
+  "kind": "HINT",
+  "hint_level": 4,
+  "content": "Tổng hai số chẵn là số chẵn.",
+  "citations": [
+    {
+      "chunk_id": "d3110000-0000-4000-8000-000000000003",
+      "material_id": "d3110000-0000-4000-8000-000000000001",
+      "page": 1,
+      "material_deleted": false
+    }
+  ],
+  "supported": true,
+  "model": "deepseek-flash",
+  "prompt_version": "f3-v1"
+}

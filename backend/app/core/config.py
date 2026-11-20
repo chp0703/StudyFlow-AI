@@ -8,6 +8,7 @@ import os
 from dataclasses import dataclass, field
 
 PRODUCT_TIMEZONE = "Asia/Ho_Chi_Minh"
+LEARNING_EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
 
 
 @dataclass(frozen=True)

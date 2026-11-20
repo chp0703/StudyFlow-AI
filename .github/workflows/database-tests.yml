@@ -187,3 +187,6 @@ jobs:
 
       - name: Run Backend Contract checker
         run: python contracts/check_contract.py
+
+      - name: Check Daily Learning upload limit in JavaScript
+        run: node --test contracts/tests/learning-upload.test.mjs
