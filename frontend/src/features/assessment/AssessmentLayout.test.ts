@@ -38,3 +38,14 @@ test("assessment layout uses natural page scrolling and compact controls", () =>
     /\.study-assessment-container \{[^}]*overflow: auto;/,
   )
 })
+
+test("quiz does not render the next button on the final question", () => {
+  assert.match(
+    workspaceSource,
+    /quizIndex < attempt\.question_ids\.length - 1 && \([\s\S]*?Câu tiếp theo[\s\S]*?\)/,
+  )
+  assert.doesNotMatch(
+    workspaceSource,
+    /disabled=\{quizIndex === attempt\.question_ids\.length - 1\}/,
+  )
+})

@@ -5,6 +5,14 @@ import {
   type DragEvent,
   type FormEvent,
 } from "react"
+import {
+  ChevronLeft,
+  ChevronRight,
+  FileQuestion,
+  ListChecks,
+  RefreshCw,
+  Sparkles,
+} from "lucide-react"
 import { api } from "../../api"
 import { ApiError } from "../../api/client"
 import Button from "../../components/ui/Button"
@@ -853,36 +861,10 @@ export default function AssessmentWorkspace() {
                 <h2>Duyệt câu hỏi</h2>
                 <p>Chỉ câu hỏi được xác minh mới có thể vào bài luyện tập.</p>
               </div>
-              <div className="assessment-actions">
-                {questionRefreshNeeded && (
-                  <Button
-                    className="secondary"
-                    onClick={() =>
-                      void run("refresh", async () => {
-                        await loadQuestions(current.material_id)
-                        setQuestionRefreshNeeded(false)
-                        setNotice("Đã tải lại danh sách câu hỏi.")
-                      })
-                    }
-                    disabled={Boolean(busy)}
-                  >
-                    Tải lại sau khi duyệt
-                  </Button>
-                )}
-                <Button
-                  className="secondary"
-                  onClick={() =>
-                    void run("refresh", () =>
-                      loadQuestions(current.material_id),
-                    )
-                  }
-                  disabled={Boolean(busy)}
-                >
-                  Làm mới
-                </Button>
-                <div className="assessment-generation-controls">
+              <div className="assessment-review-controls">
+                <div className="assessment-generation-count">
                   <label htmlFor="assessment-generation-count">
-                    <span>Số câu muốn tạo</span>
+                    <span>Số câu</span>
                     <select
                       id="assessment-generation-count"
                       value={generationCount}
@@ -900,22 +882,39 @@ export default function AssessmentWorkspace() {
                         </option>
                       ))}
                     </select>
-                    <small>Tối đa 10 câu mỗi lần</small>
                   </label>
-                  <Button
-                    className="primary"
-                    onClick={generate}
-                    disabled={
-                      Boolean(busy) ||
-                      Boolean(reference) ||
-                      current.status !== "READY"
-                    }
-                  >
-                    {busy === "generate"
-                      ? "Đang tạo câu hỏi…"
-                      : `Tạo ${generationCount} câu hỏi`}
-                  </Button>
+                  <small>Tối đa 10 câu mỗi lần</small>
                 </div>
+                <Button
+                  className="secondary"
+                  onClick={() =>
+                    void run("refresh", async () => {
+                      await loadQuestions(current.material_id)
+                      if (questionRefreshNeeded) {
+                        setQuestionRefreshNeeded(false)
+                        setNotice("Đã tải lại danh sách câu hỏi.")
+                      }
+                    })
+                  }
+                  disabled={Boolean(busy)}
+                >
+                  <RefreshCw size={16} aria-hidden="true" />
+                  Làm mới
+                </Button>
+                <Button
+                  className="primary assessment-generate-action"
+                  onClick={generate}
+                  disabled={
+                    Boolean(busy) ||
+                    Boolean(reference) ||
+                    current.status !== "READY"
+                  }
+                >
+                  <Sparkles size={16} aria-hidden="true" />
+                  {busy === "generate"
+                    ? "Đang tạo câu hỏi…"
+                    : `Tạo ${generationCount} câu hỏi`}
+                </Button>
               </div>
             </div>
 
@@ -982,6 +981,7 @@ export default function AssessmentWorkspace() {
                     }
                     disabled={reviewIndex === 0}
                   >
+                    <ChevronLeft size={16} aria-hidden="true" />
                     Câu trước
                   </Button>
                   <div className="assessment-dots" aria-hidden="true">
@@ -1002,6 +1002,7 @@ export default function AssessmentWorkspace() {
                     disabled={reviewIndex === drafts.length - 1}
                   >
                     Câu sau
+                    <ChevronRight size={16} aria-hidden="true" />
                   </Button>
                 </div>
                 <DecisionActions
@@ -1016,18 +1017,35 @@ export default function AssessmentWorkspace() {
               </section>
             ) : (
               <div className="assessment-empty is-compact">
-                <span aria-hidden="true">?</span>
+                <span aria-hidden="true">
+                  <FileQuestion size={24} />
+                </span>
                 <h3>Chưa có bản nháp cần duyệt</h3>
-                <p>Tạo câu hỏi mới hoặc làm mới để xem các câu đã lưu.</p>
+                <p>Chọn số lượng và tạo câu hỏi mới để bắt đầu duyệt nguồn.</p>
               </div>
             )}
           </Card>
 
           <aside className="assessment-question-list">
             <div className="assessment-list-heading">
-              <h2>Câu hỏi đã lưu</h2>
-              <span>{questions.length}</span>
+              <div>
+                <span className="assessment-kicker">Thư viện câu hỏi</span>
+                <h2>Câu hỏi đã lưu</h2>
+              </div>
+              <span aria-label={`${questions.length} câu hỏi đã lưu`}>
+                {questions.length}
+              </span>
             </div>
+            <dl className="assessment-saved-stats">
+              <div>
+                <dt>Tổng số</dt>
+                <dd>{questions.length}</dd>
+              </div>
+              <div>
+                <dt>Đã xác minh</dt>
+                <dd>{verified.length}</dd>
+              </div>
+            </dl>
             {questions.length ? (
               questions.map((question, index) => (
                 <article key={question.question_id}>
@@ -1044,7 +1062,15 @@ export default function AssessmentWorkspace() {
                 </article>
               ))
             ) : (
-              <p className="assessment-help">Chưa có câu hỏi trên máy chủ.</p>
+              <div className="assessment-saved-empty">
+                <span aria-hidden="true">
+                  <ListChecks size={22} />
+                </span>
+                <strong>Chưa có câu hỏi đã lưu</strong>
+                <p>
+                  Câu hỏi được xác minh sẽ xuất hiện tại đây để bạn theo dõi.
+                </p>
+              </div>
             )}
           </aside>
         </div>
@@ -1202,19 +1228,25 @@ export default function AssessmentWorkspace() {
                       }
                       disabled={quizIndex === 0}
                     >
+                      <ChevronLeft size={16} aria-hidden="true" />
                       Câu trước
                     </Button>
-                    <Button
-                      className="primary"
-                      onClick={() =>
-                        setQuizIndex((value) =>
-                          Math.min(attempt.question_ids.length - 1, value + 1),
-                        )
-                      }
-                      disabled={quizIndex === attempt.question_ids.length - 1}
-                    >
-                      Câu tiếp theo
-                    </Button>
+                    {quizIndex < attempt.question_ids.length - 1 && (
+                      <Button
+                        className="primary"
+                        onClick={() =>
+                          setQuizIndex((value) =>
+                            Math.min(
+                              attempt.question_ids.length - 1,
+                              value + 1,
+                            ),
+                          )
+                        }
+                      >
+                        Câu tiếp theo
+                        <ChevronRight size={16} aria-hidden="true" />
+                      </Button>
+                    )}
                   </div>
                 </section>
 
