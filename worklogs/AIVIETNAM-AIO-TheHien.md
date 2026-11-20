@@ -109,3 +109,17 @@ Draft PR #57. Contract checker, generator và 76 HTTP acceptance đều đạt. 
 
 **Kết quả**  
 Draft PR #57. Contract checker đạt 135 fixture và backend unit đạt 136 test. CI của bản trước đã qua 700 assertion pgTAP, 31 HTTP integration và kiểm tra dữ liệu cũ qua upgrade B7. Chạy lại concurrency với checker đã sửa.
+
+## 2026-11-20 — F3 M1 nạp và lập chỉ mục tài liệu
+
+**Mục tiêu**
+Cho Daily Learning nạp, lập chỉ mục và quản lý tài liệu trên kho dùng chung với Assessment.
+
+**Đã làm**
+
+- Mở rộng kho tài liệu F2 và tạo schema phiên học, lượt trao đổi, kết quả phiên. Thêm RPC có chứng thực cho claim, kết quả index, đọc và xóa tài liệu.
+- Nối bốn endpoint tài liệu với tách trang và embedding CPU. Thêm ca kiểm tra tương thích F2, retry và upload đồng thời.
+- Chuẩn bị PR stack từ M0 tại `a4b4561` trên nhánh `codex/f3-m1-material-indexing`.
+
+**Kết quả**
+Bộ unit indexing 28 ca, contract checker, migration generator và test base64 đúng 5 MiB đã đạt. CI Supabase và smoke CPU đang chờ kết quả.
