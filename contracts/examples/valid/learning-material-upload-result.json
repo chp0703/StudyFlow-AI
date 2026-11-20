@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.1",
+  "request_id": "learning-fixture",
+  "outcome": "COMMITTED",
+  "data": {
+    "material_id": "d3110000-0000-4000-8000-000000000001",
+    "owner_id": "d3110000-0000-4000-8000-000000000002",
+    "course_label": "Toán",
+    "filename": "Tinh-chat.txt",
+    "mime_type": "text/plain",
+    "sha256": "3639efcd08abb273b1619e82e78c29a7df02c1051b1820e99fc395dcaa3326b8",
+    "byte_size": 2,
+    "page_count": null,
+    "status": "UPLOADED",
+    "error_code": null,
+    "created_at": "2026-11-20T02:00:00Z"
+  },
+  "error": null,
+  "warnings": []
+}

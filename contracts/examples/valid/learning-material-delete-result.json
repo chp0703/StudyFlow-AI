@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.1",
+  "request_id": "learning-fixture",
+  "outcome": "COMMITTED",
+  "data": {
+    "material_id": "d3110000-0000-4000-8000-000000000001",
+    "deleted": true
+  },
+  "error": null,
+  "warnings": []
+}

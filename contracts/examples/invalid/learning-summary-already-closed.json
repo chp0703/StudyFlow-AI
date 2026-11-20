@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.1",
+  "request_id": "learning-fixture",
+  "outcome": "DRAFTED",
+  "data": {
+    "operation": "save_session_outcome",
+    "session": {
+      "session_id": "d3110000-0000-4000-8000-000000000004",
+      "owner_id": "d3110000-0000-4000-8000-000000000002",
+      "conversation_id": "d3110000-0000-4000-8000-000000000005",
+      "goal": "Ôn tính chẵn lẻ",
+      "material_ids": [
+        "d3110000-0000-4000-8000-000000000001"
+      ],
+      "planner_block_id": null,
+      "status": "CLOSED",
+      "version": 1,
+      "created_at": "2026-11-20T02:00:00Z",
+      "expires_at": "2026-12-20T02:00:00Z"
+    },
+    "draft": {
+      "summary": "Đã đọc ví dụ về số chẵn.",
+      "topics": [
+        "Tính chẵn lẻ"
+      ],
+      "duration_minutes": 5
+    },
+    "action_reference": {
+      "action_id": "d3110000-0000-4000-8000-000000000009",
+      "action_version": 1,
+      "target_type": "PENDING_ACTION",
+      "target_id": "d3110000-0000-4000-8000-000000000009",
+      "target_version": 1
+    }
+  },
+  "error": null,
+  "warnings": []
+}

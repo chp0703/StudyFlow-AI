@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.1",
+  "conversation_id": "d3110000-0000-4000-8000-000000000005",
+  "action_reference": {
+    "action_id": "d3110000-0000-4000-8000-000000000009",
+    "action_version": 1,
+    "target_type": "PENDING_ACTION",
+    "target_id": "d3110000-0000-4000-8000-000000000009",
+    "target_version": 2
+  },
+  "decision": "APPROVE"
+}
