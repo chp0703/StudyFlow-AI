@@ -3,6 +3,7 @@
 import base64
 import os
 import threading
+import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
@@ -89,6 +90,17 @@ class LearningMaterialLocalSupabase(unittest.TestCase):
             self.assertEqual(db.execute("select count(*) from app_private.material_chunks where material_id=%s",
                                         (material_id,)).fetchone()[0], 0)
 
+    @staticmethod
+    def add_assessment_reference(db, user_id, conversation_id, material_id, chunk_id):
+        question = db.execute("""insert into app_private.question_drafts(user_id, conversation_id, material_id,
+            question_id, topic, question_type, stem, options, answer_key, source_chunk_ids, status, prompt_version)
+            values (%s,%s,%s,%s,'Tin','TRUE_FALSE','Đúng hay sai?',
+            '[{"option_id":"TRUE","text":"Đúng"},{"option_id":"FALSE","text":"Sai"}]',
+            'TRUE',jsonb_build_array(%s::uuid),'DRAFT','test') returning question_id""",
+            (user_id, conversation_id, material_id, uuid4(), chunk_id)).fetchone()[0]
+        db.execute("""insert into app_private.question_draft_sources(user_id,material_id,question_id,chunk_id,source_order)
+            values (%s,%s,%s,%s,0)""", (user_id, material_id, question, chunk_id))
+
     def test_reupload_legacy_material_preserves_assessment_and_blocks_delete_with_evidence(self):
         f, body, conv = self.fixture, self.body(), str(uuid4())
         legacy = {k: v for k, v in body.items() if k != "course_label"}
@@ -99,15 +111,11 @@ class LearningMaterialLocalSupabase(unittest.TestCase):
             data = before.json()["data"]
             material_id = data["material"]["material_id"]
             chunk_id = data["chunks"][0]["chunk_id"]
+            duplicate = f.post(app, "/v1/assessment/materials", {**legacy, "conversation_id": str(uuid4())})
+            self.assertEqual(duplicate.status_code, 200, duplicate.text)
+            self.assertNotEqual(duplicate.json()["data"]["material"]["material_id"], material_id)
             with psycopg.connect(os.environ["F1_DB_TEST_DSN"]) as db:
-                question = db.execute("""insert into app_private.question_drafts(user_id, conversation_id, material_id,
-                    question_id, topic, question_type, stem, options, answer_key, source_chunk_ids, status, prompt_version)
-                    values (%s,%s,%s,%s,'Tin','TRUE_FALSE','Đúng hay sai?',
-                    '[{"option_id":"TRUE","text":"Đúng"},{"option_id":"FALSE","text":"Sai"}]',
-                    'TRUE',jsonb_build_array(%s::uuid),'DRAFT','test') returning question_id""",
-                    (f.users["a"][1], conv, material_id, uuid4(), chunk_id)).fetchone()[0]
-                db.execute("""insert into app_private.question_draft_sources(user_id,material_id,question_id,chunk_id,source_order)
-                    values (%s,%s,%s,%s,0)""", (f.users["a"][1], material_id, question, chunk_id))
+                self.add_assessment_reference(db, f.users["a"][1], conv, material_id, chunk_id)
             uploaded = f.post(app, "/v1/materials", body)
             self.assertEqual(uploaded.status_code, 200, uploaded.text)
             self.assertEqual(uploaded.json()["data"]["material_id"], material_id)
@@ -234,3 +242,39 @@ class LearningMaterialLocalSupabase(unittest.TestCase):
             self.assertEqual(sorted(r.status_code for r in results), [200, 409], [r.text for r in results])
             listed = app.get("/v1/materials", headers=f.auth("c"))
             self.assertEqual(len(listed.json()["data"]["materials"]), 20)
+
+    def test_delete_waits_for_concurrent_assessment_reference_and_rolls_back(self):
+        f = self.fixture
+        dsn = os.environ["F1_DB_TEST_DSN"]
+        with self.client() as app:
+            uploaded = f.post(app, "/v1/materials", self.body())
+            self.assertEqual(uploaded.status_code, 200, uploaded.text)
+            mid = uploaded.json()["data"]["material_id"]
+            path = f"/v1/materials/{mid}"
+            headers = f.auth("a", **{"Idempotency-Key": uuid4().hex})
+            with (psycopg.connect(dsn) as writer, psycopg.connect(dsn, autocommit=True) as observer,
+                  ThreadPoolExecutor(max_workers=1) as workers):
+                conv, chunk = writer.execute("""select m.conversation_id, c.chunk_id
+                    from app_private.materials m join app_private.material_chunks c using (material_id)
+                    where m.material_id = %s and c.profile = 'assessment'""", (mid,)).fetchone()
+                self.add_assessment_reference(writer, f.users["a"][1], conv, mid, chunk)
+                deleting = workers.submit(app.delete, path, headers=headers)
+                try:
+                    deadline = time.monotonic() + 6
+                    while not deleting.done() and time.monotonic() < deadline:
+                        blocked = observer.execute("""select exists(select 1 from pg_stat_activity
+                            where %s = any(pg_blocking_pids(pid)))""", (writer.info.backend_pid,)).fetchone()[0]
+                        if blocked:
+                            break
+                        time.sleep(0.05)
+                    else:
+                        self.fail("Expected the DELETE RPC to wait for Assessment's foreign-key lock")
+                    writer.commit()
+                finally:
+                    writer.rollback()
+                result = deleting.result(timeout=15)
+                self.assertEqual(result.status_code, 409, result.text)
+                self.assertEqual(result.json()["error"]["details"]["reason"], "MATERIAL_IN_USE")
+                self.assertEqual(observer.execute("select count(*) from app_private.material_chunks where chunk_id = %s",
+                                                  (chunk,)).fetchone()[0], 1)
+            self.assertEqual(app.get(path, headers=f.auth("a")).json()["data"]["status"], "READY")

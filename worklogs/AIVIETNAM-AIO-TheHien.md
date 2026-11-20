@@ -126,3 +126,5 @@ Bộ unit indexing 28 ca, contract checker, migration generator và test base64 
 - Smoke CPU E5 thật đạt 384 chiều và norm L2. Văn bản tiếng Việt mất 13,72 giây khi nạp model từ cache đĩa lần đầu. PDF tổng hợp 50 trang và 40.191 ký tự tạo 91 chunk trong 5,48 giây khi model đã nạp.
 - Backend CI của draft PR #65 xanh. Đổi tên constraint trùng ở migration M1 và bổ sung ca quota đồng thời, lease hết hạn và kiểm tra chunk F2 qua upgrade. Run local 190 unit (2 skip theo cấu hình), 76 ca HTTP acceptance ở bản trước, checker và generator đạt.
 - CI đã replay migration và chạy 710 assertion pgTAP. Cập nhật allowlist kiểm tra ranh giới RPC để đăng ký đúng sáu RPC M1, giữ nguyên kiểm tra quyền và chữ ký. Unit indexing và HTTP acceptance local qua sau bản sửa.
+- CI trên `199271e` đã xanh cả backend và DB. DB hoàn thành 710 assertion pgTAP, 37 ca HTTP integration, upgrade có dữ liệu và 9 ca concurrency PostgreSQL. Thêm ca race DELETE với Assessment đang giữ tham chiếu và ca chọn ID ổn định khi F2 có hash trùng.
+- Smoke CPU gần ngưỡng 200.000 ký tự đạt. PDF 50 trang có 183.631 ký tự, tạo 300 chunk trong 13,64 giây khi model đã nạp.
