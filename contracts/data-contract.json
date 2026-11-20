@@ -1413,7 +1413,7 @@
         },
         "column_mapping": {
           "owner_id": "user_id",
-          "ordinal": "chunk_index + 1"
+          "ordinal": "learning_ordinal + 1"
         }
       },
       "sessions": {

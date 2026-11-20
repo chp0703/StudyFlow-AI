@@ -15267,6 +15267,475 @@
         "session_outcome"
       ],
       "additionalProperties": false
+    },
+    "ReserveLearningMaterialArguments": {
+      "type": "object",
+      "properties": {
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\x00-\\x1f]+$",
+          "allOf": [
+            {
+              "pattern": "\\S"
+            },
+            {
+              "not": {
+                "enum": [
+                  ".",
+                  ".."
+                ]
+              }
+            }
+          ]
+        },
+        "mime_type": {
+          "enum": [
+            "application/pdf",
+            "text/plain",
+            "text/markdown"
+          ]
+        },
+        "byte_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5242880
+        },
+        "course_label": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "fingerprint",
+        "sha256",
+        "filename",
+        "mime_type",
+        "byte_size",
+        "course_label"
+      ],
+      "additionalProperties": false
+    },
+    "StoreLearningChunksArguments": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "claim": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "page_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "char_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200000
+        },
+        "assessment_chunks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 50
+              },
+              "chunk_index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 499
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "page",
+              "chunk_index",
+              "text"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 500
+        },
+        "learning_chunks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 50
+              },
+              "chunk_index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2047
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1600,
+                "pattern": "\\S"
+              },
+              "embedding": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 16000,
+                "pattern": "^\\[[0-9eE.+,\\-]+\\]$"
+              }
+            },
+            "required": [
+              "page",
+              "chunk_index",
+              "text",
+              "embedding"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 2048
+        }
+      },
+      "required": [
+        "material_id",
+        "claim",
+        "page_count",
+        "char_count",
+        "assessment_chunks",
+        "learning_chunks"
+      ],
+      "additionalProperties": false
+    },
+    "FailLearningMaterialArguments": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "claim": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "error_code": {
+          "enum": [
+            "INVALID_DOCUMENT",
+            "INDEX_TIMEOUT",
+            "INDEX_UNAVAILABLE"
+          ]
+        }
+      },
+      "required": [
+        "material_id",
+        "claim",
+        "error_code"
+      ],
+      "additionalProperties": false
+    },
+    "LearningMaterialLookupArguments": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "material_id"
+      ],
+      "additionalProperties": false
+    },
+    "ListLearningMaterialsArguments": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "before_created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "before_material_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "limit",
+        "before_created_at",
+        "before_material_id"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteLearningMaterialArguments": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "material_id",
+        "fingerprint"
+      ],
+      "additionalProperties": false
+    },
+    "LearningMaterialReservation": {
+      "type": "object",
+      "properties": {
+        "material": {
+          "$ref": "#/$defs/DailyLearningMaterial"
+        },
+        "claim": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replayed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "material",
+        "claim",
+        "replayed"
+      ],
+      "additionalProperties": false
+    },
+    "ReserveLearningMaterialResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "$ref": "#/$defs/LearningMaterialReservation"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "LearningMaterialPage": {
+      "type": "object",
+      "properties": {
+        "materials": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DailyLearningMaterial"
+          },
+          "minItems": 0,
+          "maxItems": 20
+        },
+        "has_more": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "materials",
+        "has_more"
+      ],
+      "additionalProperties": false
+    },
+    "ListLearningMaterialsResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "$ref": "#/$defs/LearningMaterialPage"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "LearningMaterialDeletion": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "deleted": {
+          "const": true
+        },
+        "replayed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "material_id",
+        "deleted",
+        "replayed"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteLearningMaterialResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "$ref": "#/$defs/LearningMaterialDeletion"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
     }
   }
 }
