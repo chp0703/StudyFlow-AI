@@ -1389,6 +1389,45 @@
           "pending_action_id"
         ]
       }
+    },
+    "learning": {
+      "version": "1.0.0",
+      "materials": {
+        "schema": "DailyLearningMaterial",
+        "table": "app_private.learning_material",
+        "unique": [
+          [
+            "owner_id",
+            "sha256"
+          ]
+        ]
+      },
+      "chunks": {
+        "schema": "DailyMaterialChunk",
+        "table": "app_private.material_chunk",
+        "private_columns": {
+          "embedding": "vector(384)",
+          "tsv": "tsvector"
+        }
+      },
+      "sessions": {
+        "schema": "DailyLearningSession",
+        "table": "app_private.learning_session"
+      },
+      "turns": {
+        "schema": "DailyLearningTurn",
+        "table": "app_private.learning_turn"
+      },
+      "outcomes": {
+        "schema": "DailyLearningSessionOutcome",
+        "table": "app_private.session_outcome",
+        "unique": [
+          [
+            "session_id"
+          ]
+        ],
+        "immutable": true
+      }
     }
   }
 }
