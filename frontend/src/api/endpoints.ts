@@ -73,22 +73,42 @@ export function createEndpoints(client: ApiClient) {
         })
         .then((r) => r.data.proposal),
 
-    uploadSource: (conversationId: string, filename: string, mimeType: string, contentBase64: string, key?: string) =>
+    uploadSource: (
+      conversationId: string,
+      filename: string,
+      mimeType: string,
+      contentBase64: string,
+      key?: string,
+    ) =>
       client.request<Read<IngestionSource>>("POST", "/v1/sources", {
-        body: { schema_version: SCHEMA, conversation_id: conversationId, filename, mime_type: mimeType, content_base64: contentBase64 },
+        body: {
+          schema_version: SCHEMA,
+          conversation_id: conversationId,
+          filename,
+          mime_type: mimeType,
+          content_base64: contentBase64,
+        },
         idempotencyKey: key,
       }),
 
     getSource: (conversationId: string, sourceId: string) =>
-      client.request<Read<IngestionSource>>("GET", `/v1/sources/${encodeURIComponent(sourceId)}`, {
-        query: { conversation_id: conversationId },
-      }),
+      client.request<Read<IngestionSource>>(
+        "GET",
+        `/v1/sources/${encodeURIComponent(sourceId)}`,
+        {
+          query: { conversation_id: conversationId },
+        },
+      ),
 
     extractSource: (conversationId: string, sourceId: string, key?: string) =>
-      client.request<Read<IngestionSource>>("POST", `/v1/sources/${encodeURIComponent(sourceId)}/extract`, {
-        body: { schema_version: SCHEMA, conversation_id: conversationId },
-        idempotencyKey: key,
-      }),
+      client.request<Read<IngestionSource>>(
+        "POST",
+        `/v1/sources/${encodeURIComponent(sourceId)}/extract`,
+        {
+          body: { schema_version: SCHEMA, conversation_id: conversationId },
+          idempotencyKey: key,
+        },
+      ),
 
     uploadAssessmentMaterial: (
       conversationId: string,
@@ -98,17 +118,21 @@ export function createEndpoints(client: ApiClient) {
       topics: string[],
       key?: string,
     ) =>
-      client.request<Read<AssessmentMaterialDetailData>>("POST", "/v1/assessment/materials", {
-        body: {
-          schema_version: SCHEMA,
-          conversation_id: conversationId,
-          filename,
-          mime_type: mimeType,
-          content_base64: contentBase64,
-          topics,
+      client.request<Read<AssessmentMaterialDetailData>>(
+        "POST",
+        "/v1/assessment/materials",
+        {
+          body: {
+            schema_version: SCHEMA,
+            conversation_id: conversationId,
+            filename,
+            mime_type: mimeType,
+            content_base64: contentBase64,
+            topics,
+          },
+          idempotencyKey: key,
         },
-        idempotencyKey: key,
-      }),
+      ),
 
     getAssessmentMaterial: (conversationId: string, materialId: string) =>
       client.request<Read<AssessmentMaterialDetailData>>(
@@ -195,9 +219,13 @@ export function createEndpoints(client: ApiClient) {
       ),
 
     getTopicStats: (materialId?: string) =>
-      client.request<Read<TopicStatsData>>("GET", "/v1/assessment/topics/stats", {
-        query: materialId ? { material_id: materialId } : {},
-      }),
+      client.request<Read<TopicStatsData>>(
+        "GET",
+        "/v1/assessment/topics/stats",
+        {
+          query: materialId ? { material_id: materialId } : {},
+        },
+      ),
 
     createRevisionRecommendation: (
       conversationId: string,
@@ -207,19 +235,28 @@ export function createEndpoints(client: ApiClient) {
       priority: 0.1 | 0.5 | 1,
       key?: string,
     ) =>
-      client.request<OrchestratorReply>("POST", "/v1/assessment/recommendations", {
-        body: {
-          schema_version: SCHEMA,
-          conversation_id: conversationId,
-          material_id: materialId,
-          topic,
-          suggested_minutes: suggestedMinutes,
-          priority,
+      client.request<OrchestratorReply>(
+        "POST",
+        "/v1/assessment/recommendations",
+        {
+          body: {
+            schema_version: SCHEMA,
+            conversation_id: conversationId,
+            material_id: materialId,
+            topic,
+            suggested_minutes: suggestedMinutes,
+            priority,
+          },
+          idempotencyKey: key,
         },
-        idempotencyKey: key,
-      }),
+      ),
 
-    sendMessage: (conversationId: string, text: string = "", key?: string, sourceIds?: string[]) =>
+    sendMessage: (
+      conversationId: string,
+      text: string = "",
+      key?: string,
+      sourceIds?: string[],
+    ) =>
       client.request<OrchestratorReply>("POST", "/v1/messages", {
         body: {
           schema_version: SCHEMA,
@@ -245,6 +282,29 @@ export function createEndpoints(client: ApiClient) {
           schema_version: SCHEMA,
           conversation_id: conversationId,
           operation: "set_availability",
+          arguments: arguments_,
+        },
+        idempotencyKey: key,
+      }),
+
+    prepareStudyPlan: (
+      conversationId: string,
+      arguments_: {
+        generation_scope: {
+          start_at: string
+          end_at: string
+          selection_mode: "SELECTED_TASKS"
+          task_ids: string[]
+        }
+        policy_overrides: Record<string, never>
+      },
+      key?: string,
+    ) =>
+      client.request<OrchestratorReply>("POST", "/v1/actions", {
+        body: {
+          schema_version: SCHEMA,
+          conversation_id: conversationId,
+          operation: "generate_study_plan",
           arguments: arguments_,
         },
         idempotencyKey: key,

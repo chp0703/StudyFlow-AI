@@ -43,6 +43,12 @@ This feature owns source-grounded question preparation, verified answer keys, qu
   - Finalized (`VERIFIED`/`REJECTED`) rows and question content are immutable via DB triggers; deletes are blocked.
   - PostgreSQL/pgTAP and HTTP integration tests run against local Supabase, including concurrent decisions and recovery after a persisted batch loses its HTTP response. Live DeepSeek verification requires API credentials.
 
+## Frontend status (F2)
+
+The Study page keeps its in-memory illustrative quiz in Demo Mode. API Mode uses the assessment endpoints for a single material per browser session: upload a TXT/Markdown/PDF file (10 MB maximum), supply one topic (the current B2 handler requires exactly one), review generated drafts and their source pages, decide using the server-issued action reference, take a quiz using only server-listed VERIFIED questions, and read topic stats. Responses are saved before submission. The UI does not retain uploaded content in browser storage.
+
+Live API and DeepSeek behavior remains to be verified against a configured local backend. There is no material-list endpoint in the current contract, so the workspace retains its material selection only while the page is open.
+
 ## Revision recommendations (B7)
 
 `POST /v1/assessment/recommendations` creates a durable review action from the latest

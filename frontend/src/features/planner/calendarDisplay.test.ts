@@ -10,8 +10,30 @@ import {
   displayRangeError,
   displaySettingsVisible,
   eventPosition,
+  rangesIncludingNow,
   type CalendarDisplayRanges,
 } from "./calendarDisplay.ts"
+
+test("current-time navigation only changes today's temporary display range when needed", () => {
+  assert.equal(
+    rangesIncludingNow(DEFAULT_DISPLAY_RANGES, 2, 9 * 60 + 30),
+    DEFAULT_DISPLAY_RANGES,
+  )
+
+  for (const now of [17 * 60 + 59, 20 * 60 + 9, 0]) {
+    const ranges = rangesIncludingNow(DEFAULT_DISPLAY_RANGES, 2, now)
+    const from =
+      Number(ranges[2].start.slice(0, 2)) * 60 +
+      Number(ranges[2].start.slice(3))
+    const end =
+      ranges[2].end === "24:00"
+        ? 1440
+        : Number(ranges[2].end.slice(0, 2)) * 60 +
+          Number(ranges[2].end.slice(3))
+    assert.ok(now >= from && now < end)
+    assert.deepEqual(ranges[1], DEFAULT_DISPLAY_RANGES[1])
+  }
+})
 
 import { runPlannerCommand } from "./plannerAgent.ts"
 
