@@ -302,3 +302,20 @@
 **Ghi chú**
 - Không gọi DeepSeek trả phí và không tạo dữ liệu F2 thật trong browser; luồng proposal/decision được kiểm tra bằng fixture và component tests. Công cụ browser không áp dụng được chính xác 390/768/1366/1440 trong phiên này.
 - `npm run format -- --check` còn báo hai file có sẵn ngoài diff (`src/api/client.ts`, `src/api/sources.test.ts`); các file thay đổi của công việc này đã được format. Build vẫn cảnh báo chunk JavaScript trên 500 kB.
+
+## 2026-11-20 — Fix Planner tasks, scheduling and event details
+
+**Mục tiêu:** Giữ nguyên bố cục Planner nhưng làm task F2 gọn, danh sách cuộn ổn định và dùng chung luồng đề xuất lịch cho task đã xác nhận.
+
+**Đã làm**
+- Giới hạn đúng chuỗi chiều cao của task panel, tăng vùng list responsive và giữ search/filter cố định khi cuộn.
+- Ẩn provenance UUID chỉ với đúng định dạng task ôn tập B7; giữ nguyên description gốc và thêm disclosure cho nội dung dài.
+- Nối task thủ công đã COMMITTED và nút “Tìm giờ học” vào coordinator `generate_study_plan` đang dùng cho F2, giữ idempotency và approval hiện hành.
+- Thêm dialog chi tiết block cho lịch tuần/tháng; ghi rõ dời/bỏ block đang bị chặn bởi contract backend.
+- Bổ sung kiểm thử presentation, UUID task và height/overflow chain; QA responsive bằng dữ liệu demo xác định.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; contract checks, scheduler unit tests, frontend tests, TypeScript và Vite build đạt.
+
+**Ghi chú**
+- Chưa chạy authenticated API E2E vì không có tài khoản thử nghiệm; browser QA scheduling dùng demo, còn API flow được xác minh bằng contract/unit tests.
+- Contract F1 v1.1 chưa hỗ trợ dời chính xác hoặc bỏ riêng StudyBlock; không thêm mutation giả.

@@ -37,6 +37,7 @@ import Card from "../components/ui/Card"
 import { apiEnabled } from "../api/config"
 
 import TaskPanel from "../features/planner/TaskPanel"
+import CalendarEventDetails from "../features/planner/CalendarEventDetails"
 
 import type { Task } from "../types/task"
 
@@ -82,6 +83,8 @@ export default function Planner({
   onRetryRevisionScheduling,
 
   onProposalDecision,
+  onTaskConfirmed,
+  onScheduleTask,
 }: PlannerProps) {
   const [plannerNotice, setPlannerNotice] = useState("")
 
@@ -172,6 +175,7 @@ export default function Planner({
       setRevision,
 
       onProposalDecision,
+      onTaskConfirmed,
     },
 
     showPlannerNotice,
@@ -205,6 +209,8 @@ export default function Planner({
   const [selectedMonthDate, setSelectedMonthDate] = useState<string | null>(
     null,
   )
+
+  const [selectedWeekEvent, setSelectedWeekEvent] = useState<Task | null>(null)
 
   const [displayRanges, setDisplayRanges] = useState<CalendarDisplayRanges>(
     DEFAULT_DISPLAY_RANGES,
@@ -654,6 +660,14 @@ export default function Planner({
             changeOf={changeOf}
             nowHour={nowHour}
             nowMinutes={nowMinutes}
+            onSelectEvent={setSelectedWeekEvent}
+          />
+        )}
+        {selectedWeekEvent && (
+          <CalendarEventDetails
+            event={selectedWeekEvent}
+            change={changeOf.get(selectedWeekEvent.id)}
+            close={() => setSelectedWeekEvent(null)}
           />
         )}
         {plannerNotice && (
@@ -694,6 +708,7 @@ export default function Planner({
           week={weekDays.map(dateOf)}
           revisionScheduling={revisionScheduling}
           onRetryRevisionScheduling={onRetryRevisionScheduling}
+          onScheduleTask={onScheduleTask}
           onClose={() => setTaskPanelOpen(false)}
         />
       </div>

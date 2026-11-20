@@ -41,6 +41,7 @@ export default function WeekCalendar({
   prefill,
   nowHour,
   nowMinutes,
+  onSelectEvent,
 }: {
   calendarRef: RefObject<HTMLDivElement | null>
   weekDays: Date[]
@@ -56,6 +57,7 @@ export default function WeekCalendar({
   prefill: (date: Date, minuteOfDay: number) => void
   nowHour: number
   nowMinutes: number
+  onSelectEvent?: (event: Task) => void
 }) {
   const gridFrom = Math.min(
     ...ranges.map((range) => displayMinutes(range.start)),
@@ -195,7 +197,8 @@ export default function WeekCalendar({
                         option.value === colors?.["--evt"].toUpperCase(),
                     )?.label
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={event.id}
                         className={`schedule-event priority-${
                           event.priority === 1 || event.priority === "Cao"
@@ -222,7 +225,7 @@ export default function WeekCalendar({
                         title={[event.title, event.time, colorLabel]
                           .filter(Boolean)
                           .join(" · ")}
-                        tabIndex={0}
+                        onClick={() => onSelectEvent?.(event)}
                       >
                         <strong>{event.title}</strong>
                         <small>
@@ -233,7 +236,7 @@ export default function WeekCalendar({
                               ? " · Đề xuất"
                               : ""}
                         </small>
-                      </div>
+                      </button>
                     )
                   })}
                   {week === 0 &&

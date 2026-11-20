@@ -17,6 +17,7 @@ import type { RevisionSchedulingState } from "./revisionScheduling"
 import Button from "../../components/ui/Button"
 
 import { daysUntil, formatShortDate } from "../../utils/date"
+import { presentTaskDescription } from "./taskPresentation"
 
 type Status = "draft" | "confirmed" | "unscheduled"
 
@@ -64,6 +65,7 @@ export default function TaskPanel({
   revisionScheduling,
 
   onRetryRevisionScheduling,
+  onScheduleTask,
 }: {
   tasks: Task[]
 
@@ -76,6 +78,8 @@ export default function TaskPanel({
   revisionScheduling?: RevisionSchedulingState | null
 
   onRetryRevisionScheduling?: () => void
+
+  onScheduleTask?: (taskId: string) => void
 }) {
   const [query, setQuery] = useState("")
 
@@ -169,6 +173,8 @@ export default function TaskPanel({
             )?.label
             const scheduling =
               revisionScheduling?.taskId === t.id ? revisionScheduling : null
+            const description = presentTaskDescription(t.description)
+            const status = statusOf(t, proposedIds)
 
             return (
               <li
@@ -180,11 +186,18 @@ export default function TaskPanel({
                 }
               >
                 <strong>{t.title}</strong>
-                {t.description && (
-                  <span className="task-panel-description">
-                    {t.description}
-                  </span>
-                )}
+                {description &&
+                  (description.summary.length > 110 ||
+                  description.summary.includes("\n") ? (
+                    <details className="task-panel-description">
+                      <summary>{description.summary}</summary>
+                      <span>{description.summary}</span>
+                    </details>
+                  ) : (
+                    <span className="task-panel-description-text">
+                      {description.summary}
+                    </span>
+                  ))}
                 <span className="task-panel-meta">
                   <CalendarClock aria-hidden="true" size={13} />
                   {t.date
@@ -199,9 +212,7 @@ export default function TaskPanel({
                     <span className="priority-badge">{colorLabel}</span>
                   )}
                   <span className="priority-badge">{t.priority}</span>
-                  <span
-                    className={`status-chip is-${statusOf(t, proposedIds)}`}
-                  >
+                  <span className={`status-chip is-${status}`}>
                     <Icon aria-hidden="true" size={13} />
                     {scheduling?.status === "finding"
                       ? "Đang tìm lịch học phù hợp…"
@@ -225,6 +236,16 @@ export default function TaskPanel({
                         onClick={onRetryRevisionScheduling}
                       >
                         Thử lại
+                      </Button>
+                    )}
+                  {status === "unscheduled" &&
+                    !scheduling &&
+                    onScheduleTask && (
+                      <Button
+                        className="secondary task-panel-retry"
+                        onClick={() => onScheduleTask(t.id)}
+                      >
+                        Tìm giờ học
                       </Button>
                     )}
                 </span>

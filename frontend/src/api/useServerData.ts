@@ -18,6 +18,8 @@ const WINDOW_DAYS = 84
 const WINDOW_BACK_DAYS = 14
 
 export type ServerData = {
+  apiTasks: import("./types").ApiTask[]
+
   tasks: Task[]
 
   // One calendar event per study block of the current plan.
@@ -41,6 +43,8 @@ export function useServerData(enabled: boolean, userId?: string): ServerData {
   const activeUserId = useRef(userId)
   activeUserId.current = userId
   const [state, setState] = useState({
+    apiTasks: [] as import("./types").ApiTask[],
+
     tasks: [] as Task[],
 
     events: [] as Task[],
@@ -76,6 +80,8 @@ export function useServerData(enabled: boolean, userId?: string): ServerData {
       )
 
       setState({
+        apiTasks: tasks,
+
         ...mapTasksAndEvents(tasks, plan.study_blocks),
 
         availability: expandWindows(windows, from, WINDOW_DAYS),
@@ -96,6 +102,8 @@ export function useServerData(enabled: boolean, userId?: string): ServerData {
   useEffect(() => {
     // A new session starts from a clean slate so one account never shows another's data.
     setState({
+      apiTasks: [],
+
       tasks: [],
       events: [],
       availability: [],

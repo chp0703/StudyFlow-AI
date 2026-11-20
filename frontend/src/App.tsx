@@ -445,7 +445,10 @@ export default function App() {
     setRevisionScheduling(null)
   }, [session?.user.id])
 
-  const scheduleRevisionTask = async (task?: ApiTask) => {
+  const scheduleConfirmedTask = async (
+    task?: ApiTask,
+    confirmedByPlanner = false,
+  ) => {
     const userId = session?.user.id
     if (!apiEnabled || !userId) return
 
@@ -458,13 +461,13 @@ export default function App() {
           taskId: task.task_id,
           status: "failed",
           message:
-            "Không thể xếp lịch vì thời gian bắt đầu không còn trước hạn hoàn thành.",
+            "Đã quá hạn hoàn thành. Cần điều chỉnh hạn trước khi xếp lịch.",
         })
       return
     }
     revisionAttempt.current = attempt
 
-    if (proposal || loadPending(userId)) {
+    if ((!confirmedByPlanner && proposal) || loadPending(userId)) {
       setRevisionScheduling({
         taskId: attempt.task.task_id,
         status: "blocked",
@@ -503,7 +506,7 @@ export default function App() {
         const currentArguments = revisionScheduleArguments(attempt.task)
         if (!currentArguments)
           throw new Error(
-            "Không thể xếp lịch vì thời gian bắt đầu không còn trước hạn hoàn thành.",
+            "Đã quá hạn hoàn thành. Cần điều chỉnh hạn trước khi xếp lịch.",
           )
         attempt.arguments = currentArguments
       }
@@ -763,10 +766,17 @@ export default function App() {
             revisionScheduling={revisionScheduling}
             onRetryRevisionScheduling={
               revisionAttempt.current
-                ? () => void scheduleRevisionTask()
+                ? () => void scheduleConfirmedTask()
                 : undefined
             }
             onProposalDecision={handleProposalDecision}
+            onTaskConfirmed={(task) => void scheduleConfirmedTask(task, true)}
+            onScheduleTask={(taskId) => {
+              const task = server.apiTasks.find(
+                (item) => item.task_id === taskId,
+              )
+              if (task) void scheduleConfirmedTask(task)
+            }}
           />
         )}
         <div
@@ -775,11 +785,11 @@ export default function App() {
         >
           <Study
             revisionScheduling={revisionScheduling}
-            onRevisionTaskConfirmed={(task) => void scheduleRevisionTask(task)}
+            onRevisionTaskConfirmed={(task) => void scheduleConfirmedTask(task)}
             onOpenPlanner={() => go("Planner")}
             onRetryScheduling={
               revisionAttempt.current
-                ? () => void scheduleRevisionTask()
+                ? () => void scheduleConfirmedTask()
                 : undefined
             }
           />

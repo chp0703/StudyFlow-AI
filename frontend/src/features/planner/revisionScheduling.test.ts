@@ -8,7 +8,7 @@ import {
 } from "./revisionScheduling.ts"
 
 const task: ApiTask = {
-  task_id: "task-server-1",
+  task_id: "11111111-1111-4111-8111-111111111111",
   title: "Ôn tập: Cơ sở lập trình",
   description: "Ôn lại vòng lặp",
   start_at: "2026-11-20T03:00:00Z",
@@ -60,12 +60,23 @@ test("scope selects the server task and never starts before now or availability"
     task,
     new Date("2026-11-20T04:00:30Z"),
   )!
-  assert.deepEqual(arguments_.generation_scope.task_ids, ["task-server-1"])
+  assert.deepEqual(arguments_.generation_scope.task_ids, [task.task_id])
   assert.equal(arguments_.generation_scope.selection_mode, "SELECTED_TASKS")
   assert.equal(arguments_.generation_scope.start_at, "2026-11-20T04:31:00.000Z")
   assert.equal(arguments_.generation_scope.end_at, "2026-11-22T16:59:00.000Z")
   assert.equal(
     revisionScheduleArguments(task, new Date("2026-11-23T00:00:00Z")),
+    null,
+  )
+})
+
+test("missing or non-server task IDs never trigger scheduling", () => {
+  assert.equal(
+    confirmedRevisionTask(confirmedReply({ ...task, task_id: "local-task" })),
+    null,
+  )
+  assert.equal(
+    confirmedRevisionTask(confirmedReply({ ...task, task_id: "" })),
     null,
   )
 })

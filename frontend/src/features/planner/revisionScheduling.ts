@@ -32,6 +32,9 @@ function isApiTask(value: unknown): value is ApiTask {
   const task = value as Partial<ApiTask>
   return (
     typeof task.task_id === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      task.task_id,
+    ) &&
     typeof task.title === "string" &&
     (typeof task.description === "string" || task.description === null) &&
     typeof task.start_at === "string" &&
@@ -50,7 +53,7 @@ function isApiTask(value: unknown): value is ApiTask {
   )
 }
 
-export function confirmedRevisionTask(reply: OrchestratorReply) {
+export function confirmedTask(reply: OrchestratorReply) {
   if (
     reply.state !== "SUCCEEDED" ||
     reply.result?.outcome !== "COMMITTED" ||
@@ -60,6 +63,8 @@ export function confirmedRevisionTask(reply: OrchestratorReply) {
     return null
   return reply.result.data
 }
+
+export const confirmedRevisionTask = confirmedTask
 
 export function revisionScheduleArguments(
   task: ApiTask,

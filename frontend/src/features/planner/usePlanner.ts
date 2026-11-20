@@ -24,7 +24,8 @@ import { proposalFromReply } from "../../api/mappers"
 
 import { savePending } from "../../api/pending"
 
-import type { ApiTimeWindow, OrchestratorReply } from "../../api/types"
+import type { ApiTask, ApiTimeWindow, OrchestratorReply } from "../../api/types"
+import { confirmedTask } from "./revisionScheduling"
 
 import {
   buildDemoClarificationQuestions,
@@ -68,6 +69,10 @@ export type PlannerProps = {
     decision: "APPROVE" | "REJECT",
     taskIds: string[],
   ) => void
+
+  onTaskConfirmed?: (task: ApiTask) => void
+
+  onScheduleTask?: (taskId: string) => void
 }
 
 export type PlannerFeedback = {
@@ -108,6 +113,7 @@ export function usePlanner(
     setRevision,
 
     onProposalDecision,
+    onTaskConfirmed,
   }: PlannerProps,
 
   showPlannerNotice: (message: string) => void,
@@ -369,6 +375,9 @@ export function usePlanner(
         showPlannerNotice(r.message)
 
         onProposalDecision?.(decision, taskIds)
+
+        const task = decision === "APPROVE" ? confirmedTask(r) : null
+        if (task) onTaskConfirmed?.(task)
       } else if (decision === "REJECT" && r.state === "SUCCEEDED") {
         setProposal(null)
 
