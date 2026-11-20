@@ -11,27 +11,52 @@ requires an `Idempotency-Key`. Reusing a key for the same principal, operation,
 resource and request body replays the original result. Reusing it for a different
 request returns `409`. Resolve ownership from the authenticated principal and
 return `404` for inaccessible resource IDs. Check access and state before
-writing. Return the shared `ErrorResult` shape for F3 errors.
+writing. Materials and session endpoints use `ErrorResult`. The shared
+`POST /v1/decisions` uses `OrchestratorReply` on success and error.
 
 ## Materials and citations
 
-- Upload PDF with an extractable text layer, plain text or Markdown as
-  base64 JSON. Enforce 5 MiB of decoded bytes, 50 extracted pages and 20 active
-  materials per owner. Keep extracted text and metadata, including the SHA-256
-  of the original bytes. Deduplicate by owner and SHA-256.
-- Material status progresses from `UPLOADED` or `INDEXING` to `READY` or
-  `FAILED`. A ready material has a page count. A failed material has an error
-  code. Poll the material GET endpoint and treat list cursors as opaque.
+- Upload text PDF, plain text or Markdown as base64 JSON. Enforce 5 MiB
+  decoded, 50 pages, 200,000 extracted characters including page separators,
+  and 20 active F3 materials per owner. Use
+  `decode_upload(..., max_bytes=5 * 1024 * 1024)` for strict decoding and
+  `read_document_pages(..., max_pages=50, max_text=200_000)` for extraction.
+  The schema checks encoded length and alphabet. Keep extracted text and metadata
+  including the SHA-256 of the original bytes.
+- Before reserving a material, return `400` for invalid base64 or a PDF
+  missing its signature, `415` for an unsupported format, and `413` for
+  exceeding the upload size. These responses carry no material ID.
+- Once reserved, return `200` with the material ID. Poll GET for
+  `UPLOADED`, `INDEXING`, `READY` or `FAILED`. A ready material has a page
+  count. Corrupt or unextractable content returns `FAILED / INVALID_DOCUMENT`.
+  A worker deadline returns `FAILED / INDEX_TIMEOUT`. A temporary indexing
+  dependency failure returns `FAILED / INDEX_UNAVAILABLE`. M1 must distinguish
+  worker timeouts from invalid documents when adapting the extractor.
+- If the HTTP call times out, send the same key to replay a completed receipt.
+  While the first request is still processing, the same key returns `409`.
+  With a fresh key and the same SHA-256, reuse the material ID. Only
+  `INDEX_TIMEOUT` and `INDEX_UNAVAILABLE` may retry indexing, by atomically
+  claiming the existing row and clearing its error as it returns to `INDEXING`.
+  Other states return the existing record. Serialize lookup, insert and retry
+  claims per owner and hash. Treat list cursors as opaque.
+- M1 extends the existing `app_private.materials` and
+  `app_private.material_chunks` as one shared library. F3 uses the same IDs
+  and preserves F2's conversation ownership, topic metadata and wire shapes.
+  F3 uploads populate metadata required by F2 and are reusable under the
+  existing F2 authorization rules. F3 can expose older F2 materials that
+  fit the F3 limits once indexed for F3. For legacy duplicate hashes, prefer
+  an eligible F3-ready record, then creation time and ID for a stable tie-break.
+  Preserve all existing IDs and references.
+- Delete material and chunks atomically if Assessment has no dependent
+  records. If F2 references either, return `409` with
+  `error.code: TIME_CONFLICT` and `error.details.reason: MATERIAL_IN_USE`.
+  Keep both the material and its chunks available on conflict. Serialize
+  deletion against concurrent F2 writes, or handle the foreign key conflict
+  with a rollback. On successful deletion, old F3 citations retain their IDs
+  and original page and return `material_deleted: true`.
 - A session uses one to five unique, owned, ready materials. An optional
-  `planner_block_id` gives read-only context and must belong to the same owner.
-  Only retrieve chunks from the selected materials.
-- Deleting a material deletes its chunks. Old citations retain their IDs and
-  original one-based page number, and return `material_deleted: true`.
-  The client can display “Tài liệu đã xoá” without fetching the deleted material.
-- The material and chunk contracts represent the proposed shared library.
-  The Assessment material endpoint and payloads already exist. Storage
-  convergence belongs to the material implementation and must preserve those
-  endpoints and ownership rules.
+  `planner_block_id` provides read-only context and must belong to the same
+  owner. Only retrieve chunks from selected materials.
 
 ## Sessions, answers, and approval
 
@@ -51,8 +76,9 @@ writing. Return the shared `ErrorResult` shape for F3 errors.
   to `POST /v1/decisions`. Resolve the pending operation server-side and check
   that both the action and session versions still match. A stale decision
   returns `409` so the client can request a fresh summary.
-- Approval returns `COMMITTED`, closes the session and creates one immutable
-  `SessionOutcome`. Rejection returns `REJECTED`, reopens the session, and
+- Approval returns `state: SUCCEEDED` with `result.outcome: COMMITTED`,
+  closes the session and creates one immutable `SessionOutcome`. Rejection
+  returns `state: SUCCEEDED` with `result.outcome: REJECTED`, reopens the session and
   returns a null outcome. Other decision operations keep their existing
   response shapes. Chat cannot approve an action. A confirmed outcome records
   a learning activity and does not certify mastery.
@@ -68,6 +94,12 @@ tokenizer overhead. Approximately 800 characters per chunk is a starting point
 for the chunker. L2-normalize the 384-dimensional vector and use cosine
 similarity. Persist the model identifier with each chunk. Model changes require
 re-indexing all affected chunks. [Model card](https://huggingface.co/intfloat/multilingual-e5-small)
+
+Install `backend/requirements-embedding.txt` only in the embedding environment.
+On Linux install CPU PyTorch first with
+`python -m pip install torch --index-url https://download.pytorch.org/whl/cpu`.
+Then install the optional requirements file. Planner and Assessment CI use the
+shared backend requirements.
 
 M0 publishes the contract and fixtures for frontend review. Endpoint handlers,
 storage, model initialization, and the frontend client ship in later milestones.

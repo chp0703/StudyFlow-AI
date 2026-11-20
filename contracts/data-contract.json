@@ -1394,20 +1394,26 @@
       "version": "1.0.0",
       "materials": {
         "schema": "DailyLearningMaterial",
-        "table": "app_private.learning_material",
-        "unique": [
-          [
-            "owner_id",
-            "sha256"
-          ]
+        "table": "app_private.materials",
+        "column_mapping": {
+          "owner_id": "user_id",
+          "byte_size": "size_bytes"
+        },
+        "deduplication": [
+          "user_id",
+          "sha256"
         ]
       },
       "chunks": {
         "schema": "DailyMaterialChunk",
-        "table": "app_private.material_chunk",
+        "table": "app_private.material_chunks",
         "private_columns": {
           "embedding": "vector(384)",
-          "tsv": "tsvector"
+          "search_vector": "tsvector"
+        },
+        "column_mapping": {
+          "owner_id": "user_id",
+          "ordinal": "chunk_index + 1"
         }
       },
       "sessions": {
