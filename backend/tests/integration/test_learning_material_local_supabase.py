@@ -126,6 +126,9 @@ class LearningMaterialLocalSupabase(unittest.TestCase):
         key = uuid4().hex
         with self.client(timed_out) as app:
             self.assertEqual(app.post("/v1/materials", json=body).status_code, 401)
+            self.assertEqual(f.post(app, "/v1/materials", []).status_code, 400)
+            duplicate = app.get("/v1/materials?limit=1&limit=2", headers=f.auth("a"))
+            self.assertEqual(duplicate.status_code, 400, duplicate.text)
             self.assertEqual(f.post(app, "/v1/materials", {**body, "content_base64": "!!!!"}).status_code, 400)
             self.assertEqual(f.post(app, "/v1/materials", self.body(b"bad", "lesson.pdf", "application/pdf")).status_code, 400)
             self.assertEqual(f.post(app, "/v1/materials", {**body, "mime_type": "image/png"}).status_code, 415)

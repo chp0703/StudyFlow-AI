@@ -121,15 +121,16 @@ class Api:
 
     # ----------------------------------------------------------------- các endpoint GET
     @staticmethod
-    def _query(request: Request, allowed: set[str], repeated: frozenset = frozenset()) -> dict:
+    def _query(request: Request, allowed: set[str], repeated: frozenset = frozenset(), *,
+               error_status: int | None = None) -> dict:
         values: dict = {}
         for key, value in request.query_params.multi_items():
             if key not in allowed:
-                raise ApiError("INVALID_PARAMETER", "Unknown query parameter.", field=key)
+                raise ApiError("INVALID_PARAMETER", "Unknown query parameter.", field=key, status=error_status)
             if key in repeated:
                 values.setdefault(key, []).append(value)
             elif key in values:
-                raise ApiError("INVALID_PARAMETER", "Query parameter repeated.", field=key)
+                raise ApiError("INVALID_PARAMETER", "Query parameter repeated.", field=key, status=error_status)
             else:
                 values[key] = value
         return values
@@ -172,7 +173,8 @@ class Api:
         return self.result_response(await run_in_threadpool(self.rpc, ctx, "get_study_plan", args), ctx)
 
     # ----------------------------------------------------------------- quy trình POST
-    async def read_json(self, request: Request, *, max_bytes: int | None = None) -> dict:
+    async def read_json(self, request: Request, *, max_bytes: int | None = None,
+                        invalid_object_status: int | None = None) -> dict:
         key = request.headers.get("idempotency-key")
         if key is None or not _KEY.match(key):
             raise ApiError("INVALID_PARAMETER", "A valid Idempotency-Key header is required.", status=400,
@@ -191,7 +193,7 @@ class Api:
         except (UnicodeDecodeError, ValueError):
             raise ApiError("INVALID_PARAMETER", "The body is not valid JSON.", status=400) from None
         if not isinstance(data, dict):
-            raise ApiError("INVALID_PARAMETER", "The body must be a JSON object.")
+            raise ApiError("INVALID_PARAMETER", "The body must be a JSON object.", status=invalid_object_status)
         if "schema_version" in data and data["schema_version"] != "1.1":
             raise ApiError("INVALID_PARAMETER", "Unsupported schema_version.", status=400, field="schema_version")
         return data
@@ -329,22 +331,22 @@ class Api:
         return self.result_response(result, ctx)
 
     async def upload_learning_material(self, request: Request, ctx: Ctx):
-        body = await self.read_json(request, max_bytes=LEARNING_MAX_BODY_BYTES)
+        body = await self.read_json(request, max_bytes=LEARNING_MAX_BODY_BYTES, invalid_object_status=400)
         return await self.learning_materials.upload(ctx, request.headers["idempotency-key"], body)
 
     async def get_learning_material(self, request: Request, ctx: Ctx):
-        self._query(request, set())
+        self._query(request, set(), error_status=400)
         return await self.learning_materials.get(ctx, self._uuid_param(request, "material_id"))
 
     async def list_learning_materials(self, request: Request, ctx: Ctx):
-        query = self._query(request, {"cursor", "limit"})
+        query = self._query(request, {"cursor", "limit"}, error_status=400)
         limit = _int(query.get("limit", "20"), "limit")
         if not 1 <= limit <= 20:
             raise ApiError("INVALID_PARAMETER", "Limit phải từ 1 đến 20.", status=400, field="limit")
         return await self.learning_materials.list(ctx, limit, query.get("cursor"))
 
     async def delete_learning_material(self, request: Request, ctx: Ctx):
-        self._query(request, set())
+        self._query(request, set(), error_status=400)
         key = request.headers.get("idempotency-key")
         if key is None or not _KEY.fullmatch(key):
             raise ApiError("INVALID_PARAMETER", "A valid Idempotency-Key header is required.", status=400,

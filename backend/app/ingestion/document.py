@@ -56,7 +56,11 @@ def read_document_pages(content: bytes, mime_type: str, *, max_bytes=MAX_BYTES,
             if typed_errors:
                 raise IndexTimeoutError('Quá thời gian xử lý PDF.') from None
             raise invalid('PDF không hợp lệ hoặc vượt giới hạn xử lý.') from None
-        except (OSError, ValueError):
+        except OSError:
+            if typed_errors:
+                raise IndexUnavailableError('Không thể chạy bộ đọc PDF trên server.') from None
+            raise invalid('PDF không hợp lệ hoặc vượt giới hạn xử lý.') from None
+        except ValueError:
             if typed_errors:
                 raise InvalidDocumentError('PDF không hợp lệ hoặc vượt giới hạn xử lý.') from None
             raise invalid('PDF không hợp lệ hoặc vượt giới hạn xử lý.') from None

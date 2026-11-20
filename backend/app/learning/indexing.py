@@ -107,13 +107,12 @@ def index_document(
     # CPU Embedding generation for F3 chunks
     if f3_chunk_records:
         passages = [chunk["text"] for chunk in f3_chunk_records]
-        vectors = embed_passages(
-            passages,
-            model=model,
-            model_name=model_name,
-            batch_size=batch_size,
-            deadline=dl,
-        )
+        try:
+            vectors = embed_passages(
+                passages, model=model, model_name=model_name, batch_size=batch_size, deadline=dl,
+            )
+        except InvalidDocumentError:
+            raise IndexUnavailableError('Mô hình trả vector embedding không hợp lệ.') from None
         if len(vectors) != len(f3_chunk_records):
             raise IndexUnavailableError('Số vector embedding không khớp số chunk.')
         for chunk, vec in zip(f3_chunk_records, vectors):
