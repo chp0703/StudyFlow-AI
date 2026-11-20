@@ -212,8 +212,8 @@ user_id: UUID
 conversation_id: UUID
 material_id: UUID
 topic: string
-priority: 0.1 | 0.5 | 1               # đồng nhất trọng số ưu tiên với Planner
-suggested_minutes: integer            # 15..240 phút
+priority: 0.1 | 0.5 | 1               # người học chọn, đồng nhất với trọng số Planner
+suggested_minutes: integer            # người học chọn, từ 15 đến 240 phút (gồm hai mốc)
 reason_summary: string                # giải thích tiếng Việt dựa trên bằng chứng
 evidence: RecommendationEvidence
 confidence_limit: ConfidenceLimit
@@ -297,8 +297,7 @@ Tất cả các đường dẫn dùng tiền tố `/v1/assessment`, yêu cầu `
 
 ## B7 runtime addendum
 
-The latest implementation is described in README.md. Recommendations use at most
-50 latest eligible submitted attempts, not B6 lifetime totals; source citations are
-capped at 50 distinct wrong-answer chunks. LOW confidence is always used in v1.
-PROPOSED/REJECTED have no candidate; ACCEPTED references a DRAFT/CONFIRMED/CANCELLED
-F1 candidate. Acceptance is a handoff, not task or plan confirmation.
+- B7 dùng tối đa 50 lượt làm bài đã nộp gần nhất có câu trả lời hợp lệ cho đúng tài liệu và chủ đề của người học. B6 thống kê toàn bộ lịch sử. B7 tính câu hỏi lặp theo lượt trả lời, ghi rõ sự lặp trong giới hạn mẫu và trích tối đa 50 đoạn nguồn khác nhau từ câu sai.
+- Một câu sai hợp lệ có nguồn cùng chủ đề đủ để tạo gợi ý với độ tin cậy `LOW`. Thiếu câu hợp lệ, câu sai hoặc nguồn phù hợp trả `422 INVALID_PARAMETER` và không tạo gợi ý hay pending action.
+- Người học phải nhập cả `suggested_minutes` và `priority` trong request tạo B7. Cùng sai 3/4 câu, người học có thể chọn 20 phút với ưu tiên 0.1 hoặc 60 phút với ưu tiên 1.
+- `PROPOSED` và `REJECTED` có `candidate_id` là null. `ACCEPTED` trỏ đến bản nháp F1 có thể chuyển sang `CONFIRMED` hoặc `CANCELLED`. Bản nháp nhận hai giá trị đã chọn làm `estimated_minutes` và `priority`. Người học có thể chỉnh chúng qua `candidate_patch`, rồi xác nhận phiên bản đã duyệt qua `POST /v1/decisions` để lưu task. Gợi ý B7 lưu lựa chọn ban đầu và bằng chứng tại lúc tạo.

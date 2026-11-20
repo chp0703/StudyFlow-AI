@@ -49,9 +49,16 @@ This feature owns source-grounded question preparation, verified answer keys, qu
 50 submitted attempts containing valid graded responses for the selected material/topic.
 Counts are calculated before joining source links; citations include at most 50 distinct
 chunks from incorrect answers. This window can differ from B6 lifetime statistics.
-The immutable snapshot always reports LOW confidence and its sample/coverage limits;
-minutes and priority are user choices. No eligible responses or no observed errors
-returns 422 without a recommendation. Creation does not change Planner workload.
+B7 counts repeated questions by valid response and discloses repetition in the
+snapshot. One valid wrong answer with a linked source for the topic is enough.
+The immutable snapshot always reports LOW confidence and its sample and coverage
+limits. No eligible responses, no observed errors, or no usable source linked to
+a wrong answer for the topic returns 422 without a recommendation or pending action.
+
+The learner must provide `suggested_minutes` (an integer from 15 through 240,
+inclusive) and `priority` (0.1, 0.5, or 1). Both values are stored as submitted.
+For the same evidence of 3 wrong answers out of 4, both 20 minutes at priority 0.1
+and 60 minutes at priority 1 are valid.
 
 
 ### Decisions and Planner handoff
@@ -65,7 +72,11 @@ the recommendation ACCEPTED and the candidate CANCELLED.
 
 To complete that draft, POST `/v1/actions/{action_id}/review` with the existing
 conversation/action version plus both `candidate_patch` (CandidateTaskFields) and
-`expected_candidate_version`. Only fields supplied are merged; null clears a field.
+`expected_candidate_version`. The draft starts with the learner's B7
+`suggested_minutes` as `estimated_minutes` and the same `priority`. The learner
+may edit both draft fields in this review. The confirmed task uses the reviewed
+values, and the recommendation preserves the original choices and evidence.
+Review merges supplied fields, with null clearing the corresponding field.
 An explicit date-only deadline is normalized to the next local midnight. Start time
 alone never invents a deadline. Incomplete drafts return NEEDS_CLARIFICATION; complete
 drafts return AWAITING_APPROVAL with a fresh TASK_CANDIDATE reference. Confirm that

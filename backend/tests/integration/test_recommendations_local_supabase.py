@@ -33,7 +33,7 @@ class RevisionLocalTests(unittest.TestCase):
         self.assertEqual(response.status_code,200,response.text)
         return response.json()
 
-    def fixture(self,app,large=False):
+    def fixture(self,app,large=False,*,link_sources=True):
         conv=str(uuid4());text=('TCP UDP source. '*9000) if large else 'TCP connection. UDP datagrams.'
         uploaded=self.ok(self.f.post(app,'/v1/assessment/materials',dict(schema_version='1.1',conversation_id=conv,
             filename='b7.md',mime_type='text/markdown',content_base64=base64.b64encode(text.encode()).decode(),topics=['TCP'])))['data']
@@ -45,7 +45,7 @@ class RevisionLocalTests(unittest.TestCase):
                 qid=str(uuid4());qids.append(qid);sources=chunks[i*10:(i+1)*10] if large else chunks[:1]
                 db.execute("insert into app_private.question_drafts(question_id,user_id,conversation_id,material_id,topic,question_type,stem,options,answer_key,source_chunk_ids,prompt_version) values(%s,%s,%s,%s,'TCP','MCQ','TCP?',%s,'A',%s,'b7-test')",
                     (qid,uid,conv,material,Jsonb([dict(option_id='A',text='TCP'),dict(option_id='B',text='UDP')]),Jsonb([c['chunk_id'] for c in sources])))
-                for order,c in enumerate(sources):
+                for order,c in enumerate(sources if link_sources else []):
                     db.execute('insert into app_private.question_draft_sources(question_id,chunk_id,user_id,material_id,source_order) values(%s,%s,%s,%s,%s)',(qid,c['chunk_id'],uid,material,order))
                 db.execute("update app_private.question_drafts set status='VERIFIED',version=2,verified_at=clock_timestamp() where question_id=%s",(qid,))
         body=dict(schema_version='1.1',conversation_id=conv,material_id=material,topic='TCP',suggested_minutes=45,priority=0.5)
@@ -58,6 +58,36 @@ class RevisionLocalTests(unittest.TestCase):
                 self.ok(app.put(f'/v1/assessment/attempts/{attempt}/responses/{qid}',json=dict(schema_version='1.1',selected_option_id=selected),headers=self.f.auth('a',**{'Idempotency-Key':f'it-{uuid4().hex}'})))
         self.ok(self.f.post(app,f'/v1/assessment/attempts/{attempt}/submit',dict(schema_version='1.1')))
         return attempt
+
+    @staticmethod
+    def seed_submitted_incorrect_attempt(db, uid, material_id, qids):
+        attempt_id = str(uuid4())
+        db.execute(
+            "insert into app_private.quiz_attempts(attempt_id,user_id,material_id,origin,question_ids,total_questions,omitted_count) "
+            "values(%s,%s,%s,'MANUAL',%s,%s,%s)",
+            (attempt_id, uid, material_id, Jsonb(qids), len(qids), len(qids)),
+        )
+        for qid in qids:
+            db.execute(
+                "insert into app_private.quiz_responses(response_id,user_id,attempt_id,question_id,selected_option_id,validity,is_correct,graded_at) "
+                "values(%s,%s,%s,%s,'B','VALID',false,'2026-11-18T00:00:00Z')",
+                (str(uuid4()), uid, attempt_id, qid),
+            )
+        db.execute(
+            "update app_private.quiz_attempts set status='SUBMITTED',valid_response_count=%s,incorrect_count=%s,"
+            "omitted_count=0,score_percent=0,submitted_at='2026-11-18T00:00:00Z' where attempt_id=%s",
+            (len(qids), len(qids), attempt_id),
+        )
+        return attempt_id
+
+    @staticmethod
+    def stored_choices_and_evidence(recommendation_id):
+        with psycopg.connect(os.environ['F1_DB_TEST_DSN']) as db:
+            return db.execute(
+                'select suggested_minutes, priority::float8, evidence from app_private.revision_recommendations '
+                'where recommendation_id = %s',
+                (recommendation_id,),
+            ).fetchone()
 
     def decide(self,app,body,ref,decision='APPROVE',key=None,who='a'):
         return self.f.post(app,'/v1/decisions',dict(schema_version='1.1',conversation_id=body['conversation_id'],action_reference=ref,decision=decision),key=key,who=who)
@@ -81,6 +111,9 @@ class RevisionLocalTests(unittest.TestCase):
             self.assertEqual(self.f.post(app,'/v1/assessment/recommendations',body,who='b').status_code,404)
             self.submit(app,body,qids,selected='A')
         with self.client() as app:
+            replay = self.f.post(app, '/v1/assessment/recommendations', body, key=key)
+            self.assertEqual(replay.headers.get('Idempotency-Replayed'), 'true')
+            self.assertEqual(self.ok(replay)['result']['data'], created['result']['data'])
             review=self.ok(self.f.post(app,f"/v1/actions/{ref['action_id']}/review",dict(schema_version='1.1',conversation_id=body['conversation_id'],expected_action_version=ref['action_version'])))
             self.assertEqual(review['result']['data']['revision_recommendation']['evidence'],rec['evidence'])
             accepted=self.ok(self.decide(app,body,review['action_reference']));self.assertEqual(accepted['state'],'NEEDS_CLARIFICATION')
@@ -89,10 +122,12 @@ class RevisionLocalTests(unittest.TestCase):
             self.assertEqual(blocked.status_code,409,blocked.text)
             self.assertEqual(blocked.json()['error']['code'],'ACTION_REVIEW_REQUIRED')
             candidate=pres['candidate'];action=pres['pending_action']
+            self.assertEqual(candidate['slots']['estimated_minutes'], body['suggested_minutes'])
+            self.assertEqual(candidate['slots']['priority'], body['priority'])
             partial=dict(schema_version='1.1',conversation_id=body['conversation_id'],expected_action_version=action['version'],expected_candidate_version=candidate['version'],candidate_patch={'start_at':'2027-03-01T01:00:00Z'})
             patched=self.ok(self.f.post(app,f"/v1/actions/{action['action_id']}/review",partial));self.assertEqual(patched['state'],'NEEDS_CLARIFICATION')
             self.assertIsNone(patched['result']['data']['candidate']['slots'].get('deadline_at'))
-            pres=patched['result']['data'];patch={**partial,'expected_action_version':pres['pending_action']['version'],'expected_candidate_version':pres['candidate']['version'],'candidate_patch':{'deadline_at':'2027-03-02T01:00:00Z'}}
+            pres=patched['result']['data'];patch={**partial,'expected_action_version':pres['pending_action']['version'],'expected_candidate_version':pres['candidate']['version'],'candidate_patch':{'deadline_at':'2027-03-02T01:00:00Z','estimated_minutes':20,'priority':1}}
             patchkey=f'it-{uuid4().hex}';ready=self.ok(self.f.post(app,f"/v1/actions/{action['action_id']}/review",patch,key=patchkey))
             self.assertEqual(ready['state'],'AWAITING_APPROVAL');self.assertEqual(self.snapshot(body),before)
             repeated=self.ok(self.f.post(app,f"/v1/actions/{action['action_id']}/review",patch,key=patchkey));self.assertEqual(repeated['action_reference'],ready['action_reference'])
@@ -113,15 +148,80 @@ class RevisionLocalTests(unittest.TestCase):
             self.assertEqual(self.snapshot(body),after)
             with psycopg.connect(os.environ['F1_DB_TEST_DSN']) as db:
                 self.assertEqual(db.execute('select count(*) from app_private.task_candidates where conversation_id=%s',(body['conversation_id'],)).fetchone()[0],1)
+                task = db.execute(
+                    'select t.estimated_minutes, t.priority from app_private.academic_tasks t '
+                    'join app_private.task_candidates c on c.confirmed_task_id = t.task_id '
+                    'where c.candidate_id = %s',
+                    (candidate['candidate_id'],),
+                ).fetchone()
+                self.assertEqual(task, (20, 1))
+            self.assertEqual(
+                self.stored_choices_and_evidence(rec['recommendation_id']),
+                (body['suggested_minutes'], body['priority'], rec['evidence']),
+            )
 
-    def test_no_data_omitted_invalid_correct_and_foreign_material(self):
+    def test_learner_choices_are_validated_and_independent_of_evidence(self):
+        with self.client() as app:
+            body, qids, _ = self.fixture(app)
+            for selected in ('B', 'B', 'B', 'A'):
+                self.submit(app, body, qids, selected)
+            path = '/v1/assessment/recommendations'
+            for field, value in (
+                ('suggested_minutes', None), ('priority', None),
+                ('suggested_minutes', 14), ('suggested_minutes', 241),
+                ('suggested_minutes', 20.5), ('priority', 0.7),
+            ):
+                with self.subTest(field=field, value=value):
+                    invalid = dict(body)
+                    if value is None:
+                        del invalid[field]
+                    else:
+                        invalid[field] = value
+                    response = self.f.post(app, path, invalid)
+                    self.assertEqual(response.status_code, 422, response.text)
+                    self.assertEqual(response.json()['error']['code'], 'INVALID_PARAMETER')
+
+            first_evidence = None
+            for minutes, priority in ((15, 0.5), (20, 0.1), (60, 1), (240, 1)):
+                with self.subTest(minutes=minutes, priority=priority):
+                    created = self.ok(self.f.post(app, path, {**body, 'suggested_minutes': minutes, 'priority': priority}))
+                    rec = created['result']['data']['revision_recommendation']
+                    self.assertEqual((rec['suggested_minutes'], rec['priority']), (minutes, priority))
+                    evidence = rec['evidence']
+                    self.assertEqual((evidence['error_count'], evidence['valid_response_count']), (3, 4))
+                    if first_evidence is None:
+                        first_evidence = evidence
+                    self.assertEqual(evidence, first_evidence)
+                    self.assertEqual(self.stored_choices_and_evidence(rec['recommendation_id']), (minutes, priority, evidence))
+                    self.ok(self.decide(app, body, created['action_reference'], 'REJECT'))
+
+    def test_missing_evidence_does_not_create_pending_action(self):
         with self.client() as app:
             body,qids,_=self.fixture(app)
+            path = '/v1/assessment/recommendations'
+            self.assertEqual(self.f.post(app, path, body).status_code, 422)
             for selected in (None,'Z','A'):
                 self.submit(app,body,qids,selected)
-                response=self.f.post(app,'/v1/assessment/recommendations',body)
+                response=self.f.post(app,path,body)
                 self.assertEqual(response.status_code,422,response.text)
-            other,_,_=self.fixture(app);self.assertEqual(self.f.post(app,'/v1/assessment/recommendations',other).status_code,422)
+                self.assertEqual(response.json()['error']['code'], 'INVALID_PARAMETER')
+            # A legacy fixture with source IDs but no relational link cannot supply B7 citations.
+            unlinked, unlinked_qids, _ = self.fixture(app, link_sources=False)
+            self.submit(app, unlinked, unlinked_qids)
+            response = self.f.post(app, path, unlinked)
+            self.assertEqual(response.status_code, 422, response.text)
+            self.assertEqual(response.json()['error']['code'], 'INVALID_PARAMETER')
+            for conversation_id in (body['conversation_id'], unlinked['conversation_id']):
+                with psycopg.connect(os.environ['F1_DB_TEST_DSN']) as db:
+                    self.assertFalse(db.execute(
+                        'select 1 from app_private.revision_recommendations where conversation_id = %s',
+                        (conversation_id,),
+                    ).fetchone())
+                    self.assertFalse(db.execute(
+                        'select 1 from app_private.pending_actions where conversation_id = %s '
+                        "and intent = 'ACCEPT_REVISION_RECOMMENDATION'",
+                        (conversation_id,),
+                    ).fetchone())
             self.assertEqual(self.f.post(app,'/v1/assessment/recommendations',{**body,'conversation_id':str(uuid4())}).status_code,404)
 
     def test_recent_fifty_ties_source_cap_and_no_join_multiplication(self):
@@ -130,11 +230,7 @@ class RevisionLocalTests(unittest.TestCase):
             # Fixed timestamp deliberately tests attempt_id as the tie-breaker. Every DB trigger stays enabled.
             with psycopg.connect(os.environ['F1_DB_TEST_DSN'],autocommit=True) as db:
                 for _ in range(51):
-                    aid=str(uuid4());ids.append(aid)
-                    db.execute("insert into app_private.quiz_attempts(attempt_id,user_id,material_id,origin,question_ids,total_questions,omitted_count) values(%s,%s,%s,'MANUAL',%s,%s,%s)",(aid,uid,body['material_id'],Jsonb(qids),len(qids),len(qids)))
-                    for qid in qids:
-                        db.execute("insert into app_private.quiz_responses(response_id,user_id,attempt_id,question_id,selected_option_id,validity,is_correct,graded_at) values(%s,%s,%s,%s,'B','VALID',false,'2026-11-18T00:00:00Z')",(str(uuid4()),uid,aid,qid))
-                    db.execute("update app_private.quiz_attempts set status='SUBMITTED',valid_response_count=%s,incorrect_count=%s,omitted_count=0,score_percent=0,submitted_at='2026-11-18T00:00:00Z' where attempt_id=%s",(len(qids),len(qids),aid))
+                    ids.append(self.seed_submitted_incorrect_attempt(db, uid, body['material_id'], qids))
             made=self.ok(self.f.post(app,'/v1/assessment/recommendations',body));rec=made['result']['data']['revision_recommendation'];e=rec['evidence']
             self.assertEqual(e['attempt_ids'],sorted(ids,reverse=True)[:50]);self.assertEqual((e['valid_response_count'],e['error_count'],e['error_rate']),(300,300,1))
             self.assertEqual(e['chunk_ids'],[c['chunk_id'] for c in sorted(chunks[:60],key=lambda c:(c['page'],c['chunk_index'],c['chunk_id']))[:50]])
