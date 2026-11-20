@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "commit": "3f010ef0e3c70c687f3d3a84c63807740635a903",
+    "git_dirty": true,
+    "generated_at": "2026-11-18T09:18:40+00:00",
+    "corpus": "backend/tests/fixtures/assessment_eval/corpus_vi.json",
+    "corpus_sha256": "19f9c3a9753263e6828a9d376c675398e453c7be3661c492ac90c7b3a1f51ed0",
+    "split": "dev",
+    "count": 5,
+    "model": "deepseek-flash",
+    "prompt_version": "f2-question-v1",
+    "runs": 1
+  },
+  "QG-01": 1.0,
+  "requested": 40,
+  "accepted": 40,
+  "SAFE-01_violating_items": 0,
+  "PERF-02_ms": {
+    "p50": 3861.7947999991884,
+    "p95": 8720.232700001361
+  },
+  "outcomes": [
+    {
+      "run": 0,
+      "case_id": "D1-xac-suat:MCQ",
+      "error": null,
+      "accepted": 5,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "D1-xac-suat:TRUE_FALSE",
+      "error": null,
+      "accepted": 5,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "D2-tcp-udp:MCQ",
+      "error": null,
+      "accepted": 5,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "D2-tcp-udp:TRUE_FALSE",
+      "error": null,
+      "accepted": 5,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "D3-bach-dang-938:MCQ",
+      "error": null,
+      "accepted": 5,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "D3-bach-dang-938:TRUE_FALSE",
+      "error": null,
+      "accepted": 5,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "D4-quang-hop:MCQ",
+      "error": null,
+      "accepted": 5,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "D4-quang-hop:TRUE_FALSE",
+      "error": null,
+      "accepted": 5,
+      "rejected": 0,
+      "safety": {}
+    }
+  ]
+}

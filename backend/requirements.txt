@@ -6,3 +6,4 @@ cryptography==50.0.2
 jsonschema>=4.25,<5
 tzdata==2026.6
 uvicorn==0.40.0
+pypdf==7.0.1

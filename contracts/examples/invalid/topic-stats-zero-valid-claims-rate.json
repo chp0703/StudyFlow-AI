@@ -1,0 +1,15 @@
+{
+  "assessment_version": "1.0.0",
+  "material_id": "00000000-0000-4000-8000-000000000201",
+  "items": [
+    {
+      "material_id": "00000000-0000-4000-8000-000000000201",
+      "topic": "Biến ngẫu nhiên rời rạc",
+      "status": "AVAILABLE",
+      "valid_response_count": 0,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "last_attempt_at": null
+    }
+  ]
+}

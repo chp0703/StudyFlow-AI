@@ -1,0 +1,40 @@
+{
+  "assessment_version": "1.0.0",
+  "question_id": "00000000-0000-4000-8000-000000000221",
+  "user_id": "00000000-0000-4000-8000-000000000001",
+  "conversation_id": "00000000-0000-4000-8000-000000000003",
+  "material_id": "00000000-0000-4000-8000-000000000201",
+  "version": 1,
+  "topic": "Kỳ vọng và phương sai",
+  "question_type": "MCQ",
+  "stem": "Công thức nào biểu diễn đúng kỳ vọng E(X) của biến ngẫu nhiên rời rạc X?",
+  "options": [
+    {
+      "option_id": "A",
+      "text": "Tổng của x_i nhân P(X = x_i)"
+    },
+    {
+      "option_id": "B",
+      "text": "Tổng bình phương các P(X = x_i)"
+    },
+    {
+      "option_id": "C",
+      "text": "Hiệu giữa giá trị lớn nhất và nhỏ nhất của X"
+    },
+    {
+      "option_id": "D",
+      "text": "Tích của mọi giá trị x_i"
+    }
+  ],
+  "answer_key": "A",
+  "explanation": "Theo định nghĩa ở trang 3, E(X) là tổng có trọng số của x_i nhân P(X = x_i).",
+  "source_chunk_ids": [
+    "00000000-0000-4000-8000-000000000211"
+  ],
+  "status": "VERIFIED",
+  "model": "deepseek-chat",
+  "prompt_version": "f2-question-v1",
+  "verified_at": "2026-11-16T08:05:00Z",
+  "created_at": "2026-11-16T08:02:00Z",
+  "updated_at": "2026-11-16T08:05:00Z"
+}

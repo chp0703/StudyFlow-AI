@@ -11,13 +11,19 @@ from ..nlu.extractor import Extractor
 from .chat import ChatProcessor
 from .workflow_ports import Clock, RpcCall, WorkflowError
 from .workflow_shared import (
-    AWAITING, DONE_TEXT, FORM_TEXT, INTENT, POLICY_DEFAULT, Terminal, _ok, deadline_instant, reply,
+    AWAITING, DONE_TEXT, FORM_TEXT, INTENT, POLICY_DEFAULT, PRODUCT_TIMEZONE,
+    Terminal, _ok, deadline_instant, end_instant_from_start, reply,
 )
 
 
 class ActionProcessor:
-    def __init__(self, rpc: RpcCall, clock: Clock, extractor: Extractor, timezone: str):
+    def __init__(self, rpc: RpcCall, clock: Clock, extractor: Extractor, timezone: str = PRODUCT_TIMEZONE, *,
+                 questions=None, recommendations=None):
+        if timezone != PRODUCT_TIMEZONE:
+            raise ValueError(f"timezone must be {PRODUCT_TIMEZONE}")
         self.rpc, self.clock = rpc, clock
+        self.questions_ops = questions
+        self.recommendations_ops = recommendations
         self.chat = ChatProcessor(self, extractor, clock=clock, timezone=timezone)
 
     def step(self, ctx, operation: str, arguments: dict, **kwargs) -> dict:
@@ -35,6 +41,14 @@ class ActionProcessor:
             return self.chat.handle_message(ctx, receipt, key, body)
         if http_operation == "prepare_action":
             return self.prepare(ctx, receipt, key, body)
+        if http_operation == "create_revision_recommendation":
+            if self.recommendations_ops is None:
+                raise Terminal("UNSUPPORTED_OPERATION", "Revision recommendations are not configured.")
+            return self.recommendations_ops.create(ctx, receipt, key, body)
+        if http_operation == "generate_question_drafts":
+            if self.questions_ops is None:
+                raise Terminal("UNSUPPORTED_OPERATION", "Question draft generation is not configured.")
+            return self.questions_ops.generate_drafts(ctx, receipt, key, body)
         if http_operation == "submit_decision":
             return self.decide(ctx, receipt, key, body)
         return self.review(ctx, receipt, key, body, path["action_id"])
@@ -80,8 +94,26 @@ class ActionProcessor:
     @staticmethod
     def normalize_slots(raw: dict) -> dict:
         slots = dict(raw)
+        slots.pop("course_label", None)
+        if type(slots.get("priority")) is float and slots["priority"] == 1.0:
+            slots["priority"] = 1
+        if slots.get("deadline_timezone") is None:
+            slots["deadline_timezone"] = PRODUCT_TIMEZONE
+        if slots.get("deadline_precision") is None and slots.get("deadline_date") is not None:
+            slots["deadline_precision"] = "DATE"
         if slots.get("deadline_precision") == "DATE" and slots.get("deadline_at") is None:
             slots["deadline_at"] = deadline_instant(slots)
+        if slots.get("start_at") is not None:
+            if slots.get("available_from_at") is None:
+                slots["available_from_at"] = slots["start_at"]
+            if slots.get("deadline_precision") is None:
+                slots["deadline_precision"] = "DATETIME"
+            if (
+                slots.get("deadline_precision") == "DATETIME"
+                and slots.get("deadline_at") is None
+                and slots.get("estimated_minutes") is not None
+            ):
+                slots["deadline_at"] = end_instant_from_start(slots["start_at"], slots["estimated_minutes"])
         return slots
 
     @staticmethod
@@ -107,7 +139,8 @@ class ActionProcessor:
             command = None if missing else {"schema_version": "1.1", "operation": "confirm_task", "arguments": {
                 "candidate_id": candidate["candidate_id"], "expected_candidate_version": candidate["version"]}}
             presentation = {"kind": "ACTION_PRESENTATION", "pending_action": pending, "candidate": candidate,
-                            "proposal": None, "normalized_command": command, "effective_policy": None}
+                            "proposal": None, "normalized_command": command, "effective_policy": None,
+                            "schedule_confirmation": None}
             target = ("TASK_CANDIDATE", candidate["candidate_id"], candidate["version"])
         else:
             command = {"schema_version": "1.1", "operation": operation, "arguments": arguments}
@@ -115,7 +148,7 @@ class ActionProcessor:
             pending = self.pending_shell(ctx, action_id, conversation, INTENT[operation], "AWAITING_APPROVAL",
                                          candidate_id=None, draft=arguments, missing=[])
             presentation = {"kind": "ACTION_PRESENTATION", "pending_action": pending, "candidate": None, "proposal": None,
-                            "normalized_command": command, "effective_policy": policy}
+                            "normalized_command": command, "effective_policy": policy, "schedule_confirmation": None}
             target = ("PENDING_ACTION", action_id, 1)
         stored = self.step(ctx, "prepare_pending_action", {"presentation": presentation, "expected_action_version": None},
                            conversation_id=conversation, idempotency_key=child_key(key, f"prepare{tag}"),
@@ -147,7 +180,8 @@ class ActionProcessor:
             "proposal_id": proposal["proposal_id"], "expected_proposal_version": proposal["version"],
             "expected_plan_version": proposal["base_plan_version"]}}
         presentation = {"kind": "ACTION_PRESENTATION", "pending_action": pending, "candidate": None, "proposal": proposal,
-                        "normalized_command": command, "effective_policy": proposal["policy_snapshot"]}
+                        "normalized_command": command, "effective_policy": proposal["policy_snapshot"],
+                        "schedule_confirmation": proposal["payload"]["schedule_confirmation"]}
         stored = self.step(ctx, "prepare_pending_action", {"presentation": presentation, "expected_action_version": None},
                            conversation_id=conversation, idempotency_key=child_key(key, f"prepare{tag}"),
                            message_id=message_id)["data"]
@@ -166,11 +200,14 @@ class ActionProcessor:
         ask = []
         if not (slots.get("title") or "").strip():
             ask.append(("title", "Tên công việc là gì?"))
-        if slots.get("deadline_precision") not in ("DATE", "DATETIME") or slots.get("deadline_at") is None \
-                or (slots["deadline_precision"] == "DATE" and slots.get("deadline_date") is None):
+        if not slots.get("start_at"):
+            ask.append(("start_at", "Thời gian bắt đầu là khi nào?"))
+        if slots.get("deadline_precision") == "DATE" and (
+            slots.get("deadline_date") is None or slots.get("deadline_at") is None
+        ):
+            ask.append(("deadline_date", "Hạn nộp là ngày nào?"))
+        elif slots.get("deadline_precision") == "DATETIME" and slots.get("deadline_at") is None:
             ask.append(("deadline_at", "Hạn nộp là khi nào?"))
-        if not slots.get("deadline_timezone"):
-            ask.append(("deadline_timezone", "Hạn nộp tính theo múi giờ nào?"))
         if slots.get("estimated_minutes") is None:
             ask.append(("estimated_minutes", "Bạn dự kiến cần bao nhiêu phút?"))
         return [{"field": field, "message": message, "choices": []} for field, message in ask]
@@ -184,16 +221,40 @@ class ActionProcessor:
         data = self.workflow_context(ctx, conversation, action_id, key, False)
         action = data["selected_action"]
         pending = action["pending_action"]
+        if "candidate_patch" in body:
+            last = (action["last_presentation"] or {}).get("presentation")
+            if last is None:
+                raise Terminal("ENTITY_NOT_FOUND", "Không tìm thấy nội dung task nháp để bổ sung.")
+            self.step(ctx, "record_source_message", {"message": {
+                "message_id": receipt["message_id"], "user_id": ctx.user_id, "conversation_id": conversation,
+                "source": "UI", "role": "USER", "text": "Bổ sung thông tin công việc ôn tập",
+                "received_at": receipt["created_at"]}}, conversation_id=conversation,
+                idempotency_key=child_key(key, "patch-message"), message_id=receipt["message_id"])
+            stored = self.step(ctx, "review_pending_action", {
+                "action_id": action_id, "expected_action_version": body["expected_action_version"],
+                "presentation": last, "candidate_patch": body["candidate_patch"],
+                "expected_candidate_version": body["expected_candidate_version"]},
+                conversation_id=conversation, idempotency_key=child_key(key, "review"),
+                message_id=receipt["message_id"])["data"]
+            return self.candidate_review_reply(ctx, stored)
         if pending["state"] not in AWAITING:
             raise Terminal("STALE_ENTITY_VERSION", "Thao tác này đã kết thúc.")
         last = (action["last_presentation"] or {}).get("presentation") or {}
         presentation = {"kind": "ACTION_PRESENTATION", "pending_action": pending, "candidate": action["candidate"],
                         "proposal": action["proposal"], "normalized_command": last.get("normalized_command"),
-                        "effective_policy": last.get("effective_policy")}
+                        "effective_policy": last.get("effective_policy"),
+                        "schedule_confirmation": last.get("schedule_confirmation")}
+        if last.get("question_drafts") is not None:
+            presentation["question_drafts"] = last["question_drafts"]
+        for field in ("revision_recommendation", "revision_source_chunks"):
+            if field in last:
+                presentation[field] = last[field]
         stored = self.step(ctx, "review_pending_action", {
             "action_id": action_id, "expected_action_version": body["expected_action_version"], "presentation": presentation},
             conversation_id=conversation, idempotency_key=child_key(key, "review"), message_id=receipt["message_id"])["data"]
         new = stored["pending_action"]
+        if stored.get("revision_recommendation") is not None and new["missing_fields"]:
+            return self.candidate_review_reply(ctx, stored)
         if stored["candidate"] is not None:
             target = ("TASK_CANDIDATE", stored["candidate"]["candidate_id"], stored["candidate"]["version"])
         elif stored["proposal"] is not None:
@@ -201,6 +262,23 @@ class ActionProcessor:
         else:
             target = ("PENDING_ACTION", new["action_id"], new["version"])
         return 200, self.awaiting_reply(ctx, stored, target)
+
+    def candidate_review_reply(self, ctx, stored):
+        from ..core import contract
+        if not contract.is_valid("ActionPresentation", stored):
+            raise WorkflowError("INTERNAL_ERROR", "Nội dung task nháp không đúng contract.")
+        action = stored["pending_action"]
+        if action["missing_fields"]:
+            prompts = {"title": "Tên công việc là gì?", "estimated_minutes": "Bạn dự kiến cần bao nhiêu phút?",
+                       "start_at": "Bạn muốn bắt đầu khi nào?", "deadline_at": "Bạn muốn hoàn thành trước khi nào?",
+                       "deadline_date": "Hạn hoàn thành là ngày nào?"}
+            questions = [{"field": f, "message": prompts.get(f, f"Cần bổ sung {f}."), "choices": []}
+                         for f in action["missing_fields"]]
+            return 200, reply(ctx.request_id, "NEEDS_CLARIFICATION", "Cần bổ sung thông tin cho task nháp.",
+                              questions=questions, result=_ok(ctx.request_id, "DRAFTED", stored))
+        candidate = stored["candidate"]
+        return 200, self.awaiting_reply(ctx, stored,
+            ("TASK_CANDIDATE", candidate["candidate_id"], candidate["version"]))
 
     def decide(self, ctx, receipt, key, body):
         conversation, ref, decision = body["conversation_id"], body["action_reference"], body["decision"]
@@ -215,6 +293,10 @@ class ActionProcessor:
             if pending["version"] != ref["action_version"]:
                 raise Terminal("STALE_ENTITY_VERSION", "Thao tác đã thay đổi; hãy tải lại trước khi quyết định.")
         last = (action["last_presentation"] or {}).get("presentation") or {}
+        if pending.get("intent") == "ACCEPT_REVISION_RECOMMENDATION":
+            return self.recommendations_ops.decide(ctx, receipt, key, body, pending)
+        if pending.get("intent") == "VERIFY_QUESTION_DRAFTS":
+            return self._decide_question_drafts(ctx, receipt, key, conversation, ref, pending, decision)
         command = last.get("normalized_command")
         if decision == "REJECT":
             return self.reject(ctx, receipt, key, conversation, ref, action, command)
@@ -257,7 +339,45 @@ class ActionProcessor:
                               message_id=receipt["message_id"])["data"]
         # Contract không có tool result "cancelled", nên hiển thị thao tác đã hủy bằng presentation riêng.
         presentation = {"kind": "ACTION_PRESENTATION", "pending_action": cancelled, "candidate": None, "proposal": None,
-                        "normalized_command": None, "effective_policy": None}
+                        "normalized_command": None, "effective_policy": None, "schedule_confirmation": None}
         done = reply(ctx.request_id, "SUCCEEDED", "Đã hủy thao tác. Không có dữ liệu nào được lưu.",
                      result=_ok(ctx.request_id, "DRAFTED", presentation))
         return 200, self.chat.resume(ctx, receipt, key, conversation, ref, None, None, True, done) or done
+
+    def _decide_question_drafts(self, ctx, receipt, key, conversation, ref, pending, decision):
+        if (ref["target_type"] != "PENDING_ACTION" or ref["target_id"] != pending["action_id"]
+                or ref["target_version"] != ref["action_version"]):
+            raise Terminal("APPROVAL_REQUIRED", "Tham chiếu thao tác xác nhận câu hỏi không khớp.")
+        question_ids = list((pending.get("draft_arguments") or {}).get("question_ids") or [])
+        if not question_ids:
+            raise Terminal("INVALID_PARAMETER", "Thao tác xác nhận không chứa danh sách câu hỏi hợp lệ.")
+        approval = {
+            "approval_action_id": str(uuid4()),
+            "user_id": ctx.user_id,
+            "target_type": "PENDING_ACTION",
+            "target_id": ref["action_id"],
+            "target_version": ref["action_version"],
+            "decision": decision,
+            "source": "UI",
+            "source_message_id": None,
+            "created_at": iso(datetime.now(timezone.utc)),
+        }
+        result = self.step(
+            ctx,
+            "verify_question_drafts",
+            {
+                "conversation_id": conversation,
+                "action_id": ref["action_id"],
+                "expected_action_version": ref["action_version"],
+                "question_ids": question_ids,
+                "decision": decision,
+            },
+            conversation_id=conversation,
+            idempotency_key=child_key(key, "decision"),
+            approval_action=approval,
+            action_reference=ref,
+            message_id=receipt["message_id"],
+        )
+        result = {**result, "request_id": ctx.request_id}
+        message = "Đã xác nhận bộ câu hỏi." if decision == "APPROVE" else "Đã từ chối bộ câu hỏi nháp."
+        return 200, reply(ctx.request_id, "SUCCEEDED", message, result=result)

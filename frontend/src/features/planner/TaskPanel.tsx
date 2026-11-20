@@ -1,3 +1,4 @@
+import { TASK_COLOR_OPTIONS } from "./clarification"
 import { useState } from "react"
 
 import {
@@ -153,17 +154,38 @@ export default function TaskPanel({
             const { label, Icon } = STATUS[statusOf(t, proposedIds)]
 
             const left = daysUntil(t.deadline)
+            const colorLabel = TASK_COLOR_OPTIONS.find(
+              (option) => option.value === t.color?.toUpperCase(),
+            )?.label
 
             return (
-              <li key={t.id}>
+              <li
+                key={t.id}
+                style={
+                  t.color && /^#[0-9a-fA-F]{6}$/.test(t.color)
+                    ? { borderLeft: `4px solid ${t.color}` }
+                    : undefined
+                }
+              >
                 <strong>{t.title}</strong>
+                {t.description && (
+                  <span className="task-panel-description">
+                    {t.description}
+                  </span>
+                )}
                 <span className="task-panel-meta">
                   <CalendarClock aria-hidden="true" size={13} />
-                  {formatShortDate(t.deadline)}
-                  {left >= 0 ? ` · còn ${left} ngày` : " · quá hạn"} ·{" "}
-                  {t.effort} phút
+                  {t.date
+                    ? `${formatShortDate(t.date)} · ${t.time}`
+                    : `${formatShortDate(t.deadline)}${
+                        left >= 0 ? ` · còn ${left} ngày` : " · quá hạn"
+                      }`}{" "}
+                  · {t.effort} phút
                 </span>
                 <span className="task-panel-tags">
+                  {colorLabel && (
+                    <span className="priority-badge">{colorLabel}</span>
+                  )}
                   <span className="priority-badge">{t.priority}</span>
                   <span
                     className={`status-chip is-${statusOf(t, proposedIds)}`}

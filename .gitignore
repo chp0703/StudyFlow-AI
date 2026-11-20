@@ -26,3 +26,9 @@ __pycache__/
 /.plugins/
 /.opencode-skills/
 history
+
+# macOS generated files
+.DS_Store
+
+# Local Graphify generated knowledge graph
+/graphify-out/

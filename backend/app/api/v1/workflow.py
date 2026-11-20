@@ -14,7 +14,8 @@ def terminal_reply(error: Terminal, request_id: str) -> tuple[int, dict]:
 
 class ActionProcessor:
     def __init__(self, api):
-        self.actions = WorkflowActions(api.rpc, api.clock, api.extractor, api.settings.default_timezone)
+        self.actions = WorkflowActions(api.rpc, api.clock, api.extractor, api.settings.default_timezone,
+                                       questions=api.questions, recommendations=api.recommendations)
         self.receipts = ReceiptProcessor(api.rpc, self.actions.dispatch, terminal_reply)
 
     def run(self, ctx, http_operation: str, key: str, fingerprint: str, body: dict, path: dict):

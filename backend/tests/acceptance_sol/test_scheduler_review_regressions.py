@@ -20,14 +20,14 @@ from backend.tests.acceptance_sol.test_scheduler_contract import context, instan
 class SchedulerReviewRegressionAcceptance(unittest.TestCase):
     def test_archived_window_is_excluded_before_dst_expansion_and_kind_check(self):
         archived = weekly(
-            timezone="America/New_York", weekday=7,
+            timezone="Asia/Ho_Chi_Minh", weekday=7,
             start_time="01:30", end_time="02:30",
             valid_from="2026-11-01", valid_until="2026-11-02",
             archived_at="2026-10-30T12:00:00Z",
         )
         busy = once(
             "2026-11-01T15:00:00Z", "2026-11-01T16:00:00Z",
-            kind="BUSY", timezone="America/New_York",
+            kind="BUSY", timezone="Asia/Ho_Chi_Minh",
             window_id="00000000-0000-0000-0000-000000000065",
         )
         for label, windows, expected in (
@@ -45,13 +45,13 @@ class SchedulerReviewRegressionAcceptance(unittest.TestCase):
                 self.assertEqual(result, expected)
 
     def test_invalid_task_priority_and_status_fail_closed_before_engine_use(self):
-        for field, value in (("priority", "URGENT"), ("status", "INVALID_STATUS")):
+        for field, value in (("priority", "URGENT"), ("priority", "LOW"), ("priority", 0.2), ("priority", True), ("color", "invalid"), ("status", "INVALID_STATUS")):
             malformed = replace(context(), tasks=(replace(task(), **{field: value}),))
-            with self.subTest(field=field, entrypoint="validate_context"):
-                self.assertTrue(validate_context(malformed), "Invalid task enum was accepted")
-            with self.subTest(field=field, entrypoint="generate_schedule"):
+            with self.subTest(field=field, value=value, entrypoint="validate_context"):
+                self.assertTrue(validate_context(malformed), "Invalid task field was accepted")
+            with self.subTest(field=field, value=value, entrypoint="generate_schedule"):
                 result = generate_schedule(malformed)
-                self.assertTrue(result.conflicts, "Engine must report the malformed task enum")
+                self.assertTrue(result.conflicts, "Engine must report the malformed task field")
                 self.assertEqual(result.generated_blocks, ())
 
     def test_unhashable_generated_task_id_returns_issue_instead_of_crashing(self):
@@ -69,7 +69,7 @@ class SchedulerReviewRegressionAcceptance(unittest.TestCase):
         horizon_start = utc("2026-11-01T05:00:00Z")
         horizon_end = utc("2026-11-01T09:00:00Z")
         ctx = replace(
-            context(), now=actual_now, timezone="America/New_York",
+            context(), now=actual_now, timezone="Asia/Ho_Chi_Minh",
             generation_scope=GenerationScope(
                 horizon_start, horizon_end, SelectionMode.ALL_ELIGIBLE,
             ),

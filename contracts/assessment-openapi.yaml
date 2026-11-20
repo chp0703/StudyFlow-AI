@@ -1,0 +1,832 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "StudyFlow Learning Assessment & Adaptive Revision",
+    "version": "1.0.0",
+    "description": "Additive F2 B1 extension (1.0.0). JWT required; generated questions are drafts until approved via /v1/decisions; grading uses verified questions only; recommendations never mutate plans directly."
+  },
+  "security": [
+    {
+      "SupabaseBearer": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "SupabaseBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/v1/assessment/materials": {
+      "post": {
+        "operationId": "upload_assessment_material",
+        "summary": "upload learning material and extract topic chunks",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/f1.schema.json#/$defs/MaterialUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stored learning material and extracted chunks with page/topic provenance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/AssessmentMaterialDetailResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request structure or parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found or belongs to another user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Idempotency conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Material exceeds size limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable material or missing topics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/assessment/materials/{material_id}": {
+      "get": {
+        "operationId": "get_assessment_material",
+        "summary": "get learning material metadata, topics, and chunks",
+        "parameters": [
+          {
+            "name": "material_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "conversation_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Material metadata, confirmed topics, and provenance chunks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/AssessmentMaterialDetailResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameter.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Material not found or belongs to another user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/assessment/drafts": {
+      "post": {
+        "operationId": "generate_question_drafts",
+        "summary": "generate source-grounded draft questions requiring /v1/decisions verification",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/f1.schema.json#/$defs/GenerateQuestionDraftsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Draft questions created with PendingAction awaiting verification via POST /v1/decisions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Material or conversation not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Active pending action or idempotency conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "No matching chunks or invalid generation parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Model provider unavailable or output rejected.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/assessment/questions": {
+      "get": {
+        "operationId": "list_assessment_questions",
+        "summary": "list questions filtered by status, material, or topic",
+        "parameters": [
+          {
+            "name": "material_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "topic",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "pattern": "\\S"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "schemas/f1.schema.json#/$defs/QuestionDraftStatus"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated questions for the authenticated user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/QuestionDraftListResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query filter.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid query filter or cursor.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/assessment/attempts": {
+      "post": {
+        "operationId": "create_quiz_attempt",
+        "summary": "create a quiz attempt from verified questions only",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/f1.schema.json#/$defs/CreateQuizAttemptRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created quiz attempt in IN_PROGRESS state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/QuizAttemptResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Material or verified question not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Question is not VERIFIED or idempotency conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid attempt origin/question selection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/assessment/attempts/{attempt_id}/responses/{question_id}": {
+      "put": {
+        "operationId": "save_quiz_response",
+        "summary": "save or update a response for a question in an active attempt",
+        "parameters": [
+          {
+            "name": "attempt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "question_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/f1.schema.json#/$defs/SaveQuizResponseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved response record before final grading.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/QuizResponseResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Attempt or question not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Attempt already submitted or idempotency conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/assessment/attempts/{attempt_id}/submit": {
+      "post": {
+        "operationId": "submit_quiz_attempt",
+        "summary": "submit and deterministically grade a quiz attempt",
+        "parameters": [
+          {
+            "name": "attempt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/f1.schema.json#/$defs/SubmitQuizAttemptRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Submitted attempt with deterministic grading results.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/QuizAttemptSubmissionResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Attempt not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Idempotency conflict or unverified question state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/assessment/topics/stats": {
+      "get": {
+        "operationId": "get_topic_stats",
+        "summary": "get topic error rates from valid responses or INSUFFICIENT_DATA",
+        "parameters": [
+          {
+            "name": "material_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Topic statistics derived exclusively from valid graded responses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/TopicStatsResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameter.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Material not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/assessment/recommendations": {
+      "post": {
+        "operationId": "create_revision_recommendation",
+        "summary": "create evidence-backed revision recommendation as a Planner pending action",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/f1.schema.json#/$defs/CreateRevisionRecommendationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Immutable evidence-backed recommendation awaiting UI decision. APPROVE creates a Planner task draft; task and plan confirmations are separate.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Material or conversation not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Active pending action or idempotency conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Insufficient valid responses to recommend revision.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

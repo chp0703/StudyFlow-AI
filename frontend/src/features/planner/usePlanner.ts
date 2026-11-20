@@ -1,8 +1,19 @@
 import { useRef, useState, type Dispatch, type SetStateAction } from "react"
+
 import type { Task } from "../../types/task"
+
 import type { Proposal, TimeWindow } from "../../types/planner"
+
 import { runPlannerCommand } from "./plannerAgent"
-import { diffTasks, diffWindows, isStale } from "./proposal"
+
+import {
+  approvalBlocked,
+  demoNoOpResult,
+  diffTasks,
+  diffWindows,
+  isStale,
+} from "./proposal"
+
 import { api } from "../../api"
 
 import { apiEnabled } from "../../api/config"
@@ -13,12 +24,19 @@ import { proposalFromReply } from "../../api/mappers"
 
 import { savePending } from "../../api/pending"
 
-import type { OrchestratorReply } from "../../api/types"
+import type { ApiTimeWindow, OrchestratorReply } from "../../api/types"
+
+import {
+  buildDemoClarificationQuestions,
+  type PlannerClarification,
+} from "./clarification"
 
 export type PlannerProps = {
   tasks: Task[]
 
   events: Task[]
+
+  windows?: ApiTimeWindow[]
 
   userId: string
 
@@ -43,43 +61,86 @@ export type PlannerProps = {
   notify?: (message: string) => void
 }
 
+export type PlannerFeedback = {
+  kind: "info" | "clarification" | "error" | "pending" | "success"
+
+  text: string
+}
+
+export const shouldClearPlannerDraft = (state: OrchestratorReply["state"]) =>
+  state === "AWAITING_APPROVAL" || state === "SUCCEEDED"
+
 export function usePlanner(
   {
     tasks,
+
     events,
+
+    windows,
+
     userId,
+
     conversationId,
+
     reload,
+
     setTasks,
+
     availability,
+
     setAvailability,
+
     proposal,
+
     setProposal,
+
     revision,
+
     setRevision,
   }: PlannerProps,
+
   showPlannerNotice: (message: string) => void,
 ) {
   const [input, setInput] = useState("")
+
   const [reply, setReply] = useState("")
+
+  const [feedback, setFeedback] = useState<PlannerFeedback | null>(null)
+
+  const [clarification, setClarification] =
+    useState<PlannerClarification | null>(null)
+
   const [busy, setBusy] = useState(false)
+
   // Retrying the same message keeps its idempotency key.
+
   const attempt = useRef<{
- text: string
- key: string
-} | null>(null)
+    text: string
+
+    key: string
+  } | null>(null)
+
   const shown = proposal ? proposal.next.tasks : apiEnabled ? events : tasks
+
   const shownWindows = proposal ? proposal.next.availability : availability
+
   const stale = proposal ? isStale(proposal, revision) : false
 
   // API mode: show what the server answered. A reply that waits for approval becomes the pending proposal.
 
-  const showReply = async (r: OrchestratorReply) => {
+  const showReply = async (r: OrchestratorReply, promptText: string) => {
     if (r.state === "AWAITING_APPROVAL") {
+      setClarification(null)
+
       const next = proposalFromReply(r, {
         tasks,
+
         events,
+
+        windows,
+
         availability,
+
         revision,
       })
 
@@ -87,22 +148,52 @@ export function usePlanner(
 
       setReply(r.message)
 
+      setFeedback({
+        kind: "pending",
+
+        text: "Đề xuất đã sẵn sàng. Hãy xem chi tiết rồi chọn Duyệt hoặc Từ chối.",
+      })
+
       if (next && r.action_reference)
         savePending(userId, {
           conversationId,
+
           reference: r.action_reference,
         })
 
       return
     }
 
-    setProposal(null)
-
-    savePending(userId, null)
-
     const questions = r.questions.map((q) => q.message).join(" ")
 
-    setReply(questions ? `${r.message} ${questions}` : r.message)
+    const text = questions ? `${r.message} ${questions}` : r.message
+
+    if (r.state === "NEEDS_CLARIFICATION") {
+      setClarification((prev) => ({
+        source: "api",
+
+        originalPrompt: prev?.originalPrompt || promptText,
+
+        message: r.message,
+
+        questions: r.questions.length
+          ? r.questions
+          : [{ field: "details", message: r.message, choices: [] }],
+      }))
+    } else {
+      setClarification(null)
+    }
+
+    setFeedback({
+      kind:
+        r.state === "NEEDS_CLARIFICATION"
+          ? "clarification"
+          : r.state === "ERROR" || r.error
+            ? "error"
+            : "info",
+
+      text,
+    })
 
     if (r.state === "SUCCEEDED") await reload()
   }
@@ -116,13 +207,15 @@ export function usePlanner(
     setBusy(true)
 
     try {
-      await showReply(await api.sendMessage(conversationId, text, key))
+      const response = await api.sendMessage(conversationId, text, key)
+
+      await showReply(response, text)
 
       attempt.current = null
 
-      setInput("")
+      if (shouldClearPlannerDraft(response.state)) setInput("")
     } catch (e) {
-      setReply(errorText(e))
+      setFeedback({ kind: "error", text: errorText(e) })
 
       // Only a failure that may have reached the server keeps the key for the retry.
 
@@ -132,8 +225,8 @@ export function usePlanner(
     }
   }
 
-  const send = () => {
-    const text = input.trim()
+  const sendText = (rawText: string) => {
+    const text = rawText.trim()
 
     if (!text || busy) return
 
@@ -143,15 +236,67 @@ export function usePlanner(
 
     const result = runPlannerCommand(text, shown, shownWindows)
 
+    const commandChangedTasks = diffTasks(shown, result.tasks)
+
+    const commandChangedWindows = diffWindows(shownWindows, result.availability)
+
     const changes = diffTasks(tasks, result.tasks)
 
     const windowChanges = diffWindows(availability, result.availability)
 
-    setReply(result.reply)
+    if (!commandChangedTasks.length && !commandChangedWindows.length) {
+      const next = demoNoOpResult(proposal, result.reply)
+
+      setProposal(next.proposal)
+
+      setReply(next.reply)
+
+      const isClarify = /cho mình biết|hãy tạo|ví dụ/iu.test(result.reply)
+
+      if (isClarify) {
+        const demoQuestions = buildDemoClarificationQuestions(
+          text,
+
+          result.reply,
+        )
+
+        setClarification(
+          demoQuestions.length
+            ? {
+                source: "demo",
+
+                originalPrompt: text,
+
+                message: result.reply,
+
+                questions: demoQuestions,
+              }
+            : null,
+        )
+      } else {
+        setClarification(null)
+      }
+
+      setFeedback({
+        kind: isClarify ? "clarification" : "error",
+
+        text: result.reply,
+      })
+
+      return
+    }
+
+    setClarification(null)
 
     setInput("")
 
-    if (!changes.length && !windowChanges.length) return setProposal(null)
+    setReply(result.reply)
+
+    setFeedback({
+      kind: "pending",
+
+      text: "Đã tạo bản xem trước. Lịch chỉ thay đổi sau khi bạn duyệt.",
+    })
 
     setProposal({
       id: proposal?.id ?? crypto.randomUUID(),
@@ -160,7 +305,11 @@ export function usePlanner(
 
       baseRevision: proposal?.baseRevision ?? revision,
 
-      next: { tasks: result.tasks, availability: result.availability },
+      next: {
+        tasks: result.tasks,
+
+        availability: result.availability,
+      },
 
       changes,
 
@@ -173,31 +322,59 @@ export function usePlanner(
   }
 
   const decideOnServer = async (decision: "APPROVE" | "REJECT") => {
-    if (!proposal?.server || busy) return
+    if (
+      !proposal?.server ||
+      busy ||
+      (decision === "APPROVE" && approvalBlocked(proposal, stale))
+    )
+      return
 
     setBusy(true)
 
     try {
       const r = await api.decide(
         conversationId,
+
         proposal.server.reference,
+
         decision,
       )
 
-      setProposal(null)
+      if (r.state === "AWAITING_APPROVAL") {
+        await showReply(r, "")
+      } else if (r.state === "SUCCEEDED" && r.result?.outcome === "COMMITTED") {
+        setProposal(null)
 
-      savePending(userId, null)
+        savePending(userId, null)
 
-      await reload()
+        await reload()
 
-      if (r.state === "AWAITING_APPROVAL") await showReply(r)
-      else {
         setReply("")
 
+        setFeedback({ kind: "success", text: r.message })
+
         showPlannerNotice(r.message)
+      } else if (decision === "REJECT" && r.state === "SUCCEEDED") {
+        setProposal(null)
+
+        savePending(userId, null)
+
+        await reload()
+
+        setReply(r.message)
+
+        setFeedback({ kind: "info", text: r.message })
+      } else {
+        setFeedback({
+          kind: "error",
+
+          text: r.error?.message ?? r.message,
+        })
+
+        await reload()
       }
     } catch (e) {
-      setReply(errorText(e))
+      setFeedback({ kind: "error", text: errorText(e) })
     } finally {
       setBusy(false)
     }
@@ -218,6 +395,8 @@ export function usePlanner(
 
     setReply("")
 
+    setFeedback({ kind: "success", text: "Đã lưu thay đổi vào lịch." })
+
     showPlannerNotice("Đã lưu thay đổi vào lịch.")
   }
 
@@ -227,19 +406,54 @@ export function usePlanner(
     setProposal(null)
 
     setReply("")
+
+    setFeedback({
+      kind: "info",
+
+      text: "Đã từ chối đề xuất. Lịch không thay đổi.",
+    })
+  }
+
+  const send = (color?: string) =>
+    sendText(color ? `${input.trim()}, màu ${color}` : input)
+
+  const submitClarification = (followUpText: string) => {
+    sendText(followUpText)
+  }
+
+  const dismissClarification = () => {
+    setClarification(null)
   }
 
   return {
     busy,
+
     input,
+
     setInput,
+
     reply,
+
     setReply,
+
+    feedback,
+
+    clarification,
+
     shown,
+
     shownWindows,
+
     stale,
+
     send,
+
+    submitClarification,
+
+    dismissClarification,
+
     approve,
+
     reject,
   }
 }

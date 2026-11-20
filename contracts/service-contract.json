@@ -307,5 +307,174 @@
   ],
   "internal_result_envelope": "Internal RPCs return {schema_version, request_id, outcome: READ or COMMITTED, data: data_schema, error:null, warnings:Issue[]} or ErrorResult. persist_plan_proposal uses generate_study_planResult unchanged.",
   "rpc_argument_name": "p_request",
-  "rpc_envelope_schema": "RpcRequest"
+  "rpc_envelope_schema": "RpcRequest",
+  "extensions": {
+    "ingestion": {
+      "version": "1.0.0",
+      "openapi": "ingestion-openapi.yaml",
+      "internal_interfaces": [
+        {
+          "rpc": "store_ingestion_source",
+          "arguments_schema": "StoreSourceArguments",
+          "data_schema": "IngestionSource",
+          "result_schema": "IngestionSourceResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "get_ingestion_source",
+          "arguments_schema": "SourceLookupArguments",
+          "data_schema": "IngestionSource",
+          "result_schema": "IngestionSourceResult",
+          "read_only": true,
+          "attestation_required": false,
+          "llm_callable": false
+        },
+        {
+          "rpc": "claim_source_extraction",
+          "arguments_schema": "SourceLookupArguments",
+          "data_schema": "SourceClaimData",
+          "result_schema": "SourceClaimResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "complete_source_extraction",
+          "arguments_schema": "CompleteSourceExtractionArguments",
+          "data_schema": "IngestionSource",
+          "result_schema": "IngestionSourceResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        }
+      ],
+      "source_ids": "Optional UserMessage/RecordSourceMessageArguments source_ids; same-owner, same-conversation, READY only; never authorizes writes."
+    },
+    "assessment": {
+      "version": "1.0.0",
+      "openapi": "assessment-openapi.yaml",
+      "internal_interfaces": [
+        {
+          "rpc": "store_assessment_material",
+          "arguments_schema": "StoreMaterialArguments",
+          "data_schema": "AssessmentMaterialDetailData",
+          "result_schema": "AssessmentMaterialDetailResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "get_assessment_material",
+          "arguments_schema": "MaterialLookupArguments",
+          "data_schema": "AssessmentMaterialDetailData",
+          "result_schema": "AssessmentMaterialDetailResult",
+          "read_only": true,
+          "attestation_required": false,
+          "llm_callable": false
+        },
+        {
+          "rpc": "search_material_chunks",
+          "arguments_schema": "SearchMaterialChunksArguments",
+          "data_schema": "MaterialChunkSearchData",
+          "result_schema": "MaterialChunkSearchResult",
+          "read_only": true,
+          "attestation_required": false,
+          "llm_callable": false
+        },
+        {
+          "rpc": "create_question_drafts",
+          "arguments_schema": "CreateQuestionDraftsArguments",
+          "data_schema": "QuestionDraftBatchData",
+          "result_schema": "QuestionDraftBatchResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "verify_question_drafts",
+          "arguments_schema": "VerifyQuestionDraftsArguments",
+          "data_schema": "QuestionDraftBatchData",
+          "result_schema": "QuestionDraftBatchResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "list_questions",
+          "arguments_schema": "ListQuestionsArguments",
+          "data_schema": "QuestionDraftListData",
+          "result_schema": "QuestionDraftListResult",
+          "read_only": true,
+          "attestation_required": false,
+          "llm_callable": false
+        },
+        {
+          "rpc": "create_quiz_attempt",
+          "arguments_schema": "CreateQuizAttemptArguments",
+          "data_schema": "QuizAttempt",
+          "result_schema": "QuizAttemptResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "get_quiz_attempt_context",
+          "arguments_schema": "GetQuizAttemptContextArguments",
+          "data_schema": "QuizAttemptContextData",
+          "result_schema": "QuizAttemptContextResult",
+          "read_only": true,
+          "attestation_required": false,
+          "llm_callable": false
+        },
+        {
+          "rpc": "save_quiz_response",
+          "arguments_schema": "SaveQuizResponseArguments",
+          "data_schema": "QuizResponse",
+          "result_schema": "QuizResponseInternalResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "submit_quiz_attempt",
+          "arguments_schema": "SubmitQuizAttemptArguments",
+          "data_schema": "QuizAttemptSubmissionData",
+          "result_schema": "QuizAttemptSubmissionInternalResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "get_topic_stats",
+          "arguments_schema": "GetTopicStatsArguments",
+          "data_schema": "TopicStatsData",
+          "result_schema": "TopicStatsResult",
+          "read_only": true,
+          "attestation_required": false,
+          "llm_callable": false
+        },
+        {
+          "rpc": "create_revision_recommendation",
+          "arguments_schema": "CreateRevisionRecommendationArguments",
+          "data_schema": "ActionPresentation",
+          "result_schema": "RevisionRecommendationResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "decide_revision_recommendation",
+          "arguments_schema": "DecideRevisionRecommendationArguments",
+          "data_schema": "ActionPresentation",
+          "result_schema": "DecideRevisionRecommendationResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        }
+      ],
+      "approval_boundary": "Generated questions remain DRAFT until verified through POST /v1/decisions with an intact action_reference; revision recommendations create Planner pending actions and never mutate StudyPlan directly."
+    }
+  }
 }

@@ -19,6 +19,13 @@ from ...core.security import AuthError, AuthUnavailable, JwtVerifier
 from .http import STATUS, ApiError, error_body, error_response, respond
 from .workflow import ActionProcessor
 from ...orchestrator.workflow_ports import WorkflowError
+from ...ingestion.service import SourceExtractor
+from ...ingestion.workflow import SourceOperations
+from ...assessment.materials import MaterialOperations, MAX_BYTES as MATERIAL_MAX_BYTES
+from ...assessment.questions import AssessmentQuestionOperations, DeepSeekQuestionGenerator
+from ...assessment.attempts import QuizAttemptOperations
+from ...assessment.stats import TopicStatsOperations
+from ...assessment.recommendations import RevisionRecommendationOperations
 
 log = logging.getLogger("studyflow.api")
 _KEY = re.compile(r"^[A-Za-z0-9._:-]{16,128}$")
@@ -41,10 +48,34 @@ def _int(value: str, name: str) -> int:
 
 
 class Api:
-    def __init__(self, settings: Settings, rpc: RpcClient, verifier: JwtVerifier, clock, extractor):
+    def __init__(self, settings: Settings, rpc: RpcClient, verifier: JwtVerifier, clock, extractor, source_extractor=None,
+                 question_generator=None):
         self.settings, self.rpc_client, self.verifier, self.clock = settings, rpc, verifier, clock
         self.extractor = extractor
+        self.materials = MaterialOperations(self.rpc, clock)
+        self.questions = AssessmentQuestionOperations(
+            self.rpc,
+            self.materials,
+            clock,
+            question_generator or DeepSeekQuestionGenerator(
+                settings.deepseek_base_url,
+                settings.deepseek_api_key,
+                settings.deepseek_model,
+                None,
+                timeout_seconds=settings.question_model_timeout_seconds,
+                max_tokens=settings.question_max_tokens,
+                max_input_chars=settings.question_max_input_chars,
+                max_context_chunks=settings.question_max_context_chunks,
+                max_response_bytes=settings.question_max_response_bytes,
+            ),
+            max_context_chunks=settings.question_max_context_chunks,
+        )
+        self.attempts = QuizAttemptOperations(self.rpc, clock)
+        self.topic_stats = TopicStatsOperations(self.rpc)
+        self.recommendations = RevisionRecommendationOperations(self.rpc, clock)
         self.processor = ActionProcessor(self)
+        self.sources = SourceOperations(self.rpc, source_extractor or SourceExtractor(
+            settings.deepseek_base_url, settings.deepseek_api_key, settings.ingestion_model), clock)
 
     # ----------------------------------------------------------------- xử lý chung
     async def authenticate(self, request: Request, request_id: str) -> Ctx:
@@ -138,12 +169,12 @@ class Api:
         return self.result_response(await run_in_threadpool(self.rpc, ctx, "get_study_plan", args), ctx)
 
     # ----------------------------------------------------------------- quy trình POST
-    async def read_json(self, request: Request) -> dict:
+    async def read_json(self, request: Request, *, max_bytes: int | None = None) -> dict:
         key = request.headers.get("idempotency-key")
         if key is None or not _KEY.match(key):
             raise ApiError("INVALID_PARAMETER", "A valid Idempotency-Key header is required.", status=400,
                            field="Idempotency-Key")
-        limit = self.settings.max_body_bytes
+        limit = max_bytes if max_bytes is not None else self.settings.max_body_bytes
         declared = request.headers.get("content-length")
         if declared is not None and declared.isdigit() and int(declared) > limit:
             raise ApiError("PAYLOAD_TOO_LARGE", "The request body is too large.")
@@ -189,6 +220,111 @@ class Api:
     async def post_decisions(self, request: Request, ctx: Ctx):
         return await self.post_pipeline(request, ctx, "submit_decision", "UserDecision")
 
+    @staticmethod
+    def source_id(request: Request) -> str:
+        value = request.path_params['source_id']
+        try:
+            return str(UUID(value))
+        except ValueError:
+            raise ApiError('INVALID_PARAMETER', 'source_id must be a UUID.', status=400, field='source_id') from None
+
+    async def post_sources(self, request: Request, ctx: Ctx):
+        body = await self.read_json(request, max_bytes=7 * 1024 * 1024)
+        self.validated('SourceUploadRequest', body)
+        result = await run_in_threadpool(self.sources.upload, ctx, request.headers['idempotency-key'], body)
+        return respond(result, 200, ctx.request_id, post=True, replayed=result['outcome'] == 'READ')
+
+    async def get_source(self, request: Request, ctx: Ctx):
+        query = self._query(request, {'conversation_id'})
+        args = {'source_id': self.source_id(request), 'conversation_id': query.get('conversation_id')}
+        self.validated('SourceLookupArguments', args)
+        result = await run_in_threadpool(self.sources.get, ctx, args['source_id'], args['conversation_id'])
+        return self.result_response(result, ctx)
+
+    async def post_extract_source(self, request: Request, ctx: Ctx):
+        source_id = self.source_id(request)
+        body = await self.read_json(request)
+        self.validated('SourceExtractRequest', body)
+        result = await run_in_threadpool(self.sources.extract, ctx, request.headers['idempotency-key'], source_id, body['conversation_id'])
+        return respond(result, 200, ctx.request_id, post=True, replayed=result['outcome'] == 'READ')
+
+    async def post_materials(self, request: Request, ctx: Ctx):
+        body = await self.read_json(request, max_bytes=4 * ((MATERIAL_MAX_BYTES + 2) // 3) + 65536)
+        self.validated('MaterialUploadRequest', body)
+        result = await run_in_threadpool(self.materials.upload, ctx, request.headers['idempotency-key'], body)
+        return respond(result, 200, ctx.request_id, post=True, replayed=result['outcome'] == 'READ')
+
+    async def get_material(self, request: Request, ctx: Ctx):
+        query = self._query(request, {'conversation_id'})
+        material_id = request.path_params['material_id']
+        try:
+            material_id = str(UUID(material_id))
+        except ValueError:
+            raise ApiError('INVALID_PARAMETER', 'material_id must be a UUID.', status=400, field='material_id') from None
+        result = await run_in_threadpool(self.materials.get, ctx, material_id, query.get('conversation_id'))
+        return self.result_response(result, ctx)
+
+    async def post_assessment_drafts(self, request: Request, ctx: Ctx):
+        return await self.post_pipeline(request, ctx, "generate_question_drafts", "GenerateQuestionDraftsRequest")
+
+    async def get_assessment_questions(self, request: Request, ctx: Ctx):
+        q = self._query(request, {"material_id", "topic", "status", "page_size", "cursor"})
+        args = {
+            "material_id": q.get("material_id"),
+            "topic": q.get("topic"),
+            "status": q.get("status"),
+            "page_size": _int(q["page_size"], "page_size") if "page_size" in q else 50,
+            "cursor": q.get("cursor"),
+        }
+        self.validated("ListQuestionsArguments", args)
+        result = await run_in_threadpool(self.questions.list_questions, ctx, args)
+        return self.result_response(result, ctx)
+
+    @staticmethod
+    def _uuid_param(request: Request, name: str) -> str:
+        value = request.path_params[name]
+        try:
+            return str(UUID(value))
+        except ValueError:
+            raise ApiError("INVALID_PARAMETER", f"{name} must be a UUID.", status=400, field=name) from None
+
+    async def post_assessment_attempts(self, request: Request, ctx: Ctx):
+        body = await self.read_json(request)
+        self.validated("CreateQuizAttemptRequest", body)
+        result = await run_in_threadpool(self.attempts.create_attempt, ctx, request.headers["idempotency-key"], body)
+        return respond(result, 200, ctx.request_id, post=True, replayed=result["outcome"] == "READ")
+
+    async def put_assessment_attempt_response(self, request: Request, ctx: Ctx):
+        attempt_id = self._uuid_param(request, "attempt_id")
+        question_id = self._uuid_param(request, "question_id")
+        body = await self.read_json(request)
+        self.validated("SaveQuizResponseRequest", body)
+        result, replayed = await run_in_threadpool(
+            self.attempts.save_response, ctx, request.headers["idempotency-key"], attempt_id, question_id, body
+        )
+        return respond(result, 200, ctx.request_id, post=True, replayed=replayed)
+
+    async def post_assessment_attempt_submit(self, request: Request, ctx: Ctx):
+        attempt_id = self._uuid_param(request, "attempt_id")
+        body = await self.read_json(request)
+        self.validated("SubmitQuizAttemptRequest", body)
+        result, replayed = await run_in_threadpool(
+            self.attempts.submit_attempt, ctx, request.headers["idempotency-key"], attempt_id, body
+        )
+        return respond(result, 200, ctx.request_id, post=True, replayed=replayed)
+
+    async def post_assessment_recommendations(self, request: Request, ctx: Ctx):
+        return await self.post_pipeline(request, ctx, "create_revision_recommendation", "CreateRevisionRecommendationRequest")
+
+    async def get_assessment_topic_stats(self, request: Request, ctx: Ctx):
+        query = self._query(request, {"material_id"})
+        args = {"material_id": query.get("material_id")}
+        self.validated("GetTopicStatsArguments", args)
+        if args["material_id"] is not None:
+            args["material_id"] = str(UUID(args["material_id"]))
+        result = await run_in_threadpool(self.topic_stats.get, ctx, args)
+        return self.result_response(result, ctx)
+
     # ----------------------------------------------------------------- đăng ký endpoint
     def register(self, app: FastAPI) -> None:
         routes = [
@@ -196,9 +332,20 @@ class Api:
             ("GET", "/v1/preferences", self.get_preferences), ("GET", "/v1/plans", self.get_plans),
             ("POST", "/v1/messages", self.post_messages), ("POST", "/v1/actions", self.post_actions),
             ("POST", "/v1/actions/{action_id}/review", self.post_review), ("POST", "/v1/decisions", self.post_decisions),
+            ("POST", "/v1/sources", self.post_sources), ("GET", "/v1/sources/{source_id}", self.get_source),
+            ("POST", "/v1/sources/{source_id}/extract", self.post_extract_source),
+            ("POST", "/v1/assessment/materials", self.post_materials),
+            ("GET", "/v1/assessment/materials/{material_id}", self.get_material),
+            ("POST", "/v1/assessment/drafts", self.post_assessment_drafts),
+            ("GET", "/v1/assessment/questions", self.get_assessment_questions),
+            ("POST", "/v1/assessment/attempts", self.post_assessment_attempts),
+            ("PUT", "/v1/assessment/attempts/{attempt_id}/responses/{question_id}", self.put_assessment_attempt_response),
+            ("POST", "/v1/assessment/attempts/{attempt_id}/submit", self.post_assessment_attempt_submit),
+            ("GET", "/v1/assessment/topics/stats", self.get_assessment_topic_stats),
+            ("POST", "/v1/assessment/recommendations", self.post_assessment_recommendations),
         ]
         for method, path, handler in routes:
-            app.add_api_route(path, self._wrap(handler, post=method == "POST"), methods=[method],
+            app.add_api_route(path, self._wrap(handler, post=method in ("POST", "PUT")), methods=[method],
                               include_in_schema=False)
 
     def _wrap(self, handler, *, post: bool):
@@ -221,6 +368,7 @@ def fallback_response(request: Request, status: int):
     request_id = str(uuid4())
     error = {"code": code, "message": "The requested resource was not found." if status == 404 else "Method not allowed.",
              "field": None, "details": {}, "retryable": False}
-    return respond(error_body(error, request_id, post=request.method == "POST"), status, request_id,
-                   post=request.method == "POST")
+    is_write = request.method in ("POST", "PUT")
+    return respond(error_body(error, request_id, post=is_write), status, request_id,
+                   post=is_write)
 

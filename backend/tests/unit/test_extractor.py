@@ -45,6 +45,26 @@ class DeepSeekExtractorTests(unittest.TestCase):
             with self.subTest(content=content), self.assertRaises(ExtractionError):
                 self.run_extract(answer(content))
 
+    def test_string_ambiguities_become_issues_but_blank_ones_are_still_rejected(self):
+        def with_notes(notes):
+            return json.dumps({"intents": [{"intent": "UNKNOWN", "slots": {}, "raw_expressions": {}, "ambiguities": notes}]})
+
+        got = self.run_extract(answer(with_notes(["không rõ"])))
+        self.assertEqual(got["intents"][0]["ambiguities"],
+                         [{"code": "AMBIGUOUS", "message": "không rõ", "field": None, "details": {}}])
+        with self.assertRaises(ExtractionError):
+            self.run_extract(answer(with_notes(["  "])))
+
+    def test_missing_valid_from_and_view_get_deterministic_defaults(self):
+        window = {"kind": "BUSY", "recurrence": "WEEKLY", "timezone": "Asia/Ho_Chi_Minh", "weekday": 2,
+                  "start_time": "08:00", "end_time": "10:00"}
+        content = json.dumps({"intents": [
+            {"intent": "SET_BUSY_INTERVAL", "slots": {"change_type": "ADD", "window": window}, "raw_expressions": {}, "ambiguities": []},
+            {"intent": "GET_STUDY_PLAN", "slots": {}, "raw_expressions": {}, "ambiguities": []}]})
+        got = self.run_extract(answer(content))["intents"]
+        self.assertEqual(got[0]["slots"]["window"]["valid_from"], "2026-11-05")
+        self.assertEqual(got[1]["slots"]["view"], "CURRENT")
+
     def test_transport_failures_are_unavailable_not_extraction_errors(self):
         def boom(request):
             raise httpx.ConnectError("down")
@@ -55,10 +75,28 @@ class DeepSeekExtractorTests(unittest.TestCase):
 
     def test_scripted_and_unavailable_doubles(self):
         scripted = ScriptedExtractor({"a": GOOD})
-        self.assertEqual(scripted.extract("a", now=NOW, timezone="UTC", active=None), GOOD)
-        self.assertEqual(scripted.extract("b", now=NOW, timezone="UTC", active=None)["intents"][0]["intent"], "UNKNOWN")
+        self.assertEqual(scripted.extract("a", now=NOW, timezone="Asia/Ho_Chi_Minh", active=None), GOOD)
+        self.assertEqual(scripted.extract("b", now=NOW, timezone="Asia/Ho_Chi_Minh", active=None)["intents"][0]["intent"], "UNKNOWN")
         with self.assertRaises(ExtractorUnavailable):
-            UnavailableExtractor().extract("a", now=NOW, timezone="UTC", active=None)
+            UnavailableExtractor().extract("a", now=NOW, timezone="Asia/Ho_Chi_Minh", active=None)
+
+    def test_create_task_canonical_slots_roundtrip(self):
+        canonical_task = {
+            "intents": [{
+                "intent": "CREATE_TASK",
+                "slots": {
+                    "title": "Ôn Giải tích",
+                    "start_at": "2026-11-06T08:00:00+07:00",
+                    "estimated_minutes": 90,
+                    "priority": 1,
+                    "color": "#596CF0",
+                    "description": "Chương 1",
+                },
+                "raw_expressions": {},
+                "ambiguities": [],
+            }]
+        }
+        self.assertEqual(self.run_extract(answer(json.dumps(canonical_task))), canonical_task)
 
 
 if __name__ == "__main__":

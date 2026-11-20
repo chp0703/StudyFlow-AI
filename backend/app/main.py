@@ -14,18 +14,34 @@ from .clients.rpc import RpcClient
 from .core.config import Settings
 from .core.security import JwtVerifier
 from .nlu.extractor import DeepSeekExtractor, UnavailableExtractor
+from .ingestion.service import SourceExtractor
+from .assessment.questions import DeepSeekQuestionGenerator
 
 
 def create_app(settings: Settings | None = None, *, rpc_transport: httpx.BaseTransport | None = None,
                llm_transport: httpx.BaseTransport | None = None, jwks_transport: httpx.BaseTransport | None = None,
-               clock=None, extractor=None) -> FastAPI:
+               clock=None, extractor=None, question_generator=None) -> FastAPI:
     settings = settings or Settings.from_env()
     clock = clock or (lambda: datetime.now(timezone.utc))
     app = FastAPI(title="StudyFlow F1 API", docs_url=None, redoc_url=None, openapi_url=None)
     if extractor is None:
         extractor = (DeepSeekExtractor(settings.deepseek_base_url, settings.deepseek_api_key, settings.deepseek_model, llm_transport)
                      if settings.deepseek_api_key else UnavailableExtractor())
-    api = Api(settings, RpcClient(settings, rpc_transport, clock), JwtVerifier(settings, jwks_transport, clock), clock, extractor)
+    if question_generator is None:
+        question_generator = DeepSeekQuestionGenerator(
+            settings.deepseek_base_url,
+            settings.deepseek_api_key,
+            settings.deepseek_model,
+            llm_transport,
+            timeout_seconds=settings.question_model_timeout_seconds,
+            max_tokens=settings.question_max_tokens,
+            max_input_chars=settings.question_max_input_chars,
+            max_context_chunks=settings.question_max_context_chunks,
+            max_response_bytes=settings.question_max_response_bytes,
+        )
+    api = Api(settings, RpcClient(settings, rpc_transport, clock), JwtVerifier(settings, jwks_transport, clock), clock, extractor,
+              SourceExtractor(settings.deepseek_base_url, settings.deepseek_api_key, settings.ingestion_model, llm_transport),
+              question_generator=question_generator)
     app.state.llm_transport = llm_transport  # được dùng ở bước trích xuất
     api.register(app)
 
@@ -34,7 +50,7 @@ def create_app(settings: Settings | None = None, *, rpc_transport: httpx.BaseTra
         return fallback_response(request, exc.status_code)
 
     app.add_middleware(
-        CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["GET", "POST", "OPTIONS"],
+        CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["GET", "POST", "PUT", "OPTIONS"],
         allow_headers=["Authorization", "Idempotency-Key", "Content-Type"],
         expose_headers=["X-Request-ID", "Idempotency-Replayed", "Retry-After"], max_age=600)
     return app

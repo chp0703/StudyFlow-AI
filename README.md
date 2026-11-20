@@ -6,7 +6,7 @@ Students add tasks, set free and busy time, and ask an AI assistant to plan thei
 
 > **Plan with AI. Stay in control.**
 
-The repository currently contains the implemented Planner foundation: a React frontend, a FastAPI backend, a deterministic scheduler, a shared contract, Supabase migrations and automated acceptance tests. Assessment and Daily Learning are part of the product scope; their requirements are defined and their implementation is pending.
+The Planner and Assessment backend are implemented with React, FastAPI, a deterministic scheduler, shared contracts, Supabase migrations and automated tests. The Assessment frontend is being developed in PR #55; Daily AI Learning remains planned.
 
 ---
 
@@ -59,7 +59,7 @@ Screens captured from the frontend running in demo mode (no login, in-memory dat
 - **Intelligent Academic Planner** — tasks with an exact start time, duration, priority weight and color; working time configured independently for each day; busy intervals; a weekly calendar view.
 - **Deterministic scheduling** — plans come from a pure scheduler, not from a model. Proposals expose conflicts, warnings and unscheduled work before approval.
 - **Approval-first writes** — chat never approves. Every change becomes a server-issued pending action that the student reviews and confirms.
-- **Study workspace** — a prototype page with multiple-choice practice, a materials list and a Q&A panel. Demo mode makes no claim of upload, extraction or live AI.
+- **Assessment API** — material ingestion, reviewed questions, graded attempts, topic statistics and evidence-backed revision recommendations. The Study page currently offers an illustrative quiz in Demo Mode; its API workspace is being developed in PR #55.
 - **Demo and API modes** — run the UI with local data and no login, or connect it to Supabase Auth and the FastAPI backend.
 - **Database as authority** — Postgres functions validate and write state, with immutable plan history and rejection of stale approvals.
 
@@ -112,7 +112,7 @@ python -m pip install -r backend/requirements.txt
 uvicorn backend.app.main:create_app --factory --port 8000
 ```
 
-Register a local RPC signing key with `supabase/scripts/register_dev_key.sql`, then add the variables below to `frontend/.env.local` and run `npm run dev`. `POST /v1/messages` returns `503` until a `DEEPSEEK_API_KEY` is configured.
+Follow [the local setup guide](docs/local-demo.md) for keys, users and environment variables. Register a local RPC signing key with `supabase/scripts/register_dev_key.sql`; keep secrets outside Git. `POST /v1/messages` returns `503` until a `DEEPSEEK_API_KEY` is configured.
 
 ---
 
@@ -128,7 +128,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=
 
 > Leave them unset to run the demo. Restart the dev server after changing them. Never commit real values.
 
-The backend reads its settings (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `DEEPSEEK_API_KEY`, `RPC_SIGNING_KEY_ID`, `RPC_SIGNING_SECRET_BASE64`, `CORS_ORIGINS` and others) from the root `.env`. See [`.env.example`](.env.example). `.env*` files are gitignored.
+The backend reads its settings (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `DEEPSEEK_API_KEY`, `RPC_SIGNING_KEY_ID`, `RPC_SIGNING_SECRET_BASE64`, `CORS_ORIGINS` and others) from the shell environment. See [`.env.example`](.env.example). Keep `.env*` files out of Git.
 
 ---
 
@@ -174,7 +174,7 @@ The app is a single page; navigation is driven by the left sidebar, which can be
 | ------- | ------------ | ------------------------------------------------------------------------------------------------ |
 | Home    | Trang chủ    | Assistant chat, new conversation and history, plus today's task, deadline and study-time summary |
 | Planner | Lập kế hoạch | Weekly calendar, task list, working-time editor and proposal review                              |
-| Study   | Học tập      | Multiple-choice practice, study materials and AI Q&A prototype                                   |
+| Study   | Học tập      | Illustrative multiple-choice practice in Demo Mode; Assessment API workspace is in PR #55         |
 | Login   | —            | Supabase email login, shown only in API mode                                                     |
 
 ---
@@ -191,7 +191,7 @@ The app is a single page; navigation is driven by the left sidebar, which can be
 
 ## Backend Integration
 
-The API exposes the eight Planner endpoints declared in `contracts/openapi.yaml`. Authentication uses Supabase JWTs, and database access goes through signed RPC envelopes.
+The API exposes the Planner endpoints in `contracts/openapi.yaml` and additive Assessment endpoints in `contracts/assessment-openapi.yaml`. Authentication uses Supabase JWTs, and database access goes through signed RPC envelopes.
 
 | Endpoint                                        | Purpose                              |
 | ----------------------------------------------- | ------------------------------------ |

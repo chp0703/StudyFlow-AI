@@ -417,17 +417,206 @@
 - Chưa kiểm tra tệp logo trong LFS có đủ trên máy.
 - Không chồng lấn tệp với PR #32.
 
-## 2026-11-13 — Viết lại README dự án
+## 2026-11-15 — Đồng bộ main và hoàn thiện Planner follow-up
 
-**Mục tiêu:** Có README giới thiệu StudyFlow AI theo bố cục rõ ràng (demo, tính năng, cách chạy, cấu trúc), để thành viên mới và người xem đánh giá nắm dự án nhanh.
+**Mục tiêu:** đưa backend/contract mới nhất vào PR #40, khôi phục build frontend và làm cho lịch hiển thị đúng ngữ nghĩa trên desktop, laptop và mobile.
 
 **Đã làm**
-- Viết lại `README.md` theo bố cục README tham chiếu: demo, tính năng, công nghệ, cách chạy, biến môi trường, lệnh, cấu trúc thư mục, các trang, luồng lập kế hoạch, API, kiểm thử, quy ước phát triển.
-- Thêm 3 ảnh demo vào `docs/screenshots/` (`Homepage.png`, `Planner.png`, `Study.png`, Git LFS, nền trong suốt và cắt sát khung laptop), ghép từ ảnh chụp giao diện chế độ demo vào mockup MacBook Pro 14.
-- Đối chiếu nội dung với `CLAUDE.md`, `backend/README.md`, `frontend/.env.example` và `contracts/openapi.yaml`; kiểm tra mọi liên kết tương đối và mục lục trỏ đúng.
 
-**Kết quả:** Nhánh `docs/readme-studyflow`; chỉ thay đổi tài liệu và ảnh, không đụng mã nguồn nên không chạy build hay test.
+- Merge `main`, giữ đầy đủ API ingestion và Planner; đồng bộ task mapper với `start_at`, priority số, color và description.
+- Bổ sung helper resize composer, đổi lịch trục thời gian thành view **Tuần** mặc định, agenda thu gọn thành **Tổng quan**, và hiển thị đúng khoảng Thứ 2–Chủ nhật.
+- Thêm layout theo chiều rộng vùng Planner; task panel chuyển xuống dưới khi hẹp, chỉ time-grid cuộn ngang.
+- Cập nhật test và tài liệu Planner theo schema/view mới.
+
+**Kết quả:** nhánh `fix/planner-followup-leader-spec-kent`; 71 frontend tests, TypeScript, production build, contract checker và generated schema check pass. Browser QA pass ở 1440×900, 1024×768 và 390×844, không có page overflow ngang.
 
 **Ghi chú**
-- Phần giấy phép ghi "chưa khai báo"; cần nhóm xác nhận giấy phép chính thức.
-- Ba ảnh demo trong `docs/screenshots/` được đẩy từ máy bằng Git LFS ở commit riêng (GitHub web không nhận PNG của repo); trước commit đó ảnh trong README chưa hiện vì thiếu tệp.
+
+- Bundle frontend vẫn có cảnh báo chunk trên 500 kB; attachment UI vẫn display-only dù backend ingestion đã có.
+- Chưa chạy authenticated ingestion/TimeWindow E2E hoặc Supabase reset; không chạm cloud project.
+
+## 2026-11-15 — Tinh chỉnh lịch tuần Planner và form bổ sung thông tin công việc
+
+**Mục tiêu:** đơn giản hóa giao diện lịch tuần Planner (1 cột giờ bên trái, nút cài đặt giờ dạng icon) và thay cảnh báo thiếu thông tin bằng popup/form đầy đủ trường công việc tự điền sẵn từ prompt trên cả Planner và Trang chủ.
+
+**Đã làm**
+
+- Lịch tuần Planner (`features/planner/WeekCalendar.tsx`, `CalendarDisplaySettings.tsx`, `pages/Planner.tsx`, `styles/planner.css`): giữ một cột giờ duy nhất bên trái, đưa cài đặt giờ hiển thị thành nút icon ở góc trên trái trục giờ, bỏ `CompactWeekCalendar` và các tài liệu nháp dư.
+- Popup bổ sung thông tin Planner (`features/planner/clarification.ts`, `TaskClarificationFields.tsx`, `PlannerClarificationPopup.tsx`, `PlannerCommandComposer.tsx`, `usePlanner.ts`): mở popup bên phải ô nhập lệnh khi `NEEDS_CLARIFICATION` hoặc thiếu thông tin demo, hiển thị đủ các trường công việc (tên, thời gian bắt đầu, hạn, thời lượng, mức ưu tiên, màu sắc, mô tả), tự điền sẵn thông tin đã có trong prompt và cho phép chỉnh sửa.
+- Trang chủ (`features/assistant/AssistantTaskClarificationForm.tsx`, `Assistant.tsx`, `ChatTranscript.tsx`, `apiAssistant.ts`, `types/assistant.ts`): áp dụng form đầy đủ trường công việc tự điền sẵn cho cả API mode (`NEEDS_CLARIFICATION`) và demo mode.
+- Bổ sung và cập nhật test (`clarification.test.ts`, `WeekCalendar.test.ts`, `apiAssistant.test.ts`).
+
+**Kết quả:** nhánh `fix/planner-followup-leader-spec-kent`; `contracts/check_contract.py` và `generate_contract_schema_migration.py --check` pass; frontend `tsc --noEmit`, `vite build` và 75/75 Node tests pass; `supabase db reset`, `supabase test db` (16 files, 504 tests) và backend pytest (176 unit/acceptance + 16 integration = 192 tests) pass.
+
+## 2026-11-18 — Hướng dẫn chạy demo local
+
+**Mục tiêu:** để thành viên khác dựng được demo trên máy mình mà không phải đoán các biến môi trường.
+
+**Đã làm**
+
+- Thêm `docs/local-demo.md`: các bước Supabase local, sinh và đăng ký khóa ký RPC, biến môi trường backend, `.env.local` frontend, tạo tài khoản.
+- `.env.example`: `SUPABASE_URL` mặc định trỏ Supabase local, `RPC_SIGNING_KEY_ID=f1-dev-1` khớp với `register_dev_key.sql`.
+- `README.md`: liên kết tới hướng dẫn và ghi rõ backend chỉ đọc biến môi trường của shell.
+
+**Kết quả:** chỉ thay đổi tài liệu và file mẫu. Các lệnh trong hướng dẫn chưa được chạy lại từ một bản clone sạch.
+
+## 2026-11-18 — Evaluation Learning Assessment F2
+
+**Mục tiêu:** có số đo chất lượng F2 chạy lại được, theo cùng khuôn với evaluation F1, với metric có nguồn trích dẫn.
+
+**Đã làm**
+
+- Thêm metric và oracle (`backend/app/assessment/evaluation.py`) cùng runner `backend/scripts/evaluate_assessment.py` (`offline`, `retrieval-local`, `generate`, `judge`, `score`, `retrieval`), kèm 10 unit test.
+- Viết corpus tiếng Việt gốc gồm 10 tài liệu (4 dev / 6 held-out), 80 truy vấn có nhãn và 6 tài liệu prompt injection (`backend/tests/fixtures/assessment_eval/corpus_vi.json`), đóng băng SHA-256 trước khi chạy held-out.
+- Viết protocol, rubric và kết quả trong `docs/features/assessment/evaluation/`; lưu items sinh ra và bảng chấm trong `results/annotations/`.
+
+**Kết quả:** nhánh `test/f2-evaluation`. Chấm điểm khớp oracle 10.000/10.000; pgTAP 618 pass; tìm kiếm Recall@5 0,70 (từ khóa 1,00, câu hỏi tự nhiên 0,69, không dấu 0,00); held-out 80/120 câu sinh được, 79/80 đạt rubric (Wilson 93,3–99,8%); injection 0/18 vi phạm. Backend unit 140 test pass.
+
+**Ghi chú**
+
+- Chưa có người chấm thật: người chấm A là AI (Claude), người chấm B là `deepseek-flash`, cùng model sinh câu hỏi. Corpus cũng do AI viết.
+- VMLU chưa chạy vì không công bố giấy phép.
+- Phát hiện cần sửa ở PR riêng: `QUESTION_MAX_TOKENS=2048` không đủ cho `count=10`; tìm kiếm không dấu và câu hỏi tự nhiên trả rỗng; sinh câu hỏi chỉ dùng 12 chunk đầu; đáp án MCQ lệch vị trí.
+- Bổ sung VMLU (dữ liệu do chủ dự án đăng nhập và tải từ vmlu.ai, không commit): `deepseek-flash` đạt 83,6% trên Vi-MQA `valid` (744 câu); sinh 90/90 câu từ 30 đoạn Vi-SQuAD, 89/90 đạt rubric theo một người chấm AI. Judge DeepSeek chạy lại sau khi nạp tiền: hai người chấm AI đồng ý 90/90 về việc câu có đạt hay không (cùng loại câu 40).
+
+## 2026-11-19 — Oracle chấm điểm làm tròn half-up như PostgreSQL
+
+**Mục tiêu:** oracle GRD-C01 phải độc lập với `grade_attempt`; trước đây cả hai cùng dùng `round(x, 2)` của Python (half-even trên float) nên che mất lệch so với PostgreSQL (half-up).
+
+**Đã làm**
+
+- `backend/app/assessment/evaluation.py`: `oracle_grade` làm tròn half-up bằng số nguyên (không dùng `Decimal` để không trùng cách cài của `grade_attempt` ở #57).
+- `backend/tests/unit/test_assessment_evaluation.py`: thêm test `1/32 -> 3.13`, `1/3`, `2/3`, `3/4`.
+
+**Kết quả:** trên mã của #57 (`81dcb1b`), oracle cũ khớp 9957/10000 ca (lệch ở ví dụ 9/32: 28.12 so với 28.13), oracle mới khớp 10000/10000. Chưa chạy lại `results/` và phần `db`; cần làm sau khi #57 vào `main`.
+
+## 2026-11-19 — Sửa hướng dẫn chạy demo local
+
+**Mục tiêu:** hướng dẫn trong `docs/local-demo.md` chạy được trên máy không có `psql` và `xxd`.
+
+**Đã làm**
+
+- Bước 2 đăng ký khóa ký RPC qua `docker exec` vào container `supabase_db`, đổi hex sang base64 bằng Python.
+
+**Kết quả:** các lệnh này đã được chạy thật trên Windows (Git Bash) và backend gọi `/v1/tasks` thành công với khóa vừa đăng ký.
+
+## 2026-11-19 — Việc nhỏ sau review #57
+
+**Mục tiêu:** xử lý các góp ý nhỏ của review #57 và hai lỗi môi trường đã gặp khi chạy lại evaluation.
+
+**Đã làm**
+
+- `backend/app/clients/rpc.py`: thêm `operation_fingerprint`; `attempts.py` và `questions.py` dùng chung thay vì tự dựng lại dấu vân tay (tránh lệch khi công thức đổi).
+- `backend/tests/integration/test_recommendations_local_supabase.py`: thêm kiểm tra `candidate_patch` không mở lại action đã hoàn tất (409).
+- `backend/tests/integration/check_quiz_attempt_upgrade.py`: gọi Supabase CLI qua `shutil.which` để chạy được trên Windows (`supabase.cmd`).
+- `.gitattributes`: ép LF cho corpus và CSV đánh giá, vì SHA-256 của chúng được ghi trong kết quả.
+
+**Kết quả:** unit 146/146; acceptance `test_question_http` 5/5 và `test_attempt_http` 6/6; integration recommendations 7/7, attempts 3/3; `check_quiz_attempt_upgrade.py` đạt trên Windows. Corpus checkout ra SHA-256 `19f9c3a9…` đúng giá trị đóng băng.
+
+**Ghi chú**
+
+- Góp ý "UNAUTHENTICATED không nên là lỗi thử lại" ở review #57 là sai: lỗi này đến từ chứng thực RPC của backend và cả `actions.py` của F1 xử lý như vậy; không đổi.
+- Chưa làm: quy tắc suy ra `priority`/`suggested_minutes` từ evidence (cần quyết định sản phẩm, migration và pgTAP).
+## 2026-11-18 — Đánh giá NLU live và dev/held-out set mới cho F1
+
+**Mục tiêu:** đo chất lượng NLU của Planner bằng bộ held-out có số liệu thật và sửa các lỗi trích xuất lặp lại mà đo được.
+
+**Đã làm**
+
+- Chạy live NLU (DeepSeek, 5 lần mỗi bộ) cho dev set 1 và held-out 1; held-out 1 đạt 70% worst-run nên chỉ giữ làm baseline.
+- Thêm `backend/tests/fixtures/nlu_dev2_vi.json` (63 ca) và sửa prompt trong `backend/app/nlu/extractor.py`: `end_at` loại trừ, GET lấy cả ngày/tuần, GENERATE không bắt đầu trong quá khứ, luôn có `deadline_timezone`, giữ nguyên không dấu, UNSUPPORTED cho báo thức và cố ghi đè quy tắc.
+- Thêm `_fill_defaults` trong `extractor.py`: server điền `valid_from` (hôm nay) cho lịch lặp và `view=CURRENT` cho GET khi mô hình bỏ sót; thêm test trong `backend/tests/unit/test_extractor.py`.
+- Thêm `backend/tests/fixtures/nlu_heldout2_vi.json` (100 ca) và chạy một lần.
+- Cập nhật `docs/features/planner/evaluation/README.md` (lệnh live, bảng kết quả, giới hạn diễn giải) và ánh xạ priority trong `annotation-guide.md`; lưu kết quả vào `results/nlu-*.json`.
+- Chạy local (Supabase local, backend, frontend) và sửa `backend/app/orchestrator/chat.py`: `operation_for` bù các khóa nullable còn thiếu của cửa sổ rảnh/bận để không bị contract từ chối; thêm `backend/tests/unit/test_chat_window_defaults.py`.
+
+**Kết quả:** nhánh `test/f1-eval-benchmarks`; 99 backend unit test pass; thử qua API local: "Mỗi thứ sáu bận 7h-9h", "Ngày mai rảnh từ 8h đến 11h" và yêu cầu tối đa 45 phút đều vào hàng chờ xác nhận. NLU worst-run: dev 1 100%, dev 2 96,8%, held-out 1 70%, held-out 2 93% (hai bộ held-out chưa đạt ngưỡng 95%).
+
+**Ghi chú**
+
+- Held-out 2 do một tác giả viết sau khi biết prompt, chạy trước khi thêm `_fill_defaults`, chưa có người duyệt và đã bị đọc kết quả nên coi là dev data; muốn tuyên bố ≥95% cần bộ mới khoảng 200 ca do người khác viết.
+- Chưa chạy lại contract check, benchmark offline, integration/pgTAP; kết quả dev 1 và 2 chạy khi working tree còn thay đổi chưa commit.
+
+## 2026-11-18 — Xử lý review PR #48
+
+**Mục tiêu:** sửa hai sai lệch metric để kết quả đánh giá Planner phản ánh đúng từng task và từng slot.
+
+**Đã làm**
+
+- Giới hạn coverage theo từng task trong `backend/app/f1/scheduler/evaluation.py`; thêm regression với task có retained block vượt số phút còn lại và task chưa được xếp.
+- Chấm `null`, `[]`, `{}` nhất quán giữa slot metrics và frame exact match trong `backend/app/nlu/evaluation.py`; thêm regression cho các slot rỗng ngoài dự đoán.
+- Tính lại slot metrics của 15 run exact-scored từ prediction đã lưu, ghi dấu scorer trong `docs/features/planner/evaluation/results/nlu-*.json` và giải thích nguồn số liệu trong README.
+- Merge `main` mới nhất vào nhánh PR và hợp nhất hai mục worklog bị conflict.
+
+**Kết quả:** PR #48 (`test/f1-eval-benchmarks`); 141 backend unit tests, contract check và generated schema check pass; 15 run đã lưu khớp scorer mới.
+
+**Ghi chú**
+
+- Chưa gọi lại model, chạy acceptance/integration/pgTAP hoặc benchmark offline; số liệu latency và frame exact match là kết quả lịch sử.
+
+## 2026-11-18 — Chạy lại benchmark cho PR #48
+
+**Mục tiêu:** cập nhật số liệu Planner sau khi sửa metric và xác minh bằng DeepSeek live.
+
+**Đã làm**
+
+- Chạy `benchmark_f1.py` offline với 1.000 mẫu và 10 warm-up cho mỗi workload, rồi đo lại latency riêng sau khi kết thúc NLU live; cập nhật `results/offline.json`.
+- Chạy `benchmark_scheduler_quality.py` 100 ca CP-SAT, cập nhật `results/scheduler-quality.json`.
+- Chạy DeepSeek `deepseek-flash` 5 lượt cho dev 1, dev 2 và candidate 2; chạy lại dev 2/candidate 2 tuần tự sau khi lượt đồng thời gặp lỗi dịch vụ, cập nhật ba file `results/nlu-*.json` tương ứng.
+- Cập nhật `docs/features/planner/evaluation/README.md` với số liệu mới, cách tái lập và giới hạn của candidate 2.
+
+**Kết quả:** PR #48 (`test/f1-eval-benchmarks`); offline unit/contract/schema/scheduler pass; CP-SAT `OPTIMAL` 100/100; NLU worst-run dev 1 100%, dev 2 96,8%, candidate 2 95%, không có lỗi provider-unavailable trong các lượt giữ lại.
+
+**Ghi chú**
+
+- Held-out 1 giữ nguyên baseline lịch sử; candidate 2 đã là development data nên mức 95% không chứng minh khả năng khái quát.
+
+## 2026-11-18 — Chuẩn hóa provenance của benchmark F1
+
+**Mục tiêu:** để hash fixture NLU tái lập được trên Windows/Linux và giải thích commit benchmark trước rebase.
+
+**Đã làm**
+
+- Thêm quy tắc LF cho `backend/tests/fixtures/nlu_*.json` trong `.gitattributes`.
+- Sửa `metadata.dataset.sha256` của bốn báo cáo bị ảnh hưởng theo Git blob LF; giữ hash CRLF ban đầu trong `sha256_at_run`, không đổi prediction hay metric.
+- Cập nhật `docs/features/planner/evaluation/README.md`: hash LF của candidate 2, nguồn gốc commit `39aa48f` và lệnh đối chiếu với `804dd113` sau rebase.
+
+**Kết quả:** PR #48 (`test/f1-eval-benchmarks`); bốn hash báo cáo khớp fixture LF, diff provenance bằng 0; 163 backend unit tests pass.
+
+**Ghi chú**
+
+- Không gọi lại DeepSeek hoặc benchmark; `git_commit` trong báo cáo vẫn ghi đúng commit lịch sử đã chạy.
+
+## 2026-11-19 — Làm rõ trạng thái held-out 1 trong evaluation F1
+
+**Mục tiêu:** README không được khẳng định điều không kiểm chứng được về held-out 1.
+
+**Đã làm**
+
+- `docs/features/planner/evaluation/README.md`: thay câu "kết quả từng ca được cố ý không xem" bằng mô tả đúng: đã xem tổng hợp theo nhóm lỗi, file kết quả từng ca nằm trong repo, các quy tắc prompt thêm sau trùng với nhóm lỗi lớn nhất của held-out 1 nên không loại trừ được ảnh hưởng; bộ này và candidate 2 đều không còn là held-out.
+- Đẩy tag `eval-run-39aa48f` trỏ vào commit chạy benchmark để lệnh `git diff` trong README tái lập được.
+
+**Kết quả:** chỉ thay đổi tài liệu và tag. Số liệu không đổi.
+
+## 2026-11-13 — Viết lại README dự án
+
+**Mục tiêu:** Giới thiệu StudyFlow AI theo bố cục rõ ràng để thành viên mới và người xem đánh giá nắm dự án nhanh.
+
+**Đã làm**
+- Viết lại `README.md` với demo, tính năng, cách chạy, cấu trúc, API, kiểm thử và quy ước phát triển.
+- Thêm ba ảnh demo Git LFS vào `docs/screenshots/` và kiểm tra liên kết tương đối.
+
+**Kết quả:** PR #35 (`docs/readme-studyflow`); chỉ thay đổi tài liệu và ảnh nên không chạy build hay test.
+
+**Ghi chú**
+- Chưa có giấy phép nguồn mở được công bố.
+
+## 2026-11-20 — Đồng bộ PR #35 với main
+
+**Mục tiêu:** Giải quyết xung đột merge và cập nhật trạng thái tính năng trong README.
+
+**Đã làm**
+- Merge `origin/main`, kết hợp hướng dẫn cấu hình mới và giữ đầy đủ worklog của hai nhánh.
+- Cập nhật README theo backend Assessment hiện có và trạng thái frontend PR #55.
+
+**Kết quả:** PR #35 (`docs/readme-studyflow`); kiểm tra liên kết và xung đột được thực hiện trước khi push.

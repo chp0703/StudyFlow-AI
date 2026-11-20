@@ -2184,5 +2184,13 @@
         "bearerFormat": "JWT"
       }
     }
+  },
+  "x-ingestion-contract": {
+    "version": "1.0.0",
+    "document": "ingestion-openapi.yaml"
+  },
+  "x-assessment-contract": {
+    "version": "1.0.0",
+    "document": "assessment-openapi.yaml"
   }
 }

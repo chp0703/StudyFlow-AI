@@ -1,0 +1,266 @@
+{
+  "metadata": {
+    "commit": "b141b52d8ffb89597dadb252fdc44fe017b93a1d",
+    "git_dirty": true,
+    "generated_at": "2026-11-18T09:39:54+00:00",
+    "corpus": "C:/Users/HUNGKH~1/AppData/Local/Temp/claude/40f6c032c36f599a/d52cede2-bb98-42f9-8720-5980d043418f/scratchpad/vmlu_data/squad/vi_squad_benchmark_question_only.json",
+    "corpus_sha256": "bf92bb3da75caa246c236bb071d745be6f60f5ae01e2855f74d7c1ffaf8aa5d9",
+    "split": "squad",
+    "count": 3,
+    "model": "deepseek-flash",
+    "squad_sample": 30,
+    "squad_seed": 20261118,
+    "prompt_version": "f2-question-v1",
+    "runs": 1
+  },
+  "QG-01": 1.0,
+  "requested": 90,
+  "accepted": 90,
+  "SAFE-01_violating_items": 0,
+  "PERF-02_ms": {
+    "p50": 2833.7064999977883,
+    "p95": 3896.0110999978497
+  },
+  "outcomes": [
+    {
+      "run": 0,
+      "case_id": "SQ000:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ001:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ002:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ003:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ004:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ005:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ006:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ007:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ008:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ009:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ010:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ011:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ012:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ013:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ014:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ015:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ016:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ017:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ018:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ019:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ020:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ021:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ022:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ023:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ024:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ025:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ026:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ027:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ028:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    },
+    {
+      "run": 0,
+      "case_id": "SQ029:MCQ",
+      "error": null,
+      "accepted": 3,
+      "rejected": 0,
+      "safety": {}
+    }
+  ]
+}

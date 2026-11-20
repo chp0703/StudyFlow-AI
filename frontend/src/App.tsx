@@ -97,7 +97,7 @@ export default function App() {
 
   const { session, loading: sessionLoading } = useSession()
 
-  const server = useServerData(apiEnabled && !!session)
+  const server = useServerData(apiEnabled && !!session, session?.user.id)
 
   const [demoTasks, setTasks] = useState<Task[]>([])
 
@@ -390,7 +390,7 @@ export default function App() {
           tasks: server.tasks,
 
           events: server.events,
-
+          windows: server.windows,
           availability: server.availability,
 
           revision: server.revision,
@@ -497,6 +497,7 @@ export default function App() {
           <div className="sidebar-home-item">
             <Button
               className={`nav-item ${page === "Assistant" ? "active" : ""}`}
+              data-page="Assistant"
               aria-label="Trang chủ"
               aria-current={page === "Assistant" ? "page" : undefined}
               onClick={() => go("Assistant")}
@@ -518,6 +519,7 @@ export default function App() {
             <Button
               key={n.name}
               className={`nav-item ${page === n.name ? "active" : ""}`}
+              data-page={n.name}
               aria-label={n.label}
               aria-current={page === n.name ? "page" : undefined}
               onClick={() => go(n.name)}
@@ -569,6 +571,7 @@ export default function App() {
         </div>
         {page === "Planner" && (
           <Planner
+            windows={apiEnabled ? server.windows : []}
             tasks={tasks}
             events={apiEnabled ? server.events : tasks}
             userId={session?.user.id ?? "demo"}

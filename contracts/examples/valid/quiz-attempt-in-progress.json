@@ -1,0 +1,23 @@
+{
+  "assessment_version": "1.0.0",
+  "attempt_id": "00000000-0000-4000-8000-000000000231",
+  "user_id": "00000000-0000-4000-8000-000000000001",
+  "material_id": "00000000-0000-4000-8000-000000000201",
+  "origin": "MANUAL",
+  "session_outcome_id": null,
+  "status": "IN_PROGRESS",
+  "question_ids": [
+    "00000000-0000-4000-8000-000000000221",
+    "00000000-0000-4000-8000-000000000222"
+  ],
+  "total_questions": 2,
+  "valid_response_count": 0,
+  "correct_count": 0,
+  "incorrect_count": 0,
+  "omitted_count": 2,
+  "score_percent": null,
+  "started_at": "2026-11-16T08:10:00Z",
+  "submitted_at": null,
+  "created_at": "2026-11-16T08:10:00Z",
+  "updated_at": "2026-11-16T08:10:00Z"
+}

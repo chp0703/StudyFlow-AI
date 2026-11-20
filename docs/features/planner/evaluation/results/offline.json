@@ -1,0 +1,99 @@
+{
+  "schema_version": "1.0",
+  "metadata": {
+    "generated_at": "2026-11-19T03:38:46.977231+00:00",
+    "git_commit": "39aa48f357f869b69e97d8ac8fd3a9fb65fe4c68",
+    "git_dirty": false,
+    "environment": {
+      "python": "3.12.10",
+      "os": "Windows-11-10.0.26300-SP0",
+      "processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel"
+    },
+    "dataset": {
+      "path": "backend\\tests\\fixtures\\nlu_eval_vi.json",
+      "sha256": "c6287a098584be96c15bc2a0556054f07cbc474d4429b886d7071d0e677ba6da",
+      "sha256_at_run": "c809680f8c22a91f7e80fd82f3643460fbd4dd736f648fb11168c9f9c470e8ab"
+    },
+    "prompt_sha256": "891dfa2a494ec0f5af84db1fa94393d635edf36807446e41e79d8efc90392e14",
+    "source_sha256": {
+      "backend\\app\\f1\\scheduler\\engine.py": "b3570960a96bcd06426c9c9f8d7ef30b981186f2d6ad1ea56a1f3618fac08d36",
+      "backend\\app\\f1\\scheduler\\evaluation.py": "96407aff401a92cdc37da2c8f5b2506b718dcbcbe28b80b26255eaf33d0d5889",
+      "backend\\app\\nlu\\evaluation.py": "6816b019a8646744c30be241cccbceb77333f37175bb54d3ca6c9f5bd30be5eb",
+      "backend\\scripts\\benchmark_f1.py": "6a0a7a2cba04c9ddd3c330b06aa0b98aa4a20725608c952be1598c11aa03f1a2"
+    }
+  },
+  "unit": {
+    "ok": true,
+    "seconds": 9.8,
+    "tail": [
+      "Ran 141 tests in 8.085s",
+      "",
+      "OK"
+    ]
+  },
+  "contract": {
+    "ok": true,
+    "seconds": 4.9,
+    "tail": [
+      "PASS: 187 definitions; 8 API paths; 10 tools; 10 entities; 126 positive/negative fixtures; OpenAPI 3.1; source/mapping/reference checks.",
+      "Scope: static contracts and pure payload invariants only. DB/auth/transaction/UI runtime cases remain unrun."
+    ]
+  },
+  "generated_schema": {
+    "ok": true,
+    "seconds": 0.1,
+    "tail": [
+      "contract schema migration is up to date"
+    ]
+  },
+  "scheduler": {
+    "ok": true,
+    "repetitions": 1000,
+    "warmups": 10,
+    "cases": {
+      "10_tasks_3_days": {
+        "hard_constraint_violations": 0,
+        "deterministic": true,
+        "scheduled_ratio": 1.0,
+        "mean_latency_ms": 2.68,
+        "latency_ms_p50": 2.426,
+        "latency_ms_p95": 3.808,
+        "latency_ms_p99": 4.365,
+        "latency_sample_count": 1000,
+        "latency_samples_sha256": "7a92883c9f3858a5e438ba527696c9955dd89113acf80876789ce961a056dc15",
+        "ok": true
+      },
+      "50_tasks_7_days": {
+        "hard_constraint_violations": 0,
+        "deterministic": true,
+        "scheduled_ratio": 0.56,
+        "mean_latency_ms": 37.702,
+        "latency_ms_p50": 34.662,
+        "latency_ms_p95": 53.861,
+        "latency_ms_p99": 66.106,
+        "latency_sample_count": 1000,
+        "latency_samples_sha256": "2770f2df3257b1e3562c28c19e2e5e14f443eee4dfdf29ece1d600abb9156610",
+        "ok": true
+      },
+      "200_tasks_14_days": {
+        "hard_constraint_violations": 0,
+        "deterministic": true,
+        "scheduled_ratio": 0.28,
+        "mean_latency_ms": 519.717,
+        "latency_ms_p50": 374.621,
+        "latency_ms_p95": 903.261,
+        "latency_ms_p99": 1030.834,
+        "latency_sample_count": 1000,
+        "latency_samples_sha256": "f6669ec7b2ebe1c1634c25393018b3315846a4d858ea77c5af2774084c3be694",
+        "ok": true
+      }
+    }
+  },
+  "nlu": {
+    "ok": null,
+    "status": "NOT_RUN",
+    "reason": "DEEPSEEK_API_KEY is not set",
+    "case_count": 40,
+    "minimum_passes": 38
+  }
+}

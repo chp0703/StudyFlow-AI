@@ -7,7 +7,7 @@ from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .intervals import clip, is_single_local_day, merge_intervals
-from .models import Interval
+from .models import PRODUCT_TIMEZONE, Interval
 
 
 _RFC3339_RE = re.compile(
@@ -62,8 +62,6 @@ def _parse_uuid(value: object, field_name: str) -> UUID:
 def _parse_rfc3339(value: object, field_name: str, *, minute_aligned: bool) -> datetime:
     if not isinstance(value, str) or not _RFC3339_RE.fullmatch(value):
         raise ValueError(f"{field_name} must be a valid RFC 3339 timestamp with offset")
-    if minute_aligned and "." in value:
-        raise ValueError(f"{field_name} must be minute-aligned without fractional seconds")
     normalized = f"{value[:-1]}+00:00" if value.endswith("Z") else value
     try:
         parsed = datetime.fromisoformat(normalized)
@@ -89,9 +87,12 @@ def _parse_timezone(value: object) -> ZoneInfo:
     if not isinstance(value, str) or not value.strip():
         raise ValueError("timezone must be a non-empty IANA timezone name")
     try:
-        return ZoneInfo(value)
+        tz = ZoneInfo(value)
     except (ZoneInfoNotFoundError, KeyError, ValueError) as exc:
         raise ValueError(f"Invalid IANA timezone: {value}") from exc
+    if value != PRODUCT_TIMEZONE:
+        raise ValueError(f"timezone must be {PRODUCT_TIMEZONE}: {value}")
+    return tz
 
 
 def _resolve_strict_local_datetime(local_date: date, local_time: time, tz: ZoneInfo) -> datetime:

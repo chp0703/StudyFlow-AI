@@ -1,0 +1,81 @@
+﻿question_id,answer_correct,answerable_from_source,single_correct_answer,on_topic,distractor_plausibility,clarity,note
+5b3f2d3c-3c06-4089-9012-1e4a663b4ddd,1,1,1,1,2,3,Nguồn nêu rõ định luật I còn gọi là định luật quán tính; các phương án khác không liên quan.
+08bddf5a-2113-461c-b61f-6f9cbf8d000d,1,1,1,1,2,3,"Nguồn nêu rõ vật đang chuyển động sẽ tiếp tục chuyển động thẳng đều khi hợp lực bằng không; đáp án A đúng, các phương án khác trái với định luật I."
+77a57262-8a5d-4c68-8c93-b6e2e0491d8f,1,1,1,1,3,3,Nguồn nêu rõ định luật I chỉ đúng trong hệ quy chiếu quán tính; các phương án còn lại đều sai.
+1ab545e3-c1f3-442d-937d-2fce256bbd45,1,1,1,1,3,3,Nguồn nêu rõ F = m·a là biểu thức định luật II Newton; các phương án còn lại sai về đại số.
+7328a685-b05b-4341-829c-b194ce0189bd,1,1,1,1,3,3,"Nguồn nêu rõ gia tốc tỉ lệ nghịch với khối lượng; đáp án A đúng, các lựa chọn khác sai."
+c8598ab0-c24d-43ff-a7ff-5482c7ac8cca,1,1,1,1,2,3,"Nguồn nêu rõ 1 N truyền cho vật 1 kg gia tốc 1 m/s²; đáp án A đúng, các phương án khác sai rõ."
+62910d2b-eab9-4d0b-8c55-08d95a2cb0da,1,1,1,1,2,3,Nguồn nêu rõ khối lượng đặc trưng cho mức quán tính; các phương án còn lại không đúng theo nguồn.
+12d37772-6138-4005-b8dd-b07b101f52c4,1,1,1,1,2,3,Nguồn nêu rõ P = m·g; các phương án còn lại sai về mặt công thức.
+f0402ce9-217b-4300-bb00-4e3d77d33442,1,1,1,1,3,3,"Nguồn nêu rõ hai lực cùng giá, cùng độ lớn, ngược chiều; đáp án A đúng, các lựa chọn khác sai rõ."
+8849dad8-b381-443a-a042-826867f133e3,1,1,1,1,2,3,"Nguồn nêu rõ lực và phản lực đặt vào hai vật khác nhau nên không cân bằng, không triệt tiêu; đáp án A đúng, các phương án khác sai theo nguồn."
+c7363290-03f0-40d9-9ce7-6e30a2fa58b9,1,1,1,1,3,3,"Nguồn nêu rõ định luật I còn gọi là định luật quán tính; câu TRUE/FALSE rõ ràng, đáp án TRUE đúng."
+31590ee7-57ce-439f-876f-db13ca403d6d,1,1,1,1,2,3,"Nguồn nêu rõ định luật I chỉ đúng trong hệ quy chiếu quán tính, nên phát biểu là sai; đáp án FALSE đúng."
+6ef6f7aa-c22a-47af-8c6b-7833e3aa6d08,1,1,1,1,2,3,"Nguồn nêu rõ gia tốc tỉ lệ thuận với lực và tỉ lệ nghịch với khối lượng, nên phát biểu 'tỉ lệ nghịch với hợp lực' là sai; đáp án FALSE đúng."
+db7ccf15-3e46-4dcf-be46-2650beb79b63,1,1,1,1,3,3,"Nguồn nêu đúng định nghĩa niutơn trong hệ SI; câu TRUE/FALSE rõ ràng, đáp án TRUE khớp nguồn."
+edcce509-3abe-476e-b0a1-1f60cd75507f,1,1,1,1,2,3,"Nguồn nêu rõ khối lượng không đổi khi mang lên Mặt Trăng, chỉ trọng lượng giảm; đáp án FALSE đúng. Câu TRUE/FALSE đơn giản, dễ hiểu."
+1f5047ba-f3db-41ce-b097-ca12c5513297,1,1,1,1,2,3,"Nguồn xác nhận định luật III: hai lực cùng giá, cùng độ lớn, ngược chiều; đáp án TRUE đúng. Câu TRUE/FALSE đơn giản, distractor ít nhiễu."
+222c6bac-923e-4205-b2fb-ef791470480f,1,1,1,1,2,3,"Nguồn nêu rõ lực và phản lực đặt vào hai vật khác nhau, không cân bằng; đáp án FALSE đúng. Câu TRUE/FALSE đơn giản, rõ ràng."
+7a6be8db-1956-4d57-86f0-260b049baa82,1,1,1,1,2,3,"Nguồn nêu rõ lực và phản lực xuất hiện, mất đi đồng thời và cùng loại; câu TRUE/FALSE đơn giản, đáp án đúng duy nhất."
+d43b06b3-7efb-44c3-854b-cc87e92887c0,1,1,1,1,2,3,"Nguồn nêu rõ khi phanh gấp hành khách chúi về phía trước, nên phát biểu 'ngả về phía sau' là sai; đáp án FALSE đúng."
+f25931bb-8e1f-4002-8450-ea0085e22066,1,1,1,1,2,3,"Nguồn nêu rõ khối lượng là đại lượng vô hướng, dương, không đổi và có tính cộng; đáp án TRUE đúng. Câu dạng đúng/sai nên distractor đơn giản."
+f8f23a50-4342-481d-978f-8707d6267ee4,1,1,1,1,2,3,Nguồn nêu rõ nguyên tử các nguyên tố khác liên kết để đạt cấu hình bền vững giống khí hiếm; đáp án TRUE đúng. Chỉ có 2 lựa chọn Đúng/Sai nên độ nhiễu hạn chế.
+669f6cf9-c62a-4ff2-8027-d83664684597,1,1,1,1,2,3,Câu đúng nguyên văn định nghĩa trong nguồn; dạng TRUE/FALSE nên distractor đơn giản.
+7d361a00-d135-45d6-9929-93922b58ae57,1,1,1,1,2,3,"Nguồn nêu rõ Cl nhận 1 electron thành Cl−, Na nhường electron; phát biểu sai nên đáp án FALSE đúng. Chỉ có 2 lựa chọn Đúng/Sai nên độ nhiễu hạn chế."
+d06d539f-d175-44b9-b528-db1ff5ec29c7,1,1,1,1,2,3,Nguồn nêu rõ hợp chất ion có nhiệt độ nóng chảy cao và dẫn điện khi nóng chảy/tan trong nước; đáp án TRUE đúng. Chỉ có 2 lựa chọn Đúng/Sai nên độ nhiễu hạn chế.
+b4f52476-46a5-4b67-8f0b-ae6b258fcb6f,1,1,1,1,2,3,"Nguồn nêu rõ N2 góp chung ba cặp electron tạo liên kết ba, khớp đáp án TRUE; câu đúng/sai đơn giản, distractor ít."
+b5ba9687-e20d-426b-ab0e-1467d70f2950,1,1,1,1,2,3,"Nguồn nêu rõ HCl có liên kết cộng hóa trị có cực, nên phát biểu 'không cực' là sai; đáp án FALSE đúng."
+71f2c0c8-4e73-4eb7-b0f5-8789ff5fef3c,1,1,1,1,3,3,"Nguồn khẳng định flo có độ âm điện lớn nhất khoảng 3,98 theo thang Pauling; đáp án TRUE đúng và suy ra trực tiếp từ nguồn."
+572f7fbc-3e25-4e06-9928-6509667a9059,1,1,1,1,2,3,"Nguồn nêu rõ Δχ từ 1,7 trở lên thường là liên kết ion; đáp án TRUE đúng. Câu dạng đúng/sai nên độ nhiễu hạn chế."
+4aa7f492-9837-4c98-b206-0ee93725dbe8,1,1,1,1,2,3,"Nguồn nêu rõ liên kết hiđro yếu hơn nhiều so với liên kết ion và cộng hóa trị, nên đáp án FALSE đúng; câu hỏi đúng chủ đề, chỉ có hai lựa chọn đối lập."
+f2471557-4bed-4f9b-b33f-b5e4b9bbb77b,1,1,1,1,2,3,Nguồn trực tiếp khẳng định liên kết hiđro giải thích nhiệt độ sôi cao bất thường của nước so với H2S; đáp án TRUE đúng.
+a5df7146-7200-4ce8-aca4-0dd9890a3885,1,1,1,1,2,3,Câu đúng theo định nghĩa cầu trong nguồn; dạng TRUE/FALSE nên distractor đơn giản.
+e26d32be-2770-470d-8984-13430306bbb5,1,1,1,1,2,3,"Nguồn nêu rõ quy luật cầu: giá tăng thì lượng cầu giảm, nên phát biểu trong đề là sai; đáp án FALSE đúng."
+84ff2a61-7eec-4d4f-8215-67f0a09d0a02,1,1,1,1,2,3,"Nguồn nêu rõ giá của chính hàng hóa thay đổi gây di chuyển dọc theo đường cầu, không phải dịch chuyển; đáp án FALSE đúng."
+d5caa16f-379e-4b96-94c0-2c1bf2dcf69c,1,1,1,1,2,3,"Nguồn nêu rõ trà và cà phê là hàng hóa thay thế, giá cà phê tăng làm cầu trà tăng; đáp án TRUE đúng."
+3403efc4-08d6-4da2-bd93-e400f37a8a1f,1,1,1,1,2,3,"Nguồn nêu rõ xe máy và xăng là hàng hóa bổ sung, giá xăng tăng làm cầu xe máy giảm; đáp án TRUE đúng và suy ra trực tiếp từ nguồn."
+2bbf053a-d3c8-4004-ad60-c283db7a6760,1,1,1,1,2,3,"Nguồn nêu đúng quy luật cung: giá tăng thì lượng cung tăng khi các yếu tố khác không đổi, đường cung dốc lên; đáp án TRUE khớp nguồn."
+948692f9-b809-49c1-a1c8-306cb82e8159,1,1,1,1,2,3,"Nguồn nêu rõ công nghệ mới giảm chi phí làm đường cung dịch sang phải, nên phát biểu 'dịch sang trái' là sai; đáp án FALSE đúng."
+1aa83a12-22c8-405b-91ba-13a9a7239cb9,1,1,1,1,3,3,"Nguồn định nghĩa đúng giá cân bằng là mức giá tại đó lượng cầu bằng lượng cung, giao điểm hai đường; đáp án TRUE chính xác."
+ff67a3d4-ea3d-469e-9ad4-e22ce985dff1,1,1,1,1,2,3,"Nguồn nêu rõ giá cao hơn cân bằng gây dư thừa, không phải thiếu hụt; đáp án FALSE đúng."
+2a63a94f-c230-42aa-8b7a-2565f5b9a73d,1,1,1,1,2,3,Nguồn xác nhận đúng cả hai ý; câu dạng TRUE/FALSE nên distractor hạn chế.
+647c52b4-2ed0-467b-a02d-83d8e0056452,1,1,1,1,3,3,"Nguồn nêu rõ ngăn xếp hoạt động theo LIFO; câu TRUE/FALSE rõ ràng, đáp án TRUE đúng."
+f35b507b-3b4f-4dbf-8ac5-5cadded9a35b,1,1,1,1,2,3,"Nguồn nêu rõ peek chỉ xem đỉnh không xóa, pop mới lấy và xóa; câu TRUE/FALSE rõ ràng, đáp án FALSE đúng."
+9304917f-1b52-48ad-9d35-f530c5595124,1,1,1,1,2,3,"Nguồn nêu rõ push và pop đều O(1) với mảng động hoặc danh sách liên kết; câu TRUE/FALSE đơn giản, đáp án TRUE đúng."
+426afea4-b25f-443f-9281-f23203312030,1,1,1,1,2,3,"Nguồn nêu rõ pop trên ngăn xếp rỗng là underflow, không phải overflow; đáp án FALSE đúng."
+c03f222d-b82f-4b8c-a8ca-ce958263b403,1,1,1,1,1,3,"Nguồn nêu rõ call stack và undo là ứng dụng của ngăn xếp; câu TRUE/FALSE đơn giản, đáp án TRUE đúng."
+13f9618c-62ea-4c86-8a9e-40b7acd9a2d5,1,1,1,1,3,3,"Nguồn nêu rõ hàng đợi hoạt động theo FIFO, khớp đáp án TRUE."
+257cdf9e-2927-4927-9dbd-ddb8cedcdb56,1,1,1,1,2,3,Nguồn nêu rõ cài đặt hàng đợi bằng mảng thông thường dời phần tử mỗi lần dequeue tốn O(n); câu TRUE/FALSE rõ ràng.
+c807db5e-1eda-4d97-8033-0b126fe4276f,1,1,1,1,2,3,"Nguồn nêu rõ hàng đợi vòng dùng hai chỉ số quay vòng theo chia lấy dư, enqueue và dequeue đều O(1); khớp đáp án TRUE."
+7659c078-1c17-4d29-a6dd-17cf0e332d16,1,1,1,1,2,3,"Nguồn nêu rõ BFS dùng hàng đợi và thăm đỉnh theo khoảng cách tăng dần; câu TRUE/FALSE đơn giản, đáp án TRUE khớp nguồn."
+bb429d10-726c-4f30-ac59-b1662e8a9210,1,1,1,1,2,3,"Nguồn nêu rõ hàng đợi ưu tiên không tuân theo FIFO và cài đặt bằng đống nhị phân O(log n), nên đáp án FALSE đúng."
+394669fc-0546-4301-9d3b-1ba0afdbcd7e,1,1,1,1,3,3,"Nguồn nêu rõ Việt Nam nằm hoàn toàn trong vùng nội chí tuyến bán cầu Bắc; đáp án B đúng, các lựa chọn khác sai rõ."
+b186b3ec-7832-4ef7-984b-453197de3e77,1,1,1,1,2,3,Nguồn nêu rõ phần lớn lãnh thổ có nhiệt độ trung bình năm trên 20°C; các phương án khác sai rõ ràng.
+1552410a-d7e7-4c67-ac6c-566a44102631,1,1,1,1,2,3,"Nguồn nêu rõ lượng mưa trung bình năm 1500–2000 mm, khớp đáp án C; các phương án khác không khớp."
+16876811-23aa-4ff8-984c-6aeb91412b4c,1,1,1,1,2,3,"Nguồn nêu rõ độ ẩm không khí cao, trên 80%, khớp đáp án A; các phương án khác đều thấp hơn và sai."
+34559f9e-2aa1-49d9-a06c-98375c751a40,1,1,1,1,3,3,Nguồn nêu rõ gió mùa mùa đông xuất phát từ áp cao Xibia; các phương án khác không được nguồn hỗ trợ.
+160fa443-62e6-4262-a41f-0f3f0ca98304,1,1,1,1,3,3,Nguồn nêu rõ gió mùa Đông Bắc gần như bị chặn lại ở dãy Bạch Mã; các phương án khác không phù hợp.
+b45122db-e015-4015-9ab5-73248bf0a569,1,1,1,1,2,3,"Nguồn nêu rõ gió mùa mùa hạ hoạt động từ khoảng tháng 5 đến tháng 10, khớp đáp án B; các phương án còn lại đều sai."
+c06f2126-a8fc-4fd9-8ea4-c65bf2154e11,1,1,1,1,3,3,Nguồn nêu rõ gió khô nóng ở Bắc Trung Bộ và phía nam Tây Bắc gọi là gió Lào; các phương án còn lại đều sai.
+8d39570a-2dbf-49ce-a202-007ef9230af1,1,1,1,1,2,3,Nguồn nêu rõ phía nam Bạch Mã nhiệt độ trung bình năm trên 25°C; các phương án còn lại đều sai và không hợp lý.
+cae43d3b-36cc-4bfd-a07c-d4e1ff66a823,1,1,1,1,2,3,"Nguồn nêu rõ mùa bão từ tháng 6 đến tháng 12, khớp đáp án C; các phương án khác không được nguồn hỗ trợ."
+2d00f9c7-ce5c-416a-8bbe-51e84b976158,1,1,1,1,3,3,"Nguồn nêu rõ Việt Nam nằm hoàn toàn trong vùng nội chí tuyến bán cầu Bắc, nhận bức xạ lớn, nhiệt độ trung bình năm cao; đáp án TRUE đúng và suy ra trực tiếp từ nguồn."
+b658a194-223f-4a79-82e3-9b860c233699,1,1,1,1,2,3,"Nguồn nêu rõ lượng mưa 1500–2000 mm và độ ẩm trên 80%, khớp đáp án TRUE; dạng TRUE/FALSE chỉ có một lựa chọn đúng."
+f8347a44-2892-4819-b4d8-4ab3964cae53,1,1,1,1,2,3,"Nguồn nêu rõ gió mùa mùa đông từ tháng 11 đến tháng 4, tháng 5-10 là gió mùa mùa hạ; câu khẳng định sai nên đáp án FALSE đúng."
+b0415c5e-168b-4b3a-81f5-2e0c342d1b07,1,1,1,1,2,3,"Nguồn xác nhận gió mùa Đông Bắc xuất phát từ áp cao Xibia và gần như bị chặn ở dãy Bạch Mã; câu TRUE/FALSE rõ ràng, chỉ một đáp án đúng."
+2a97a135-ef97-4ea9-b844-caaf825472c9,1,1,1,1,2,3,Nguồn xác nhận đúng câu phát biểu; dạng TRUE/FALSE chỉ có một lựa chọn đúng.
+a20bee47-8b56-4537-9d7d-173ce5a2771c,1,1,1,1,2,3,"Nguồn khẳng định rõ dãy Bạch Mã là ranh giới khí hậu quan trọng giữa hai miền; câu TRUE/FALSE đơn giản, đáp án TRUE đúng."
+d34c089d-94aa-41d2-b350-279c6aa6f391,1,1,1,1,2,3,"Nguồn nêu rõ đặc điểm mùa đông lạnh và 2–3 tháng dưới 18°C thuộc phía bắc dãy Bạch Mã, phía nam nóng quanh năm; câu phát biểu sai nên đáp án FALSE đúng."
+201985f1-81dd-4234-bcf5-6207b4a173be,1,1,1,1,3,3,"Nguồn nêu đúng quy luật giảm 0,6°C/100m và dẫn chứng Sa Pa, Đà Lạt mát mẻ quanh năm; đáp án TRUE khớp nguồn."
+b7e8de46-4447-468e-b376-74946cd1418e,1,1,1,1,2,3,"Nguồn xác nhận đúng nguyên văn nhận định; câu hỏi Đúng/Sai rõ ràng, đáp án duy nhất."
+dc305e0b-569d-499b-88ad-7ea9c61ef068,1,1,1,1,2,3,"Nguồn nêu rõ khí hậu nhiệt đới ẩm giúp cây trồng sinh trưởng quanh năm, trồng nhiều vụ, nên mệnh đề 'chỉ gây khó khăn' là sai; đáp án FALSE đúng."
+2783a5d6-0cf7-473b-9e63-23b6408876a3,1,1,1,1,3,3,"Nguồn ghi rõ Nguyễn Du (1765–1820), khớp đáp án TRUE."
+23be7b84-d25f-484e-80e9-80e6850b2e3f,1,1,1,1,1,3,"Nguồn nêu rõ quê quán Nguyễn Du tại làng Tiên Điền, huyện Nghi Xuân, tỉnh Hà Tĩnh; câu TRUE đúng. Dạng đúng/sai nên distractor hạn chế."
+72c49a24-cbcb-4780-b36e-85cb4c4cf982,1,1,1,1,3,3,"Nguồn nêu rõ tên gốc là Đoạn trường tân thanh; câu TRUE/FALSE rõ ràng, đúng chủ đề."
+6204c8ed-fbaa-4039-9d38-d097d16a7ac1,1,1,1,1,2,3,"Nguồn nêu rõ Truyện Kiều viết bằng chữ Nôm, thể lục bát; câu phát biểu sai vì nói chữ Hán."
+17ee4ee7-0730-496a-af1b-a6292bdec8e2,1,1,1,1,2,3,"Nguồn ghi rõ tác phẩm gồm 3254 câu, khớp đáp án TRUE; câu hỏi đúng/sai đơn giản, ít nhiễu."
+56bf9140-4730-4859-ae6a-a2d7085038a0,1,1,1,1,2,3,"Nguồn nêu rõ Nguyễn Du dựa vào Kim Vân Kiều truyện của Thanh Tâm Tài Nhân, nên mệnh đề 'hoàn toàn độc lập' là sai; đáp án FALSE đúng."
+3212a283-8c2b-47b4-8cbb-a06aa59ba624,1,1,1,1,3,3,Nguồn nêu rõ Kiều bán mình cho Mã Giám Sinh để có tiền cứu cha và em; đáp án TRUE đúng.
+605ead09-b2ef-4e39-8e0e-ffdbc3e57f0a,1,1,1,1,2,3,"Nguồn nêu rõ Kiều nhờ Thúy Vân thay mình kết duyên với Kim Trọng; câu TRUE/FALSE đơn giản, đáp án TRUE đúng."
+2f0cbdb4-d69a-4484-ac0c-6d4571b083f9,1,1,1,1,2,3,"Nguồn nêu rõ Hồ Tôn Hiến lừa Từ Hải ra hàng, không phải Thúc Sinh; đáp án FALSE đúng."
+59ad2467-5a37-4e70-996c-8f3aa7ead7f7,1,1,1,1,2,3,Nguồn xác nhận năm 2015 UNESCO vinh danh Nguyễn Du nhân 250 năm sinh; câu đúng-sai rõ ràng.

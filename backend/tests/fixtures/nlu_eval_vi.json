@@ -1,8 +1,9 @@
 {
- "description": "40 Vietnamese messages for the production extractor; pass = intent sequence and listed slots both match.",
+ "description": "Development set of 40 Vietnamese messages; pass = intent sequence and listed slot assertions match.",
+ "scoring_mode": "assertions",
  "now": "2026-11-05T10:00:00+07:00",
  "timezone": "Asia/Ho_Chi_Minh",
- "pass_threshold": 38,
+ "minimum_rate": 0.95,
  "cases": [
   {
    "text": "Thêm bài tập OOP hạn thứ 6 tuần sau, làm khoảng 2 tiếng",
@@ -74,7 +75,7 @@
     {
      "intent": "CREATE_TASK",
      "slots": {
-      "priority": "HIGH",
+      "priority": 1,
       "deadline_date": "2026-11-09"
      }
     }
@@ -86,7 +87,7 @@
     {
      "intent": "CREATE_TASK",
      "slots": {
-      "priority": "LOW",
+      "priority": 0.1,
       "deadline_date": "2026-11-30",
       "estimated_minutes": 180
      }

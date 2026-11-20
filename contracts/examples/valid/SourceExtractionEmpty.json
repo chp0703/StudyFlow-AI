@@ -1,0 +1,11 @@
+{
+  "parser": "document-v1",
+  "model": "deepseek-flash",
+  "prompt_version": "be04-1",
+  "extracted_at": "2026-11-13T09:00:00Z",
+  "usage": {
+    "input_tokens": 3,
+    "output_tokens": 4
+  },
+  "intents": []
+}

@@ -358,6 +358,12 @@
       "reason": "FULL must not hide unallocated work"
     },
     {
+      "file": "examples/invalid/proposal-missing-schedule-confirmation.json",
+      "schema": "PlanProposal",
+      "valid": false,
+      "reason": "Proposal payload must include schedule confirmation"
+    },
+    {
       "file": "examples/invalid/proposal-none.json",
       "schema": "PlanProposal",
       "valid": false,
@@ -546,6 +552,186 @@
       "schema": "RpcRequest",
       "valid": false,
       "reason": "Package 1.0.1 rejects 1.0.0 RpcRequest envelopes"
+    },
+    {
+      "file": "examples/invalid/task-invalid-priority.json",
+      "schema": "AcademicTask",
+      "valid": false,
+      "reason": "Unsupported priority values fail contract validation"
+    },
+    {
+      "file": "examples/invalid/task-invalid-color.json",
+      "schema": "AcademicTask",
+      "valid": false,
+      "reason": "Invalid colors fail contract validation"
+    },
+    {
+      "file": "examples/invalid/task-course-label-removed.json",
+      "schema": "CandidateTaskFields",
+      "valid": false,
+      "reason": "course_label is removed from the contract"
+    },
+    {
+      "file": "examples/invalid/non-vietnam-timezone.json",
+      "schema": "TimeWindowInput",
+      "valid": false,
+      "reason": "Caller/model input cannot select another business timezone"
+    },
+    {
+      "file": "examples/valid/SourceUploadRequest.json",
+      "schema": "SourceUploadRequest",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/source-owner-injection.json",
+      "schema": "SourceUploadRequest",
+      "valid": false
+    },
+    {
+      "file": "examples/invalid/source-id-url.json",
+      "schema": "UserMessage",
+      "valid": false
+    },
+    {
+      "file": "examples/valid/message-attachment-only.json",
+      "schema": "UserMessage",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/message-without-text-or-source.json",
+      "schema": "UserMessage",
+      "valid": false
+    },
+    {
+      "file": "examples/valid/SourceExtractionEmpty.json",
+      "schema": "SourceExtraction",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/LearningMaterial.json",
+      "schema": "LearningMaterial",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/MaterialChunk.json",
+      "schema": "MaterialChunk",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/QuestionDraft.json",
+      "schema": "QuestionDraft",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/QuizAttempt.json",
+      "schema": "QuizAttempt",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/quiz-attempt-in-progress.json",
+      "schema": "QuizAttempt",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/QuizResponse.json",
+      "schema": "QuizResponse",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/TopicStatsData.json",
+      "schema": "TopicStatsData",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/RevisionRecommendation.json",
+      "schema": "RevisionRecommendation",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/question-draft-missing-answer-option.json",
+      "schema": "QuestionDraft",
+      "valid": false,
+      "expected_error": "answer_key must match one of the question options"
+    },
+    {
+      "file": "examples/invalid/question-draft-empty-chunks.json",
+      "schema": "QuestionDraft",
+      "valid": false
+    },
+    {
+      "file": "examples/invalid/quiz-response-omitted-marked-wrong.json",
+      "schema": "QuizResponse",
+      "valid": false,
+      "expected_error": "omitted or invalid response must have is_correct=null and never count as wrong"
+    },
+    {
+      "file": "examples/invalid/topic-stats-zero-valid-claims-rate.json",
+      "schema": "TopicStatsData",
+      "valid": false,
+      "expected_error": "zero valid responses must report INSUFFICIENT_DATA with error_count=0 and error_rate=null"
+    },
+    {
+      "file": "examples/invalid/quiz-attempt-manual-with-handoff-id.json",
+      "schema": "QuizAttempt",
+      "valid": false,
+      "expected_error": "MANUAL quiz attempt cannot have a session_outcome_id"
+    },
+    {
+      "file": "examples/invalid/quiz-attempt-in-progress-omitted-count.json",
+      "schema": "QuizAttempt",
+      "valid": false,
+      "expected_error": "IN_PROGRESS attempt omitted_count must equal total_questions"
+    },
+    {
+      "file": "examples/invalid/material-upload-owner-injection.json",
+      "schema": "MaterialUploadRequest",
+      "valid": false
+    },
+    {
+      "file": "examples/valid/QuestionDraftActionPresentation.json",
+      "schema": "ActionPresentation",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/question-draft-presentation-owner-mismatch.json",
+      "schema": "ActionPresentation",
+      "valid": false,
+      "expected_error": "presented question_drafts must match pending action owner and conversation"
+    },
+    {
+      "file": "examples/valid/b7-recommendation-presentation.json",
+      "schema": "ActionPresentation",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/b7-create-recommendation-arguments.json",
+      "schema": "CreateRevisionRecommendationArguments",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/b7-candidate-review.json",
+      "schema": "ReviewActionRequest",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/b7-review-patch-without-version.json",
+      "schema": "ReviewActionRequest",
+      "valid": false
+    },
+    {
+      "file": "examples/invalid/b7-review-version-without-patch.json",
+      "schema": "ReviewActionRequest",
+      "valid": false
+    },
+    {
+      "file": "examples/invalid/b7-create-owner-injection.json",
+      "schema": "CreateRevisionRecommendationArguments",
+      "valid": false
+    },
+    {
+      "file": "examples/invalid/b7-presentation-without-evidence.json",
+      "schema": "ActionPresentation",
+      "valid": false
     }
   ]
 }

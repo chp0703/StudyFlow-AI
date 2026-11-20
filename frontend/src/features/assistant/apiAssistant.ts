@@ -18,22 +18,28 @@ type Draft = Omit<ChatMessage, "id" | "timestamp">
 
 const INTENTS: IntentCandidate[] = [
   "CREATE_TASK",
+
   "SEARCH_TASKS",
+
   "SET_AVAILABILITY",
+
   "SET_BUSY_INTERVAL",
+
   "SET_SCHEDULING_PREFERENCES",
+
   "GENERATE_STUDY_PLAN",
+
   "GET_STUDY_PLAN",
 ]
 
 // A card the user can approve or cancel: what the server says it will do, plus the reference to send back.
-export function proposalFromReply(reply: OrchestratorReply): ActionProposal | null {
+
+export function proposalFromReply(
+  reply: OrchestratorReply,
+): ActionProposal | null {
   const presentation = reply.result?.data as ActionPresentation | undefined
 
-  if (
-    !reply.action_reference ||
-    presentation?.kind !== "ACTION_PRESENTATION"
-  )
+  if (!reply.action_reference || presentation?.kind !== "ACTION_PRESENTATION")
     return null
 
   const { title, details } = summarize(presentation)
@@ -56,21 +62,34 @@ export function proposalFromReply(reply: OrchestratorReply): ActionProposal | nu
 }
 
 // Short list of what a read returned (tasks only; plans are shown on the Planner page).
+
 function listing(reply: OrchestratorReply): string {
   const data = reply.result?.data as { items?: ApiTask[] } | undefined
 
   if (!Array.isArray(data?.items) || data.items.length === 0) return ""
 
   const lines = data.items
-    .slice(0, 5)
-    .map((t) => `• ${t.title} — hạn ${t.deadline_date ?? t.deadline_at.slice(0, 10)}`)
 
-  const more = data.items.length > 5 ? `\n… và ${data.items.length - 5} công việc khác.` : ""
+    .slice(0, 5)
+
+    .map(
+      (t) =>
+        `• ${t.title} — hạn ${t.deadline_date ?? t.deadline_at.slice(0, 10)}`,
+    )
+
+  const more =
+    data.items.length > 5
+      ? `\n… và ${data.items.length - 5} công việc khác.`
+      : ""
 
   return `\n${lines.join("\n")}${more}`
 }
 
-export function replyToMessage(reply: OrchestratorReply): Draft {
+export function replyToMessage(
+  reply: OrchestratorReply,
+
+  originalPrompt = "",
+): Draft {
   if (reply.state === "AWAITING_APPROVAL") {
     const proposal = proposalFromReply(reply)
 
@@ -91,7 +110,17 @@ export function replyToMessage(reply: OrchestratorReply): Draft {
 
       category: "CLARIFICATION",
 
-      text: [reply.message, ...reply.questions.map((q) => `• ${q.message}`)].join("\n"),
+      text: [
+        reply.message,
+
+        ...reply.questions.map((q) => `• ${q.message}`),
+      ].join("\n"),
+
+      clarification: {
+        originalPrompt,
+
+        questions: reply.questions,
+      },
     }
 
   if (reply.state === "ERROR" || reply.error)
@@ -102,7 +131,11 @@ export function replyToMessage(reply: OrchestratorReply): Draft {
 
       text: reply.message,
 
-      error: { code: reply.error?.code ?? "INTERNAL_ERROR", detail: reply.message },
+      error: {
+        code: reply.error?.code ?? "INTERNAL_ERROR",
+
+        detail: reply.message,
+      },
     }
 
   return {

@@ -1,6 +1,23 @@
 # StudyFlow AI backend
 
-The backend is a FastAPI application implementing the eight public Planner endpoints. It verifies Supabase JWTs, coordinates durable workflows, calls signed database RPCs and uses the deterministic scheduler under `app/f1/scheduler/`. The `f1` package name is a compatibility path for the existing Planner implementation; Assessment and Daily Learning are additional product features that are not implemented here yet.
+The backend is a FastAPI application implementing the eight core Planner endpoints plus additive source-ingestion and assessment APIs. It verifies Supabase JWTs, coordinates durable workflows, calls signed database RPCs and uses the deterministic scheduler under `app/f1/scheduler/`. The `f1` package name is a compatibility path for the existing Planner implementation; Assessment B2–B7 covers materials, question review, attempts, topic statistics and evidence-backed revision handoff. Daily Learning remains planned.
+
+## Source ingestion (BE-04)
+
+The additive source API and its limits are documented in
+[`contracts/INGESTION.md`](../contracts/INGESTION.md). It adds upload, private
+source reads and explicit extraction to the eight existing Planner endpoints.
+Source IDs may then be attached to a chat message to enter the existing approval
+queue. Upload/extraction alone never creates tasks, imports busy intervals or
+generates a plan. With source IDs, message text is an annotation; request planning
+separately after approving imports.
+
+Use the existing `DEEPSEEK_API_KEY` and `DEEPSEEK_BASE_URL` environment variables.
+`INGESTION_MODEL` defaults to `deepseek-flash`; the existing NLU model setting is
+independent. Thinking is disabled for extraction, output is capped at 2,048 tokens,
+and paid extraction is never automatically retried. Set secrets locally, not in Git.
+Install updated backend requirements for text-PDF support. Calendar parsing needs
+no paid API; scanned PDF pages must be uploaded as images in this version.
 
 ## Run locally
 

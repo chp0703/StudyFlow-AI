@@ -1,0 +1,34 @@
+{
+  "assessment_version": "1.0.0",
+  "recommendation_id": "00000000-0000-4000-8000-000000000251",
+  "user_id": "00000000-0000-4000-8000-000000000001",
+  "conversation_id": "00000000-0000-4000-8000-000000000003",
+  "material_id": "00000000-0000-4000-8000-000000000201",
+  "topic": "Kỳ vọng và phương sai",
+  "priority": 1,
+  "suggested_minutes": 60,
+  "reason_summary": "Tỷ lệ sai ở chủ đề Kỳ vọng và phương sai là 75% (3/4 câu hợp lệ); cần ôn lại định nghĩa và tính chất ở trang 3.",
+  "evidence": {
+    "attempt_ids": [
+      "00000000-0000-4000-8000-000000000231"
+    ],
+    "chunk_ids": [
+      "00000000-0000-4000-8000-000000000211",
+      "00000000-0000-4000-8000-000000000212"
+    ],
+    "valid_response_count": 4,
+    "error_count": 3,
+    "error_rate": 0.75
+  },
+  "confidence_limit": {
+    "level": "LOW",
+    "limitations": [
+      "Cỡ mẫu mới gồm 4 câu trả lời hợp lệ trên 1 lượt làm bài."
+    ]
+  },
+  "pending_action_id": "00000000-0000-4000-8000-000000000261",
+  "candidate_id": null,
+  "status": "PROPOSED",
+  "created_at": "2026-11-16T08:20:00Z",
+  "updated_at": "2026-11-16T08:20:00Z"
+}

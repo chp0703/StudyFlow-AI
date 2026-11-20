@@ -3,7 +3,7 @@ export type Task = {
 
   title: string
 
-  course: string
+  description?: string | null
 
   time: string
 
@@ -11,7 +11,9 @@ export type Task = {
 
   effort: number
 
-  priority: string
+  priority: string | 0.1 | 0.5 | 1
+
+  color?: string
 
   deadline: string
 
@@ -20,6 +22,8 @@ export type Task = {
   date?: string
 
   hour?: number
+
+  minute?: number
 }
 
 export type StudyFile = {
