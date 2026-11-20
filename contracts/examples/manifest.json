@@ -911,6 +911,31 @@
       "file": "examples/valid/learning-decision-stale.json",
       "schema": "DailyLearningOutcomeDecisionResult",
       "valid": true
+    },
+    {
+      "file": "examples/valid/learning-material-pdf-invalid.json",
+      "schema": "DailyMaterialUploadResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-material-index-timeout.json",
+      "schema": "DailyMaterialUploadResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-material-delete-in-use.json",
+      "schema": "DailyMaterialDeleteResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-decision-unauthenticated.json",
+      "schema": "DailyLearningOutcomeDecisionResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-material-pdf-signature-invalid.json",
+      "schema": "DailyMaterialUploadResult",
+      "valid": true
     }
   ]
 }

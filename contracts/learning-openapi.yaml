@@ -91,16 +91,6 @@
           }
         }
       },
-      "IndexingFailed": {
-        "description": "Document could not be indexed.",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "schemas/f1.schema.json#/$defs/ErrorResult"
-            }
-          }
-        }
-      },
       "RateLimited": {
         "description": "Rate limit exceeded.",
         "content": {
@@ -179,16 +169,14 @@
           "415": {
             "$ref": "#/components/responses/UnsupportedMedia"
           },
-          "422": {
-            "$ref": "#/components/responses/IndexingFailed"
-          },
           "429": {
             "$ref": "#/components/responses/RateLimited"
           },
           "503": {
             "$ref": "#/components/responses/Unavailable"
           }
-        }
+        },
+        "description": "Invalid encoding, media type or decoded size is rejected before storage. Once a material exists, indexing failures return HTTP 200 with its ID, FAILED status and error code. See LEARNING.md for retry semantics."
       },
       "get": {
         "operationId": "list_learning_materials",
@@ -318,7 +306,8 @@
           "503": {
             "$ref": "#/components/responses/Unavailable"
           }
-        }
+        },
+        "description": "Returns 409 with error.details.reason MATERIAL_IN_USE when the material or its chunks are referenced by Assessment. Deletion leaves all rows unchanged in this case."
       }
     },
     "/v1/learning/sessions": {
@@ -549,22 +538,64 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/InvalidRequest"
+            "description": "Invalid request parameters or body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
           },
           "401": {
-            "$ref": "#/components/responses/Unauthenticated"
+            "description": "Missing or invalid Supabase JWT.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "description": "Resource unavailable to the authenticated user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
           },
           "409": {
-            "$ref": "#/components/responses/Conflict"
+            "description": "State, version, quota or idempotency conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
           },
           "429": {
-            "$ref": "#/components/responses/RateLimited"
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
           },
           "503": {
-            "$ref": "#/components/responses/Unavailable"
+            "description": "A backend dependency is temporarily unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/OrchestratorReply"
+                }
+              }
+            }
           }
         }
       }

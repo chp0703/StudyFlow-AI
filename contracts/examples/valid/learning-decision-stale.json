@@ -1,14 +1,16 @@
 {
   "schema_version": "1.1",
   "request_id": "learning-fixture",
-  "outcome": "ERROR",
-  "data": null,
+  "state": "ERROR",
+  "message": "Phiên đã thay đổi. Hãy tạo lại bản tóm tắt.",
+  "action_reference": null,
+  "questions": [],
+  "result": null,
   "error": {
     "code": "STALE_ENTITY_VERSION",
     "message": "Phiên đã thay đổi. Hãy tạo lại bản tóm tắt.",
     "field": "action_reference",
     "details": {},
     "retryable": false
-  },
-  "warnings": []
+  }
 }
