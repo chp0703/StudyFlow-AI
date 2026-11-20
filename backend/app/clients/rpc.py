@@ -20,7 +20,7 @@ READ_OPERATIONS = frozenset({
     "search_tasks", "get_study_plan", "list_time_windows", "get_scheduling_context", "lookup_operation_result",
     "get_workflow_context", "get_workflow_continuation", "get_ingestion_source",
     "get_assessment_material", "search_material_chunks", "list_questions", "get_quiz_attempt_context",
-    "get_topic_stats",
+    "get_topic_stats", "get_learning_material", "list_learning_materials",
 })
 
 

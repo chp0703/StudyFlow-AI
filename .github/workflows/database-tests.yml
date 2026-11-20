@@ -11,6 +11,7 @@ on:
     branches:
       - main
       - feat/f1-mvp-intergration
+      - feat/f3-m0-learning-contract
   workflow_dispatch:
 
 permissions:

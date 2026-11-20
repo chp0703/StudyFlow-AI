@@ -26,6 +26,8 @@ from ...assessment.questions import AssessmentQuestionOperations, DeepSeekQuesti
 from ...assessment.attempts import QuizAttemptOperations
 from ...assessment.stats import TopicStatsOperations
 from ...assessment.recommendations import RevisionRecommendationOperations
+from ...learning.indexing import index_document
+from ...learning.materials import LearningMaterialOperations, MAX_BODY_BYTES as LEARNING_MAX_BODY_BYTES
 
 log = logging.getLogger("studyflow.api")
 _KEY = re.compile(r"^[A-Za-z0-9._:-]{16,128}$")
@@ -49,10 +51,11 @@ def _int(value: str, name: str) -> int:
 
 class Api:
     def __init__(self, settings: Settings, rpc: RpcClient, verifier: JwtVerifier, clock, extractor, source_extractor=None,
-                 question_generator=None):
+                 question_generator=None, learning_indexer=None):
         self.settings, self.rpc_client, self.verifier, self.clock = settings, rpc, verifier, clock
         self.extractor = extractor
         self.materials = MaterialOperations(self.rpc, clock)
+        self.learning_materials = LearningMaterialOperations(self.rpc, learning_indexer or index_document)
         self.questions = AssessmentQuestionOperations(
             self.rpc,
             self.materials,
@@ -325,6 +328,29 @@ class Api:
         result = await run_in_threadpool(self.topic_stats.get, ctx, args)
         return self.result_response(result, ctx)
 
+    async def upload_learning_material(self, request: Request, ctx: Ctx):
+        body = await self.read_json(request, max_bytes=LEARNING_MAX_BODY_BYTES)
+        return await self.learning_materials.upload(ctx, request.headers["idempotency-key"], body)
+
+    async def get_learning_material(self, request: Request, ctx: Ctx):
+        self._query(request, set())
+        return await self.learning_materials.get(ctx, self._uuid_param(request, "material_id"))
+
+    async def list_learning_materials(self, request: Request, ctx: Ctx):
+        query = self._query(request, {"cursor", "limit"})
+        limit = _int(query.get("limit", "20"), "limit")
+        if not 1 <= limit <= 20:
+            raise ApiError("INVALID_PARAMETER", "Limit phải từ 1 đến 20.", status=400, field="limit")
+        return await self.learning_materials.list(ctx, limit, query.get("cursor"))
+
+    async def delete_learning_material(self, request: Request, ctx: Ctx):
+        self._query(request, set())
+        key = request.headers.get("idempotency-key")
+        if key is None or not _KEY.fullmatch(key):
+            raise ApiError("INVALID_PARAMETER", "A valid Idempotency-Key header is required.", status=400,
+                           field="Idempotency-Key")
+        return await self.learning_materials.delete(ctx, key, self._uuid_param(request, "material_id"))
+
     # ----------------------------------------------------------------- đăng ký endpoint
     def register(self, app: FastAPI) -> None:
         routes = [
@@ -347,6 +373,15 @@ class Api:
         for method, path, handler in routes:
             app.add_api_route(path, self._wrap(handler, post=method in ("POST", "PUT")), methods=[method],
                               include_in_schema=False)
+
+        learning_routes = [
+            ("POST", "/v1/materials", self.upload_learning_material),
+            ("GET", "/v1/materials", self.list_learning_materials),
+            ("GET", "/v1/materials/{material_id}", self.get_learning_material),
+            ("DELETE", "/v1/materials/{material_id}", self.delete_learning_material),
+        ]
+        for method, path, handler in learning_routes:
+            app.add_api_route(path, self._wrap(handler, post=False), methods=[method], include_in_schema=False)
 
     def _wrap(self, handler, *, post: bool):
         async def endpoint(request: Request):
