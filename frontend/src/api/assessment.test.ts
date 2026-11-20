@@ -112,7 +112,7 @@ test("assessment attempt, response, stats, and recommendation endpoints match B1
     "conv-1",
     "mat-1",
     "Kỳ vọng",
-    60,
+    20,
     1,
     "idem-rec-1",
   )
@@ -145,7 +145,7 @@ test("assessment attempt, response, stats, and recommendation endpoints match B1
     conversation_id: "conv-1",
     material_id: "mat-1",
     topic: "Kỳ vọng",
-    suggested_minutes: 60,
+    suggested_minutes: 20,
     priority: 1,
   })
 })

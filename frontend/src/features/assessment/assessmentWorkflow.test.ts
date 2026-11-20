@@ -22,12 +22,25 @@ import {
   quizQuestionCount,
   recommendationFromReply,
   referencedSources,
+  revisionMinutes,
+  revisionMinutesError,
   revisionCandidatePatch,
   runGenerationOnce,
   submitQuestionDecision,
   uncertainDecisionMessage,
   validGenerationCount,
 } from "./assessmentWorkflow.ts"
+
+test("revision duration accepts every integer in the 15-240 contract", () => {
+  for (const value of [15, 20, 35, 60, 75, 125, 239, 240]) {
+    assert.equal(revisionMinutes(String(value)), value)
+    assert.equal(revisionMinutesError(String(value)), "")
+  }
+  for (const value of ["", "14", "241", "20.5", "NaN", "abc"]) {
+    assert.equal(revisionMinutes(value), null)
+    assert.ok(revisionMinutesError(value))
+  }
+})
 
 const reference: ActionReference = {
   action_id: "action-1",

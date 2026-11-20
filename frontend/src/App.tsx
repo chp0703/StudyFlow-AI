@@ -448,6 +448,7 @@ export default function App() {
   const scheduleConfirmedTask = async (
     task?: ApiTask,
     confirmedByPlanner = false,
+    availabilityConfirmed = false,
   ) => {
     const userId = session?.user.id
     if (!apiEnabled || !userId) return
@@ -478,6 +479,7 @@ export default function App() {
     }
 
     if (
+      !availabilityConfirmed &&
       !server.windows.some(
         (window) =>
           window.kind === "AVAILABILITY" && window.archived_at === null,
@@ -577,6 +579,14 @@ export default function App() {
     taskIds: string[],
   ) => {
     const taskId = revisionScheduling?.taskId
+    if (
+      decision === "APPROVE" &&
+      taskIds.length === 0 &&
+      revisionScheduling?.status === "needs_availability"
+    ) {
+      void scheduleConfirmedTask(undefined, true, true)
+      return
+    }
     if (!taskId || !taskIds.includes(taskId)) return
     if (decision === "APPROVE") {
       revisionAttempt.current = null

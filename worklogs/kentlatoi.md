@@ -319,3 +319,21 @@
 **Ghi chú**
 - Chưa chạy authenticated API E2E vì không có tài khoản thử nghiệm; browser QA scheduling dùng demo, còn API flow được xác minh bằng contract/unit tests.
 - Contract F1 v1.1 chưa hỗ trợ dời chính xác hoặc bỏ riêng StudyBlock; không thêm mutation giả.
+
+## 2026-11-20 — Refine Planner time UX and F2 revision duration
+
+**Mục tiêu:** Khôi phục khả năng tới giờ hiện tại, làm task panel cuộn bằng chuột/bàn phím và tương thích contract B7 nhận mọi thời lượng nguyên 15–240 phút mà không nới lỏng F1 Availability.
+
+**Đã làm**
+- Thêm “Đến hiện tại” vào toolbar Planner: về tuần hiện tại, chuyển Month sang Week, dùng range hiển thị tạm chứa giờ Việt Nam thật, tự cuộn và highlight vạch đỏ; không ghi đè setting hoặc dữ liệu lịch.
+- Cho task list nhận focus/PageDown, giữ search/filter cố định và thêm scrollbar gọn; browser đo `scrollHeight 1630 > clientHeight 451`, `scrollTop 0 → 380 → 1106` và task cuối hiển thị.
+- Thêm CTA “Thiết lập giờ học mặc định” qua composer/approval TimeWindow hiện có; sau khi Availability được duyệt, tự thử lại scheduler cho task đã giữ, không giả lập “ô trắng = rảnh”.
+- Thay select thời lượng F2 bằng number input 15–240 bước 1 và chip chọn nhanh; kiểm tra raw input, khóa đổi tham số khi retry chưa rõ và xác minh payload `suggested_minutes: 20`.
+- Bổ sung test range hiện tại, biên thời lượng, payload recommendation; chạy lại frontend, contract và scheduler.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; 120/120 frontend tests, 29/29 scheduler unit tests, 37/37 scheduler acceptance tests, contract 194 definitions/135 fixtures, generated schema, TypeScript, Vite build và `git diff --check` đạt. Browser desktop 1366×768 không tràn ngang, task cuối truy cập được, “Đến hiện tại” lúc 20:29 hiển thị range 11:29–21:29 và không có console error.
+
+**Ghi chú**
+- Không có phiên authenticated/backend có dữ liệu F2 nên manual/F2 scheduling và input 20 phút chỉ được xác minh bằng contract/unit/fixture, chưa phải E2E live.
+- Backend chưa có policy “mọi ô trống là rảnh”; sản phẩm vẫn yêu cầu người dùng duyệt Availability. Công cụ mobile áp viewport 390×844 nhưng báo CSS viewport 487×1055; không tràn ngang, song kích thước pixel chính xác 390 chưa được xác nhận.
+- Vite vẫn cảnh báo chunk JavaScript trên 500 kB; không gọi DeepSeek, không reset Supabase.

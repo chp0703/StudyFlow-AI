@@ -56,6 +56,33 @@ export const displayRangeError = ({ start, end }: CalendarDisplayRange) => {
 
 export const displayMinutes = (time: string) => clockMinutes(time) ?? 0
 
+const minuteClock = (minutes: number) =>
+  `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
+
+export function rangesIncludingNow(
+  ranges: CalendarDisplayRanges,
+  todayIndex: number,
+  now: number,
+): CalendarDisplayRanges {
+  const range = ranges[todayIndex]
+  const from = displayMinutes(range.start)
+  const to = displayMinutes(range.end)
+  if (now >= from && now < to) return ranges
+
+  const span = to - from
+  const end =
+    now < from
+      ? Math.min(1440, Math.max(now + 61, span))
+      : Math.min(1440, now + 61)
+  const start = Math.max(0, Math.min(now - 60, end - span))
+  const next = [...ranges] as CalendarDisplayRange[]
+  next[todayIndex] = {
+    start: minuteClock(start),
+    end: minuteClock(end),
+  }
+  return next as unknown as CalendarDisplayRanges
+}
+
 // A source event keeps its clock time; the range only clips what is drawn.
 
 export function eventPosition(time: string, range: CalendarDisplayRange) {

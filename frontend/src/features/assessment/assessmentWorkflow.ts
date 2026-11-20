@@ -21,6 +21,24 @@ export type PendingOperation = {
 export const DEFAULT_GENERATION_COUNT = 5
 export const MAX_GENERATION_COUNT = 10
 export const MAX_QUIZ_QUESTION_COUNT = 50
+export const MIN_REVISION_MINUTES = 15
+export const MAX_REVISION_MINUTES = 240
+
+export function revisionMinutes(value: string) {
+  if (!/^\d+$/.test(value)) return null
+  const minutes = Number(value)
+  return minutes >= MIN_REVISION_MINUTES && minutes <= MAX_REVISION_MINUTES
+    ? minutes
+    : null
+}
+
+export function revisionMinutesError(value: string) {
+  if (!value) return "Nhập thời lượng ôn tập."
+  if (!/^\d+$/.test(value)) return "Thời lượng phải là số phút nguyên."
+  return revisionMinutes(value) === null
+    ? "Thời lượng ôn tập phải từ 15 đến 240 phút."
+    : ""
+}
 
 export function validGenerationCount(value: number) {
   return Number.isInteger(value) && value >= 1 && value <= MAX_GENERATION_COUNT

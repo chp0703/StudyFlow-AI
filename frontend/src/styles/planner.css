@@ -584,6 +584,14 @@
   border-radius: 50%;
   background: var(--pink);
 }
+.now-line.is-highlighted {
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--pink) 16%, transparent);
+  animation: now-line-pulse 0.8s ease-out 2;
+}
+@keyframes now-line-pulse {
+  50% { opacity: 0.55; }
+}
+.calendar-now-btn { display: inline-flex; align-items: center; gap: 5px; }
 
 /* Nút điều khiển lịch có kiểu dáng như nút chat */
 .planner-calendar .dashboard-calendar-controls {
@@ -1017,6 +1025,15 @@
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-primary) 45%, transparent) transparent;
+}
+.task-panel-list::-webkit-scrollbar { width: 7px; }
+.task-panel-list::-webkit-scrollbar-thumb { border-radius: 8px; background: color-mix(in srgb, var(--color-primary) 38%, transparent); }
+.task-panel-list:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-primary) 45%, transparent); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .now-line.is-highlighted { animation: none; }
 }
 .task-panel-list li {
   display: grid;

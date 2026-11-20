@@ -66,6 +66,7 @@ export default function TaskPanel({
 
   onRetryRevisionScheduling,
   onScheduleTask,
+  onSetupAvailability,
 }: {
   tasks: Task[]
 
@@ -80,6 +81,8 @@ export default function TaskPanel({
   onRetryRevisionScheduling?: () => void
 
   onScheduleTask?: (taskId: string) => void
+
+  onSetupAvailability?: () => void
 }) {
   const [query, setQuery] = useState("")
 
@@ -163,7 +166,12 @@ export default function TaskPanel({
             </button>
           )}
         </div>
-        <ul className="task-panel-list">
+        <ul
+          className="task-panel-list"
+          role="region"
+          aria-label="Danh sách công việc"
+          tabIndex={0}
+        >
           {rows.map((t) => {
             const { label, Icon } = STATUS[statusOf(t, proposedIds)]
 
@@ -236,6 +244,15 @@ export default function TaskPanel({
                         onClick={onRetryRevisionScheduling}
                       >
                         Thử lại
+                      </Button>
+                    )}
+                  {scheduling?.status === "needs_availability" &&
+                    onSetupAvailability && (
+                      <Button
+                        className="secondary task-panel-retry"
+                        onClick={onSetupAvailability}
+                      >
+                        Thiết lập giờ học mặc định
                       </Button>
                     )}
                   {status === "unscheduled" &&

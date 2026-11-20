@@ -41,6 +41,7 @@ export default function WeekCalendar({
   prefill,
   nowHour,
   nowMinutes,
+  highlightNow,
   onSelectEvent,
 }: {
   calendarRef: RefObject<HTMLDivElement | null>
@@ -57,6 +58,7 @@ export default function WeekCalendar({
   prefill: (date: Date, minuteOfDay: number) => void
   nowHour: number
   nowMinutes: number
+  highlightNow?: boolean
   onSelectEvent?: (event: Task) => void
 }) {
   const gridFrom = Math.min(
@@ -244,7 +246,9 @@ export default function WeekCalendar({
                     now >= from &&
                     now < to && (
                       <i
-                        className="now-line"
+                        className={`now-line${
+                          highlightNow ? " is-highlighted" : ""
+                        }`}
                         aria-label={`Bây giờ ${timeLabel(now)}`}
                         style={{ top: (now - gridFrom) * pxPerMinute }}
                       />

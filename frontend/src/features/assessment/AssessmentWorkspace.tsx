@@ -38,6 +38,8 @@ import {
   quizQuestionCount,
   referencedSources,
   recommendationFromReply,
+  revisionMinutes,
+  revisionMinutesError,
   revisionCandidatePatch,
   submitQuestionDecision,
   runGenerationOnce,
@@ -440,9 +442,9 @@ export default function AssessmentWorkspace({
 
   async function requestRecommendation() {
     if (!current || busy || !hasRecommendationEvidence) return
-    const minutes = Number(suggestedMinutes)
-    if (!Number.isInteger(minutes) || minutes < 15 || minutes > 240) {
-      setError("Thời lượng ôn tập phải từ 15 đến 240 phút.")
+    const minutes = revisionMinutes(suggestedMinutes)
+    if (minutes === null) {
+      setError(revisionMinutesError(suggestedMinutes))
       return
     }
     const priority = Number(recommendationPriority) as 0.1 | 0.5 | 1
@@ -1466,22 +1468,64 @@ export default function AssessmentWorkspace({
                         void requestRecommendation()
                       }}
                     >
-                      <label>
-                        <span>Thời lượng đề xuất</span>
-                        <select
-                          value={suggestedMinutes}
-                          onChange={(event) =>
-                            setSuggestedMinutes(event.target.value)
-                          }
-                          disabled={Boolean(busy)}
+                      <div className="assessment-duration-field">
+                        <label htmlFor="assessment-revision-minutes">
+                          <span>Thời lượng ôn tập</span>
+                          <span className="assessment-number-input">
+                            <input
+                              id="assessment-revision-minutes"
+                              type="number"
+                              inputMode="numeric"
+                              min="15"
+                              max="240"
+                              step="1"
+                              value={suggestedMinutes}
+                              onChange={(event) =>
+                                setSuggestedMinutes(event.target.value)
+                              }
+                              aria-invalid={Boolean(
+                                revisionMinutesError(suggestedMinutes),
+                              )}
+                              aria-describedby="assessment-revision-minutes-error"
+                              disabled={
+                                Boolean(busy) ||
+                                Boolean(recommendationOperation.current)
+                              }
+                            />
+                            <span>phút</span>
+                          </span>
+                        </label>
+                        <div
+                          className="assessment-duration-shortcuts"
+                          aria-label="Chọn nhanh thời lượng"
                         >
-                          {[30, 45, 60, 90, 120, 180, 240].map((minutes) => (
-                            <option key={minutes} value={minutes}>
+                          {[30, 45, 60, 90].map((minutes) => (
+                            <button
+                              key={minutes}
+                              type="button"
+                              aria-pressed={
+                                suggestedMinutes === String(minutes)
+                              }
+                              onClick={() =>
+                                setSuggestedMinutes(String(minutes))
+                              }
+                              disabled={
+                                Boolean(busy) ||
+                                Boolean(recommendationOperation.current)
+                              }
+                            >
                               {minutes} phút
-                            </option>
+                            </button>
                           ))}
-                        </select>
-                      </label>
+                        </div>
+                        <span
+                          id="assessment-revision-minutes-error"
+                          className="assessment-field-error"
+                          role="alert"
+                        >
+                          {revisionMinutesError(suggestedMinutes)}
+                        </span>
+                      </div>
                       <label>
                         <span>Mức ưu tiên</span>
                         <select
@@ -1491,7 +1535,10 @@ export default function AssessmentWorkspace({
                               event.target.value as "0.1" | "0.5" | "1",
                             )
                           }
-                          disabled={Boolean(busy)}
+                          disabled={
+                            Boolean(busy) ||
+                            Boolean(recommendationOperation.current)
+                          }
                         >
                           <option value="0.1">Thấp</option>
                           <option value="0.5">Trung bình</option>
@@ -1501,7 +1548,10 @@ export default function AssessmentWorkspace({
                       <Button
                         className="primary"
                         type="submit"
-                        disabled={Boolean(busy)}
+                        disabled={
+                          Boolean(busy) ||
+                          Boolean(revisionMinutesError(suggestedMinutes))
+                        }
                       >
                         {busy === "recommendation"
                           ? "Đang tạo đề xuất…"
