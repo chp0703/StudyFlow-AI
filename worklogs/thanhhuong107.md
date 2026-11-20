@@ -85,3 +85,15 @@
 **Ghi chú**
 
 - Endpoint runtime, lưu trữ và chạy model embedding thuộc các mốc triển khai sau.
+
+## 2026-11-20 — Sửa hợp đồng F3 M0 theo review của Hiển
+
+**Mục tiêu.** Thống nhất các điều kiện để Backend và Frontend triển khai M1.
+
+**Đã làm**
+
+- Chốt dùng kho tài liệu chung với Assessment và trả xung đột khi tài liệu còn tham chiếu F2.
+- Phân biệt lỗi upload trước khi tạo bản ghi, lỗi indexing có ID, và cách retry theo idempotency key.
+- Đồng bộ phản hồi quyết định với OrchestratorReply, sửa regex upload và tách dependency embedding.
+
+**Kết quả.** PR #64. 175 fixture hợp đồng, 37 fixture schema trên Supabase cục bộ và bài kiểm tra JavaScript ở đúng 5 MiB đều đạt.
