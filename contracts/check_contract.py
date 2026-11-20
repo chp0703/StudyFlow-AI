@@ -503,6 +503,10 @@ def main():
     assert len(learning_api['paths']) == 7
     for key in ('materials', 'chunks', 'sessions', 'turns', 'outcomes'):
         assert learning_data[key]['schema'] in definitions
+    for interface in learning['internal_interfaces']:
+        assert all(interface[key] in definitions for key in ('arguments_schema', 'data_schema', 'result_schema'))
+        assert interface['llm_callable'] is False
+        assert interface['attestation_required'] == (not interface['read_only'])
     decision = learning['decision']
     decision_api = learning_api['paths'][decision['path']]['post']
     media = 'application/json'
