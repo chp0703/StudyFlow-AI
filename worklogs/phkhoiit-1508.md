@@ -597,3 +597,26 @@
 - Đẩy tag `eval-run-39aa48f` trỏ vào commit chạy benchmark để lệnh `git diff` trong README tái lập được.
 
 **Kết quả:** chỉ thay đổi tài liệu và tag. Số liệu không đổi.
+
+## 2026-11-13 — Viết lại README dự án
+
+**Mục tiêu:** Giới thiệu StudyFlow AI theo bố cục rõ ràng để thành viên mới và người xem đánh giá nắm dự án nhanh.
+
+**Đã làm**
+- Viết lại `README.md` với demo, tính năng, cách chạy, cấu trúc, API, kiểm thử và quy ước phát triển.
+- Thêm ba ảnh demo Git LFS vào `docs/screenshots/` và kiểm tra liên kết tương đối.
+
+**Kết quả:** PR #35 (`docs/readme-studyflow`); chỉ thay đổi tài liệu và ảnh nên không chạy build hay test.
+
+**Ghi chú**
+- Chưa có giấy phép nguồn mở được công bố.
+
+## 2026-11-20 — Đồng bộ PR #35 với main
+
+**Mục tiêu:** Giải quyết xung đột merge và cập nhật trạng thái tính năng trong README.
+
+**Đã làm**
+- Merge `origin/main`, kết hợp hướng dẫn cấu hình mới và giữ đầy đủ worklog của hai nhánh.
+- Cập nhật README theo backend Assessment hiện có và trạng thái frontend PR #55.
+
+**Kết quả:** PR #35 (`docs/readme-studyflow`); kiểm tra liên kết và xung đột được thực hiện trước khi push.
