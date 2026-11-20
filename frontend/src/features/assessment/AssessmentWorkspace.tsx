@@ -51,14 +51,13 @@ const maxBytes = 10 * 1024 * 1024
 type StageDefinition = {
   id: AssessmentStage
   label: string
-  hint: string
 }
 
 const stages: StageDefinition[] = [
-  { id: "materials", label: "Tài liệu", hint: "Tải lên và kiểm tra" },
-  { id: "questions", label: "Câu hỏi", hint: "Tạo và xác minh" },
-  { id: "practice", label: "Luyện tập", hint: "Làm bài kiểm tra" },
-  { id: "results", label: "Kết quả", hint: "Xem thống kê" },
+  { id: "materials", label: "Tài liệu" },
+  { id: "questions", label: "Câu hỏi" },
+  { id: "practice", label: "Luyện tập" },
+  { id: "results", label: "Kết quả" },
 ]
 
 function formatBytes(bytes: number) {
@@ -674,24 +673,6 @@ export default function AssessmentWorkspace() {
         attempt && !result ? "is-quiz-active" : ""
       }`}
     >
-      <header className="assessment-hero">
-        <div>
-          <span className="assessment-eyebrow">Không gian đánh giá</span>
-          <h1>
-            {attempt && !result
-              ? "Luyện tập từ câu hỏi đã xác minh"
-              : "Học từ tài liệu, kiểm tra bằng dữ liệu thật"}
-          </h1>
-          {(!attempt || result) && (
-            <p>
-              Tải tài liệu, duyệt câu hỏi do hệ thống đề xuất và luyện tập với
-              những câu đã được bạn xác minh.
-            </p>
-          )}
-        </div>
-        <span className="assessment-session-note">Phiên làm việc hiện tại</span>
-      </header>
-
       <nav className="assessment-steps" aria-label="Các bước đánh giá">
         {stages.map((item, index) => {
           const state = stageState[item.id]
@@ -711,7 +692,6 @@ export default function AssessmentWorkspace() {
               </span>
               <span>
                 <strong>{item.label}</strong>
-                <small>{item.hint}</small>
               </span>
             </button>
           )

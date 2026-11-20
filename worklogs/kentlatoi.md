@@ -270,3 +270,19 @@
 **Ghi chú**
 - Browser authenticated đạt ở viewport hiện tại 1680×828, không horizontal overflow và không có JavaScript console error. HMR làm mất material state chỉ lưu trong phiên; active quiz tại 390/768/1366/1440 chưa tái kiểm tra và không gọi DeepSeek trả phí để dựng dữ liệu mới.
 - Vite vẫn cảnh báo bundle JavaScript trên 500 kB; SSR tests in cảnh báo HMR port 24678 đã được dùng nhưng toàn bộ assertion đạt.
+
+## 2026-11-20 — Optimize F2 Study viewport layout
+
+**Mục tiêu:** Đưa các điều khiển chính của Study vào khung nhìn laptop thông thường mà không cắt nội dung hoặc thay đổi luồng Assessment.
+
+**Đã làm**
+- Bỏ hero Assessment trùng với tiêu đề trang, rút stepper bốn giai đoạn thành thanh điều hướng cao 48px và giữ nguyên quy tắc mở khóa bước.
+- Thu gọn card, drop zone, form, review, quiz và kết quả trong `frontend/src/styles/study.css`; trả API Mode về cuộn trang tự nhiên thay vì vùng fixed-height có `overflow: hidden`.
+- Giữ upload dạng hai cột trên desktop, sidebar quiz hiện có và layout một cột trên mobile; sửa content-box khiến workspace tràn ngang ở 390px.
+- Thêm regression test cho một tiêu đề, bốn bước, natural scrolling, kích thước compact và mobile box sizing.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; 106/106 frontend tests, TypeScript, Vite production build và `git diff --check` đạt. Fixture dùng CSS sản phẩm xác nhận Step 1 vừa 1366×768/1440×900 và không tràn ngang ở 360/390px.
+
+**Ghi chú**
+- Visual QA dùng dữ liệu tổng hợp và Chrome headless, không gọi DeepSeek; chưa chạy E2E đăng nhập với material thật. Step 2 có nội dung review dài vẫn cuộn tự nhiên.
+- Vite vẫn cảnh báo bundle JavaScript trên 500 kB; SSR tests vẫn in cảnh báo HMR port 24678 đã được dùng nhưng mọi assertion đạt.

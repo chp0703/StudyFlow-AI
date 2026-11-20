@@ -70,7 +70,7 @@ const pageInfo: Record<string, PageInfo> = {
   Study: {
     title: "Học tập",
 
-    description: "Tài liệu học tập, luyện đề và trao đổi cùng trợ lý AI.",
+    description: "Tài liệu, câu hỏi và luyện tập có kiểm chứng.",
   },
 }
 
