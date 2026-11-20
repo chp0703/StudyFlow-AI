@@ -172,3 +172,62 @@ class LearningMaterialLocalSupabase(unittest.TestCase):
             self.assertEqual(completed.status_code, 200, completed.text)
             self.assertEqual(completed.json()["data"]["material_id"], snapshot["material_id"])
             self.assertEqual(write_count, ["text/plain"])
+
+    def test_expired_worker_cannot_publish_and_retry_reuses_id(self):
+        f, body, key = self.fixture, self.body(), uuid4().hex
+        entered, release = threading.Event(), threading.Event()
+
+        def old_worker(content, mime, **kwargs):
+            entered.set()
+            if not release.wait(timeout=15):
+                raise AssertionError("test did not release index")
+            return fake_index(content, mime, **kwargs)
+
+        with self.client(old_worker) as first_app, ThreadPoolExecutor(max_workers=1) as workers:
+            pending = workers.submit(f.post, first_app, "/v1/materials", body, key=key)
+            try:
+                self.assertTrue(entered.wait(timeout=10))
+                with psycopg.connect(os.environ["F1_DB_TEST_DSN"]) as db:
+                    material_id = db.execute("""update app_private.materials m set learning_deadline=clock_timestamp()
+                        from app_private.learning_material_receipts r
+                        where r.material_id=m.material_id and r.idempotency_key=%s returning m.material_id""",
+                        (key,)).fetchone()[0]
+                path = f"/v1/materials/{material_id}"
+                status = first_app.get(path, headers=f.auth("a"))
+                self.assertEqual(status.json()["data"]["error_code"], "INDEX_TIMEOUT")
+            finally:
+                release.set()
+            timeout = pending.result(timeout=20)
+            self.assertEqual(timeout.status_code, 200, timeout.text)
+            self.assertEqual(timeout.json()["data"]["error_code"], "INDEX_TIMEOUT")
+
+        with self.client() as app:
+            retry = f.post(app, "/v1/materials", body)
+            self.assertEqual(retry.status_code, 200, retry.text)
+            self.assertEqual(retry.json()["data"]["status"], "READY")
+            self.assertEqual(retry.json()["data"]["material_id"], str(material_id))
+            replay = f.post(app, "/v1/materials", body, key=key)
+            self.assertEqual(replay.json()["data"]["error_code"], "INDEX_TIMEOUT")
+            self.assertEqual(replay.headers["Idempotency-Replayed"], "true")
+
+    def test_quota_serializes_different_hashes(self):
+        f = self.fixture
+        with self.client() as app:
+            first = f.post(app, "/v1/materials", self.body(), who="c")
+            self.assertEqual(first.status_code, 200, first.text)
+            material_id = first.json()["data"]["material_id"]
+            with psycopg.connect(os.environ["F1_DB_TEST_DSN"]) as db:
+                db.execute("""insert into app_private.materials(user_id,conversation_id,material_id,
+                      filename,mime_type,size_bytes,sha256,page_count,char_count,topics,upload_fingerprint,
+                      learning_origin,learning_status,learning_error)
+                    select user_id,conversation_id,gen_random_uuid(),filename,mime_type,size_bytes,
+                           encode(extensions.digest(n::text,'sha256'),'hex'),1,1,topics,upload_fingerprint,
+                           true,'FAILED','INVALID_DOCUMENT'
+                    from app_private.materials cross join generate_series(1,18) n where material_id=%s""",
+                    (material_id,))
+            with ThreadPoolExecutor(max_workers=2) as workers:
+                writes = [workers.submit(f.post, app, "/v1/materials", self.body(), who="c") for _ in range(2)]
+                results = [write.result(timeout=25) for write in writes]
+            self.assertEqual(sorted(r.status_code for r in results), [200, 409], [r.text for r in results])
+            listed = app.get("/v1/materials", headers=f.auth("c"))
+            self.assertEqual(len(listed.json()["data"]["materials"]), 20)

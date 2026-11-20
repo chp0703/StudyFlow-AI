@@ -32,39 +32,6 @@ class IndexDocumentResult:
     f3_chunks: list[dict[str, Any]]
     f2_chunks: list[dict[str, Any]]
 
-    @property
-    def pages(self) -> int:
-        return self.page_count
-
-    @property
-    def raw_char_count(self) -> int:
-        return self.char_count
-
-    def __getitem__(self, key: str) -> Any:
-        if key in ("page_count", "pages"):
-            return self.page_count
-        if key in ("char_count", "raw_char_count"):
-            return self.char_count
-        if key == "f3_chunks":
-            return self.f3_chunks
-        if key == "f2_chunks":
-            return self.f2_chunks
-        raise KeyError(key)
-
-    def get(self, key: str, default: Any = None) -> Any:
-        try:
-            return self[key]
-        except KeyError:
-            return default
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "page_count": self.page_count,
-            "char_count": self.char_count,
-            "f3_chunks": self.f3_chunks,
-            "f2_chunks": self.f2_chunks,
-        }
-
 
 def index_document(
     content: bytes,

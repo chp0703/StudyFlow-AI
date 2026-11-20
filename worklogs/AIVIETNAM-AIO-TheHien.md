@@ -123,3 +123,5 @@ Cho Daily Learning nạp, lập chỉ mục và quản lý tài liệu trên kho
 
 **Kết quả**
 Bộ unit indexing 28 ca, contract checker, migration generator và test base64 đúng 5 MiB đã đạt. CI Supabase và smoke CPU đang chờ kết quả.
+- Smoke CPU E5 thật đạt 384 chiều và norm L2. Văn bản tiếng Việt mất 13,72 giây khi nạp model từ cache đĩa lần đầu. PDF tổng hợp 50 trang và 40.191 ký tự tạo 91 chunk trong 5,48 giây khi model đã nạp.
+- Backend CI của draft PR #65 xanh. Đổi tên constraint trùng ở migration M1 và bổ sung ca quota đồng thời, lease hết hạn và kiểm tra chunk F2 qua upgrade. Run local 190 unit (2 skip theo cấu hình), 76 ca HTTP acceptance ở bản trước, checker và generator đạt.
