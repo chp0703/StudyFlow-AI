@@ -2,17 +2,31 @@ import assert from "node:assert/strict"
 import test from "node:test"
 
 import { createEndpoints } from "./endpoints.ts"
-import { createApiClient, type ApiClient, type RequestOptions } from "./client.ts"
+import {
+  createApiClient,
+  type ApiClient,
+  type RequestOptions,
+} from "./client.ts"
 
 import type { ActionPresentation } from "./types.ts"
 
 function fixture() {
-  const calls: Array<{ method: string; path: string; options: RequestOptions }> = []
+  const calls: Array<{
+    method: string
+    path: string
+    options: RequestOptions
+  }> = []
   const client: ApiClient = {
-    async request<T>(method: string, path: string, options: RequestOptions = {}) {
+    async request<T,>(
+      method: string,
+      path: string,
+      options: RequestOptions = {},
+    ) {
       calls.push({ method, path, options })
       if (path === "/v1/assessment/questions") {
-        return { data: { items: [{ question_id: "q-1" }], next_cursor: null } } as T
+        return {
+          data: { items: [{ question_id: "q-1" }], next_cursor: null },
+        } as T
       }
       return { data: { ok: true } } as T
     },
@@ -31,7 +45,14 @@ test("assessment material and draft endpoints send canonical bodies and idempote
     "idem-mat-1",
   )
   await endpoints.getAssessmentMaterial("conv-1", "mat/1")
-  await endpoints.generateQuestionDrafts("conv-1", "mat-1", "Kỳ vọng", "MCQ", 5, "idem-draft-1")
+  await endpoints.generateQuestionDrafts(
+    "conv-1",
+    "mat-1",
+    "Kỳ vọng",
+    "MCQ",
+    5,
+    "idem-draft-1",
+  )
   const questions = await endpoints.listAssessmentQuestions({
     material_id: "mat-1",
     status: "VERIFIED",
@@ -77,11 +98,24 @@ test("assessment material and draft endpoints send canonical bodies and idempote
 
 test("assessment attempt, response, stats, and recommendation endpoints match B1 contract", async () => {
   const { calls, endpoints } = fixture()
-  await endpoints.createQuizAttempt("mat-1", ["q-1", "q-2"], "MANUAL", null, "idem-att-1")
+  await endpoints.createQuizAttempt(
+    "mat-1",
+    ["q-1", "q-2"],
+    "MANUAL",
+    null,
+    "idem-att-1",
+  )
   await endpoints.saveQuizResponse("att-1", "q-1", "A", "idem-resp-1")
   await endpoints.submitQuizAttempt("att-1", "idem-sub-1")
   await endpoints.getTopicStats("mat-1")
-  await endpoints.createRevisionRecommendation("conv-1", "mat-1", "Kỳ vọng", 60, 1, "idem-rec-1")
+  await endpoints.createRevisionRecommendation(
+    "conv-1",
+    "mat-1",
+    "Kỳ vọng",
+    60,
+    1,
+    "idem-rec-1",
+  )
 
   assert.equal(calls[0].path, "/v1/assessment/attempts")
   assert.deepEqual(calls[0].options.body, {
@@ -116,8 +150,35 @@ test("assessment attempt, response, stats, and recommendation endpoints match B1
   })
 })
 
+test("selected revision scheduling uses the approved F1 action contract", async () => {
+  const { calls, endpoints } = fixture()
+  const arguments_ = {
+    generation_scope: {
+      start_at: "2026-11-20T03:00:00.000Z",
+      end_at: "2026-11-22T16:59:00.000Z",
+      selection_mode: "SELECTED_TASKS" as const,
+      task_ids: ["task-server-1"],
+    },
+    policy_overrides: {},
+  }
+  await endpoints.prepareStudyPlan("planner-conv", arguments_, "idem-plan-1")
+
+  assert.equal(calls[0].path, "/v1/actions")
+  assert.equal(calls[0].options.idempotencyKey, "idem-plan-1")
+  assert.deepEqual(calls[0].options.body, {
+    schema_version: "1.1",
+    conversation_id: "planner-conv",
+    operation: "generate_study_plan",
+    arguments: arguments_,
+  })
+})
+
 test("createApiClient supports idempotent PUT requests and question_drafts presentations", async () => {
-  const seen: Array<{ url: string; method?: string; headers?: unknown }> = []
+  const seen: Array<{
+    url: string
+    method?: string
+    headers?: unknown
+  }> = []
 
   const client = createApiClient({
     baseUrl: "http://localhost:8000",

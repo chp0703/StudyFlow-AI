@@ -22,6 +22,8 @@ import type { StudyFile } from "../types/task"
 import DemoQuiz from "../features/assessment/DemoQuiz"
 import AssessmentWorkspace from "../features/assessment/AssessmentWorkspace"
 import { apiEnabled } from "../api/config"
+import type { ApiTask } from "../api/types"
+import type { RevisionSchedulingState } from "../features/planner/revisionScheduling"
 
 type StudyChatMessage = {
   id: string
@@ -59,7 +61,17 @@ const defaultFiles: StudyFile[] = [
   },
 ]
 
-export default function Study() {
+export default function Study({
+  revisionScheduling,
+  onRevisionTaskConfirmed,
+  onOpenPlanner,
+  onRetryScheduling,
+}: {
+  revisionScheduling?: RevisionSchedulingState | null
+  onRevisionTaskConfirmed?: (task: ApiTask) => void
+  onOpenPlanner?: () => void
+  onRetryScheduling?: () => void
+}) {
   // === Thẻ 2: Trạng thái tài liệu ===
 
   // Phản hồi tải lên/xóa hiển thị trong thẻ tài liệu thay vì thông báo nổi toàn trang.
@@ -231,7 +243,12 @@ export default function Study() {
   if (apiEnabled)
     return (
       <div className="study-container study-assessment-container">
-        <AssessmentWorkspace />
+        <AssessmentWorkspace
+          revisionScheduling={revisionScheduling}
+          onRevisionTaskConfirmed={onRevisionTaskConfirmed}
+          onOpenPlanner={onOpenPlanner}
+          onRetryScheduling={onRetryScheduling}
+        />
       </div>
     )
 

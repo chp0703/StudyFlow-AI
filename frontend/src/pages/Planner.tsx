@@ -76,6 +76,12 @@ export default function Planner({
   setRevision,
 
   notify,
+
+  revisionScheduling,
+
+  onRetryRevisionScheduling,
+
+  onProposalDecision,
 }: PlannerProps) {
   const [plannerNotice, setPlannerNotice] = useState("")
 
@@ -164,6 +170,8 @@ export default function Planner({
       revision,
 
       setRevision,
+
+      onProposalDecision,
     },
 
     showPlannerNotice,
@@ -684,6 +692,8 @@ export default function Planner({
             )
           }
           week={weekDays.map(dateOf)}
+          revisionScheduling={revisionScheduling}
+          onRetryRevisionScheduling={onRetryRevisionScheduling}
           onClose={() => setTaskPanelOpen(false)}
         />
       </div>

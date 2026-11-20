@@ -286,3 +286,19 @@
 **Ghi chú**
 - Visual QA dùng dữ liệu tổng hợp và Chrome headless, không gọi DeepSeek; chưa chạy E2E đăng nhập với material thật. Step 2 có nội dung review dài vẫn cuộn tự nhiên.
 - Vite vẫn cảnh báo bundle JavaScript trên 500 kB; SSR tests vẫn in cảnh báo HMR port 24678 đã được dùng nhưng mọi assertion đạt.
+
+## 2026-11-20 — Auto-propose F2 revision schedule
+
+**Mục tiêu:** Sau khi người học xác nhận công việc ôn tập F2, tự dùng scheduler F1 để tạo lịch đề xuất cho đúng task và vẫn yêu cầu duyệt trước khi ghi lịch.
+
+**Đã làm**
+- Chỉ kích hoạt sau kết quả xác nhận TaskCandidate `SUCCEEDED/COMMITTED`; lấy `task_id` máy chủ, tạo scope hữu hạn `SELECTED_TASKS` từ hiện tại/`available_from_at` đến deadline và gọi typed `generate_study_plan` bằng conversation Planner hiện có.
+- Dùng lại proposal overlay, `ProposalReview` và `/v1/decisions`; thêm trạng thái đang tìm/chờ duyệt/đã xếp/thất bại vào Study và TaskPanel, hành động xem Planner/thiết lập giờ rảnh/thử lại, không đổi cấu trúc lịch.
+- Giữ body và idempotency key cho kết quả mạng chưa rõ, khóa request đồng thời, chặn action đang chờ, làm mới scope sau thất bại đã xác định và bỏ kết quả nếu tài khoản đã đổi.
+- Bổ sung test typed endpoint, trigger chỉ sau commit, server task ID/scope, retry/concurrency và nhãn “Xác nhận lịch”; chạy lại toàn bộ scheduler F1 cho availability, busy, deadline, partial, retained block và split/break.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; 112/112 frontend tests, 29/29 scheduler unit tests, 15/15 scheduler acceptance tests, TypeScript, Vite production build và `git diff --check` đạt. Browser API Mode có đăng nhập xác nhận Planner render, không tràn ngang ở 1680×828 và không có console error; demo viewport bị công cụ kẹp ở 487×1055 nhưng không tràn ngang.
+
+**Ghi chú**
+- Không gọi DeepSeek trả phí và không tạo dữ liệu F2 thật trong browser; luồng proposal/decision được kiểm tra bằng fixture và component tests. Công cụ browser không áp dụng được chính xác 390/768/1366/1440 trong phiên này.
+- `npm run format -- --check` còn báo hai file có sẵn ngoài diff (`src/api/client.ts`, `src/api/sources.test.ts`); các file thay đổi của công việc này đã được format. Build vẫn cảnh báo chunk JavaScript trên 500 kB.

@@ -52,7 +52,12 @@ import type {
   QuizAttempt,
   QuizAttemptSubmissionData,
   TopicStatsItem,
+  ApiTask,
 } from "../../api/types"
+import {
+  confirmedRevisionTask,
+  type RevisionSchedulingState,
+} from "../planner/revisionScheduling"
 
 const allowedTypes = ["text/plain", "text/markdown", "application/pdf"] as const
 const maxBytes = 10 * 1024 * 1024
@@ -90,7 +95,17 @@ function readBase64(file: File): Promise<string> {
   })
 }
 
-export default function AssessmentWorkspace() {
+export default function AssessmentWorkspace({
+  revisionScheduling,
+  onRevisionTaskConfirmed,
+  onOpenPlanner,
+  onRetryScheduling,
+}: {
+  revisionScheduling?: RevisionSchedulingState | null
+  onRevisionTaskConfirmed?: (task: ApiTask) => void
+  onOpenPlanner?: () => void
+  onRetryScheduling?: () => void
+}) {
   const [conversationId] = useState(() => crypto.randomUUID())
   const [file, setFile] = useState<File | null>(null)
   const [topic, setTopic] = useState("")
@@ -524,6 +539,12 @@ export default function AssessmentWorkspace() {
           throw new Error(
             reply.error?.message ?? "Chưa xác nhận được công việc ôn tập.",
           )
+        const confirmedTask =
+          decision === "APPROVE" ? confirmedRevisionTask(reply) : null
+        if (decision === "APPROVE" && !confirmedTask)
+          throw new Error(
+            "Máy chủ chưa trả về công việc đã lưu với mã công việc hợp lệ.",
+          )
         recommendationOperation.current = null
         setRecommendationReference(null)
         setRecommendationState(
@@ -531,9 +552,10 @@ export default function AssessmentWorkspace() {
         )
         setNotice(
           decision === "APPROVE"
-            ? "Công việc ôn tập đã được xác nhận. Lịch học chưa bị thay đổi."
+            ? "Đã lưu công việc ôn tập. StudyFlow đang tìm giờ học phù hợp."
             : "Đã hủy công việc ôn tập nháp.",
         )
+        if (confirmedTask) onRevisionTaskConfirmed?.(confirmedTask)
         return
       }
 
@@ -1672,8 +1694,8 @@ export default function AssessmentWorkspace() {
                               "Công việc ôn tập"}
                           </strong>
                           <small>
-                            Xác nhận sẽ lưu công việc vào Planner nhưng không tự
-                            động xếp lịch.
+                            Xác nhận sẽ lưu công việc và tự động tìm một lịch
+                            học để bạn duyệt trong Planner.
                           </small>
                         </div>
                         <Button
@@ -1702,10 +1724,31 @@ export default function AssessmentWorkspace() {
                     )}
 
                   {recommendationState === "confirmed" && (
-                    <p className="assessment-recommendation-state">
-                      Công việc ôn tập đã được xác nhận; lịch học vẫn chưa thay
-                      đổi.
-                    </p>
+                    <div className="assessment-recommendation-state assessment-scheduling-state">
+                      <strong>
+                        {revisionScheduling?.message ??
+                          "Đã lưu công việc ôn tập. StudyFlow đang tìm giờ học phù hợp."}
+                      </strong>
+                      <div>
+                        {onOpenPlanner && (
+                          <Button className="secondary" onClick={onOpenPlanner}>
+                            {revisionScheduling?.status === "needs_availability"
+                              ? "Thiết lập giờ rảnh"
+                              : "Xem lịch học"}
+                          </Button>
+                        )}
+                        {(revisionScheduling?.status === "failed" ||
+                          revisionScheduling?.status === "blocked") &&
+                          onRetryScheduling && (
+                            <Button
+                              className="secondary"
+                              onClick={onRetryScheduling}
+                            >
+                              Thử lại
+                            </Button>
+                          )}
+                      </div>
+                    </div>
                   )}
                   {recommendationState === "rejected" && (
                     <p className="assessment-recommendation-state">

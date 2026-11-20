@@ -1117,3 +1117,4 @@
     display: none;
   }
 }
+.task-panel-retry { min-height: 28px; padding: 4px 9px; font-size: 11px; }
