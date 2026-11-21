@@ -386,6 +386,10 @@ class Api:
         body = await self.read_json(request, invalid_object_status=400)
         return await self.learning_sessions.add_turn(ctx, request.headers["idempotency-key"], session_id, body)
 
+    async def get_learning_planner_context(self, request: Request, ctx: Ctx):
+        self._query(request, set(), error_status=400)
+        return await self.learning_sessions.get_planner_context(ctx, self._uuid_param(request, "block_id"))
+
     async def prepare_learning_summary(self, request: Request, ctx: Ctx):
         self._query(request, set(), error_status=400)
         session_id = self._uuid_param(request, "session_id")
@@ -424,6 +428,7 @@ class Api:
             ("GET", "/v1/learning/sessions/{session_id}", self.get_learning_session),
             ("POST", "/v1/learning/sessions/{session_id}/turns", self.add_learning_turn),
             ("POST", "/v1/learning/sessions/{session_id}/summary", self.prepare_learning_summary),
+            ("GET", "/v1/learning/planner-blocks/{block_id}/context", self.get_learning_planner_context),
         ]
         for method, path, handler in learning_routes:
             app.add_api_route(path, self._wrap(handler, post=False), methods=[method], include_in_schema=False)

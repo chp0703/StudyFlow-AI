@@ -100,6 +100,10 @@ class LearningSessionOperations:
             # Retention failure must not hide the user's data path; it reruns on the next read.
             log.warning("Learning purge failed request_id=%s code=%s", ctx.request_id, result["error"]["code"])
 
+    async def get_planner_context(self, ctx, block_id: str):
+        result = await run_in_threadpool(self.rpc, ctx, "get_learning_planner_context", {"block_id": block_id})
+        return _response(result, ctx, "DailyLearningPlannerContextResult")
+
     async def get_session(self, ctx, session_id: str):
         await self._purge(ctx)
         result = await run_in_threadpool(self.rpc, ctx, "get_learning_session", {"session_id": session_id})

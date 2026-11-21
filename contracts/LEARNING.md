@@ -62,6 +62,9 @@ writing. Materials and session endpoints use `ErrorResult`. The shared
 - A session uses one to five unique, owned, ready materials. An optional
   `planner_block_id` provides read-only context and must belong to the same
   owner. Only retrieve chunks from selected materials.
+- `GET /v1/learning/planner-blocks/{id}/context` reads the owned block's task
+  title and time range and returns a `suggested_goal` the client
+  may prefill. It never writes to the Planner.
 
 ### CPU cold-start follow-up
 

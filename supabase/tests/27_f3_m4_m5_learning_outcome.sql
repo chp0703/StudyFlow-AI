@@ -187,5 +187,26 @@ select is((select count(*)::int from app_private.learning_session_receipts where
 select is((select state from app_private.pending_actions where (draft_arguments ->> 'session_id') = 'd3440000-0000-4000-8000-000000000102'
            order by created_at desc limit 1), 'CANCELLED', 'pending summary of a purged session is cancelled');
 
+-- 6. Planner context is read-only and owner-scoped. FK/trigger checks are skipped only while seeding the plan.
+set local session_replication_role = replica;
+insert into app_private.academic_tasks(task_id, user_id, candidate_id, title, start_at, deadline_at, deadline_precision,
+    deadline_timezone, estimated_minutes, remaining_minutes)
+values ('d3440000-0000-4000-8000-0000000000c1', 'd3440000-0000-4000-8000-000000000001', gen_random_uuid(),
+    'Ôn chương 2: Tính chẵn lẻ', now(), now() + interval '3 days', 'DATETIME', 'Asia/Ho_Chi_Minh', 60, 60);
+insert into app_private.study_blocks(plan_id, block_id, user_id, task_id, start_at, end_at)
+values (gen_random_uuid(), 'd3440000-0000-4000-8000-0000000000e1', 'd3440000-0000-4000-8000-000000000001',
+    'd3440000-0000-4000-8000-0000000000c1', now() + interval '1 day', now() + interval '1 day 1 hour');
+set local session_replication_role = origin;
+insert into m4 select 'planner', pg_temp.m4_call('get_learning_planner_context',
+    '{"block_id":"d3440000-0000-4000-8000-0000000000e1"}');
+select is((select val #>> '{data,suggested_goal}' from m4 where label = 'planner'), 'Ôn chương 2: Tính chẵn lẻ',
+    'planner context suggests a goal from the task title');
+select ok(app_private.matches_contract('DailyLearningPlannerContextResult', (select val from m4 where label = 'planner')),
+    'planner context result matches contract');
+select is(pg_temp.m4_call('get_learning_planner_context', '{"block_id":"d3440000-0000-4000-8000-0000000000e1"}',
+    'd3440000-0000-4000-8000-000000000002') #>> '{error,code}', 'ENTITY_NOT_FOUND', 'another user cannot read the block');
+select is((select remaining_minutes::int from app_private.academic_tasks where task_id = 'd3440000-0000-4000-8000-0000000000c1'), 60,
+    'reading planner context leaves the task unchanged');
+
 select * from finish();
 rollback;

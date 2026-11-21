@@ -500,7 +500,7 @@ def main():
     learning_data = data['extensions']['learning']
     assert learning['version'] == learning_data['version'] == learning_api['info']['version'] == '1.0.0'
     assert api['x-learning-contract'] == {'version': learning['version'], 'document': learning['openapi']}
-    assert len(learning_api['paths']) == 7
+    assert len(learning_api['paths']) == 8
     for key in ('materials', 'chunks', 'sessions', 'turns', 'outcomes'):
         assert learning_data[key]['schema'] in definitions
     for interface in learning['internal_interfaces']:

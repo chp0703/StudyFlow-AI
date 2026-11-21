@@ -599,6 +599,44 @@
           }
         }
       }
+    },
+    "/v1/learning/planner-blocks/{id}/context": {
+      "get": {
+        "operationId": "get_learning_planner_context",
+        "summary": "Read a planner block's task to suggest a session goal",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ResourceId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Read a planner block's task to suggest a session goal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/f1.schema.json#/$defs/DailyLearningPlannerContextResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
     }
   }
 }
