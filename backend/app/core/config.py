@@ -33,7 +33,7 @@ class Settings:
     question_max_input_chars: int = 24000
     question_max_context_chunks: int = 12
     question_max_response_bytes: int = 128 * 1024
-    learning_grounding_threshold: float = 0.78
+    learning_grounding_threshold: float = 0.82
     learning_model_timeout_seconds: float = 30.0
     learning_max_tokens: int = 1024
     learning_max_response_bytes: int = 64 * 1024
@@ -101,7 +101,7 @@ class Settings:
             question_max_input_chars=int(env.get("QUESTION_MAX_INPUT_CHARS", "24000")),
             question_max_context_chunks=int(env.get("QUESTION_MAX_CONTEXT_CHUNKS", "12")),
             question_max_response_bytes=int(env.get("QUESTION_MAX_RESPONSE_BYTES", str(128 * 1024))),
-            learning_grounding_threshold=float(env.get("LEARNING_GROUNDING_THRESHOLD", "0.78")),
+            learning_grounding_threshold=float(env.get("LEARNING_GROUNDING_THRESHOLD", "0.82")),
             learning_model_timeout_seconds=float(env.get("LEARNING_MODEL_TIMEOUT_SECONDS", "30.0")),
             learning_max_tokens=int(env.get("LEARNING_MAX_TOKENS", "1024")),
             learning_max_response_bytes=int(env.get("LEARNING_MAX_RESPONSE_BYTES", str(64 * 1024))),

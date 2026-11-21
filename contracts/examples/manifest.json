@@ -936,6 +936,17 @@
       "file": "examples/valid/learning-material-pdf-signature-invalid.json",
       "schema": "DailyMaterialUploadResult",
       "valid": true
+    },
+    {
+      "file": "examples/valid/learning-planner-context.json",
+      "schema": "DailyLearningPlannerContextResult",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/learning-planner-context-empty-goal.json",
+      "schema": "DailyLearningPlannerContextResult",
+      "valid": false,
+      "expected_error": "suggested_goal"
     }
   ]
 }
