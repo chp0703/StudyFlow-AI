@@ -21,6 +21,7 @@ READ_OPERATIONS = frozenset({
     "get_workflow_context", "get_workflow_continuation", "get_ingestion_source",
     "get_assessment_material", "search_material_chunks", "list_questions", "get_quiz_attempt_context",
     "get_topic_stats", "get_learning_material", "list_learning_materials",
+    "get_learning_session", "lookup_learning_turn_receipt", "search_learning_material_chunks",
 })
 
 
