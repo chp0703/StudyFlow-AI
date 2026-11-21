@@ -18,6 +18,7 @@
 | [README.md](README.md) | Luồng xử lý, trust boundary, transaction, invariants và quyết định đã phê duyệt |
 | [schemas/f1.schema.json](schemas/f1.schema.json) | Kiểu/enum/nullability/required của mọi DTO và 10 entity logic; JSON Schema 2020-12 |
 | [openapi.yaml](openapi.yaml) | Method/path/header/query/request/response HTTP; OpenAPI 3.1.1, viết bằng cú pháp JSON hợp lệ trong YAML |
+| [LEARNING.md](LEARNING.md) | Extension Daily AI Learning 1.0.0, quy ước sử dụng API và mô hình embedding |
 | [service-contract.json](service-contract.json) | 10 operation chính thức, schema arguments/result, approval và mapping RPC |
 | [data-contract.json](data-contract.json) | Tên bảng/cột, PostgreSQL type, nullability và PK cho 10 entity |
 | [examples/manifest.json](examples/manifest.json) | Các ví dụ hợp lệ/không hợp lệ và validator phải áp dụng |

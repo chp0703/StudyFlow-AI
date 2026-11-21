@@ -23,7 +23,8 @@ def invalid(message='Không đọc được nguồn. Hãy kiểm tra định d�
     return WorkflowError('INVALID_PARAMETER', message)
 
 
-def decode_upload(filename: str, mime_type: str, encoded: str, *, max_bytes: int = MAX_BYTES) -> bytes:
+def decode_upload(filename: str, mime_type: str, encoded: str, *, max_bytes: int = MAX_BYTES,
+                  validate_text: bool = True) -> bytes:
     if (not isinstance(filename, str) or not filename.strip() or len(filename) > 255
             or '/' in filename or '\\' in filename or any(ord(c) < 32 for c in filename)):
         raise invalid('Tên tệp không hợp lệ.')
@@ -45,7 +46,7 @@ def decode_upload(filename: str, mime_type: str, encoded: str, *, max_bytes: int
     elif mime_type == 'application/pdf':
         if not content.startswith(b'%PDF-'):
             raise invalid('Nội dung không phải PDF.')
-    else:
+    elif validate_text:
         decode_text(content)
     return content
 

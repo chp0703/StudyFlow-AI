@@ -12,3 +12,5 @@ This feature owns source-grounded learning conversations, progressive hints, ses
 - The feature cannot modify Planner tasks or schedules directly.
 
 Detailed requirements are maintained in [product requirements](../../product/requirements.md#feature-3--daily-ai-learning). Machine-readable contracts and persistence models must be added before implementation.
+
+Retrieval evaluation and the grounding threshold are documented in [evaluation](evaluation/README.md).

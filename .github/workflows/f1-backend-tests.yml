@@ -4,7 +4,7 @@ on:
   push:
     branches: [feat/f1-mvp-intergration, feat/be-04-source-ingestion, feat/f2-be02-material-store-retrieval]
   pull_request:
-    branches: [main, feat/f1-mvp-intergration]
+    branches: [main, feat/f1-mvp-intergration, feat/f3-m0-learning-contract]
   workflow_dispatch:
 
 permissions:
@@ -36,6 +36,7 @@ jobs:
               python -B -m unittest discover -s backend/tests/acceptance_api_sol -p test_question_http.py -v
               python -B -m unittest discover -s backend/tests/acceptance_api_sol -p test_attempt_http.py -v
               python -B -m unittest discover -s backend/tests/acceptance_api_sol -p test_topic_stats_http.py -v
+              python -B -m unittest discover -s backend/tests/acceptance_api_sol -p test_learning_http.py -v
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

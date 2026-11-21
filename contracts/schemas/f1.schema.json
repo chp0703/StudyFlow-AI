@@ -1947,7 +1947,8 @@
             "GENERATE_STUDY_PLAN",
             "GET_STUDY_PLAN",
             "VERIFY_QUESTION_DRAFTS",
-            "ACCEPT_REVISION_RECOMMENDATION"
+            "ACCEPT_REVISION_RECOMMENDATION",
+            "SAVE_SESSION_OUTCOME"
           ]
         },
         "state": {
@@ -5280,6 +5281,9 @@
                 },
                 {
                   "$ref": "#/$defs/ActionPresentation"
+                },
+                {
+                  "$ref": "#/$defs/DailyLearningOutcomeApprovedData"
                 }
               ]
             },
@@ -5324,6 +5328,9 @@
                 },
                 {
                   "$ref": "#/$defs/QuestionDraftBatchData"
+                },
+                {
+                  "$ref": "#/$defs/DailyLearningOutcomeRejectedData"
                 }
               ]
             },
@@ -13780,6 +13787,3027 @@
           "$ref": "#/$defs/ErrorResult"
         }
       ]
+    },
+    "DailyMaterialUploadRequest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1"
+        },
+        "course_label": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\x00-\\x1f]+$",
+          "allOf": [
+            {
+              "pattern": "\\S"
+            },
+            {
+              "not": {
+                "enum": [
+                  ".",
+                  ".."
+                ]
+              }
+            }
+          ]
+        },
+        "mime_type": {
+          "enum": [
+            "application/pdf",
+            "text/plain",
+            "text/markdown"
+          ]
+        },
+        "content_base64": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 6990508,
+          "pattern": "^[A-Za-z0-9+/]+={0,2}(?![\\s\\S])"
+        }
+      },
+      "required": [
+        "schema_version",
+        "filename",
+        "mime_type",
+        "content_base64"
+      ],
+      "additionalProperties": false
+    },
+    "DailyLearningMaterial": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "owner_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "course_label": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\x00-\\x1f]+$",
+          "allOf": [
+            {
+              "pattern": "\\S"
+            },
+            {
+              "not": {
+                "enum": [
+                  ".",
+                  ".."
+                ]
+              }
+            }
+          ]
+        },
+        "mime_type": {
+          "enum": [
+            "application/pdf",
+            "text/plain",
+            "text/markdown"
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "byte_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5242880
+        },
+        "page_count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "UPLOADED",
+            "INDEXING",
+            "READY",
+            "FAILED"
+          ]
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "enum": [
+                "INVALID_DOCUMENT",
+                "INDEX_TIMEOUT",
+                "INDEX_UNAVAILABLE"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "material_id",
+        "owner_id",
+        "course_label",
+        "filename",
+        "mime_type",
+        "sha256",
+        "byte_size",
+        "page_count",
+        "status",
+        "error_code",
+        "created_at"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "READY"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "page_count": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 50
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "FAILED"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "error_code": {
+                "enum": [
+                  "INVALID_DOCUMENT",
+                  "INDEX_TIMEOUT",
+                  "INDEX_UNAVAILABLE"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "not": {
+                  "const": "FAILED"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "error_code": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DailyMaterialChunk": {
+      "type": "object",
+      "properties": {
+        "chunk_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "owner_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "ordinal": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "page_start": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "page_end": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1600,
+          "pattern": "\\S"
+        },
+        "embedding": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "minItems": 384,
+          "maxItems": 384
+        },
+        "embedding_model": {
+          "const": "intfloat/multilingual-e5-small"
+        }
+      },
+      "required": [
+        "chunk_id",
+        "material_id",
+        "owner_id",
+        "ordinal",
+        "page_start",
+        "page_end",
+        "text",
+        "embedding",
+        "embedding_model"
+      ],
+      "additionalProperties": false
+    },
+    "DailyLearningCitation": {
+      "type": "object",
+      "properties": {
+        "chunk_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "material_deleted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "chunk_id",
+        "material_id",
+        "page",
+        "material_deleted"
+      ],
+      "additionalProperties": false
+    },
+    "DailyLearningSessionCreateRequest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1"
+        },
+        "goal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "pattern": "\\S"
+        },
+        "material_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true
+        },
+        "planner_block_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "goal",
+        "material_ids"
+      ],
+      "additionalProperties": false
+    },
+    "DailyLearningSession": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "owner_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "goal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "pattern": "\\S"
+        },
+        "material_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true
+        },
+        "planner_block_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "ACTIVE",
+            "SUMMARY_PENDING",
+            "CLOSED"
+          ]
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "session_id",
+        "owner_id",
+        "conversation_id",
+        "goal",
+        "material_ids",
+        "planner_block_id",
+        "status",
+        "version",
+        "created_at",
+        "expires_at"
+      ],
+      "additionalProperties": false
+    },
+    "DailyLearningTurnRequest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1"
+        },
+        "kind": {
+          "enum": [
+            "ASK",
+            "HINT"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "ASK"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "text"
+            ]
+          }
+        }
+      ]
+    },
+    "DailyLearningTurn": {
+      "type": "object",
+      "properties": {
+        "turn_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "session_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "owner_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "ordinal": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "role": {
+          "enum": [
+            "USER",
+            "ASSISTANT"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "ASK",
+            "HINT"
+          ]
+        },
+        "hint_level": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000,
+          "pattern": "\\S"
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DailyLearningCitation"
+          },
+          "minItems": 0,
+          "maxItems": 20,
+          "uniqueItems": true
+        },
+        "supported": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "turn_id",
+        "session_id",
+        "owner_id",
+        "ordinal",
+        "role",
+        "kind",
+        "hint_level",
+        "content",
+        "citations",
+        "supported",
+        "model",
+        "prompt_version"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "ASK"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "hint_level": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "USER"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "properties": {
+              "hint_level": {
+                "type": "null"
+              },
+              "supported": {
+                "type": "null"
+              },
+              "citations": {
+                "maxItems": 0
+              },
+              "model": {
+                "type": "null"
+              },
+              "prompt_version": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "ASSISTANT"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "properties": {
+              "supported": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "ASSISTANT"
+              },
+              "kind": {
+                "const": "HINT"
+              }
+            },
+            "required": [
+              "role",
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "hint_level": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 3
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "supported": {
+                "const": true
+              }
+            },
+            "required": [
+              "supported"
+            ]
+          },
+          "then": {
+            "properties": {
+              "citations": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "supported": {
+                "const": false
+              }
+            },
+            "required": [
+              "supported"
+            ]
+          },
+          "then": {
+            "properties": {
+              "citations": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DailyLearningSummaryDraft": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000,
+          "pattern": "\\S"
+        },
+        "topics": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "pattern": "\\S"
+          },
+          "minItems": 0,
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "duration_minutes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "summary",
+        "topics",
+        "duration_minutes"
+      ],
+      "additionalProperties": false
+    },
+    "DailyLearningSessionOutcome": {
+      "type": "object",
+      "properties": {
+        "outcome_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "session_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "owner_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000,
+          "pattern": "\\S"
+        },
+        "topics": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "pattern": "\\S"
+          },
+          "minItems": 0,
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "duration_minutes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "confirmed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "outcome_id",
+        "session_id",
+        "owner_id",
+        "summary",
+        "topics",
+        "duration_minutes",
+        "confirmed_at"
+      ],
+      "additionalProperties": false
+    },
+    "DailyLearningSummaryRequest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1"
+        }
+      },
+      "required": [
+        "schema_version"
+      ],
+      "additionalProperties": false
+    },
+    "DailyLearningOutcomeReference": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ActionReference"
+        },
+        {
+          "properties": {
+            "target_type": {
+              "const": "PENDING_ACTION"
+            }
+          }
+        }
+      ]
+    },
+    "DailyLearningOutcomeDecisionRequest": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/UserDecision"
+        },
+        {
+          "properties": {
+            "action_reference": {
+              "$ref": "#/$defs/DailyLearningOutcomeReference"
+            }
+          }
+        }
+      ]
+    },
+    "DailyMaterialUploadResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "$ref": "#/$defs/DailyLearningMaterial"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "DailyMaterialReadResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "$ref": "#/$defs/DailyLearningMaterial"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "DailyMaterialListResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "materials": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/DailyLearningMaterial"
+                  },
+                  "minItems": 0,
+                  "maxItems": 20
+                },
+                "next_cursor": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 512,
+                      "pattern": "\\S"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "materials",
+                "next_cursor"
+              ],
+              "additionalProperties": false
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "DailyMaterialDeleteResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "material_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "deleted": {
+                  "const": true
+                }
+              },
+              "required": [
+                "material_id",
+                "deleted"
+              ],
+              "additionalProperties": false
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "DailyLearningSessionCreateResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/DailyLearningSession"
+                },
+                {
+                  "properties": {
+                    "status": {
+                      "const": "ACTIVE"
+                    }
+                  }
+                }
+              ]
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "DailyLearningSessionReadResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "session": {
+                  "$ref": "#/$defs/DailyLearningSession"
+                },
+                "turns": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/DailyLearningTurn"
+                  },
+                  "minItems": 0
+                }
+              },
+              "required": [
+                "session",
+                "turns"
+              ],
+              "additionalProperties": false
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "DailyLearningTurnResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "user_turn": {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/DailyLearningTurn"
+                    },
+                    {
+                      "properties": {
+                        "role": {
+                          "const": "USER"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "assistant_turn": {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/DailyLearningTurn"
+                    },
+                    {
+                      "properties": {
+                        "role": {
+                          "const": "ASSISTANT"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "user_turn",
+                "assistant_turn"
+              ],
+              "additionalProperties": false
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "DailyLearningSummaryResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "DRAFTED"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "operation": {
+                  "const": "save_session_outcome"
+                },
+                "session": {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/DailyLearningSession"
+                    },
+                    {
+                      "properties": {
+                        "status": {
+                          "const": "SUMMARY_PENDING"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "draft": {
+                  "$ref": "#/$defs/DailyLearningSummaryDraft"
+                },
+                "action_reference": {
+                  "$ref": "#/$defs/DailyLearningOutcomeReference"
+                }
+              },
+              "required": [
+                "operation",
+                "session",
+                "draft",
+                "action_reference"
+              ],
+              "additionalProperties": false
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "DailyLearningOutcomeDecisionResult": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/OrchestratorReply"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "state": {
+                  "const": "ERROR"
+                }
+              }
+            },
+            {
+              "properties": {
+                "state": {
+                  "const": "SUCCEEDED"
+                },
+                "result": {
+                  "type": "object",
+                  "oneOf": [
+                    {
+                      "properties": {
+                        "outcome": {
+                          "const": "COMMITTED"
+                        },
+                        "data": {
+                          "$ref": "#/$defs/DailyLearningOutcomeApprovedData"
+                        }
+                      }
+                    },
+                    {
+                      "properties": {
+                        "outcome": {
+                          "const": "REJECTED"
+                        },
+                        "data": {
+                          "$ref": "#/$defs/DailyLearningOutcomeRejectedData"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "DailyLearningOutcomeApprovedData": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "const": "save_session_outcome"
+        },
+        "decision": {
+          "const": "APPROVE"
+        },
+        "session": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/DailyLearningSession"
+            },
+            {
+              "properties": {
+                "status": {
+                  "const": "CLOSED"
+                }
+              }
+            }
+          ]
+        },
+        "session_outcome": {
+          "$ref": "#/$defs/DailyLearningSessionOutcome"
+        }
+      },
+      "required": [
+        "operation",
+        "decision",
+        "session",
+        "session_outcome"
+      ],
+      "additionalProperties": false
+    },
+    "DailyLearningOutcomeRejectedData": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "const": "save_session_outcome"
+        },
+        "decision": {
+          "const": "REJECT"
+        },
+        "session": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/DailyLearningSession"
+            },
+            {
+              "properties": {
+                "status": {
+                  "const": "ACTIVE"
+                }
+              }
+            }
+          ]
+        },
+        "session_outcome": {
+          "type": "null"
+        }
+      },
+      "required": [
+        "operation",
+        "decision",
+        "session",
+        "session_outcome"
+      ],
+      "additionalProperties": false
+    },
+    "ReserveLearningMaterialArguments": {
+      "type": "object",
+      "properties": {
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\x00-\\x1f]+$",
+          "allOf": [
+            {
+              "pattern": "\\S"
+            },
+            {
+              "not": {
+                "enum": [
+                  ".",
+                  ".."
+                ]
+              }
+            }
+          ]
+        },
+        "mime_type": {
+          "enum": [
+            "application/pdf",
+            "text/plain",
+            "text/markdown"
+          ]
+        },
+        "byte_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5242880
+        },
+        "course_label": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "fingerprint",
+        "sha256",
+        "filename",
+        "mime_type",
+        "byte_size",
+        "course_label"
+      ],
+      "additionalProperties": false
+    },
+    "StoreLearningChunksArguments": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "claim": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "page_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "char_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200000
+        },
+        "assessment_chunks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 50
+              },
+              "chunk_index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 499
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "page",
+              "chunk_index",
+              "text"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 500
+        },
+        "learning_chunks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 50
+              },
+              "chunk_index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2047
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1600,
+                "pattern": "\\S"
+              },
+              "embedding": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 16000,
+                "pattern": "^\\[[0-9eE.+,\\-]+\\]$"
+              }
+            },
+            "required": [
+              "page",
+              "chunk_index",
+              "text",
+              "embedding"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 2048
+        }
+      },
+      "required": [
+        "material_id",
+        "claim",
+        "page_count",
+        "char_count",
+        "assessment_chunks",
+        "learning_chunks"
+      ],
+      "additionalProperties": false
+    },
+    "FailLearningMaterialArguments": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "claim": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "error_code": {
+          "enum": [
+            "INVALID_DOCUMENT",
+            "INDEX_TIMEOUT",
+            "INDEX_UNAVAILABLE"
+          ]
+        }
+      },
+      "required": [
+        "material_id",
+        "claim",
+        "error_code"
+      ],
+      "additionalProperties": false
+    },
+    "LearningMaterialLookupArguments": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "material_id"
+      ],
+      "additionalProperties": false
+    },
+    "ListLearningMaterialsArguments": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "before_created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "before_material_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "limit",
+        "before_created_at",
+        "before_material_id"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteLearningMaterialArguments": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "material_id",
+        "fingerprint"
+      ],
+      "additionalProperties": false
+    },
+    "LearningMaterialReservation": {
+      "type": "object",
+      "properties": {
+        "material": {
+          "$ref": "#/$defs/DailyLearningMaterial"
+        },
+        "claim": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replayed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "material",
+        "claim",
+        "replayed"
+      ],
+      "additionalProperties": false
+    },
+    "ReserveLearningMaterialResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "$ref": "#/$defs/LearningMaterialReservation"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "LearningMaterialPage": {
+      "type": "object",
+      "properties": {
+        "materials": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DailyLearningMaterial"
+          },
+          "minItems": 0,
+          "maxItems": 20
+        },
+        "has_more": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "materials",
+        "has_more"
+      ],
+      "additionalProperties": false
+    },
+    "ListLearningMaterialsResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "$ref": "#/$defs/LearningMaterialPage"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "LearningMaterialDeletion": {
+      "type": "object",
+      "properties": {
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "deleted": {
+          "const": true
+        },
+        "replayed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "material_id",
+        "deleted",
+        "replayed"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteLearningMaterialResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "$ref": "#/$defs/LearningMaterialDeletion"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "CreateLearningSessionArguments": {
+      "type": "object",
+      "properties": {
+        "goal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "pattern": "\\S"
+        },
+        "material_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true
+        },
+        "planner_block_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "goal",
+        "material_ids",
+        "planner_block_id",
+        "fingerprint"
+      ],
+      "additionalProperties": false
+    },
+    "LearningSessionCreation": {
+      "type": "object",
+      "properties": {
+        "session": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/DailyLearningSession"
+            },
+            {
+              "properties": {
+                "status": {
+                  "const": "ACTIVE"
+                }
+              }
+            }
+          ]
+        },
+        "replayed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "session",
+        "replayed"
+      ],
+      "additionalProperties": false
+    },
+    "CreateLearningSessionResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "$ref": "#/$defs/LearningSessionCreation"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "GetLearningSessionArguments": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "session_id"
+      ],
+      "additionalProperties": false
+    },
+    "DailyLearningSessionReadData": {
+      "type": "object",
+      "properties": {
+        "session": {
+          "$ref": "#/$defs/DailyLearningSession"
+        },
+        "turns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DailyLearningTurn"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "session",
+        "turns"
+      ],
+      "additionalProperties": false
+    },
+    "LookupLearningTurnReceiptArguments": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "session_id",
+        "idempotency_key",
+        "fingerprint"
+      ],
+      "additionalProperties": false
+    },
+    "LearningTurnPair": {
+      "type": "object",
+      "properties": {
+        "user_turn": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/DailyLearningTurn"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "USER"
+                }
+              }
+            }
+          ]
+        },
+        "assistant_turn": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/DailyLearningTurn"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "ASSISTANT"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "user_turn",
+        "assistant_turn"
+      ],
+      "additionalProperties": false
+    },
+    "LearningTurnReceiptLookup": {
+      "type": "object",
+      "properties": {
+        "found": {
+          "type": "boolean"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LearningTurnPair"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "found",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "LookupLearningTurnReceiptResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "$ref": "#/$defs/LearningTurnReceiptLookup"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "SearchLearningMaterialChunksArguments": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "query_embedding": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16000,
+          "pattern": "^\\[[0-9eE.+,\\-]+\\]$"
+        },
+        "query_text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000,
+          "pattern": "\\S"
+        },
+        "k": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        }
+      },
+      "required": [
+        "session_id",
+        "query_embedding",
+        "query_text",
+        "k"
+      ],
+      "additionalProperties": false
+    },
+    "RetrievedLearningChunk": {
+      "type": "object",
+      "properties": {
+        "chunk_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "ordinal": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1600,
+          "pattern": "\\S"
+        },
+        "cosine_similarity": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "fts_rank": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rrf_score": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "chunk_id",
+        "material_id",
+        "page",
+        "ordinal",
+        "text",
+        "cosine_similarity",
+        "fts_rank",
+        "rrf_score"
+      ],
+      "additionalProperties": false
+    },
+    "SearchLearningMaterialChunksData": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "chunks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RetrievedLearningChunk"
+          },
+          "minItems": 0,
+          "maxItems": 20
+        }
+      },
+      "required": [
+        "session_id",
+        "chunks"
+      ],
+      "additionalProperties": false
+    },
+    "SearchLearningMaterialChunksResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "$ref": "#/$defs/SearchLearningMaterialChunksData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "LearningCitationInput": {
+      "type": "object",
+      "properties": {
+        "chunk_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        }
+      },
+      "required": [
+        "chunk_id",
+        "material_id",
+        "page"
+      ],
+      "additionalProperties": false
+    },
+    "AppendLearningTurnArguments": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "expected_last_ordinal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "kind": {
+          "enum": [
+            "ASK",
+            "HINT"
+          ]
+        },
+        "user_content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000,
+          "pattern": "\\S"
+        },
+        "assistant_content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000,
+          "pattern": "\\S"
+        },
+        "hint_level": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LearningCitationInput"
+          },
+          "minItems": 0,
+          "maxItems": 20,
+          "uniqueItems": true
+        },
+        "supported": {
+          "type": "boolean"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "session_id",
+        "fingerprint",
+        "expected_last_ordinal",
+        "kind",
+        "user_content",
+        "assistant_content",
+        "hint_level",
+        "citations",
+        "supported",
+        "model",
+        "prompt_version"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "ASK"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "hint_level": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "hint_level": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 3
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "supported": {
+                "const": true
+              }
+            },
+            "required": [
+              "supported"
+            ]
+          },
+          "then": {
+            "properties": {
+              "citations": {
+                "minItems": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "citations": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "LearningTurnAppended": {
+      "type": "object",
+      "properties": {
+        "user_turn": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/DailyLearningTurn"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "USER"
+                }
+              }
+            }
+          ]
+        },
+        "assistant_turn": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/DailyLearningTurn"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "ASSISTANT"
+                }
+              }
+            }
+          ]
+        },
+        "replayed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "user_turn",
+        "assistant_turn",
+        "replayed"
+      ],
+      "additionalProperties": false
+    },
+    "AppendLearningTurnResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "$ref": "#/$defs/LearningTurnAppended"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "PrepareLearningSummaryArguments": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "expected_session_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000,
+          "pattern": "\\S"
+        },
+        "topics": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "pattern": "\\S"
+          },
+          "minItems": 0,
+          "maxItems": 50,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "session_id",
+        "fingerprint",
+        "expected_session_version",
+        "summary",
+        "topics"
+      ],
+      "additionalProperties": false
+    },
+    "LearningSummaryPrepared": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "const": "save_session_outcome"
+        },
+        "session": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/DailyLearningSession"
+            },
+            {
+              "properties": {
+                "status": {
+                  "const": "SUMMARY_PENDING"
+                }
+              }
+            }
+          ]
+        },
+        "draft": {
+          "$ref": "#/$defs/DailyLearningSummaryDraft"
+        },
+        "action_reference": {
+          "$ref": "#/$defs/DailyLearningOutcomeReference"
+        },
+        "replayed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "operation",
+        "session",
+        "draft",
+        "action_reference",
+        "replayed"
+      ],
+      "additionalProperties": false
+    },
+    "PrepareLearningSummaryResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "DRAFTED"
+            },
+            "data": {
+              "$ref": "#/$defs/LearningSummaryPrepared"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "DecideLearningSessionOutcomeArguments": {
+      "type": "object",
+      "properties": {
+        "decision": {
+          "type": "string",
+          "enum": [
+            "APPROVE",
+            "REJECT"
+          ]
+        }
+      },
+      "required": [
+        "decision"
+      ],
+      "additionalProperties": false
+    },
+    "LearningSessionOutcomeDecided": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/DailyLearningOutcomeApprovedData"
+        },
+        {
+          "$ref": "#/$defs/DailyLearningOutcomeRejectedData"
+        }
+      ]
+    },
+    "DecideLearningSessionOutcomeResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "enum": [
+                "COMMITTED",
+                "REJECTED"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/LearningSessionOutcomeDecided"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "PurgeExpiredLearningArguments": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "LearningPurgeData": {
+      "type": "object",
+      "properties": {
+        "deleted_sessions": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "closed_sessions": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "deleted_sessions",
+        "closed_sessions"
+      ],
+      "additionalProperties": false
+    },
+    "PurgeExpiredLearningResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "$ref": "#/$defs/LearningPurgeData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "DailyLearningPlannerContext": {
+      "type": "object",
+      "properties": {
+        "block_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "task_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "task_title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "pattern": "\\S"
+        },
+        "start_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "suggested_goal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "block_id",
+        "task_id",
+        "task_title",
+        "start_at",
+        "end_at",
+        "suggested_goal"
+      ],
+      "additionalProperties": false
+    },
+    "DailyLearningPlannerContextResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "$ref": "#/$defs/DailyLearningPlannerContext"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "GetLearningPlannerContextArguments": {
+      "type": "object",
+      "properties": {
+        "block_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "block_id"
+      ],
+      "additionalProperties": false
     }
   }
 }
