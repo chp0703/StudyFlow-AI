@@ -26,6 +26,10 @@ from ...assessment.questions import AssessmentQuestionOperations, DeepSeekQuesti
 from ...assessment.attempts import QuizAttemptOperations
 from ...assessment.stats import TopicStatsOperations
 from ...assessment.recommendations import RevisionRecommendationOperations
+from ...learning.answer import DeepSeekLearningModel
+from ...learning.indexing import index_document
+from ...learning.materials import LearningMaterialOperations, MAX_BODY_BYTES as LEARNING_MAX_BODY_BYTES
+from ...learning.sessions import LearningSessionOperations
 
 log = logging.getLogger("studyflow.api")
 _KEY = re.compile(r"^[A-Za-z0-9._:-]{16,128}$")
@@ -49,10 +53,25 @@ def _int(value: str, name: str) -> int:
 
 class Api:
     def __init__(self, settings: Settings, rpc: RpcClient, verifier: JwtVerifier, clock, extractor, source_extractor=None,
-                 question_generator=None):
+                 question_generator=None, learning_indexer=None, learning_embedder=None, learning_model=None):
         self.settings, self.rpc_client, self.verifier, self.clock = settings, rpc, verifier, clock
         self.extractor = extractor
         self.materials = MaterialOperations(self.rpc, clock)
+        self.learning_materials = LearningMaterialOperations(self.rpc, learning_indexer or index_document)
+        self.learning_sessions = LearningSessionOperations(
+            self.rpc,
+            settings,
+            embedder=learning_embedder,
+            model=learning_model or DeepSeekLearningModel(
+                settings.deepseek_base_url,
+                settings.deepseek_api_key,
+                settings.deepseek_model,
+                None,
+                timeout_seconds=settings.learning_model_timeout_seconds,
+                max_tokens=settings.learning_max_tokens,
+                max_response_bytes=settings.learning_max_response_bytes,
+            ),
+        )
         self.questions = AssessmentQuestionOperations(
             self.rpc,
             self.materials,
@@ -118,15 +137,16 @@ class Api:
 
     # ----------------------------------------------------------------- các endpoint GET
     @staticmethod
-    def _query(request: Request, allowed: set[str], repeated: frozenset = frozenset()) -> dict:
+    def _query(request: Request, allowed: set[str], repeated: frozenset = frozenset(), *,
+               error_status: int | None = None) -> dict:
         values: dict = {}
         for key, value in request.query_params.multi_items():
             if key not in allowed:
-                raise ApiError("INVALID_PARAMETER", "Unknown query parameter.", field=key)
+                raise ApiError("INVALID_PARAMETER", "Unknown query parameter.", field=key, status=error_status)
             if key in repeated:
                 values.setdefault(key, []).append(value)
             elif key in values:
-                raise ApiError("INVALID_PARAMETER", "Query parameter repeated.", field=key)
+                raise ApiError("INVALID_PARAMETER", "Query parameter repeated.", field=key, status=error_status)
             else:
                 values[key] = value
         return values
@@ -169,7 +189,8 @@ class Api:
         return self.result_response(await run_in_threadpool(self.rpc, ctx, "get_study_plan", args), ctx)
 
     # ----------------------------------------------------------------- quy trình POST
-    async def read_json(self, request: Request, *, max_bytes: int | None = None) -> dict:
+    async def read_json(self, request: Request, *, max_bytes: int | None = None,
+                        invalid_object_status: int | None = None) -> dict:
         key = request.headers.get("idempotency-key")
         if key is None or not _KEY.match(key):
             raise ApiError("INVALID_PARAMETER", "A valid Idempotency-Key header is required.", status=400,
@@ -188,7 +209,7 @@ class Api:
         except (UnicodeDecodeError, ValueError):
             raise ApiError("INVALID_PARAMETER", "The body is not valid JSON.", status=400) from None
         if not isinstance(data, dict):
-            raise ApiError("INVALID_PARAMETER", "The body must be a JSON object.")
+            raise ApiError("INVALID_PARAMETER", "The body must be a JSON object.", status=invalid_object_status)
         if "schema_version" in data and data["schema_version"] != "1.1":
             raise ApiError("INVALID_PARAMETER", "Unsupported schema_version.", status=400, field="schema_version")
         return data
@@ -325,6 +346,44 @@ class Api:
         result = await run_in_threadpool(self.topic_stats.get, ctx, args)
         return self.result_response(result, ctx)
 
+    async def upload_learning_material(self, request: Request, ctx: Ctx):
+        body = await self.read_json(request, max_bytes=LEARNING_MAX_BODY_BYTES, invalid_object_status=400)
+        return await self.learning_materials.upload(ctx, request.headers["idempotency-key"], body)
+
+    async def get_learning_material(self, request: Request, ctx: Ctx):
+        self._query(request, set(), error_status=400)
+        return await self.learning_materials.get(ctx, self._uuid_param(request, "material_id"))
+
+    async def list_learning_materials(self, request: Request, ctx: Ctx):
+        query = self._query(request, {"cursor", "limit"}, error_status=400)
+        limit = _int(query.get("limit", "20"), "limit")
+        if not 1 <= limit <= 20:
+            raise ApiError("INVALID_PARAMETER", "Limit phải từ 1 đến 20.", status=400, field="limit")
+        return await self.learning_materials.list(ctx, limit, query.get("cursor"))
+
+    async def delete_learning_material(self, request: Request, ctx: Ctx):
+        self._query(request, set(), error_status=400)
+        key = request.headers.get("idempotency-key")
+        if key is None or not _KEY.fullmatch(key):
+            raise ApiError("INVALID_PARAMETER", "A valid Idempotency-Key header is required.", status=400,
+                           field="Idempotency-Key")
+        return await self.learning_materials.delete(ctx, key, self._uuid_param(request, "material_id"))
+
+    async def create_learning_session(self, request: Request, ctx: Ctx):
+        self._query(request, set(), error_status=400)
+        body = await self.read_json(request, invalid_object_status=400)
+        return await self.learning_sessions.create_session(ctx, request.headers["idempotency-key"], body)
+
+    async def get_learning_session(self, request: Request, ctx: Ctx):
+        self._query(request, set(), error_status=400)
+        return await self.learning_sessions.get_session(ctx, self._uuid_param(request, "session_id"))
+
+    async def add_learning_turn(self, request: Request, ctx: Ctx):
+        self._query(request, set(), error_status=400)
+        session_id = self._uuid_param(request, "session_id")
+        body = await self.read_json(request, invalid_object_status=400)
+        return await self.learning_sessions.add_turn(ctx, request.headers["idempotency-key"], session_id, body)
+
     # ----------------------------------------------------------------- đăng ký endpoint
     def register(self, app: FastAPI) -> None:
         routes = [
@@ -347,6 +406,18 @@ class Api:
         for method, path, handler in routes:
             app.add_api_route(path, self._wrap(handler, post=method in ("POST", "PUT")), methods=[method],
                               include_in_schema=False)
+
+        learning_routes = [
+            ("POST", "/v1/materials", self.upload_learning_material),
+            ("GET", "/v1/materials", self.list_learning_materials),
+            ("GET", "/v1/materials/{material_id}", self.get_learning_material),
+            ("DELETE", "/v1/materials/{material_id}", self.delete_learning_material),
+            ("POST", "/v1/learning/sessions", self.create_learning_session),
+            ("GET", "/v1/learning/sessions/{session_id}", self.get_learning_session),
+            ("POST", "/v1/learning/sessions/{session_id}/turns", self.add_learning_turn),
+        ]
+        for method, path, handler in learning_routes:
+            app.add_api_route(path, self._wrap(handler, post=False), methods=[method], include_in_schema=False)
 
     def _wrap(self, handler, *, post: bool):
         async def endpoint(request: Request):

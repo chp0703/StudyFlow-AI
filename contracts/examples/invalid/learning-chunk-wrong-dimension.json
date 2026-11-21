@@ -1,0 +1,14 @@
+{
+  "chunk_id": "d3110000-0000-4000-8000-000000000003",
+  "material_id": "d3110000-0000-4000-8000-000000000001",
+  "owner_id": "d3110000-0000-4000-8000-000000000002",
+  "ordinal": 1,
+  "page_start": 1,
+  "page_end": 1,
+  "text": "Tổng hai số chẵn là số chẵn.",
+  "embedding": [
+    1,
+    0
+  ],
+  "embedding_model": "intfloat/multilingual-e5-small"
+}

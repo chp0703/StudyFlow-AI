@@ -11,6 +11,7 @@ on:
     branches:
       - main
       - feat/f1-mvp-intergration
+      - feat/f3-m0-learning-contract
   workflow_dispatch:
 
 permissions:
@@ -187,3 +188,6 @@ jobs:
 
       - name: Run Backend Contract checker
         run: python contracts/check_contract.py
+
+      - name: Check Daily Learning upload limit in JavaScript
+        run: node --test contracts/tests/learning-upload.test.mjs

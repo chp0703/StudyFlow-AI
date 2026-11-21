@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.1",
+  "request_id": "learning-fixture",
+  "outcome": "ERROR",
+  "data": null,
+  "error": {
+    "code": "TIME_CONFLICT",
+    "message": "Tài liệu đang được Assessment sử dụng.",
+    "field": "material_id",
+    "details": {
+      "reason": "MATERIAL_IN_USE"
+    },
+    "retryable": false
+  },
+  "warnings": []
+}

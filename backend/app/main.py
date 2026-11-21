@@ -16,11 +16,13 @@ from .core.security import JwtVerifier
 from .nlu.extractor import DeepSeekExtractor, UnavailableExtractor
 from .ingestion.service import SourceExtractor
 from .assessment.questions import DeepSeekQuestionGenerator
+from .learning.answer import DeepSeekLearningModel
 
 
 def create_app(settings: Settings | None = None, *, rpc_transport: httpx.BaseTransport | None = None,
                llm_transport: httpx.BaseTransport | None = None, jwks_transport: httpx.BaseTransport | None = None,
-               clock=None, extractor=None, question_generator=None) -> FastAPI:
+               clock=None, extractor=None, question_generator=None, learning_indexer=None,
+               learning_embedder=None, learning_model=None) -> FastAPI:
     settings = settings or Settings.from_env()
     clock = clock or (lambda: datetime.now(timezone.utc))
     app = FastAPI(title="StudyFlow F1 API", docs_url=None, redoc_url=None, openapi_url=None)
@@ -39,9 +41,20 @@ def create_app(settings: Settings | None = None, *, rpc_transport: httpx.BaseTra
             max_context_chunks=settings.question_max_context_chunks,
             max_response_bytes=settings.question_max_response_bytes,
         )
+    if learning_model is None:
+        learning_model = DeepSeekLearningModel(
+            settings.deepseek_base_url,
+            settings.deepseek_api_key,
+            settings.deepseek_model,
+            llm_transport,
+            timeout_seconds=settings.learning_model_timeout_seconds,
+            max_tokens=settings.learning_max_tokens,
+            max_response_bytes=settings.learning_max_response_bytes,
+        )
     api = Api(settings, RpcClient(settings, rpc_transport, clock), JwtVerifier(settings, jwks_transport, clock), clock, extractor,
               SourceExtractor(settings.deepseek_base_url, settings.deepseek_api_key, settings.ingestion_model, llm_transport),
-              question_generator=question_generator)
+              question_generator=question_generator, learning_indexer=learning_indexer,
+              learning_embedder=learning_embedder, learning_model=learning_model)
     app.state.llm_transport = llm_transport  # được dùng ở bước trích xuất
     api.register(app)
 
@@ -50,7 +63,7 @@ def create_app(settings: Settings | None = None, *, rpc_transport: httpx.BaseTra
         return fallback_response(request, exc.status_code)
 
     app.add_middleware(
-        CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["GET", "POST", "PUT", "OPTIONS"],
+        CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Idempotency-Key", "Content-Type"],
         expose_headers=["X-Request-ID", "Idempotency-Replayed", "Retry-After"], max_age=600)
     return app

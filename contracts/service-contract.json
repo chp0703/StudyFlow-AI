@@ -475,6 +475,117 @@
         }
       ],
       "approval_boundary": "Generated questions remain DRAFT until verified through POST /v1/decisions with an intact action_reference; revision recommendations create Planner pending actions and never mutate StudyPlan directly."
+    },
+    "learning": {
+      "version": "1.0.0",
+      "openapi": "learning-openapi.yaml",
+      "decision": {
+        "operation": "save_session_outcome",
+        "path": "/v1/decisions",
+        "request_schema": "DailyLearningOutcomeDecisionRequest",
+        "result_schema": "DailyLearningOutcomeDecisionResult"
+      },
+      "internal_interfaces": [
+        {
+          "rpc": "reserve_learning_material",
+          "arguments_schema": "ReserveLearningMaterialArguments",
+          "data_schema": "LearningMaterialReservation",
+          "result_schema": "ReserveLearningMaterialResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "store_learning_material_chunks",
+          "arguments_schema": "StoreLearningChunksArguments",
+          "data_schema": "DailyLearningMaterial",
+          "result_schema": "DailyMaterialUploadResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "fail_learning_material",
+          "arguments_schema": "FailLearningMaterialArguments",
+          "data_schema": "DailyLearningMaterial",
+          "result_schema": "DailyMaterialUploadResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "get_learning_material",
+          "arguments_schema": "LearningMaterialLookupArguments",
+          "data_schema": "DailyLearningMaterial",
+          "result_schema": "DailyMaterialReadResult",
+          "read_only": true,
+          "attestation_required": false,
+          "llm_callable": false
+        },
+        {
+          "rpc": "list_learning_materials",
+          "arguments_schema": "ListLearningMaterialsArguments",
+          "data_schema": "LearningMaterialPage",
+          "result_schema": "ListLearningMaterialsResult",
+          "read_only": true,
+          "attestation_required": false,
+          "llm_callable": false
+        },
+        {
+          "rpc": "delete_learning_material",
+          "arguments_schema": "DeleteLearningMaterialArguments",
+          "data_schema": "LearningMaterialDeletion",
+          "result_schema": "DeleteLearningMaterialResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "create_learning_session",
+          "arguments_schema": "CreateLearningSessionArguments",
+          "data_schema": "LearningSessionCreation",
+          "result_schema": "CreateLearningSessionResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "get_learning_session",
+          "arguments_schema": "GetLearningSessionArguments",
+          "data_schema": "DailyLearningSessionReadData",
+          "result_schema": "DailyLearningSessionReadResult",
+          "read_only": true,
+          "attestation_required": false,
+          "llm_callable": false
+        },
+        {
+          "rpc": "lookup_learning_turn_receipt",
+          "arguments_schema": "LookupLearningTurnReceiptArguments",
+          "data_schema": "LearningTurnReceiptLookup",
+          "result_schema": "LookupLearningTurnReceiptResult",
+          "read_only": true,
+          "attestation_required": false,
+          "llm_callable": false
+        },
+        {
+          "rpc": "search_learning_material_chunks",
+          "arguments_schema": "SearchLearningMaterialChunksArguments",
+          "data_schema": "SearchLearningMaterialChunksData",
+          "result_schema": "SearchLearningMaterialChunksResult",
+          "read_only": true,
+          "attestation_required": false,
+          "llm_callable": false
+        },
+        {
+          "rpc": "append_learning_turn",
+          "arguments_schema": "AppendLearningTurnArguments",
+          "data_schema": "LearningTurnAppended",
+          "result_schema": "AppendLearningTurnResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        }
+      ]
     }
   }
 }

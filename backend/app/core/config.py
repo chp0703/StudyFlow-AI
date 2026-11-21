@@ -8,6 +8,7 @@ import os
 from dataclasses import dataclass, field
 
 PRODUCT_TIMEZONE = "Asia/Ho_Chi_Minh"
+LEARNING_EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
 
 
 @dataclass(frozen=True)
@@ -32,6 +33,11 @@ class Settings:
     question_max_input_chars: int = 24000
     question_max_context_chunks: int = 12
     question_max_response_bytes: int = 128 * 1024
+    learning_grounding_threshold: float = 0.78
+    learning_model_timeout_seconds: float = 30.0
+    learning_max_tokens: int = 1024
+    learning_max_response_bytes: int = 64 * 1024
+    learning_context_recent_turns: int = 6
 
     def __post_init__(self):
         if not self.supabase_url.startswith(("https://", "http://127.0.0.1", "http://localhost")):
@@ -52,6 +58,16 @@ class Settings:
             raise ValueError("question_max_context_chunks must be between 1 and 20")
         if not (4096 <= self.question_max_response_bytes <= 1024 * 1024):
             raise ValueError("question_max_response_bytes must be between 4096 and 1048576")
+        if not (-1.0 <= self.learning_grounding_threshold <= 1.0):
+            raise ValueError("learning_grounding_threshold must be within [-1.0, 1.0]")
+        if not (0 < self.learning_model_timeout_seconds <= 120.0):
+            raise ValueError("learning_model_timeout_seconds must be within (0, 120]")
+        if not (128 <= self.learning_max_tokens <= 4096):
+            raise ValueError("learning_max_tokens must be between 128 and 4096")
+        if not (4096 <= self.learning_max_response_bytes <= 1024 * 1024):
+            raise ValueError("learning_max_response_bytes must be between 4096 and 1048576")
+        if not (1 <= self.learning_context_recent_turns <= 20):
+            raise ValueError("learning_context_recent_turns must be between 1 and 20")
 
     @property
     def signing_secret(self) -> bytes:
@@ -85,4 +101,9 @@ class Settings:
             question_max_input_chars=int(env.get("QUESTION_MAX_INPUT_CHARS", "24000")),
             question_max_context_chunks=int(env.get("QUESTION_MAX_CONTEXT_CHUNKS", "12")),
             question_max_response_bytes=int(env.get("QUESTION_MAX_RESPONSE_BYTES", str(128 * 1024))),
+            learning_grounding_threshold=float(env.get("LEARNING_GROUNDING_THRESHOLD", "0.78")),
+            learning_model_timeout_seconds=float(env.get("LEARNING_MODEL_TIMEOUT_SECONDS", "30.0")),
+            learning_max_tokens=int(env.get("LEARNING_MAX_TOKENS", "1024")),
+            learning_max_response_bytes=int(env.get("LEARNING_MAX_RESPONSE_BYTES", str(64 * 1024))),
+            learning_context_recent_turns=int(env.get("LEARNING_CONTEXT_RECENT_TURNS", "6")),
         )

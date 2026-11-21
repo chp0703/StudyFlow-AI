@@ -69,3 +69,31 @@
 **Ghi chú**
 
 - Chưa xác minh lưu nhãn màu qua API thật.
+
+## 2026-11-20 — Chốt hợp đồng F3 M0
+
+**Mục tiêu.** Cung cấp hợp đồng Daily AI Learning để Backend và Frontend review trước khi triển khai.
+
+**Đã làm**
+
+- Công bố OpenAPI 1.0.0, JSON Schema và 35 fixture hợp lệ hoặc không hợp lệ.
+- Sinh migration schema từ hợp đồng và chốt embedding cục bộ multilingual-e5-small, 384 chiều.
+- Ghi quy ước về trích dẫn theo trang, mức gợi ý, xác nhận kết quả phiên và tương thích với Assessment.
+
+**Kết quả.** Issue #63 và nhánh `feat/f3-m0-learning-contract`. Kiểm tra OpenAPI và 170 fixture đạt. Bộ unit backend chạy 163 ca, bỏ qua 2 ca. Supabase cục bộ xác minh 32 fixture SQL trong giao dịch rollback.
+
+**Ghi chú**
+
+- Endpoint runtime, lưu trữ và chạy model embedding thuộc các mốc triển khai sau.
+
+## 2026-11-20 — Sửa hợp đồng F3 M0 theo review của Hiển
+
+**Mục tiêu.** Thống nhất các điều kiện để Backend và Frontend triển khai M1.
+
+**Đã làm**
+
+- Chốt dùng kho tài liệu chung với Assessment và trả xung đột khi tài liệu còn tham chiếu F2.
+- Phân biệt lỗi upload trước khi tạo bản ghi, lỗi indexing có ID, và cách retry theo idempotency key.
+- Đồng bộ phản hồi quyết định với OrchestratorReply, sửa regex upload và tách dependency embedding.
+
+**Kết quả.** PR #64. 175 fixture hợp đồng, 37 fixture schema trên Supabase cục bộ và bài kiểm tra JavaScript ở đúng 5 MiB đều đạt.
