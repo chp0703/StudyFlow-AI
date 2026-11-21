@@ -28,6 +28,7 @@ from .answer import (
 from .embedding import embed_query
 from .exceptions import IndexingError
 from .hints import normalize_hint_answer, resolve_hint_target_and_level
+from .summary import SummaryNormalizationError, build_summary_messages, normalize_summary
 
 log = logging.getLogger(__name__)
 DEFAULT_RETRIEVAL_K = 6
@@ -76,6 +77,7 @@ class LearningSessionOperations:
             "planner_block_id": body.get("planner_block_id"),
             "fingerprint": contract.sha256_hex(body),
         }
+        await self._purge(ctx)
         result = await run_in_threadpool(self.rpc, ctx, "create_learning_session", args, idempotency_key=key)
         if result["outcome"] == "ERROR":
             return _response(result, ctx, "DailyLearningSessionCreateResult", write=True)
@@ -91,7 +93,15 @@ class LearningSessionOperations:
             replayed=bool(data["replayed"]),
         )
 
+    async def _purge(self, ctx) -> None:
+        """Apply 30-day retention for the caller before reading or creating sessions."""
+        result = await run_in_threadpool(self.rpc, ctx, "purge_expired_learning", {})
+        if result["outcome"] == "ERROR":
+            # Retention failure must not hide the user's data path; it reruns on the next read.
+            log.warning("Learning purge failed request_id=%s code=%s", ctx.request_id, result["error"]["code"])
+
     async def get_session(self, ctx, session_id: str):
+        await self._purge(ctx)
         result = await run_in_threadpool(self.rpc, ctx, "get_learning_session", {"session_id": session_id})
         if result["outcome"] == "READ":
             session = result["data"]["session"]
@@ -280,3 +290,38 @@ class LearningSessionOperations:
             write=True,
             replayed=replayed,
         )
+
+    async def prepare_summary(self, ctx, key: str, session_id: str, body: dict[str, Any]):
+        if not contract.is_valid("DailyLearningSummaryRequest", body):
+            raise ApiError("INVALID_PARAMETER", "Yêu cầu tóm tắt phiên không đúng định dạng.", status=400)
+        fingerprint = contract.sha256_hex({"session_id": session_id, "body": body})
+        loaded = await run_in_threadpool(self.rpc, ctx, "get_learning_session", {"session_id": session_id})
+        if loaded["outcome"] == "ERROR":
+            return _response(loaded, ctx, "DailyLearningSummaryResult", write=True)
+        session, turns = loaded["data"]["session"], loaded["data"]["turns"]
+        if session["owner_id"] != ctx.user_id:
+            raise ApiError("INTERNAL_ERROR", "Kết quả phiên học không đúng chủ sở hữu.")
+
+        if session["status"] != "ACTIVE" or not turns:
+            # Skip the model: the RPC replays a stored receipt for this key, or reports the state conflict.
+            draft = {"summary": "-", "topics": []}
+        else:
+            if self.model is None:
+                raise ApiError("SERVICE_UNAVAILABLE", "Chưa cấu hình dịch vụ mô hình học tập trên server.",
+                               status=503, retryable=True, retry_after=1)
+            try:
+                raw, _ = await run_in_threadpool(
+                    self.model.generate, build_summary_messages(goal=session["goal"], turns=turns))
+                draft = normalize_summary(raw)
+            except (LearningModelUnavailable, LearningModelError, SummaryNormalizationError):
+                raise ApiError("SERVICE_UNAVAILABLE", "Không thể tạo bản tóm tắt lúc này.",
+                               status=503, retryable=True, retry_after=1) from None
+
+        args = {"session_id": session_id, "fingerprint": fingerprint,
+                "expected_session_version": session["version"], **draft}
+        result = await run_in_threadpool(self.rpc, ctx, "prepare_learning_summary", args, idempotency_key=key)
+        if result["outcome"] == "ERROR":
+            return _response(result, ctx, "DailyLearningSummaryResult", write=True)
+        data = dict(result["data"])
+        replayed = bool(data.pop("replayed"))
+        return _response({**result, "data": data}, ctx, "DailyLearningSummaryResult", write=True, replayed=replayed)

@@ -100,8 +100,8 @@ select ok((select relrowsecurity and relforcerowsecurity from pg_class where oid
     'learning_session_receipts enables and forces RLS');
 select ok(not has_table_privilege('authenticated', 'app_private.learning_session_receipts', 'SELECT'),
     'authenticated cannot read learning_session_receipts directly');
-select ok(not has_table_privilege('sf_rpc_owner', 'app_private.session_outcome', 'INSERT'),
-    'M2+M3 still grants no INSERT on session_outcome before M4');
+select ok(not has_table_privilege('authenticated', 'app_private.session_outcome', 'INSERT'),
+    'authenticated cannot insert session_outcome directly (M4 writes it only through the decision RPC)');
 select ok(not has_function_privilege('anon', 'app_api.search_learning_material_chunks(jsonb)', 'EXECUTE'),
     'anon cannot search learning chunks');
 select ok(not has_function_privilege('anon', 'app_api.create_learning_session(jsonb)', 'EXECUTE'),

@@ -584,6 +584,33 @@
           "read_only": false,
           "attestation_required": true,
           "llm_callable": false
+        },
+        {
+          "rpc": "prepare_learning_summary",
+          "arguments_schema": "PrepareLearningSummaryArguments",
+          "data_schema": "LearningSummaryPrepared",
+          "result_schema": "PrepareLearningSummaryResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "decide_learning_session_outcome",
+          "arguments_schema": "DecideLearningSessionOutcomeArguments",
+          "data_schema": "LearningSessionOutcomeDecided",
+          "result_schema": "DecideLearningSessionOutcomeResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
+        },
+        {
+          "rpc": "purge_expired_learning",
+          "arguments_schema": "PurgeExpiredLearningArguments",
+          "data_schema": "LearningPurgeData",
+          "result_schema": "PurgeExpiredLearningResult",
+          "read_only": false,
+          "attestation_required": true,
+          "llm_callable": false
         }
       ]
     }

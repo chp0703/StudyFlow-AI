@@ -89,7 +89,9 @@ select ok(not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pron
  'get_learning_material','list_learning_materials','delete_learning_material',
  -- F3 M2+M3 extension; session, hybrid retrieval and grounded turns/hints are exercised in test 26.
  'create_learning_session','get_learning_session','lookup_learning_turn_receipt',
- 'search_learning_material_chunks','append_learning_turn'))
+ 'search_learning_material_chunks','append_learning_turn',
+ -- F3 M4+M5 extension; summary decisions and retention purge are exercised in test 27.
+ 'prepare_learning_summary','decide_learning_session_outcome','purge_expired_learning'))
  or p.pronargs<>1 or p.proargtypes[0]<>'jsonb'::regtype
  or p.proargnames is distinct from array['p_request']::text[])),
  'old overloads, legacy issuer and unregistered public RPCs are removed');

@@ -29,6 +29,7 @@ from ...assessment.recommendations import RevisionRecommendationOperations
 from ...learning.answer import DeepSeekLearningModel
 from ...learning.indexing import index_document
 from ...learning.materials import LearningMaterialOperations, MAX_BODY_BYTES as LEARNING_MAX_BODY_BYTES
+from ...learning.outcome import LearningOutcomeOperations
 from ...learning.sessions import LearningSessionOperations
 
 log = logging.getLogger("studyflow.api")
@@ -92,6 +93,7 @@ class Api:
         self.attempts = QuizAttemptOperations(self.rpc, clock)
         self.topic_stats = TopicStatsOperations(self.rpc)
         self.recommendations = RevisionRecommendationOperations(self.rpc, clock)
+        self.learning_outcomes = LearningOutcomeOperations(self.rpc, clock)
         self.processor = ActionProcessor(self)
         self.sources = SourceOperations(self.rpc, source_extractor or SourceExtractor(
             settings.deepseek_base_url, settings.deepseek_api_key, settings.ingestion_model), clock)
@@ -384,6 +386,12 @@ class Api:
         body = await self.read_json(request, invalid_object_status=400)
         return await self.learning_sessions.add_turn(ctx, request.headers["idempotency-key"], session_id, body)
 
+    async def prepare_learning_summary(self, request: Request, ctx: Ctx):
+        self._query(request, set(), error_status=400)
+        session_id = self._uuid_param(request, "session_id")
+        body = await self.read_json(request, invalid_object_status=400)
+        return await self.learning_sessions.prepare_summary(ctx, request.headers["idempotency-key"], session_id, body)
+
     # ----------------------------------------------------------------- đăng ký endpoint
     def register(self, app: FastAPI) -> None:
         routes = [
@@ -415,6 +423,7 @@ class Api:
             ("POST", "/v1/learning/sessions", self.create_learning_session),
             ("GET", "/v1/learning/sessions/{session_id}", self.get_learning_session),
             ("POST", "/v1/learning/sessions/{session_id}/turns", self.add_learning_turn),
+            ("POST", "/v1/learning/sessions/{session_id}/summary", self.prepare_learning_summary),
         ]
         for method, path, handler in learning_routes:
             app.add_api_route(path, self._wrap(handler, post=False), methods=[method], include_in_schema=False)
