@@ -21,6 +21,31 @@ grant select, insert on app_private.learning_session_receipts to sf_rpc_owner;
 grant insert, update on app_private.learning_session to sf_rpc_owner;
 grant insert on app_private.learning_turn to sf_rpc_owner;
 
+-- M1 created `hint_level integer check (hint_level between 1 and 3 and kind = 'HINT' and role = 'ASSISTANT')`.
+-- Under SQL three-valued logic, when hint_level is NULL on USER or ASK turns, UNKNOWN AND FALSE = FALSE,
+-- rejecting every USER and ASK turn insert. Replace it with the exact DailyLearningTurn invariant.
+do $$
+declare
+    v_conname text;
+begin
+    for v_conname in
+        select c.conname
+        from pg_constraint c
+        where c.conrelid = 'app_private.learning_turn'::regclass
+          and c.contype = 'c'
+          and pg_get_constraintdef(c.oid) like '%hint_level%'
+    loop
+        execute format('alter table app_private.learning_turn drop constraint %I', v_conname);
+    end loop;
+end
+$$;
+
+alter table app_private.learning_turn
+    add constraint learning_turn_hint_level_check check (
+        (hint_level is null and (role = 'USER' or kind = 'ASK'))
+        or (hint_level between 1 and 3 and kind = 'HINT' and role = 'ASSISTANT')
+    );
+
 create index ix_learning_turn_session_ordinal
     on app_private.learning_turn (user_id, session_id, ordinal);
 create index ix_material_chunks_learning_owner_mat
@@ -59,19 +84,27 @@ language sql stable set search_path = '' as $$
     select coalesce(
         jsonb_agg(
             jsonb_build_object(
-                'chunk_id', (c.item ->> 'chunk_id')::uuid,
-                'material_id', (c.item ->> 'material_id')::uuid,
-                'page', (c.item ->> 'page')::integer,
-                'material_deleted', not exists (
-                    select 1 from app_private.materials m
-                    where m.user_id = p_uid and m.material_id = (c.item ->> 'material_id')::uuid
-                )
+                'chunk_id', x.chunk_id,
+                'material_id', x.material_id,
+                'page', x.page,
+                'material_deleted', x.material_deleted
             )
-            order by c.ord
+            order by x.ord
         ),
         '[]'::jsonb
     )
-    from jsonb_array_elements(p_citations) with ordinality as c(item, ord)
+    from (
+        select
+            (c.item ->> 'chunk_id')::uuid as chunk_id,
+            (c.item ->> 'material_id')::uuid as material_id,
+            (c.item ->> 'page')::integer as page,
+            not exists (
+                select 1 from app_private.materials m
+                where m.user_id = p_uid and m.material_id = (c.item ->> 'material_id')::uuid
+            ) as material_deleted,
+            c.ord
+        from jsonb_array_elements(p_citations) with ordinality as c(item, ord)
+    ) x
 $$;
 
 create function app_private.learning_turn_json(t app_private.learning_turn) returns jsonb
@@ -373,15 +406,15 @@ declare
     args jsonb := p_request -> 'arguments';
     uid uuid := app_private.current_uid();
     key text := p_request #>> '{execution_context,idempotency_key}';
-    v_session_id uuid := (args ->> 'session_id')::uuid;
-    fingerprint text := args ->> 'fingerprint';
+    v_session_id uuid;
+    fingerprint text;
     receipt app_private.learning_session_receipts;
     v_session app_private.learning_session;
     v_last_ordinal bigint;
-    v_kind text := args ->> 'kind';
-    v_hint_level integer := (args ->> 'hint_level')::integer;
-    v_supported boolean := (args ->> 'supported')::boolean;
-    v_citations jsonb := args -> 'citations';
+    v_kind text;
+    v_hint_level integer;
+    v_supported boolean;
+    v_citations jsonb;
     v_item jsonb;
     v_cit_mat uuid;
     v_cit_chunk uuid;
@@ -394,6 +427,13 @@ begin
     if key is null or key !~ '^[A-Za-z0-9._:-]{16,128}$' then
         return app_private.error_result(p_request, 'INVALID_PARAMETER', 'A valid idempotency key is required.');
     end if;
+
+    v_session_id := (args ->> 'session_id')::uuid;
+    fingerprint := args ->> 'fingerprint';
+    v_kind := args ->> 'kind';
+    v_hint_level := (args ->> 'hint_level')::integer;
+    v_supported := (args ->> 'supported')::boolean;
+    v_citations := args -> 'citations';
 
     if (v_kind = 'ASK' and v_hint_level is not null)
        or (v_kind = 'HINT' and (v_hint_level is null or v_hint_level not between 1 and 3))
