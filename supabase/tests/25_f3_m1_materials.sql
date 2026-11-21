@@ -9,7 +9,7 @@ select ok(not has_table_privilege('authenticated','app_private.learning_material
 select ok(not has_table_privilege('authenticated','app_private.learning_session','SELECT'), 'No direct session reads');
 select ok(not has_table_privilege('authenticated','app_private.learning_turn','INSERT'), 'No direct turn writes');
 select ok(not has_table_privilege('authenticated','app_private.session_outcome','INSERT'), 'No direct outcome writes');
-select ok(not has_table_privilege('sf_rpc_owner','app_private.session_outcome','INSERT'), 'No outcome write before M4');
+select ok(not has_table_privilege('sf_rpc_owner','app_private.session_outcome','UPDATE'), 'Outcomes are never updated (M4 inserts only via decision)');
 select ok(not has_function_privilege('anon','app_api.get_learning_material(jsonb)','EXECUTE'), 'No anonymous RPC reads');
 select ok(not has_function_privilege('anon','app_api.reserve_learning_material(jsonb)','EXECUTE'), 'No anonymous RPC writes');
 select ok(to_regclass('app_private.material_chunks_learning_cosine') is not null, 'Learning cosine index installed');
