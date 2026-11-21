@@ -166,6 +166,23 @@ select is(pg_temp.m4_call('prepare_learning_summary', jsonb_build_object(
     'expected_session_version', 3, 'summary', 'Bản nháp 2.', 'topics', '[]'::jsonb), idem => 'm4-summary-b-00002') ->> 'outcome',
     'DRAFTED', 'a rejected session can be summarized again');
 
+-- 4b. An expired session that was not purged yet rejects writes and keeps its expiry.
+select pg_temp.m4_session('d3440000-0000-4000-8000-000000000104', 'd3440000-0000-4000-8000-000000000001',
+    'd3440000-0000-4000-8000-000000000204', clock_timestamp() - interval '1 minute');
+select is(pg_temp.m4_call('append_learning_turn', jsonb_build_object(
+    'session_id', 'd3440000-0000-4000-8000-000000000104', 'fingerprint', repeat('6', 64), 'expected_last_ordinal', 2,
+    'kind', 'ASK', 'user_content', 'Hỏi tiếp', 'assistant_content', 'Tài liệu hiện có không đủ căn cứ để trả lời câu này',
+    'hint_level', null, 'citations', '[]'::jsonb, 'supported', false, 'model', null, 'prompt_version', null),
+    idem => 'm4-expired-turn-0001') #>> '{error,details,reason}', 'SESSION_EXPIRED', 'expired session rejects a new turn');
+select is(pg_temp.m4_call('prepare_learning_summary', jsonb_build_object(
+    'session_id', 'd3440000-0000-4000-8000-000000000104', 'fingerprint', repeat('7', 64),
+    'expected_session_version', 1, 'summary', 'x', 'topics', '[]'::jsonb), idem => 'm4-expired-sum-00001') #>> '{error,details,reason}',
+    'SESSION_EXPIRED', 'expired session cannot be summarized');
+select ok((select expires_at < clock_timestamp() from app_private.learning_session where session_id = 'd3440000-0000-4000-8000-000000000104'),
+    'rejected writes do not extend the expiry');
+select is((select count(*)::int from app_private.learning_turn where session_id = 'd3440000-0000-4000-8000-000000000104'), 2,
+    'rejected writes add no turns');
+
 -- 5. Retention: expired outcome session keeps the outcome; expired unsummarized session is removed.
 select pg_temp.m4_session('d3440000-0000-4000-8000-000000000103', 'd3440000-0000-4000-8000-000000000001',
     'd3440000-0000-4000-8000-000000000203', clock_timestamp() - interval '1 day');
@@ -174,8 +191,8 @@ update app_private.learning_session set expires_at = clock_timestamp() - interva
 select is(pg_temp.m4_call('purge_expired_learning', '{}', 'd3440000-0000-4000-8000-000000000002') #>> '{data,deleted_sessions}',
     '0', 'purge only touches the caller''s sessions');
 insert into m4 select 'purge', pg_temp.m4_call('purge_expired_learning', '{}');
-select is((select val #> '{data}' from m4 where label = 'purge'), '{"deleted_sessions":2,"closed_sessions":1}'::jsonb,
-    'purge removes two unconfirmed sessions and closes one with an outcome');
+select is((select val #> '{data}' from m4 where label = 'purge'), '{"deleted_sessions":3,"closed_sessions":1}'::jsonb,
+    'purge removes three unconfirmed sessions and closes one with an outcome');
 select is((select count(*)::int from app_private.learning_turn where user_id = 'd3440000-0000-4000-8000-000000000001'), 0,
     'expired sessions keep no turns');
 select is((select count(*)::int from app_private.session_outcome where session_id = 'd3440000-0000-4000-8000-000000000101'), 1,

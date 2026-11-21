@@ -75,6 +75,10 @@ begin
         err := app_private.error_result(p_request, 'TIME_CONFLICT', 'Phiên học không còn ở trạng thái hoạt động.');
         return jsonb_set(err, '{error,details}', jsonb_build_object('status', v_session.status));
     end if;
+    if v_session.expires_at <= clock_timestamp() then
+        err := app_private.error_result(p_request, 'TIME_CONFLICT', 'Phiên học đã hết hạn lưu giữ.');
+        return jsonb_set(err, '{error,details}', '{"reason":"SESSION_EXPIRED"}'::jsonb);
+    end if;
     if v_session.version <> (args ->> 'expected_session_version')::bigint then
         return app_private.error_result(p_request, 'STALE_ENTITY_VERSION', 'Phiên học đã thay đổi, hãy tạo lại bản tóm tắt.', true);
     end if;
