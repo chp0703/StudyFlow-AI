@@ -159,6 +159,12 @@ class LearningInteractionHttpAcceptance(unittest.TestCase):
                 },
             )
 
+        if op == "purge_expired_learning":
+            # M5 retention runs before session reads/creates; nothing expires in these fixtures.
+            assert contract.is_valid("PurgeExpiredLearningArguments", args)
+            assert envelope["attestation"] is not None
+            return ok("COMMITTED", {"deleted_sessions": 0, "closed_sessions": 0})
+
         if op == "create_learning_session":
             assert contract.is_valid("CreateLearningSessionArguments", args)
             assert envelope["attestation"] is not None
