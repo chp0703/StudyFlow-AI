@@ -142,3 +142,13 @@ Bộ unit indexing 28 ca, contract checker, migration generator và test base64 
 **Kết quả:** Contract checker qua 175 fixture, schema generator đồng bộ, 188 backend unit đạt và 2 skip.
 
 **Ghi chú:** Supabase sạch, nâng cấp, pgTAP và cạnh tranh chạy bằng CI. Việc nạp sẵn E5 chờ số đo cache lạnh và ấm.
+
+## 2026-11-20 — Cô lập assertion của danh sách tài liệu (#65)
+
+**Mục tiêu:** Kiểm tra phân quyền danh sách với hai owner đã có tài liệu.
+
+**Đã làm**
+
+- Đổi assertion đang giả định danh sách owner B rỗng thành kiểm tra không lộ ID của owner A và mọi dòng trả về đều thuộc B.
+
+**Kết quả:** CI trước đó qua pgTAP và ca upload đồng thời. Chạy lại HTTP integration sau khi sửa assertion.

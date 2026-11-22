@@ -64,7 +64,11 @@ class LearningMaterialLocalSupabase(unittest.TestCase):
             self.assertEqual(dedup.json()["data"]["material_id"], material_id)
             self.assertEqual(app.get(path, headers=f.auth("a")).json()["data"], material)
             self.assertEqual(app.get(path, headers=f.auth("b")).status_code, 404)
-            self.assertEqual(app.get("/v1/materials", headers=f.auth("b")).json()["data"]["materials"], [])
+            other_list = app.get("/v1/materials", headers=f.auth("b"))
+            self.assertEqual(other_list.status_code, 200, other_list.text)
+            other_materials = other_list.json()["data"]["materials"]
+            self.assertNotIn(material_id, {item["material_id"] for item in other_materials})
+            self.assertTrue(all(item["owner_id"] == f.users["b"][1] for item in other_materials))
             second = f.post(app, "/v1/materials", self.body())
             self.assertEqual(second.status_code, 200, second.text)
             page = app.get("/v1/materials", headers=f.auth("a"), params={"limit": 1})
