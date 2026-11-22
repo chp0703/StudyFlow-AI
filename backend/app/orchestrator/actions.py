@@ -18,12 +18,13 @@ from .workflow_shared import (
 
 class ActionProcessor:
     def __init__(self, rpc: RpcCall, clock: Clock, extractor: Extractor, timezone: str = PRODUCT_TIMEZONE, *,
-                 questions=None, recommendations=None):
+                 questions=None, recommendations=None, learning_outcomes=None):
         if timezone != PRODUCT_TIMEZONE:
             raise ValueError(f"timezone must be {PRODUCT_TIMEZONE}")
         self.rpc, self.clock = rpc, clock
         self.questions_ops = questions
         self.recommendations_ops = recommendations
+        self.learning_outcomes_ops = learning_outcomes
         self.chat = ChatProcessor(self, extractor, clock=clock, timezone=timezone)
 
     def step(self, ctx, operation: str, arguments: dict, **kwargs) -> dict:
@@ -295,6 +296,10 @@ class ActionProcessor:
         last = (action["last_presentation"] or {}).get("presentation") or {}
         if pending.get("intent") == "ACCEPT_REVISION_RECOMMENDATION":
             return self.recommendations_ops.decide(ctx, receipt, key, body, pending)
+        if pending.get("intent") == "SAVE_SESSION_OUTCOME":
+            if self.learning_outcomes_ops is None:
+                raise Terminal("UNSUPPORTED_OPERATION", "Learning outcomes are not configured.")
+            return self.learning_outcomes_ops.decide(ctx, receipt, key, body)
         if pending.get("intent") == "VERIFY_QUESTION_DRAFTS":
             return self._decide_question_drafts(ctx, receipt, key, conversation, ref, pending, decision)
         command = last.get("normalized_command")

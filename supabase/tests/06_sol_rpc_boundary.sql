@@ -83,7 +83,16 @@ select ok(not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pron
  -- F2 B5 extension 1.0.0; quiz attempt/response/grading are exercised in test 22.
  'create_quiz_attempt','get_quiz_attempt_context','save_quiz_response','submit_quiz_attempt',
  -- F2 B6 extension 1.0.0; topic statistics are exercised in test 22.
- 'get_topic_stats','create_revision_recommendation','decide_revision_recommendation'))
+ 'get_topic_stats','create_revision_recommendation','decide_revision_recommendation',
+ -- F3 M1 extension; lifecycle and owner isolation are verified in HTTP integration.
+ 'reserve_learning_material','store_learning_material_chunks','fail_learning_material',
+ 'get_learning_material','list_learning_materials','delete_learning_material',
+ -- F3 M2+M3 extension; session, hybrid retrieval and grounded turns/hints are exercised in test 26.
+ 'create_learning_session','get_learning_session','lookup_learning_turn_receipt',
+ 'search_learning_material_chunks','append_learning_turn',
+ -- F3 M4+M5 extension; summary decisions and retention purge are exercised in test 27.
+ 'prepare_learning_summary','decide_learning_session_outcome','purge_expired_learning',
+ 'get_learning_planner_context'))
  or p.pronargs<>1 or p.proargtypes[0]<>'jsonb'::regtype
  or p.proargnames is distinct from array['p_request']::text[])),
  'old overloads, legacy issuer and unregistered public RPCs are removed');

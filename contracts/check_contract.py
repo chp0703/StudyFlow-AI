@@ -49,6 +49,35 @@ def semantic_errors(value, path='$'):
     def fail(message):
         errors.append(f'{path}: {message}')
 
+    if {'page_start', 'page_end', 'embedding_model'} <= value.keys():
+        if value['page_start'] > value['page_end']:
+            fail('page_start must not exceed page_end')
+        if abs(sum(component * component for component in value['embedding']) - 1) > 1e-4:
+            fail('embedding must be L2-normalized')
+    if {'session_id', 'conversation_id', 'material_ids', 'created_at', 'expires_at'} <= value.keys():
+        if instant(value['expires_at']) <= instant(value['created_at']):
+            fail('expires_at must be after created_at')
+    if {'session', 'turns'} == value.keys():
+        session, turns = value['session'], value['turns']
+        ordinals = [turn['ordinal'] for turn in turns]
+        if ordinals != sorted(set(ordinals)):
+            fail('session turns must use increasing unique ordinals')
+        if any((turn['session_id'], turn['owner_id']) != (session['session_id'], session['owner_id'])
+               for turn in turns):
+            fail('session turns must belong to the same session and owner')
+        if any(citation['material_id'] not in session['material_ids']
+               for turn in turns for citation in turn['citations']):
+            fail('session citations must reference a selected material')
+    if {'user_turn', 'assistant_turn'} == value.keys():
+        user, assistant = value['user_turn'], value['assistant_turn']
+        fields = ('session_id', 'owner_id', 'kind')
+        if any(user[field] != assistant[field] for field in fields) or assistant['ordinal'] != user['ordinal'] + 1:
+            fail('turn pair must share session, owner and kind with adjacent ordinals')
+    if value.get('operation') == 'save_session_outcome':
+        outcome = value.get('session_outcome')
+        if outcome is not None and any(outcome[field] != value['session'][field] for field in ('session_id', 'owner_id')):
+            fail('outcome must belong to the same session and owner')
+
     for k, v in value.items():
         if k in {'start_at', 'end_at', 'available_from_at', 'deadline_at'} and isinstance(v, str):
             dt = instant(v)
@@ -374,7 +403,14 @@ def semantic_errors(value, path='$'):
 def validate_instance(definitions, name, value, semantic=True):
     schema = {'$schema': 'https://json-schema.org/draft/2020-12/schema', '$defs': definitions, '$ref': '#/$defs/' + name}
     errors = [f'{list(e.absolute_path)}: {e.message}' for e in Draft202012Validator(schema, format_checker=FORMATS).iter_errors(value)]
-    return errors or (semantic_errors(value) if semantic else [])
+    if errors or not semantic:
+        return errors
+    if name in {'DailyLearningOutcomeReference', 'DailyLearningOutcomeDecisionRequest', 'DailyLearningSummaryResult'}:
+        ref = (value if name == 'DailyLearningOutcomeReference'
+               else value.get('action_reference') or (value.get('data') or {}).get('action_reference'))
+        if ref and (ref['action_id'], ref['action_version']) != (ref['target_id'], ref['target_version']):
+            return ['Daily Learning action reference must bind the same pending action and version']
+    return semantic_errors(value)
 
 
 def main():
@@ -458,6 +494,24 @@ def main():
         assert interface['attestation_required'] == (not interface['read_only'])
     for key in ('materials', 'material_chunks', 'question_drafts', 'quiz_attempts', 'quiz_responses', 'revision_recommendations'):
         assert data['extensions']['assessment'][key]['schema'] in definitions
+    learning_api = read('learning-openapi.yaml')
+    check_refs(learning_api, learning_api)
+    learning = service['extensions']['learning']
+    learning_data = data['extensions']['learning']
+    assert learning['version'] == learning_data['version'] == learning_api['info']['version'] == '1.0.0'
+    assert api['x-learning-contract'] == {'version': learning['version'], 'document': learning['openapi']}
+    assert len(learning_api['paths']) == 8
+    for key in ('materials', 'chunks', 'sessions', 'turns', 'outcomes'):
+        assert learning_data[key]['schema'] in definitions
+    for interface in learning['internal_interfaces']:
+        assert all(interface[key] in definitions for key in ('arguments_schema', 'data_schema', 'result_schema'))
+        assert interface['llm_callable'] is False
+        assert interface['attestation_required'] == (not interface['read_only'])
+    decision = learning['decision']
+    decision_api = learning_api['paths'][decision['path']]['post']
+    media = 'application/json'
+    assert decision_api['requestBody']['content'][media]['schema']['$ref'].endswith('/' + decision['request_schema'])
+    assert decision_api['responses']['200']['content'][media]['schema']['$ref'].endswith('/' + decision['result_schema'])
     try:
         from openapi_spec_validator import validate
     except ImportError as exc:
@@ -465,6 +519,7 @@ def main():
     validate(api, base_uri=(ROOT / 'openapi.yaml').as_uri())
     validate(ingestion_api, base_uri=(ROOT / 'ingestion-openapi.yaml').as_uri())
     validate(assessment_api, base_uri=(ROOT / 'assessment-openapi.yaml').as_uri())
+    validate(learning_api, base_uri=(ROOT / 'learning-openapi.yaml').as_uri())
     manifest = read('examples/manifest.json')
     for case in manifest['cases']:
         payload = read(case['file'])

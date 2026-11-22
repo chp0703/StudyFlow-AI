@@ -732,6 +732,221 @@
       "file": "examples/invalid/b7-presentation-without-evidence.json",
       "schema": "ActionPresentation",
       "valid": false
+    },
+    {
+      "file": "examples/valid/learning-material-upload-request.json",
+      "schema": "DailyMaterialUploadRequest",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/learning-material-upload-invalid-base64.json",
+      "schema": "DailyMaterialUploadRequest",
+      "valid": false
+    },
+    {
+      "file": "examples/invalid/learning-material-upload-owner-injection.json",
+      "schema": "DailyMaterialUploadRequest",
+      "valid": false
+    },
+    {
+      "file": "examples/valid/learning-material-upload-result.json",
+      "schema": "DailyMaterialUploadResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-material-ready-result.json",
+      "schema": "DailyMaterialReadResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-material-index-failed-result.json",
+      "schema": "DailyMaterialReadResult",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/learning-material-ready-without-pages.json",
+      "schema": "DailyMaterialReadResult",
+      "valid": false
+    },
+    {
+      "file": "examples/valid/learning-material-list-result.json",
+      "schema": "DailyMaterialListResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-material-delete-result.json",
+      "schema": "DailyMaterialDeleteResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-chunk-vector.json",
+      "schema": "DailyMaterialChunk",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/learning-chunk-wrong-dimension.json",
+      "schema": "DailyMaterialChunk",
+      "valid": false
+    },
+    {
+      "file": "examples/invalid/learning-chunk-not-normalized.json",
+      "schema": "DailyMaterialChunk",
+      "valid": false,
+      "expected_error": "L2-normalized"
+    },
+    {
+      "file": "examples/valid/learning-session-create-request.json",
+      "schema": "DailyLearningSessionCreateRequest",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/learning-session-duplicate-material.json",
+      "schema": "DailyLearningSessionCreateRequest",
+      "valid": false
+    },
+    {
+      "file": "examples/valid/learning-session-created.json",
+      "schema": "DailyLearningSessionCreateResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-ask-request.json",
+      "schema": "DailyLearningTurnRequest",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-hint-request.json",
+      "schema": "DailyLearningTurnRequest",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/learning-ask-without-text.json",
+      "schema": "DailyLearningTurnRequest",
+      "valid": false
+    },
+    {
+      "file": "examples/invalid/learning-hint-client-level.json",
+      "schema": "DailyLearningTurnRequest",
+      "valid": false
+    },
+    {
+      "file": "examples/valid/learning-ask-supported.json",
+      "schema": "DailyLearningTurnResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-ask-unsupported.json",
+      "schema": "DailyLearningTurnResult",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/learning-ask-supported-without-citation.json",
+      "schema": "DailyLearningTurn",
+      "valid": false,
+      "expected_error": "non-empty"
+    },
+    {
+      "file": "examples/valid/learning-hint-level-two.json",
+      "schema": "DailyLearningTurnResult",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/learning-hint-level-four.json",
+      "schema": "DailyLearningTurn",
+      "valid": false
+    },
+    {
+      "file": "examples/valid/learning-session-deleted-citation-history.json",
+      "schema": "DailyLearningSessionReadResult",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/learning-session-cross-owner-turn.json",
+      "schema": "DailyLearningSessionReadResult",
+      "valid": false,
+      "expected_error": "same session and owner"
+    },
+    {
+      "file": "examples/valid/learning-summary-request.json",
+      "schema": "DailyLearningSummaryRequest",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-summary-awaiting-decision.json",
+      "schema": "DailyLearningSummaryResult",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/learning-summary-already-closed.json",
+      "schema": "DailyLearningSummaryResult",
+      "valid": false
+    },
+    {
+      "file": "examples/valid/learning-decision-approve-request.json",
+      "schema": "DailyLearningOutcomeDecisionRequest",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/learning-decision-invalid-reference.json",
+      "schema": "DailyLearningOutcomeDecisionRequest",
+      "valid": false,
+      "expected_error": "same pending action and version"
+    },
+    {
+      "file": "examples/valid/learning-decision-approved.json",
+      "schema": "DailyLearningOutcomeDecisionResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-decision-rejected.json",
+      "schema": "DailyLearningOutcomeDecisionResult",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/learning-decision-rejected-with-outcome.json",
+      "schema": "DailyLearningOutcomeDecisionResult",
+      "valid": false
+    },
+    {
+      "file": "examples/valid/learning-decision-stale.json",
+      "schema": "DailyLearningOutcomeDecisionResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-material-pdf-invalid.json",
+      "schema": "DailyMaterialUploadResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-material-index-timeout.json",
+      "schema": "DailyMaterialUploadResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-material-delete-in-use.json",
+      "schema": "DailyMaterialDeleteResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-decision-unauthenticated.json",
+      "schema": "DailyLearningOutcomeDecisionResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-material-pdf-signature-invalid.json",
+      "schema": "DailyMaterialUploadResult",
+      "valid": true
+    },
+    {
+      "file": "examples/valid/learning-planner-context.json",
+      "schema": "DailyLearningPlannerContextResult",
+      "valid": true
+    },
+    {
+      "file": "examples/invalid/learning-planner-context-empty-goal.json",
+      "schema": "DailyLearningPlannerContextResult",
+      "valid": false,
+      "expected_error": "suggested_goal"
     }
   ]
 }

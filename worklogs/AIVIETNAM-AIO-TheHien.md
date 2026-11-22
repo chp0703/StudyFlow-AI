@@ -109,3 +109,56 @@ Draft PR #57. Contract checker, generator và 76 HTTP acceptance đều đạt. 
 
 **Kết quả**  
 Draft PR #57. Contract checker đạt 135 fixture và backend unit đạt 136 test. CI của bản trước đã qua 700 assertion pgTAP, 31 HTTP integration và kiểm tra dữ liệu cũ qua upgrade B7. Chạy lại concurrency với checker đã sửa.
+
+## 2026-11-20 — F3 M1 nạp và lập chỉ mục tài liệu
+
+**Mục tiêu**
+Cho Daily Learning nạp, lập chỉ mục và quản lý tài liệu trên kho dùng chung với Assessment.
+
+**Đã làm**
+
+- Mở rộng kho tài liệu F2 và tạo schema phiên học, lượt trao đổi, kết quả phiên. Thêm RPC có chứng thực cho claim, kết quả index, đọc và xóa tài liệu.
+- Nối bốn endpoint tài liệu với tách trang và embedding CPU. Thêm ca kiểm tra tương thích F2, retry và upload đồng thời.
+- Chuẩn bị PR stack từ M0 tại `a4b4561` trên nhánh `codex/f3-m1-material-indexing`.
+
+**Kết quả**
+Bộ unit indexing 28 ca, contract checker, migration generator và test base64 đúng 5 MiB đã đạt. CI Supabase và smoke CPU đang chờ kết quả.
+- Smoke CPU E5 thật đạt 384 chiều và norm L2. Văn bản tiếng Việt mất 13,72 giây khi nạp model từ cache đĩa lần đầu. PDF tổng hợp 50 trang và 40.191 ký tự tạo 91 chunk trong 5,48 giây khi model đã nạp.
+- Backend CI của draft PR #65 xanh. Đổi tên constraint trùng ở migration M1 và bổ sung ca quota đồng thời, lease hết hạn và kiểm tra chunk F2 qua upgrade. Run local 190 unit (2 skip theo cấu hình), 76 ca HTTP acceptance ở bản trước, checker và generator đạt.
+- CI đã replay migration và chạy 710 assertion pgTAP. Cập nhật allowlist kiểm tra ranh giới RPC để đăng ký đúng sáu RPC M1, giữ nguyên kiểm tra quyền và chữ ký. Unit indexing và HTTP acceptance local qua sau bản sửa.
+- CI trên `199271e` đã xanh cả backend và DB. DB hoàn thành 710 assertion pgTAP, 37 ca HTTP integration, upgrade có dữ liệu và 9 ca concurrency PostgreSQL. Thêm ca race DELETE với Assessment đang giữ tham chiếu và ca chọn ID ổn định khi F2 có hash trùng.
+- Smoke CPU gần ngưỡng 200.000 ký tự đạt. PDF 50 trang có 183.631 ký tự, tạo 300 chunk trong 13,64 giây khi model đã nạp.
+
+## 2026-11-20 — Xử lý review upload và lập chỉ mục F3 M1 (#65)
+
+**Mục tiêu:** Lưu đúng loại lượt học và cho upload thử lại khi worker đang bận.
+
+**Đã làm**
+
+- Sửa CHECK của learning_turn, thêm pgTAP cho ASK/HINT của người học và trợ lý.
+- Trả 503 retryable trước khi cấp claim nếu worker bận, giữ nguyên replay và hợp nhất nội dung trùng.
+- Bổ sung regression HTTP đồng thời, quota, ghi chú xác nhận xóa thư viện dùng chung và phép đo E5 cold start.
+
+**Kết quả:** Contract checker qua 175 fixture, schema generator đồng bộ, 188 backend unit đạt và 2 skip.
+
+**Ghi chú:** Supabase sạch, nâng cấp, pgTAP và cạnh tranh chạy bằng CI. Việc nạp sẵn E5 chờ số đo cache lạnh và ấm.
+
+## 2026-11-21 — Đồng bộ ràng buộc lượt học M1 vào M2–M3 (#65, #66)
+
+**Mục tiêu:** Duy trì một ràng buộc hint_level duy nhất trong migration M1.
+
+**Đã làm**
+
+- Đồng bộ #65, bỏ đoạn vá dò constraint trong 00013 và sinh lại schema M2–M3.
+
+**Kết quả:** Generator đồng bộ. CI kiểm tra phiên, lượt hỏi và gợi ý trên schema mới.
+
+## 2026-11-20 — Cô lập assertion của danh sách tài liệu (#65)
+
+**Mục tiêu:** Kiểm tra phân quyền danh sách với hai owner đã có tài liệu.
+
+**Đã làm**
+
+- Đổi assertion đang giả định danh sách owner B rỗng thành kiểm tra không lộ ID của owner A và mọi dòng trả về đều thuộc B.
+
+**Kết quả:** CI trước đó qua pgTAP và ca upload đồng thời. Chạy lại HTTP integration sau khi sửa assertion.
