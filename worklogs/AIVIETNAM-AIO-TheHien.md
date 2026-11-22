@@ -179,3 +179,13 @@ Bộ unit indexing 28 ca, contract checker, migration generator và test base64 
 - Kiểm tra payload 20 phút, ưu tiên 0.1, lưu recommendation, bàn giao sang Planner và chỉ tạo task khi xác nhận cuối.
 
 **Kết quả:** Nhánh kiểm thử codex/studyflow-review-integration. Supabase chạy trong CI của nhánh tích hợp.
+
+## 2026-11-20 — Cô lập assertion của danh sách tài liệu (#65)
+
+**Mục tiêu:** Kiểm tra phân quyền danh sách với hai owner đã có tài liệu.
+
+**Đã làm**
+
+- Đổi assertion đang giả định danh sách owner B rỗng thành kiểm tra không lộ ID của owner A và mọi dòng trả về đều thuộc B.
+
+**Kết quả:** CI trước đó qua pgTAP và ca upload đồng thời. Chạy lại HTTP integration sau khi sửa assertion.
