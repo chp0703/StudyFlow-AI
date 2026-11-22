@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi.responses import JSONResponse
 
+from ...core import contract
 from ...orchestrator.workflow_ports import WorkflowError
 
 # Mã lỗi nghiệp vụ/transport -> trạng thái HTTP (contracts/README.md mục 3.1).
@@ -15,6 +16,10 @@ STATUS = {
     "IDEMPOTENCY_CONFLICT": 409, "TIME_CONFLICT": 409, "ACTIVE_BLOCK_REQUIRES_REVIEW": 409,
     "PAYLOAD_TOO_LARGE": 413, "RATE_LIMITED": 429, "INTERNAL_ERROR": 500, "SERVICE_UNAVAILABLE": 503,
 }
+
+# Contract F3 (contracts/learning-openapi.yaml) chỉ khai báo 400 cho input sai, không có 422.
+LEARNING_STATUS = {**STATUS, "INVALID_PARAMETER": 400, "MISSING_REQUIRED_FIELD": 400,
+                   "UNSUPPORTED_OPERATION": 400}
 
 
 class ApiError(WorkflowError):
@@ -40,6 +45,21 @@ def respond(body: dict, status: int, request_id: str, *, post: bool, replayed: b
     if retry_after is not None:
         headers["Retry-After"] = str(retry_after)
     return JSONResponse(body, status_code=status, headers=headers)
+
+
+def result_response(result: dict, request_id: str, *, write: bool = False, replayed: bool | None = None,
+                    schema: str | None = None, statuses: dict = STATUS) -> JSONResponse:
+    """Kết quả RPC theo contract -> HTTP. replayed=None nghĩa là suy từ outcome READ (quy ước ghi của F2)."""
+    result = {**result, "request_id": request_id}
+    if schema is not None and not contract.is_valid(schema, result):
+        raise ApiError("INTERNAL_ERROR", "Kết quả không đúng contract.")
+    if result.get("outcome") == "ERROR":
+        code = (result.get("error") or {}).get("code", "INTERNAL_ERROR")
+        return respond(result, statuses.get(code, 500), request_id, post=write,
+                       retry_after=1 if code == "SERVICE_UNAVAILABLE" else None)
+    if replayed is None:
+        replayed = result["outcome"] == "READ"
+    return respond(result, 200, request_id, post=write, replayed=replayed)
 
 
 def error_response(exc: WorkflowError, request_id: str, *, post: bool) -> JSONResponse:

@@ -16,7 +16,7 @@ from ...clients.rpc import RpcClient, RpcUnavailable, child_key
 from ...core import contract
 from ...core.config import Settings
 from ...core.security import AuthError, AuthUnavailable, JwtVerifier
-from .http import STATUS, ApiError, error_body, error_response, respond
+from .http import ApiError, error_body, error_response, respond, result_response
 from .workflow import ActionProcessor
 from ...orchestrator.workflow_ports import WorkflowError
 from ...ingestion.service import SourceExtractor
@@ -123,15 +123,6 @@ class Api:
             raise ApiError("INTERNAL_ERROR", "The request could not be completed.") from None
 
     @staticmethod
-    def result_response(result: dict, ctx: Ctx):
-        result = {**result, "request_id": ctx.request_id}
-        if result.get("outcome") == "ERROR":
-            code = (result.get("error") or {}).get("code", "INTERNAL_ERROR")
-            return respond(result, STATUS.get(code, 500), ctx.request_id, post=False,
-                           retry_after=1 if code == "SERVICE_UNAVAILABLE" else None)
-        return respond(result, 200, ctx.request_id, post=False)
-
-    @staticmethod
     def validated(name: str, value, field: str | None = None):
         if not contract.is_valid(name, value):
             raise ApiError("INVALID_PARAMETER", "The request does not match the approved contract.", field=field)
@@ -158,7 +149,7 @@ class Api:
         args = {"query": q.get("query"), "status_filter": q.get("status_filter", []),
                 "page_size": _int(q["page_size"], "page_size") if "page_size" in q else 50, "cursor": q.get("cursor")}
         self.validated("search_tasksArguments", args)
-        return self.result_response(await run_in_threadpool(self.rpc, ctx, "search_tasks", args), ctx)
+        return result_response(await run_in_threadpool(self.rpc, ctx, "search_tasks", args), ctx.request_id)
 
     async def get_time_windows(self, request: Request, ctx: Ctx):
         q = self._query(request, {"kind", "include_archived", "page_size", "cursor"})
@@ -168,13 +159,13 @@ class Api:
         args = {"kind": q.get("kind"), "include_archived": flag == "true",
                 "page_size": _int(q["page_size"], "page_size") if "page_size" in q else 50, "cursor": q.get("cursor")}
         self.validated("ListTimeWindowsArguments", args)
-        return self.result_response(await run_in_threadpool(self.rpc, ctx, "list_time_windows", args), ctx)
+        return result_response(await run_in_threadpool(self.rpc, ctx, "list_time_windows", args), ctx.request_id)
 
     async def get_preferences(self, request: Request, ctx: Ctx):
         self._query(request, set())
         result = await run_in_threadpool(self.rpc, ctx, "ensure_user_context", {})
         if result.get("outcome") == "ERROR":
-            return self.result_response(result, ctx)
+            return result_response(result, ctx.request_id)
         user = result["data"]
         body = {"schema_version": "1.1", "request_id": ctx.request_id, "outcome": "READ",
                 "data": {"scheduling_policy": user["scheduling_policy"], "schedule_revision": user["schedule_revision"]},
@@ -188,7 +179,7 @@ class Api:
         if args["view"] == "PROPOSAL" and (args["start_at"] is not None or args["end_at"] is not None):
             raise ApiError("INVALID_PARAMETER", "A proposal view takes no time window.", field="start_at")
         self.validated("get_study_planArguments", args)
-        return self.result_response(await run_in_threadpool(self.rpc, ctx, "get_study_plan", args), ctx)
+        return result_response(await run_in_threadpool(self.rpc, ctx, "get_study_plan", args), ctx.request_id)
 
     # ----------------------------------------------------------------- quy trình POST
     async def read_json(self, request: Request, *, max_bytes: int | None = None,
@@ -255,27 +246,27 @@ class Api:
         body = await self.read_json(request, max_bytes=7 * 1024 * 1024)
         self.validated('SourceUploadRequest', body)
         result = await run_in_threadpool(self.sources.upload, ctx, request.headers['idempotency-key'], body)
-        return respond(result, 200, ctx.request_id, post=True, replayed=result['outcome'] == 'READ')
+        return result_response(result, ctx.request_id, write=True)
 
     async def get_source(self, request: Request, ctx: Ctx):
         query = self._query(request, {'conversation_id'})
         args = {'source_id': self.source_id(request), 'conversation_id': query.get('conversation_id')}
         self.validated('SourceLookupArguments', args)
         result = await run_in_threadpool(self.sources.get, ctx, args['source_id'], args['conversation_id'])
-        return self.result_response(result, ctx)
+        return result_response(result, ctx.request_id)
 
     async def post_extract_source(self, request: Request, ctx: Ctx):
         source_id = self.source_id(request)
         body = await self.read_json(request)
         self.validated('SourceExtractRequest', body)
         result = await run_in_threadpool(self.sources.extract, ctx, request.headers['idempotency-key'], source_id, body['conversation_id'])
-        return respond(result, 200, ctx.request_id, post=True, replayed=result['outcome'] == 'READ')
+        return result_response(result, ctx.request_id, write=True)
 
     async def post_materials(self, request: Request, ctx: Ctx):
         body = await self.read_json(request, max_bytes=4 * ((MATERIAL_MAX_BYTES + 2) // 3) + 65536)
         self.validated('MaterialUploadRequest', body)
         result = await run_in_threadpool(self.materials.upload, ctx, request.headers['idempotency-key'], body)
-        return respond(result, 200, ctx.request_id, post=True, replayed=result['outcome'] == 'READ')
+        return result_response(result, ctx.request_id, write=True)
 
     async def get_material(self, request: Request, ctx: Ctx):
         query = self._query(request, {'conversation_id'})
@@ -285,7 +276,7 @@ class Api:
         except ValueError:
             raise ApiError('INVALID_PARAMETER', 'material_id must be a UUID.', status=400, field='material_id') from None
         result = await run_in_threadpool(self.materials.get, ctx, material_id, query.get('conversation_id'))
-        return self.result_response(result, ctx)
+        return result_response(result, ctx.request_id)
 
     async def post_assessment_drafts(self, request: Request, ctx: Ctx):
         return await self.post_pipeline(request, ctx, "generate_question_drafts", "GenerateQuestionDraftsRequest")
@@ -301,7 +292,7 @@ class Api:
         }
         self.validated("ListQuestionsArguments", args)
         result = await run_in_threadpool(self.questions.list_questions, ctx, args)
-        return self.result_response(result, ctx)
+        return result_response(result, ctx.request_id)
 
     @staticmethod
     def _uuid_param(request: Request, name: str) -> str:
@@ -315,7 +306,7 @@ class Api:
         body = await self.read_json(request)
         self.validated("CreateQuizAttemptRequest", body)
         result = await run_in_threadpool(self.attempts.create_attempt, ctx, request.headers["idempotency-key"], body)
-        return respond(result, 200, ctx.request_id, post=True, replayed=result["outcome"] == "READ")
+        return result_response(result, ctx.request_id, write=True)
 
     async def put_assessment_attempt_response(self, request: Request, ctx: Ctx):
         attempt_id = self._uuid_param(request, "attempt_id")
@@ -325,7 +316,7 @@ class Api:
         result, replayed = await run_in_threadpool(
             self.attempts.save_response, ctx, request.headers["idempotency-key"], attempt_id, question_id, body
         )
-        return respond(result, 200, ctx.request_id, post=True, replayed=replayed)
+        return result_response(result, ctx.request_id, write=True, replayed=replayed)
 
     async def post_assessment_attempt_submit(self, request: Request, ctx: Ctx):
         attempt_id = self._uuid_param(request, "attempt_id")
@@ -334,7 +325,7 @@ class Api:
         result, replayed = await run_in_threadpool(
             self.attempts.submit_attempt, ctx, request.headers["idempotency-key"], attempt_id, body
         )
-        return respond(result, 200, ctx.request_id, post=True, replayed=replayed)
+        return result_response(result, ctx.request_id, write=True, replayed=replayed)
 
     async def post_assessment_recommendations(self, request: Request, ctx: Ctx):
         return await self.post_pipeline(request, ctx, "create_revision_recommendation", "CreateRevisionRecommendationRequest")
@@ -346,7 +337,7 @@ class Api:
         if args["material_id"] is not None:
             args["material_id"] = str(UUID(args["material_id"]))
         result = await run_in_threadpool(self.topic_stats.get, ctx, args)
-        return self.result_response(result, ctx)
+        return result_response(result, ctx.request_id)
 
     async def upload_learning_material(self, request: Request, ctx: Ctx):
         body = await self.read_json(request, max_bytes=LEARNING_MAX_BODY_BYTES, invalid_object_status=400)
