@@ -1070,6 +1070,7 @@
 .calendar-event-detail dd { margin: 0; color: var(--color-ink); font-weight: 600; }
 .calendar-event-detail p { margin: 0; color: var(--color-muted); line-height: 1.5; }
 .calendar-event-contract-note { padding: 10px 12px; border-radius: 10px; background: var(--color-info-bg); color: var(--color-info-text) !important; }
+.calendar-event-learn-button { justify-self: end; min-height: 44px; gap: 8px; }
 
 .proposal-issues { font-size: 12px; margin-top: 2px; }
 .proposal-issues summary { cursor: pointer; font-weight: 600; }

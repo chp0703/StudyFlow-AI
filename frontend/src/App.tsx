@@ -102,6 +102,11 @@ const infoModals: Record<string, ModalInfo> = {
 export default function App() {
   const [page, setPage] = useState("Assistant")
 
+  const [learningEntry, setLearningEntry] = useState<{
+    blockId: string
+    goal: string
+  } | null>(null)
+
   // Demo mode keeps everything in memory; API mode reads it from the server (see api/useServerData).
 
   const { session, loading: sessionLoading } = useSession()
@@ -368,6 +373,7 @@ export default function App() {
   }, [page])
 
   const go = (p: string) => {
+    if (p === "Study") setLearningEntry(null)
     setPage(p)
   }
 
@@ -787,6 +793,14 @@ export default function App() {
               )
               if (task) void scheduleConfirmedTask(task)
             }}
+            onStartLearning={
+              apiEnabled
+                ? (blockId, goal) => {
+                    setLearningEntry({ blockId, goal })
+                    setPage("Study")
+                  }
+                : undefined
+            }
           />
         )}
         <div
@@ -794,6 +808,9 @@ export default function App() {
           className={page === "Study" ? "study-page-wrapper" : ""}
         >
           <Study
+            userId={session?.user.id ?? "demo"}
+            plannerBlockId={learningEntry?.blockId ?? null}
+            plannerGoal={learningEntry?.goal ?? ""}
             revisionScheduling={revisionScheduling}
             onRevisionTaskConfirmed={(task) => void scheduleConfirmedTask(task)}
             onOpenPlanner={() => go("Planner")}

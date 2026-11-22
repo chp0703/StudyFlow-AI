@@ -41,7 +41,7 @@ export type RequestOptions = {
 
   body?: unknown
 
-  // POST/PUT only. Reuse the same key when the user retries the same action.
+  // Mutations only. Reuse the same key when the user retries the same action.
   idempotencyKey?: string
 
   // Generation requests must not automatically retry model calls.
@@ -95,7 +95,7 @@ export function createApiClient(options: ClientOptions) {
       Authorization: `Bearer ${token}`,
     }
 
-    if (method === "POST" || method === "PUT") {
+    if (method === "POST" || method === "PUT" || method === "DELETE") {
       headers["Content-Type"] = "application/json"
 
       headers["Idempotency-Key"] = opts.idempotencyKey ?? crypto.randomUUID()
@@ -137,20 +137,26 @@ export function createApiClient(options: ClientOptions) {
   }
 
   async function request<T>(
-    method: "GET" | "POST" | "PUT",
+    method: "GET" | "POST" | "PUT" | "DELETE",
     path: string,
     opts: RequestOptions = {},
   ): Promise<T> {
     // A write without a key would not be safe to repeat, so fix one before the first attempt.
     const fixed =
-      (method === "POST" || method === "PUT") && !opts.idempotencyKey
+      (method === "POST" || method === "PUT" || method === "DELETE") &&
+      !opts.idempotencyKey
         ? { ...opts, idempotencyKey: crypto.randomUUID() }
         : opts
 
     try {
       return (await once(method, path, fixed)) as T
     } catch (error) {
-      if (!(error instanceof ApiError) || !error.retryable || fixed.retry === false) throw error
+      if (
+        !(error instanceof ApiError) ||
+        !error.retryable ||
+        fixed.retry === false
+      )
+        throw error
 
       await new Promise((r) => setTimeout(r, options.retryDelayMs ?? 400))
 

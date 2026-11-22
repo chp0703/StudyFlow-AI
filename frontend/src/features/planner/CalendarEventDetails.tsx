@@ -3,15 +3,19 @@ import type { TaskChange } from "../../types/planner"
 import type { Task } from "../../types/task"
 import { formatShortDate } from "../../utils/date"
 import { presentTaskDescription } from "./taskPresentation"
+import { BookOpen } from "lucide-react"
+import Button from "../../components/ui/Button"
 
 export default function CalendarEventDetails({
   event,
   change,
   close,
+  onStartLearning,
 }: {
   event: Task
   change?: TaskChange["kind"]
   close: () => void
+  onStartLearning?: (blockId: string, goal: string) => void
 }) {
   const proposed = Boolean(change)
   const description = presentTaskDescription(event.description)
@@ -46,6 +50,15 @@ export default function CalendarEventDetails({
           Dời hoặc bỏ riêng buổi học chưa được backend hỗ trợ. Công việc gốc vẫn
           được giữ nguyên.
         </p>
+        {!proposed && onStartLearning && (
+          <Button
+            className="primary calendar-event-learn-button"
+            onClick={() => onStartLearning(event.id, event.title)}
+          >
+            <BookOpen size={16} aria-hidden="true" />
+            Học ngay
+          </Button>
+        )}
       </div>
     </Modal>
   )

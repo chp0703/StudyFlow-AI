@@ -97,6 +97,30 @@ test("POST sends a JSON body and an idempotency key", async () => {
   assert.equal(calls[0].init.body, '{"a":1}')
 })
 
+test("DELETE sends an idempotency key without a JSON body", async () => {
+  const { client, calls } = setup([json({ data: { deleted: true } })])
+  await client.request("DELETE", "/v1/materials/mat-1", {
+    idempotencyKey: "delete-123456789012",
+  })
+  const headers = calls[0].init.headers as Record<string, string>
+  assert.equal(headers["Idempotency-Key"], "delete-123456789012")
+  assert.equal(headers["Content-Type"], "application/json")
+  assert.equal(calls[0].init.body, undefined)
+})
+
+test("retry false leaves an AI side effect for explicit UI retry", async () => {
+  const { client, calls } = setup([
+    json(errBody("SERVICE_UNAVAILABLE", true), 503),
+  ])
+  await assert.rejects(
+    client.request("POST", "/v1/learning/sessions/s-1/turns", {
+      body: { kind: "ASK", text: "x" },
+      retry: false,
+    }),
+  )
+  assert.equal(calls.length, 1)
+})
+
 test("a transient failure is retried once with the same idempotency key", async () => {
   const { client, calls } = setup([
     json(errBody("SERVICE_UNAVAILABLE", true), 503),

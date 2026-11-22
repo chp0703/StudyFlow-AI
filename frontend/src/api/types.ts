@@ -170,6 +170,79 @@ export type ActionReference = {
   target_version: number
 }
 
+export type DailyMaterialStatus = "UPLOADED" | "INDEXING" | "READY" | "FAILED"
+
+export type DailyLearningMaterial = {
+  material_id: string
+  owner_id: string
+  course_label: string | null
+  filename: string
+  mime_type: "application/pdf" | "text/plain" | "text/markdown"
+  sha256: string
+  byte_size: number
+  page_count: number | null
+  status: DailyMaterialStatus
+  error_code: "INVALID_DOCUMENT" | "INDEX_TIMEOUT" | "INDEX_UNAVAILABLE" | null
+  created_at: string
+}
+
+export type DailyLearningCitation = {
+  chunk_id: string
+  material_id: string
+  page: number
+  material_deleted: boolean
+}
+
+export type DailyLearningTurn = {
+  turn_id: string
+  session_id: string
+  owner_id: string
+  ordinal: number
+  role: "USER" | "ASSISTANT"
+  kind: "ASK" | "HINT"
+  hint_level: 1 | 2 | 3 | null
+  content: string
+  citations: DailyLearningCitation[]
+  supported: boolean | null
+  model: string | null
+  prompt_version: string | null
+}
+
+export type DailyLearningSession = {
+  session_id: string
+  owner_id: string
+  conversation_id: string
+  goal: string
+  material_ids: string[]
+  planner_block_id: string | null
+  status: "ACTIVE" | "SUMMARY_PENDING" | "CLOSED"
+  version: number
+  created_at: string
+  expires_at: string
+}
+
+export type DailyLearningSummaryDraft = {
+  summary: string
+  topics: string[]
+  duration_minutes: number
+}
+
+export type DailyLearningSummaryData = {
+  operation: "save_session_outcome"
+  session: DailyLearningSession
+  draft: DailyLearningSummaryDraft
+  action_reference: ActionReference
+}
+
+export type DailyLearningPlannerContext = {
+  block_id: string
+  task_id: string
+  task_title: string
+  start_at: string
+  end_at: string
+  suggested_goal: string
+}
+
 export type Question = {
   field: string
 

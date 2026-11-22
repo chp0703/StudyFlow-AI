@@ -73,6 +73,8 @@ export type PlannerProps = {
   onTaskConfirmed?: (task: ApiTask) => void
 
   onScheduleTask?: (taskId: string) => void
+
+  onStartLearning?: (blockId: string, goal: string) => void
 }
 
 export type PlannerFeedback = {

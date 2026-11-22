@@ -337,3 +337,20 @@
 - Không có phiên authenticated/backend có dữ liệu F2 nên manual/F2 scheduling và input 20 phút chỉ được xác minh bằng contract/unit/fixture, chưa phải E2E live.
 - Backend chưa có policy “mọi ô trống là rảnh”; sản phẩm vẫn yêu cầu người dùng duyệt Availability. Công cụ mobile áp viewport 390×844 nhưng báo CSS viewport 487×1055; không tràn ngang, song kích thước pixel chính xác 390 chưa được xác nhận.
 - Vite vẫn cảnh báo chunk JavaScript trên 500 kB; không gọi DeepSeek, không reset Supabase.
+
+## 2026-11-23 — Implement F3 Daily AI Learning frontend
+
+**Mục tiêu:** Hoàn thiện frontend Daily AI Learning theo contract main, giữ nguyên F1/F2 và ranh giới xác nhận trước mọi ghi kết quả.
+
+**Đã làm**
+- Tạo workspace F3 độc lập từ HEAD PR #55; thêm typed endpoints cho materials, sessions, turns, summary, decisions và Planner context với JWT/idempotency/retry semantics hiện có.
+- Triển khai upload/list/poll/delete tài liệu, chọn tối đa năm tài liệu READY, phiên học khôi phục 30 ngày, transcript có citation/unsupported state và progressive hints theo mức máy chủ.
+- Thêm review summary bằng ActionReference nguyên vẹn, APPROVE/REJECT qua `/v1/decisions`, khóa double-submit và xử lý retry/stale reference.
+- Giữ F2 trong tab riêng đủ chiều rộng; thêm “Học ngay” trên StudyBlock đã xác nhận và xác minh context qua server trước khi tạo phiên.
+- Làm demo mode trung thực, responsive và accessible; bổ sung mapper/status/hint/recovery/idempotency/decision tests và browser QA 1440/1366/768/390/320.
+
+**Kết quả:** PR #55 đích, nhánh local `feat/f3-daily-learning-kent`; 134/134 frontend tests, TypeScript, targeted oxfmt, Vite production build, `git diff --check` và contract main 259 definitions/177 fixtures đạt. Browser demo không tràn ngang, console sạch, F2 render bình thường và modal trả focus đúng.
+
+**Ghi chú**
+- Backend F3 không tồn tại tại baseline PR #55 nên upload/polling/AI/summary live là NOT VERIFIED; các endpoint mới được fixture/contract test, browser chỉ kiểm tra demo mode.
+- Chưa push hoặc cập nhật PR #55; Vite vẫn cảnh báo bundle JavaScript trên 500 kB và frontend tests in warning HMR port 24678 đã được dùng dù mọi assertion đạt.

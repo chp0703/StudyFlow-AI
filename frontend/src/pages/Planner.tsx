@@ -86,6 +86,7 @@ export default function Planner({
   onProposalDecision,
   onTaskConfirmed,
   onScheduleTask,
+  onStartLearning,
 }: PlannerProps) {
   const [plannerNotice, setPlannerNotice] = useState("")
 
@@ -722,6 +723,7 @@ export default function Planner({
             event={selectedWeekEvent}
             change={changeOf.get(selectedWeekEvent.id)}
             close={() => setSelectedWeekEvent(null)}
+            onStartLearning={onStartLearning}
           />
         )}
         {plannerNotice && (
