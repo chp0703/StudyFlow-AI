@@ -741,6 +741,7 @@
       "post": {
         "operationId": "create_revision_recommendation",
         "summary": "create evidence-backed revision recommendation as a Planner pending action",
+        "description": "The learner supplies suggested_minutes as an integer from 15 through 240 and priority as 0.1, 0.5, or 1. PostgreSQL stores these choices with the evidence snapshot. Approval copies them into an editable Planner draft for separate confirmation.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -816,7 +817,7 @@
             }
           },
           "422": {
-            "description": "Insufficient valid responses to recommend revision.",
+            "description": "Invalid learner choices or topic, or insufficient evidence. A recommendation requires a valid wrong response with a source linked to the topic.",
             "content": {
               "application/json": {
                 "schema": {

@@ -42,6 +42,9 @@ test("B7 summary exposes observed errors, user choices and confidence/source lim
   assert.ok(text.includes(rec.evidence.attempt_ids[0]))
   assert.ok(text.includes(chunk.chunk_id))
   assert.ok(text.includes(chunk.text))
-  assert.match(text, /Thời lượng do bạn chọn/)
+  assert.ok(
+    text.includes(`Thời lượng do bạn chọn: ${rec.suggested_minutes} phút`),
+  )
+  assert.ok(text.includes(`Ưu tiên do bạn chọn: ${rec.priority}`))
   assert.deepEqual(p, before)
 })

@@ -109,3 +109,29 @@ Draft PR #57. Contract checker, generator và 76 HTTP acceptance đều đạt. 
 
 **Kết quả**  
 Draft PR #57. Contract checker đạt 135 fixture và backend unit đạt 136 test. CI của bản trước đã qua 700 assertion pgTAP, 31 HTTP integration và kiểm tra dữ liệu cũ qua upgrade B7. Chạy lại concurrency với checker đã sửa.
+
+## 2026-11-19 — F2 B7 ghi nhận lựa chọn ôn tập (#60)
+
+**Mục tiêu:** Xác định thời lượng và ưu tiên do người học chọn, cùng cách dùng hai giá trị trong bản nháp Planner.
+
+**Đã làm**
+
+- Cập nhật đặc tả Assessment, contract và mô tả hai cột B7 qua migration mới.
+- Bổ sung kiểm thử mốc hợp lệ, bằng chứng, xác nhận bản nháp, replay qua nâng cấp và nhãn hiển thị.
+
+**Kết quả:** Nhánh `codex/issue-60-b7-learner-choices`. Contract checker, generator, 147 backend unit test, 83 frontend test, TypeScript và Vite build đạt.
+
+**Ghi chú**
+
+- Kiểm thử pgTAP, integration và upgrade chạy qua CI vì máy thiếu Docker/WSL. Quy tắc chờ nhóm duyệt trên PR.
+
+## 2026-11-22 — Tránh trùng phiên bản migration của F2 B7 (#62)
+
+**Mục tiêu:** Giữ migration mô tả lựa chọn của người học khi tích hợp với chuỗi F3.
+
+**Đã làm**
+
+- Đổi phiên bản migration chú thích cột B7 sang 202611220001 và giữ nguyên SQL.
+- Đổi liên kết trên PR thành Refs #60 để nhóm xác nhận quyết định sản phẩm trước khi đóng issue.
+
+**Kết quả:** Hash nội dung SQL khớp trước và sau khi đổi tên. CI kiểm chứng clean replay và upgrade.

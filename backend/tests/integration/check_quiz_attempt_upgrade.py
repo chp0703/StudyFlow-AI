@@ -1,4 +1,4 @@
-"""Local upgrade verification for F2 quiz attempts across migration 202611200004 -> head."""
+"""Verify local F2 quiz attempts and recommendations across migration 202611200004 -> head."""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 import httpx
+import psycopg
 
 ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
@@ -120,6 +121,24 @@ class QuizAttemptUpgradeCheck(unittest.TestCase):
         resp_id = legacy["response_id"]
         self.assertEqual((legacy["attempt_id"], legacy["question_id"], legacy["selected_option_id"], legacy["validity"], legacy["is_correct"], legacy["graded_at"]), (attempt_id, qid, "B", "VALID", None, None))
 
+        # The pre-upgrade schema predates the current HTTP quiz submission RPC.
+        # Seed one graded attempt with the DB guards active, then create B7 over HTTP.
+        with psycopg.connect(local_dsn(), autocommit=True) as db:
+            wrong_attempt = self.rev.seed_submitted_incorrect_attempt(db, user_id, body["material_id"], qids)
+        recommendation_path = "/v1/assessment/recommendations"
+        recommendation_body = {**body, "suggested_minutes": 20, "priority": 0.1}
+        recommendation_key = f"it-upgrade-recommendation-{uuid4().hex}"
+        with self.rev.client() as pre_app:
+            recommendation = self.ok(
+                self.f.post(pre_app, recommendation_path, recommendation_body, key=recommendation_key),
+                False, "OrchestratorReply",
+            )
+        rec = recommendation["result"]["data"]["revision_recommendation"]
+        self.assertEqual(rec["evidence"]["attempt_ids"], [wrong_attempt])
+        self.assertEqual(rec["evidence"]["error_count"], 1)
+        expected_snapshot = (20, 0.1, rec["evidence"])
+        self.assertEqual(self.rev.stored_choices_and_evidence(rec["recommendation_id"]), expected_snapshot)
+
         proc = subprocess.run([shutil.which("supabase") or "supabase", "migration", "up", "--local", "--yes"], cwd=ROOT, check=False, timeout=180)
         self.assertEqual(proc.returncode, 0, f"supabase migration up --local --yes failed ({proc.returncode})")
 
@@ -132,7 +151,15 @@ class QuizAttemptUpgradeCheck(unittest.TestCase):
         save_url = f"/v1/assessment/attempts/{attempt_id}/responses/{qid}"
         put_save = lambda app, opt, key, replayed: self.ok(app.put(save_url, json={"schema_version": "1.1", "selected_option_id": opt}, headers=self.f.auth("a", **{"Idempotency-Key": key})), replayed, "QuizResponseResult", "COMMITTED")
 
+        self.assertEqual(self.rev.stored_choices_and_evidence(rec["recommendation_id"]), expected_snapshot)
         with self.rev.client() as post_app:
+            replayed_recommendation = self.ok(
+                self.f.post(post_app, recommendation_path, recommendation_body, key=recommendation_key),
+                True, "OrchestratorReply",
+            )
+            self.assertEqual(replayed_recommendation["action_reference"], recommendation["action_reference"])
+            self.assertEqual(replayed_recommendation["result"]["data"], recommendation["result"]["data"])
+
             self.assertEqual(put_save(post_app, "B", legacy_key, True)["data"], legacy)
             new_save = put_save(post_app, "A", f"it-upgrade-new-save-{uuid4().hex}", False)["data"]
             self.assertEqual((new_save["response_id"], new_save["selected_option_id"], new_save["validity"], new_save["is_correct"]), (resp_id, "A", "VALID", None))
