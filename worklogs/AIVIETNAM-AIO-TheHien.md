@@ -168,3 +168,14 @@ Bộ unit indexing 28 ca, contract checker, migration generator và test base64 
 **Kết quả:** Contract checker qua 175 fixture, schema generator đồng bộ, 188 backend unit đạt và 2 skip.
 
 **Ghi chú:** Supabase sạch, nâng cấp, pgTAP và cạnh tranh chạy bằng CI. Việc nạp sẵn E5 chờ số đo cache lạnh và ấm.
+
+## 2026-11-20 — Kiểm chứng tích hợp F2 B7 và F3 M1 (#62, #65)
+
+**Mục tiêu:** Giữ snapshot B7 và chunks của tài liệu Assessment qua cùng lượt nâng cấp.
+
+**Đã làm**
+
+- Giữ hai nhóm assertion upgrade và cả hai mục worklog.
+- Kiểm tra payload 20 phút, ưu tiên 0.1, lưu recommendation, bàn giao sang Planner và chỉ tạo task khi xác nhận cuối.
+
+**Kết quả:** Nhánh kiểm thử codex/studyflow-review-integration. Supabase chạy trong CI của nhánh tích hợp.

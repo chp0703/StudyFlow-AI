@@ -99,12 +99,17 @@ class RevisionLocalTests(unittest.TestCase):
 
     def test_handoff_patch_confirm_and_snapshot_after_restart(self):
         with self.client() as app:
-            body,qids,chunks=self.fixture(app);attempt=self.submit(app,body,qids);before=self.snapshot(body)
+            body, qids, _ = self.fixture(app)
+            body.update(suggested_minutes=20, priority=0.1)
+            attempt = self.submit(app, body, qids)
+            before = self.snapshot(body)
             key=f'it-{uuid4().hex}';created=self.ok(self.f.post(app,'/v1/assessment/recommendations',body,key=key));ref=created['action_reference']
             tampered=self.decide(app,body,{**ref,'target_id':str(uuid4())})
             self.assertEqual(tampered.status_code,409,tampered.text)
             self.assertEqual(tampered.json()['error']['code'],'APPROVAL_REQUIRED')
             rec=created['result']['data']['revision_recommendation'];self.assertEqual(rec['evidence']['attempt_ids'],[attempt])
+            self.assertEqual((rec['suggested_minutes'], rec['priority']), (20, 0.1))
+            self.assertEqual(self.snapshot(body), before)
             self.assertEqual(rec['evidence']['error_count'],1);self.assertEqual(rec['confidence_limit']['level'],'LOW')
             replay=self.ok(self.f.post(app,'/v1/assessment/recommendations',body,key=key));self.assertEqual(replay['result']['data'],created['result']['data'])
             self.assertEqual(self.f.post(app,'/v1/assessment/recommendations',{**body,'priority':1},key=key).status_code,409)
@@ -127,7 +132,7 @@ class RevisionLocalTests(unittest.TestCase):
             partial=dict(schema_version='1.1',conversation_id=body['conversation_id'],expected_action_version=action['version'],expected_candidate_version=candidate['version'],candidate_patch={'start_at':'2027-03-01T01:00:00Z'})
             patched=self.ok(self.f.post(app,f"/v1/actions/{action['action_id']}/review",partial));self.assertEqual(patched['state'],'NEEDS_CLARIFICATION')
             self.assertIsNone(patched['result']['data']['candidate']['slots'].get('deadline_at'))
-            pres=patched['result']['data'];patch={**partial,'expected_action_version':pres['pending_action']['version'],'expected_candidate_version':pres['candidate']['version'],'candidate_patch':{'deadline_at':'2027-03-02T01:00:00Z','estimated_minutes':20,'priority':1}}
+            pres=patched['result']['data'];patch={**partial,'expected_action_version':pres['pending_action']['version'],'expected_candidate_version':pres['candidate']['version'],'candidate_patch':{'deadline_at':'2027-03-02T01:00:00Z','estimated_minutes':35,'priority':1}}
             patchkey=f'it-{uuid4().hex}';ready=self.ok(self.f.post(app,f"/v1/actions/{action['action_id']}/review",patch,key=patchkey))
             self.assertEqual(ready['state'],'AWAITING_APPROVAL');self.assertEqual(self.snapshot(body),before)
             repeated=self.ok(self.f.post(app,f"/v1/actions/{action['action_id']}/review",patch,key=patchkey));self.assertEqual(repeated['action_reference'],ready['action_reference'])
@@ -154,7 +159,7 @@ class RevisionLocalTests(unittest.TestCase):
                     'where c.candidate_id = %s',
                     (candidate['candidate_id'],),
                 ).fetchone()
-                self.assertEqual(task, (20, 1))
+                self.assertEqual(task, (35, 1))
             self.assertEqual(
                 self.stored_choices_and_evidence(rec['recommendation_id']),
                 (body['suggested_minutes'], body['priority'], rec['evidence']),
