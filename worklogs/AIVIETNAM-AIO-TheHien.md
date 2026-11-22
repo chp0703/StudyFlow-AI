@@ -124,3 +124,14 @@ Draft PR #57. Contract checker đạt 135 fixture và backend unit đạt 136 te
 **Ghi chú**
 
 - Kiểm thử pgTAP, integration và upgrade chạy qua CI vì máy thiếu Docker/WSL. Quy tắc chờ nhóm duyệt trên PR.
+
+## 2026-11-22 — Tránh trùng phiên bản migration của F2 B7 (#62)
+
+**Mục tiêu:** Giữ migration mô tả lựa chọn của người học khi tích hợp với chuỗi F3.
+
+**Đã làm**
+
+- Đổi phiên bản migration chú thích cột B7 sang 202611220001 và giữ nguyên SQL.
+- Đổi liên kết trên PR thành Refs #60 để nhóm xác nhận quyết định sản phẩm trước khi đóng issue.
+
+**Kết quả:** Hash nội dung SQL khớp trước và sau khi đổi tên. CI kiểm chứng clean replay và upgrade.
