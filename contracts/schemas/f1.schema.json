@@ -15739,6 +15739,705 @@
           "$ref": "#/$defs/ErrorResult"
         }
       ]
+    },
+    "CreateLearningSessionArguments": {
+      "type": "object",
+      "properties": {
+        "goal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "pattern": "\\S"
+        },
+        "material_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true
+        },
+        "planner_block_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "goal",
+        "material_ids",
+        "planner_block_id",
+        "fingerprint"
+      ],
+      "additionalProperties": false
+    },
+    "LearningSessionCreation": {
+      "type": "object",
+      "properties": {
+        "session": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/DailyLearningSession"
+            },
+            {
+              "properties": {
+                "status": {
+                  "const": "ACTIVE"
+                }
+              }
+            }
+          ]
+        },
+        "replayed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "session",
+        "replayed"
+      ],
+      "additionalProperties": false
+    },
+    "CreateLearningSessionResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "$ref": "#/$defs/LearningSessionCreation"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "GetLearningSessionArguments": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "session_id"
+      ],
+      "additionalProperties": false
+    },
+    "DailyLearningSessionReadData": {
+      "type": "object",
+      "properties": {
+        "session": {
+          "$ref": "#/$defs/DailyLearningSession"
+        },
+        "turns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DailyLearningTurn"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "session",
+        "turns"
+      ],
+      "additionalProperties": false
+    },
+    "LookupLearningTurnReceiptArguments": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "session_id",
+        "idempotency_key",
+        "fingerprint"
+      ],
+      "additionalProperties": false
+    },
+    "LearningTurnPair": {
+      "type": "object",
+      "properties": {
+        "user_turn": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/DailyLearningTurn"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "USER"
+                }
+              }
+            }
+          ]
+        },
+        "assistant_turn": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/DailyLearningTurn"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "ASSISTANT"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "user_turn",
+        "assistant_turn"
+      ],
+      "additionalProperties": false
+    },
+    "LearningTurnReceiptLookup": {
+      "type": "object",
+      "properties": {
+        "found": {
+          "type": "boolean"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LearningTurnPair"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "found",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "LookupLearningTurnReceiptResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "$ref": "#/$defs/LearningTurnReceiptLookup"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "SearchLearningMaterialChunksArguments": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "query_embedding": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16000,
+          "pattern": "^\\[[0-9eE.+,\\-]+\\]$"
+        },
+        "query_text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000,
+          "pattern": "\\S"
+        },
+        "k": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        }
+      },
+      "required": [
+        "session_id",
+        "query_embedding",
+        "query_text",
+        "k"
+      ],
+      "additionalProperties": false
+    },
+    "RetrievedLearningChunk": {
+      "type": "object",
+      "properties": {
+        "chunk_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "ordinal": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1600,
+          "pattern": "\\S"
+        },
+        "cosine_similarity": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "fts_rank": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rrf_score": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "chunk_id",
+        "material_id",
+        "page",
+        "ordinal",
+        "text",
+        "cosine_similarity",
+        "fts_rank",
+        "rrf_score"
+      ],
+      "additionalProperties": false
+    },
+    "SearchLearningMaterialChunksData": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "chunks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RetrievedLearningChunk"
+          },
+          "minItems": 0,
+          "maxItems": 20
+        }
+      },
+      "required": [
+        "session_id",
+        "chunks"
+      ],
+      "additionalProperties": false
+    },
+    "SearchLearningMaterialChunksResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "READ"
+            },
+            "data": {
+              "$ref": "#/$defs/SearchLearningMaterialChunksData"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
+    },
+    "LearningCitationInput": {
+      "type": "object",
+      "properties": {
+        "chunk_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "material_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        }
+      },
+      "required": [
+        "chunk_id",
+        "material_id",
+        "page"
+      ],
+      "additionalProperties": false
+    },
+    "AppendLearningTurnArguments": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "expected_last_ordinal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "kind": {
+          "enum": [
+            "ASK",
+            "HINT"
+          ]
+        },
+        "user_content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000,
+          "pattern": "\\S"
+        },
+        "assistant_content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000,
+          "pattern": "\\S"
+        },
+        "hint_level": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LearningCitationInput"
+          },
+          "minItems": 0,
+          "maxItems": 20,
+          "uniqueItems": true
+        },
+        "supported": {
+          "type": "boolean"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "session_id",
+        "fingerprint",
+        "expected_last_ordinal",
+        "kind",
+        "user_content",
+        "assistant_content",
+        "hint_level",
+        "citations",
+        "supported",
+        "model",
+        "prompt_version"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "ASK"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "hint_level": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "hint_level": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 3
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "supported": {
+                "const": true
+              }
+            },
+            "required": [
+              "supported"
+            ]
+          },
+          "then": {
+            "properties": {
+              "citations": {
+                "minItems": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "citations": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "LearningTurnAppended": {
+      "type": "object",
+      "properties": {
+        "user_turn": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/DailyLearningTurn"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "USER"
+                }
+              }
+            }
+          ]
+        },
+        "assistant_turn": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/DailyLearningTurn"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "ASSISTANT"
+                }
+              }
+            }
+          ]
+        },
+        "replayed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "user_turn",
+        "assistant_turn",
+        "replayed"
+      ],
+      "additionalProperties": false
+    },
+    "AppendLearningTurnResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schema_version": {
+              "const": "1.1"
+            },
+            "request_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "outcome": {
+              "const": "COMMITTED"
+            },
+            "data": {
+              "$ref": "#/$defs/LearningTurnAppended"
+            },
+            "error": {
+              "type": "null"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "schema_version",
+            "request_id",
+            "outcome",
+            "data",
+            "error",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ErrorResult"
+        }
+      ]
     }
   }
 }

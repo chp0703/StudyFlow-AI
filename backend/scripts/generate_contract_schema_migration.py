@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA = ROOT / "contracts" / "schemas" / "f1.schema.json"
-TARGET = ROOT / "supabase" / "migrations" / "202611200010_f3_m1_learning_rpc_contract_schema.sql"
+TARGET = ROOT / "supabase" / "migrations" / "202611200012_f3_m2_m3_learning_rpc_contract_schema.sql"
 
 
 def render() -> str:

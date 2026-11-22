@@ -143,6 +143,16 @@ Bộ unit indexing 28 ca, contract checker, migration generator và test base64 
 
 **Ghi chú:** Supabase sạch, nâng cấp, pgTAP và cạnh tranh chạy bằng CI. Việc nạp sẵn E5 chờ số đo cache lạnh và ấm.
 
+## 2026-11-21 — Đồng bộ ràng buộc lượt học M1 vào M2–M3 (#65, #66)
+
+**Mục tiêu:** Duy trì một ràng buộc hint_level duy nhất trong migration M1.
+
+**Đã làm**
+
+- Đồng bộ #65, bỏ đoạn vá dò constraint trong 00013 và sinh lại schema M2–M3.
+
+**Kết quả:** Generator đồng bộ. CI kiểm tra phiên, lượt hỏi và gợi ý trên schema mới.
+
 ## 2026-11-20 — Cô lập assertion của danh sách tài liệu (#65)
 
 **Mục tiêu:** Kiểm tra phân quyền danh sách với hai owner đã có tài liệu.

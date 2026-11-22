@@ -13,6 +13,8 @@ from .exceptions import IndexTimeoutError, IndexUnavailableError, InvalidDocumen
 EMBEDDING_DIM = 384
 DEFAULT_BATCH_SIZE = 16
 E5_PREFIX = "passage: "
+E5_QUERY_PREFIX = "query: "
+E5_MAX_TOKENS = 512
 
 _MODEL_CACHE: dict[str, Any] = {}
 _CACHE_LOCK = threading.Lock()
@@ -143,3 +145,52 @@ def embed_passages(
 
     check_deadline(deadline)
     return results
+
+
+def _bound_query_tokens(query: str, tokenizer: Any, *, max_tokens: int = E5_MAX_TOKENS) -> str:
+    """Trim an overlong query to fit the E5 token budget including the query prefix."""
+    from .chunking import count_passage_tokens
+
+    if tokenizer is None or count_passage_tokens(query, tokenizer, prefix=E5_QUERY_PREFIX) <= max_tokens:
+        return query
+    low, high, best = 1, len(query), 1
+    while low <= high:
+        mid = (low + high) // 2
+        candidate = query[:mid].strip()
+        if candidate and count_passage_tokens(candidate, tokenizer, prefix=E5_QUERY_PREFIX) <= max_tokens:
+            best = mid
+            low = mid + 1
+        else:
+            high = mid - 1
+    trimmed = query[:best].strip()
+    if not trimmed:
+        raise InvalidDocumentError("Câu hỏi không hợp lệ sau khi giới hạn token.")
+    return trimmed
+
+
+def embed_query(
+    query: str,
+    *,
+    model: Any = None,
+    tokenizer: Any = None,
+    model_name: str = LEARNING_EMBEDDING_MODEL,
+    deadline: float | None = None,
+) -> list[float]:
+    """Encode a single student query on CPU with literal 'query: ' prefix and L2 normalization."""
+    cleaned = query.strip() if isinstance(query, str) else ""
+    if not cleaned:
+        raise InvalidDocumentError("Nội dung câu hỏi không được rỗng.")
+    check_deadline(deadline)
+    if model is None:
+        model = get_embedding_model(model_name)
+    active_tokenizer = tokenizer if tokenizer is not None else getattr(model, "tokenizer", None)
+    bounded = _bound_query_tokens(cleaned, active_tokenizer)
+    vectors = embed_passages(
+        [bounded],
+        model=model,
+        model_name=model_name,
+        batch_size=1,
+        deadline=deadline,
+        prefix=E5_QUERY_PREFIX,
+    )
+    return vectors[0]
