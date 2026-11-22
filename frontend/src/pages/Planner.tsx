@@ -16,6 +16,7 @@ import {
   DEFAULT_DISPLAY_RANGES,
   calendarViewLabel,
   displaySettingsVisible,
+  rangesIncludingNow,
   type CalendarDisplayRanges,
   type CalendarView,
 } from "../features/planner/calendarDisplay"
@@ -28,7 +29,7 @@ import gsap from "gsap"
 
 import { useGSAP } from "@gsap/react"
 
-import { ChevronLeft, ChevronRight, ListTodo, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, Clock3, ListTodo, X } from "lucide-react"
 
 import Button from "../components/ui/Button"
 
@@ -37,6 +38,7 @@ import Card from "../components/ui/Card"
 import { apiEnabled } from "../api/config"
 
 import TaskPanel from "../features/planner/TaskPanel"
+import CalendarEventDetails from "../features/planner/CalendarEventDetails"
 
 import type { Task } from "../types/task"
 
@@ -76,6 +78,14 @@ export default function Planner({
   setRevision,
 
   notify,
+
+  revisionScheduling,
+
+  onRetryRevisionScheduling,
+
+  onProposalDecision,
+  onTaskConfirmed,
+  onScheduleTask,
 }: PlannerProps) {
   const [plannerNotice, setPlannerNotice] = useState("")
 
@@ -164,6 +174,9 @@ export default function Planner({
       revision,
 
       setRevision,
+
+      onProposalDecision,
+      onTaskConfirmed,
     },
 
     showPlannerNotice,
@@ -198,9 +211,16 @@ export default function Planner({
     null,
   )
 
+  const [selectedWeekEvent, setSelectedWeekEvent] = useState<Task | null>(null)
+
   const [displayRanges, setDisplayRanges] = useState<CalendarDisplayRanges>(
     DEFAULT_DISPLAY_RANGES,
   )
+
+  const [temporaryRanges, setTemporaryRanges] =
+    useState<CalendarDisplayRanges | null>(null)
+
+  const [highlightNow, setHighlightNow] = useState(false)
 
   const [now, setNow] = useState(() => new Date())
 
@@ -215,6 +235,8 @@ export default function Planner({
   const todayIndex = civilWeekday(todayKey)
 
   const [nowHour, nowMinutes] = vietnamClock(now).split(":").map(Number)
+
+  const activeRanges = temporaryRanges ?? displayRanges
 
   const [taskPanelOpen, setTaskPanelOpen] = useState(() => {
     try {
@@ -410,6 +432,7 @@ export default function Planner({
   const weekLabel = formatWeekRange(mondayKey)
 
   const chooseView = (view: CalendarView) => {
+    setTemporaryRanges(null)
     if (view === "month" && calendarView !== "month") {
       setMonth(mondayKey.slice(0, 7))
 
@@ -444,6 +467,34 @@ export default function Planner({
   const dateOf = (date: Date) => vietnamDate(date)
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  const goToNow = () => {
+    const current = new Date()
+    const currentDate = vietnamDate(current)
+    const index = civilWeekday(currentDate)
+    const [hour, minute] = vietnamClock(current).split(":").map(Number)
+    setNow(current)
+    setWeek(0)
+    setSelectedMonthDate(currentDate)
+    setCalendarView("detail")
+    setTemporaryRanges(
+      rangesIncludingNow(displayRanges, index, hour * 60 + minute),
+    )
+    setHighlightNow(true)
+  }
+
+  useEffect(() => {
+    if (!highlightNow || calendarView !== "detail" || week !== 0) return
+    const frame = window.requestAnimationFrame(() => {
+      const line = calendarRef.current?.querySelector<HTMLElement>(".now-line")
+      line?.scrollIntoView({ block: "center", behavior: "smooth" })
+    })
+    const timer = window.setTimeout(() => setHighlightNow(false), 1800)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.clearTimeout(timer)
+    }
+  }, [activeRanges, calendarView, highlightNow, week])
 
   // Nhấn ô trống để bắt đầu lệnh thêm vào khung giờ đó.
 
@@ -523,6 +574,7 @@ export default function Planner({
                 <Button
                   className="secondary calendar-today-btn"
                   onClick={() => {
+                    setTemporaryRanges(null)
                     if (calendarView === "month") {
                       setMonth(todayKey.slice(0, 7))
 
@@ -534,11 +586,20 @@ export default function Planner({
                 </Button>
               )}
               <Button
+                className="secondary calendar-now-btn"
+                type="button"
+                onClick={goToNow}
+              >
+                <Clock3 aria-hidden="true" size={15} />
+                Đến hiện tại
+              </Button>
+              <Button
                 className="icon-button"
                 aria-label={
                   calendarView === "month" ? "Tháng trước" : "Tuần trước"
                 }
                 onClick={() => {
+                  setTemporaryRanges(null)
                   if (calendarView === "month") {
                     setMonth(addMonths(month, -1))
 
@@ -552,6 +613,7 @@ export default function Planner({
                 className="icon-button"
                 aria-label={calendarView === "month" ? "Tháng sau" : "Tuần sau"}
                 onClick={() => {
+                  setTemporaryRanges(null)
                   if (calendarView === "month") {
                     setMonth(addMonths(month, 1))
 
@@ -603,7 +665,9 @@ export default function Planner({
           <span className="legend-proposed">Đề xuất</span>
           <span>
             {weekEmpty
-              ? "Tuần này chưa có việc."
+              ? shown.length
+                ? `Tuần này chưa có buổi học; có ${shown.length} công việc chưa xếp.`
+                : "Tuần này chưa có buổi học."
               : calendarView === "month"
                 ? "Chọn ngày để xem chi tiết"
                 : "Chọn giờ để nhập yêu cầu"}
@@ -628,10 +692,13 @@ export default function Planner({
             weekDays={weekDays}
             week={week}
             todayIndex={todayIndex}
-            ranges={displayRanges}
+            ranges={activeRanges}
             onRangesChange={
               displaySettingsVisible(calendarView)
-                ? setDisplayRanges
+                ? (ranges) => {
+                    setTemporaryRanges(null)
+                    setDisplayRanges(ranges)
+                  }
                 : undefined
             }
             events={calendarEvents}
@@ -646,6 +713,15 @@ export default function Planner({
             changeOf={changeOf}
             nowHour={nowHour}
             nowMinutes={nowMinutes}
+            highlightNow={highlightNow}
+            onSelectEvent={setSelectedWeekEvent}
+          />
+        )}
+        {selectedWeekEvent && (
+          <CalendarEventDetails
+            event={selectedWeekEvent}
+            change={changeOf.get(selectedWeekEvent.id)}
+            close={() => setSelectedWeekEvent(null)}
           />
         )}
         {plannerNotice && (
@@ -684,6 +760,15 @@ export default function Planner({
             )
           }
           week={weekDays.map(dateOf)}
+          revisionScheduling={revisionScheduling}
+          onRetryRevisionScheduling={onRetryRevisionScheduling}
+          onScheduleTask={onScheduleTask}
+          onSetupAvailability={() => {
+            setInput(
+              "Thiết lập giờ học mặc định từ 19:00 đến 21:00, Thứ 2 đến Thứ 6",
+            )
+            window.requestAnimationFrame(() => inputRef.current?.focus())
+          }}
           onClose={() => setTaskPanelOpen(false)}
         />
       </div>

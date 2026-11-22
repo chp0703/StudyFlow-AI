@@ -13,8 +13,11 @@ import {
 import Card from "../../components/ui/Card"
 
 import type { Task } from "../../types/task"
+import type { RevisionSchedulingState } from "./revisionScheduling"
+import Button from "../../components/ui/Button"
 
 import { daysUntil, formatShortDate } from "../../utils/date"
+import { presentTaskDescription } from "./taskPresentation"
 
 type Status = "draft" | "confirmed" | "unscheduled"
 
@@ -58,6 +61,12 @@ export default function TaskPanel({
   week,
 
   onClose,
+
+  revisionScheduling,
+
+  onRetryRevisionScheduling,
+  onScheduleTask,
+  onSetupAvailability,
 }: {
   tasks: Task[]
 
@@ -66,6 +75,14 @@ export default function TaskPanel({
   week?: string[]
 
   onClose?: () => void
+
+  revisionScheduling?: RevisionSchedulingState | null
+
+  onRetryRevisionScheduling?: () => void
+
+  onScheduleTask?: (taskId: string) => void
+
+  onSetupAvailability?: () => void
 }) {
   const [query, setQuery] = useState("")
 
@@ -149,7 +166,12 @@ export default function TaskPanel({
             </button>
           )}
         </div>
-        <ul className="task-panel-list">
+        <ul
+          className="task-panel-list"
+          role="region"
+          aria-label="Danh sách công việc"
+          tabIndex={0}
+        >
           {rows.map((t) => {
             const { label, Icon } = STATUS[statusOf(t, proposedIds)]
 
@@ -157,6 +179,10 @@ export default function TaskPanel({
             const colorLabel = TASK_COLOR_OPTIONS.find(
               (option) => option.value === t.color?.toUpperCase(),
             )?.label
+            const scheduling =
+              revisionScheduling?.taskId === t.id ? revisionScheduling : null
+            const description = presentTaskDescription(t.description)
+            const status = statusOf(t, proposedIds)
 
             return (
               <li
@@ -168,11 +194,18 @@ export default function TaskPanel({
                 }
               >
                 <strong>{t.title}</strong>
-                {t.description && (
-                  <span className="task-panel-description">
-                    {t.description}
-                  </span>
-                )}
+                {description &&
+                  (description.summary.length > 110 ||
+                  description.summary.includes("\n") ? (
+                    <details className="task-panel-description">
+                      <summary>{description.summary}</summary>
+                      <span>{description.summary}</span>
+                    </details>
+                  ) : (
+                    <span className="task-panel-description-text">
+                      {description.summary}
+                    </span>
+                  ))}
                 <span className="task-panel-meta">
                   <CalendarClock aria-hidden="true" size={13} />
                   {t.date
@@ -187,11 +220,51 @@ export default function TaskPanel({
                     <span className="priority-badge">{colorLabel}</span>
                   )}
                   <span className="priority-badge">{t.priority}</span>
-                  <span
-                    className={`status-chip is-${statusOf(t, proposedIds)}`}
-                  >
-                    <Icon aria-hidden="true" size={13} /> {label}
+                  <span className={`status-chip is-${status}`}>
+                    <Icon aria-hidden="true" size={13} />
+                    {scheduling?.status === "finding"
+                      ? "Đang tìm lịch học phù hợp…"
+                      : scheduling?.status === "pending"
+                        ? "Đang chờ xác nhận lịch"
+                        : scheduling?.status === "scheduled"
+                          ? "Đã xếp lịch"
+                          : scheduling?.status === "failed"
+                            ? "Chưa tìm được khung giờ phù hợp"
+                            : scheduling?.status === "needs_availability"
+                              ? "Cần thiết lập giờ rảnh"
+                              : scheduling?.status === "blocked"
+                                ? "Đang có đề xuất chờ duyệt"
+                                : label}
                   </span>
+                  {(scheduling?.status === "failed" ||
+                    scheduling?.status === "blocked") &&
+                    onRetryRevisionScheduling && (
+                      <Button
+                        className="secondary task-panel-retry"
+                        onClick={onRetryRevisionScheduling}
+                      >
+                        Thử lại
+                      </Button>
+                    )}
+                  {scheduling?.status === "needs_availability" &&
+                    onSetupAvailability && (
+                      <Button
+                        className="secondary task-panel-retry"
+                        onClick={onSetupAvailability}
+                      >
+                        Thiết lập giờ học mặc định
+                      </Button>
+                    )}
+                  {status === "unscheduled" &&
+                    !scheduling &&
+                    onScheduleTask && (
+                      <Button
+                        className="secondary task-panel-retry"
+                        onClick={() => onScheduleTask(t.id)}
+                      >
+                        Tìm giờ học
+                      </Button>
+                    )}
                 </span>
               </li>
             )

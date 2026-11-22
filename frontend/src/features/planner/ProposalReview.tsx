@@ -167,7 +167,8 @@ export default function ProposalReview({
             onClick={approve}
             disabled={blocked || busy}
           >
-            <Check aria-hidden="true" size={14} /> Duyệt
+            <Check aria-hidden="true" size={14} />
+            {proposal.server?.coverage ? "Xác nhận lịch" : "Duyệt"}
           </Button>
         </div>
       ) : null}
