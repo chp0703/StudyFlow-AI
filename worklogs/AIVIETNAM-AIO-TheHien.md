@@ -154,3 +154,17 @@ Bộ unit indexing 28 ca, contract checker, migration generator và test base64 
 - CI đã replay migration và chạy 710 assertion pgTAP. Cập nhật allowlist kiểm tra ranh giới RPC để đăng ký đúng sáu RPC M1, giữ nguyên kiểm tra quyền và chữ ký. Unit indexing và HTTP acceptance local qua sau bản sửa.
 - CI trên `199271e` đã xanh cả backend và DB. DB hoàn thành 710 assertion pgTAP, 37 ca HTTP integration, upgrade có dữ liệu và 9 ca concurrency PostgreSQL. Thêm ca race DELETE với Assessment đang giữ tham chiếu và ca chọn ID ổn định khi F2 có hash trùng.
 - Smoke CPU gần ngưỡng 200.000 ký tự đạt. PDF 50 trang có 183.631 ký tự, tạo 300 chunk trong 13,64 giây khi model đã nạp.
+
+## 2026-11-20 — Xử lý review upload và lập chỉ mục F3 M1 (#65)
+
+**Mục tiêu:** Lưu đúng loại lượt học và cho upload thử lại khi worker đang bận.
+
+**Đã làm**
+
+- Sửa CHECK của learning_turn, thêm pgTAP cho ASK/HINT của người học và trợ lý.
+- Trả 503 retryable trước khi cấp claim nếu worker bận, giữ nguyên replay và hợp nhất nội dung trùng.
+- Bổ sung regression HTTP đồng thời, quota, ghi chú xác nhận xóa thư viện dùng chung và phép đo E5 cold start.
+
+**Kết quả:** Contract checker qua 175 fixture, schema generator đồng bộ, 188 backend unit đạt và 2 skip.
+
+**Ghi chú:** Supabase sạch, nâng cấp, pgTAP và cạnh tranh chạy bằng CI. Việc nạp sẵn E5 chờ số đo cache lạnh và ấm.
