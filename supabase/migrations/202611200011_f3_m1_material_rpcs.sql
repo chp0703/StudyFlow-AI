@@ -55,6 +55,7 @@ declare
     receipt app_private.learning_material_receipts;
     material app_private.materials;
     claim_id uuid;
+    claim_allowed boolean := coalesce((args ->> 'claim_allowed')::boolean, true);
     conversation uuid;
     snapshot jsonb;
     topic text := coalesce(args ->> 'course_label', 'Tài liệu học tập');
@@ -88,6 +89,9 @@ begin
              (m.learning_status is not null) desc, m.created_at, m.material_id
     limit 1;
     if material.learning_status = 'INDEXING' and material.learning_deadline <= clock_timestamp() then
+        if not claim_allowed then
+            return app_private.error_result(p_request, 'SERVICE_UNAVAILABLE', 'Material index worker is busy.', true);
+        end if;
         material := app_private.finish_learning_material(material, 'INDEX_TIMEOUT');
     end if;
     if material.learning_status in ('UPLOADED','INDEXING','READY') or material.learning_error = 'INVALID_DOCUMENT' then
@@ -103,6 +107,9 @@ begin
         return app_private.error_result(p_request, 'TIME_CONFLICT', 'F3 material quota reached.');
     end if;
 
+    if not claim_allowed then
+        return app_private.error_result(p_request, 'SERVICE_UNAVAILABLE', 'Material index worker is busy.', true);
+    end if;
     claim_id := gen_random_uuid();
     if material.material_id is null then
         conversation := gen_random_uuid();

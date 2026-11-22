@@ -1,6 +1,7 @@
 """M1 FastAPI -> PostgREST -> shared Postgres library, using a deterministic embedder."""
 
 import base64
+from hashlib import sha256
 import os
 import threading
 import time
@@ -159,6 +160,11 @@ class LearningMaterialLocalSupabase(unittest.TestCase):
         entered, release = threading.Event(), threading.Event()
         write_count = []
         body, key = self.body(), uuid4().hex
+        other_body, other_key = self.body(), uuid4().hex
+        saved_body, saved_key = self.body(), uuid4().hex
+        with self.client() as app:
+            saved = f.post(app, "/v1/materials", saved_body, who="b", key=saved_key)
+            self.assertEqual(saved.status_code, 200, saved.text)
 
         def blocked_index(content, mime, **kwargs):
             write_count.append(mime)
@@ -177,12 +183,38 @@ class LearningMaterialLocalSupabase(unittest.TestCase):
                 self.assertEqual(dedup.status_code, 200, dedup.text)
                 snapshot = dedup.json()["data"]
                 self.assertEqual(snapshot["status"], "INDEXING")
+                conflict = f.post(app, "/v1/materials", {**body, "filename": "changed.txt"}, key=key)
+                self.assertEqual(conflict.status_code, 409, conflict.text)
+                busy = f.post(app, "/v1/materials", other_body, who="b", key=other_key)
+                self.assertEqual(busy.status_code, 503, busy.text)
+                self.assertEqual(busy.headers["Retry-After"], "1")
+                self.assertEqual(busy.json()["error"]["code"], "SERVICE_UNAVAILABLE")
+                self.assertIs(busy.json()["error"]["retryable"], True)
+                replay = f.post(app, "/v1/materials", saved_body, who="b", key=saved_key)
+                self.assertEqual(replay.headers["Idempotency-Replayed"], "true")
+                self.assertEqual(replay.json()["data"], saved.json()["data"])
+                with psycopg.connect(os.environ["F1_DB_TEST_DSN"]) as db:
+                    receipt = db.execute(
+                        "select 1 from app_private.learning_material_receipts where idempotency_key=%s",
+                        (other_key,),
+                    ).fetchone()
+                    material = db.execute(
+                        "select 1 from app_private.materials where sha256=%s",
+                        (sha256(base64.b64decode(other_body["content_base64"])).hexdigest(),),
+                    ).fetchone()
+                self.assertIsNone(receipt)
+                self.assertIsNone(material)
             finally:
                 release.set()
             completed = pending.result(timeout=20)
             self.assertEqual(completed.status_code, 200, completed.text)
             self.assertEqual(completed.json()["data"]["material_id"], snapshot["material_id"])
             self.assertEqual(write_count, ["text/plain"])
+
+        with self.client() as app:
+            retried = f.post(app, "/v1/materials", other_body, who="b", key=other_key)
+            self.assertEqual(retried.status_code, 200, retried.text)
+            self.assertEqual(retried.json()["data"]["status"], "READY")
 
     def test_expired_worker_cannot_publish_and_retry_reuses_id(self):
         f, body, key = self.fixture, self.body(), uuid4().hex
@@ -236,12 +268,24 @@ class LearningMaterialLocalSupabase(unittest.TestCase):
                            true,'FAILED','INVALID_DOCUMENT'
                     from app_private.materials cross join generate_series(1,18) n where material_id=%s""",
                     (material_id,))
+            contenders = [(self.body(), uuid4().hex) for _ in range(2)]
             with ThreadPoolExecutor(max_workers=2) as workers:
-                writes = [workers.submit(f.post, app, "/v1/materials", self.body(), who="c") for _ in range(2)]
+                writes = [workers.submit(f.post, app, "/v1/materials", body, who="c", key=key)
+                          for body, key in contenders]
                 results = [write.result(timeout=25) for write in writes]
+            for i, ((body, key), result) in enumerate(zip(contenders, results, strict=True)):
+                if result.status_code == 503:
+                    results[i] = f.post(app, "/v1/materials", body, who="c", key=key)
             self.assertEqual(sorted(r.status_code for r in results), [200, 409], [r.text for r in results])
             listed = app.get("/v1/materials", headers=f.auth("c"))
             self.assertEqual(len(listed.json()["data"]["materials"]), 20)
+
+            failed_id = next(m["material_id"] for m in listed.json()["data"]["materials"] if m["status"] == "FAILED")
+            deleted = app.delete(f"/v1/materials/{failed_id}", headers=f.auth("c", **{"Idempotency-Key": uuid4().hex}))
+            self.assertEqual(deleted.status_code, 200, deleted.text)
+            replacement = f.post(app, "/v1/materials", self.body(), who="c")
+            self.assertEqual(replacement.status_code, 200, replacement.text)
+            self.assertEqual(replacement.json()["data"]["status"], "READY")
 
     def test_delete_waits_for_concurrent_assessment_reference_and_rolls_back(self):
         f = self.fixture

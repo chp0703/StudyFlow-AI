@@ -82,7 +82,12 @@ create table app_private.learning_turn (
     ordinal bigint not null check (ordinal >= 1),
     role text not null check (role in ('USER','ASSISTANT')),
     kind text not null check (kind in ('ASK','HINT')),
-    hint_level integer check (hint_level between 1 and 3 and kind = 'HINT' and role = 'ASSISTANT'),
+    hint_level integer constraint learning_turn_hint_level_check check (
+        case when role = 'ASSISTANT' and kind = 'HINT'
+            then hint_level is not null and hint_level between 1 and 3
+            else hint_level is null
+        end
+    ),
     content text not null check (length(content) between 1 and 12000 and content ~ '\S'),
     -- Citation snapshots retain IDs after material deletion.
     citations jsonb not null default '[]'::jsonb check (jsonb_typeof(citations) = 'array'),
