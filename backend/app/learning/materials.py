@@ -19,7 +19,7 @@ from fastapi.concurrency import run_in_threadpool
 
 from ..api.v1.http import ApiError, STATUS, respond
 from ..core import contract
-from ..ingestion.document import IndexingError, IndexUnavailableError
+from ..ingestion.document import IndexingError
 from ..ingestion.models import MIME_EXTENSIONS, decode_upload
 from ..orchestrator.workflow_ports import WorkflowError
 from .indexing import MAX_BYTES, index_document
@@ -90,20 +90,39 @@ class LearningMaterialOperations:
         metadata = {name: body.get(name) for name in ("filename", "mime_type", "course_label")}
         metadata.update(fingerprint=contract.sha256_hex(body), sha256=hashlib.sha256(content).hexdigest(),
                         byte_size=len(content))
-        result = await run_in_threadpool(self.rpc, ctx, "reserve_learning_material", metadata, idempotency_key=key)
-        if result["outcome"] == "ERROR":
-            return _response(result, ctx, "DailyMaterialUploadResult", write=True)
-        data = result["data"]
-        material, claim = data["material"], data["claim"]
-        if material['owner_id'] != ctx.user_id:
-            raise ApiError('INTERNAL_ERROR', 'Kết quả tài liệu không đúng chủ sở hữu.')
-        if claim is None:
-            return _response({**result, "data": material}, ctx, "DailyMaterialUploadResult", write=True,
-                             replayed=data["replayed"])
-
-        args = {"material_id": material["material_id"], "claim": claim}
+        slot_acquired = _worker_slot.acquire(blocking=False)
         try:
-            indexed = await self.index(content, metadata["mime_type"])
+            result = await run_in_threadpool(
+                self.rpc, ctx, "reserve_learning_material",
+                {**metadata, "claim_allowed": slot_acquired}, idempotency_key=key,
+            )
+            if result["outcome"] == "ERROR":
+                return _response(result, ctx, "DailyMaterialUploadResult", write=True)
+            data = result["data"]
+            material, claim = data["material"], data["claim"]
+            if material["owner_id"] != ctx.user_id or (claim is not None and not slot_acquired):
+                raise ApiError("INTERNAL_ERROR", "Kết quả giữ chỗ lập chỉ mục không hợp lệ.")
+            if claim is None:
+                return _response({**result, "data": material}, ctx, "DailyMaterialUploadResult",
+                                 write=True, replayed=data["replayed"])
+
+            args = {"material_id": material["material_id"], "claim": claim}
+            try:
+                future = _index_worker.submit(self.indexer, content, metadata["mime_type"],
+                                              deadline=time.monotonic() + INDEX_SECONDS)
+            except Exception:
+                log.error("Learning index worker submission failed request_id=%s", ctx.request_id)
+                result = await self.fail(ctx, key, args, "INDEX_UNAVAILABLE")
+                return _response(result, ctx, "DailyMaterialUploadResult", write=True)
+            # A request timing out must not release a worker that is still running.
+            future.add_done_callback(lambda _: _worker_slot.release())
+            slot_acquired = False
+        finally:
+            if slot_acquired:
+                _worker_slot.release()
+
+        try:
+            indexed = await asyncio.wait_for(asyncio.wrap_future(future), INDEX_SECONDS)
             chunks = [{"page": c["page_start"], "chunk_index": c["chunk_index"], "text": c["text"],
                        "embedding": json.dumps(c["vector"], allow_nan=False, separators=(",", ":"))}
                       for c in indexed.f3_chunks]
@@ -121,17 +140,6 @@ class LearningMaterialOperations:
             if result["outcome"] == "ERROR" and result["error"]["code"] in ("INVALID_PARAMETER", "INTERNAL_ERROR"):
                 result = await self.fail(ctx, key, args, "INDEX_UNAVAILABLE")
         return _response(result, ctx, "DailyMaterialUploadResult", write=True)
-
-    async def index(self, content: bytes, mime: str):
-        if not _worker_slot.acquire(blocking=False):
-            raise IndexUnavailableError("Bộ xử lý tài liệu đang bận.")
-        try:
-            future = _index_worker.submit(self.indexer, content, mime, deadline=time.monotonic() + INDEX_SECONDS)
-        except BaseException:
-            _worker_slot.release()
-            raise
-        future.add_done_callback(lambda _: _worker_slot.release())
-        return await asyncio.wait_for(asyncio.wrap_future(future), INDEX_SECONDS)
 
     async def fail(self, ctx, key, args, code):
         failure = {"material_id": args["material_id"], "claim": args["claim"], "error_code": code}

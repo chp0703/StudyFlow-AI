@@ -18,14 +18,17 @@ writing. Materials and session endpoints use `ErrorResult`. The shared
 
 - Upload text PDF, plain text or Markdown as base64 JSON. Enforce 5 MiB
   decoded, 50 pages, 200,000 extracted characters including page separators,
-  and 20 active F3 materials per owner. Use
+  and 20 F3 materials per owner. FAILED materials count toward quota until deleted. Use
   `decode_upload(..., max_bytes=5 * 1024 * 1024)` for strict decoding and
   `read_document_pages(..., max_pages=50, max_text=200_000)` for extraction.
   The schema checks encoded length and alphabet. Keep extracted text and metadata
   including the SHA-256 of the original bytes.
 - Before reserving a material, return `400` for invalid base64 or a PDF
   missing its signature, `415` for an unsupported format, and `413` for
-  exceeding the upload size. These responses carry no material ID.
+  exceeding the upload size. If the index worker is busy and the upload needs
+  a new claim, return retryable `503 SERVICE_UNAVAILABLE` with `Retry-After`.
+  These responses carry no material ID. A busy response creates no claim or
+  receipt, so retry with the same key. Existing replays and deduplication still work.
 - Once reserved, return `200` with the material ID. Poll GET for
   `UPLOADED`, `INDEXING`, `READY` or `FAILED`. A ready material has a page
   count. Corrupt or unextractable content returns `FAILED / INVALID_DOCUMENT`.
@@ -53,10 +56,20 @@ writing. Materials and session endpoints use `ErrorResult`. The shared
   Keep both the material and its chunks available on conflict. Serialize
   deletion against concurrent F2 writes, or handle the foreign key conflict
   with a rollback. On successful deletion, old F3 citations retain their IDs
-  and original page and return `material_deleted: true`.
+  and original page and return `material_deleted: true`. The delete confirmation
+  in F2 and F3 should explain that successful deletion removes the material
+  from both libraries, including any failed material occupying an F3 slot.
 - A session uses one to five unique, owned, ready materials. An optional
   `planner_block_id` provides read-only context and must belong to the same
   owner. Only retrieve chunks from selected materials.
+
+### CPU cold-start follow-up
+
+On a fresh CPU process, measure E5 download and initialization separately from
+first-document indexing, once with an empty disk cache and once with a populated
+disk cache. Record CPU, dependency versions, document size and elapsed times, and
+compare total first-upload latency against the 90-second deadline before deciding
+whether to preload E5 at startup.
 
 ## Sessions, answers, and approval
 

@@ -15271,6 +15271,9 @@
     "ReserveLearningMaterialArguments": {
       "type": "object",
       "properties": {
+        "claim_allowed": {
+          "type": "boolean"
+        },
         "fingerprint": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
