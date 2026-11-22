@@ -1,0 +1,2 @@
+# Optional Daily Learning worker dependencies.
+sentence-transformers==5.1.2

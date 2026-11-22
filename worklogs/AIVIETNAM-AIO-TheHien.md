@@ -135,3 +135,22 @@ Draft PR #57. Contract checker đạt 135 fixture và backend unit đạt 136 te
 - Đổi liên kết trên PR thành Refs #60 để nhóm xác nhận quyết định sản phẩm trước khi đóng issue.
 
 **Kết quả:** Hash nội dung SQL khớp trước và sau khi đổi tên. CI kiểm chứng clean replay và upgrade.
+
+## 2026-11-20 — F3 M1 nạp và lập chỉ mục tài liệu
+
+**Mục tiêu**
+Cho Daily Learning nạp, lập chỉ mục và quản lý tài liệu trên kho dùng chung với Assessment.
+
+**Đã làm**
+
+- Mở rộng kho tài liệu F2 và tạo schema phiên học, lượt trao đổi, kết quả phiên. Thêm RPC có chứng thực cho claim, kết quả index, đọc và xóa tài liệu.
+- Nối bốn endpoint tài liệu với tách trang và embedding CPU. Thêm ca kiểm tra tương thích F2, retry và upload đồng thời.
+- Chuẩn bị PR stack từ M0 tại `a4b4561` trên nhánh `codex/f3-m1-material-indexing`.
+
+**Kết quả**
+Bộ unit indexing 28 ca, contract checker, migration generator và test base64 đúng 5 MiB đã đạt. CI Supabase và smoke CPU đang chờ kết quả.
+- Smoke CPU E5 thật đạt 384 chiều và norm L2. Văn bản tiếng Việt mất 13,72 giây khi nạp model từ cache đĩa lần đầu. PDF tổng hợp 50 trang và 40.191 ký tự tạo 91 chunk trong 5,48 giây khi model đã nạp.
+- Backend CI của draft PR #65 xanh. Đổi tên constraint trùng ở migration M1 và bổ sung ca quota đồng thời, lease hết hạn và kiểm tra chunk F2 qua upgrade. Run local 190 unit (2 skip theo cấu hình), 76 ca HTTP acceptance ở bản trước, checker và generator đạt.
+- CI đã replay migration và chạy 710 assertion pgTAP. Cập nhật allowlist kiểm tra ranh giới RPC để đăng ký đúng sáu RPC M1, giữ nguyên kiểm tra quyền và chữ ký. Unit indexing và HTTP acceptance local qua sau bản sửa.
+- CI trên `199271e` đã xanh cả backend và DB. DB hoàn thành 710 assertion pgTAP, 37 ca HTTP integration, upgrade có dữ liệu và 9 ca concurrency PostgreSQL. Thêm ca race DELETE với Assessment đang giữ tham chiếu và ca chọn ID ổn định khi F2 có hash trùng.
+- Smoke CPU gần ngưỡng 200.000 ký tự đạt. PDF 50 trang có 183.631 ký tự, tạo 300 chunk trong 13,64 giây khi model đã nạp.

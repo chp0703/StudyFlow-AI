@@ -103,7 +103,7 @@ class QuizAttemptUpgradeCheck(unittest.TestCase):
     def test_quiz_attempt_upgrade(self) -> None:
         token, user_id = self.f.users["a"]
         with self.rev.client() as pre_app:
-            body, qids, _ = self.rev.fixture(pre_app)
+            body, qids, legacy_chunks = self.rev.fixture(pre_app)
             self.assertEqual(len(qids), 1)
             qid = qids[0]
             create_body = {"schema_version": "1.1", "material_id": body["material_id"], "question_ids": qids, "origin": "MANUAL", "session_outcome_id": None}
@@ -160,6 +160,11 @@ class QuizAttemptUpgradeCheck(unittest.TestCase):
             self.assertEqual(replayed_recommendation["action_reference"], recommendation["action_reference"])
             self.assertEqual(replayed_recommendation["result"]["data"], recommendation["result"]["data"])
 
+            restored = self.ok(post_app.get(f"/v1/assessment/materials/{body['material_id']}",
+                                           headers=self.f.auth("a"),
+                                           params={"conversation_id": body["conversation_id"]}),
+                               schema="AssessmentMaterialDetailResult", outcome="READ")
+            self.assertEqual(restored["data"]["chunks"], legacy_chunks)
             self.assertEqual(put_save(post_app, "B", legacy_key, True)["data"], legacy)
             new_save = put_save(post_app, "A", f"it-upgrade-new-save-{uuid4().hex}", False)["data"]
             self.assertEqual((new_save["response_id"], new_save["selected_option_id"], new_save["validity"], new_save["is_correct"]), (resp_id, "A", "VALID", None))

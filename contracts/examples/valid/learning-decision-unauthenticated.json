@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.1",
+  "request_id": "learning-fixture",
+  "state": "ERROR",
+  "message": "Bạn cần đăng nhập.",
+  "action_reference": null,
+  "questions": [],
+  "result": null,
+  "error": {
+    "code": "UNAUTHENTICATED",
+    "message": "Bạn cần đăng nhập.",
+    "field": null,
+    "details": {},
+    "retryable": false
+  }
+}

@@ -2192,5 +2192,9 @@
   "x-assessment-contract": {
     "version": "1.0.0",
     "document": "assessment-openapi.yaml"
+  },
+  "x-learning-contract": {
+    "version": "1.0.0",
+    "document": "learning-openapi.yaml"
   }
 }
