@@ -182,12 +182,17 @@ class Api:
         return result_response(await run_in_threadpool(self.rpc, ctx, "get_study_plan", args), ctx.request_id)
 
     # ----------------------------------------------------------------- quy trình POST
-    async def read_json(self, request: Request, *, max_bytes: int | None = None,
-                        invalid_object_status: int | None = None) -> dict:
+    @staticmethod
+    def _idempotency_key(request: Request) -> str:
         key = request.headers.get("idempotency-key")
-        if key is None or not _KEY.match(key):
+        if key is None or not _KEY.fullmatch(key):
             raise ApiError("INVALID_PARAMETER", "A valid Idempotency-Key header is required.", status=400,
                            field="Idempotency-Key")
+        return key
+
+    async def read_json(self, request: Request, *, max_bytes: int | None = None,
+                        invalid_object_status: int | None = None) -> dict:
+        self._idempotency_key(request)
         limit = max_bytes if max_bytes is not None else self.settings.max_body_bytes
         declared = request.headers.get("content-length")
         if declared is not None and declared.isdigit() and int(declared) > limit:
@@ -224,23 +229,12 @@ class Api:
         return await self.post_pipeline(request, ctx, "prepare_action", "ActionRequest")
 
     async def post_review(self, request: Request, ctx: Ctx):
-        action_id = request.path_params["action_id"]
-        try:
-            UUID(action_id)
-        except ValueError:
-            raise ApiError("INVALID_PARAMETER", "action_id must be a UUID.", status=400, field="action_id") from None
-        return await self.post_pipeline(request, ctx, "review_action", "ReviewActionRequest", path={"action_id": action_id})
+        self._uuid_param(request, "action_id")  # chỉ kiểm tra; path giữ giá trị gốc vì nó nằm trong fingerprint receipt
+        return await self.post_pipeline(request, ctx, "review_action", "ReviewActionRequest",
+                                        path={"action_id": request.path_params["action_id"]})
 
     async def post_decisions(self, request: Request, ctx: Ctx):
         return await self.post_pipeline(request, ctx, "submit_decision", "UserDecision")
-
-    @staticmethod
-    def source_id(request: Request) -> str:
-        value = request.path_params['source_id']
-        try:
-            return str(UUID(value))
-        except ValueError:
-            raise ApiError('INVALID_PARAMETER', 'source_id must be a UUID.', status=400, field='source_id') from None
 
     async def post_sources(self, request: Request, ctx: Ctx):
         body = await self.read_json(request, max_bytes=7 * 1024 * 1024)
@@ -250,13 +244,13 @@ class Api:
 
     async def get_source(self, request: Request, ctx: Ctx):
         query = self._query(request, {'conversation_id'})
-        args = {'source_id': self.source_id(request), 'conversation_id': query.get('conversation_id')}
+        args = {'source_id': self._uuid_param(request, 'source_id'), 'conversation_id': query.get('conversation_id')}
         self.validated('SourceLookupArguments', args)
         result = await run_in_threadpool(self.sources.get, ctx, args['source_id'], args['conversation_id'])
         return result_response(result, ctx.request_id)
 
     async def post_extract_source(self, request: Request, ctx: Ctx):
-        source_id = self.source_id(request)
+        source_id = self._uuid_param(request, 'source_id')
         body = await self.read_json(request)
         self.validated('SourceExtractRequest', body)
         result = await run_in_threadpool(self.sources.extract, ctx, request.headers['idempotency-key'], source_id, body['conversation_id'])
@@ -270,11 +264,7 @@ class Api:
 
     async def get_material(self, request: Request, ctx: Ctx):
         query = self._query(request, {'conversation_id'})
-        material_id = request.path_params['material_id']
-        try:
-            material_id = str(UUID(material_id))
-        except ValueError:
-            raise ApiError('INVALID_PARAMETER', 'material_id must be a UUID.', status=400, field='material_id') from None
+        material_id = self._uuid_param(request, 'material_id')
         result = await run_in_threadpool(self.materials.get, ctx, material_id, query.get('conversation_id'))
         return result_response(result, ctx.request_id)
 
@@ -356,11 +346,8 @@ class Api:
 
     async def delete_learning_material(self, request: Request, ctx: Ctx):
         self._query(request, set(), error_status=400)
-        key = request.headers.get("idempotency-key")
-        if key is None or not _KEY.fullmatch(key):
-            raise ApiError("INVALID_PARAMETER", "A valid Idempotency-Key header is required.", status=400,
-                           field="Idempotency-Key")
-        return await self.learning_materials.delete(ctx, key, self._uuid_param(request, "material_id"))
+        key = self._idempotency_key(request)
+        return await self.learning_materials.delete(ctx, key,self._uuid_param(request, "material_id"))
 
     async def create_learning_session(self, request: Request, ctx: Ctx):
         self._query(request, set(), error_status=400)
