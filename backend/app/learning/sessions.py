@@ -32,6 +32,13 @@ from .summary import SummaryNormalizationError, build_summary_messages, normaliz
 
 log = logging.getLogger(__name__)
 DEFAULT_RETRIEVAL_K = 6
+
+def _require_owner(session: dict[str, Any], ctx) -> None:
+    # RLS already scopes rows to the caller; a foreign row means the RPC broke that guarantee.
+    if session["owner_id"] != ctx.user_id:
+        raise ApiError("INTERNAL_ERROR", "Kết quả phiên học không đúng chủ sở hữu.")
+
+
 class LearningSessionOperations:
     def __init__(
         self,
@@ -61,8 +68,7 @@ class LearningSessionOperations:
             return result_response(result, ctx.request_id, schema="DailyLearningSessionCreateResult", statuses=LEARNING_STATUS, write=True)
         data = result["data"]
         session = data["session"]
-        if session["owner_id"] != ctx.user_id:
-            raise ApiError("INTERNAL_ERROR", "Kết quả phiên học không đúng chủ sở hữu.")
+        _require_owner(session, ctx)
         return result_response({**result, "data": session}, ctx.request_id, schema="DailyLearningSessionCreateResult", statuses=LEARNING_STATUS,
             write=True,
             replayed=bool(data["replayed"]),
@@ -84,8 +90,7 @@ class LearningSessionOperations:
         result = await run_in_threadpool(self.rpc, ctx, "get_learning_session", {"session_id": session_id})
         if result["outcome"] == "READ":
             session = result["data"]["session"]
-            if session["owner_id"] != ctx.user_id:
-                raise ApiError("INTERNAL_ERROR", "Kết quả phiên học không đúng chủ sở hữu.")
+            _require_owner(session, ctx)
         return result_response(result, ctx.request_id, schema="DailyLearningSessionReadResult", statuses=LEARNING_STATUS)
 
     async def add_turn(self, ctx, key: str, session_id: str, body: dict[str, Any]):
@@ -113,8 +118,7 @@ class LearningSessionOperations:
 
         session = loaded["data"]["session"]
         turns = loaded["data"]["turns"]
-        if session["owner_id"] != ctx.user_id:
-            raise ApiError("INTERNAL_ERROR", "Kết quả phiên học không đúng chủ sở hữu.")
+        _require_owner(session, ctx)
         if session["status"] != "ACTIVE":
             raise ApiError(
                 "TIME_CONFLICT",
@@ -272,8 +276,7 @@ class LearningSessionOperations:
         if loaded["outcome"] == "ERROR":
             return result_response(loaded, ctx.request_id, schema="DailyLearningSummaryResult", statuses=LEARNING_STATUS, write=True)
         session, turns = loaded["data"]["session"], loaded["data"]["turns"]
-        if session["owner_id"] != ctx.user_id:
-            raise ApiError("INTERNAL_ERROR", "Kết quả phiên học không đúng chủ sở hữu.")
+        _require_owner(session, ctx)
 
         if session["status"] != "ACTIVE" or not turns:
             # Skip the model: the RPC replays a stored receipt for this key, or reports the state conflict.
