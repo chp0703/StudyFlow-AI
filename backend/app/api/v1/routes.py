@@ -19,14 +19,12 @@ from ...core.security import AuthError, AuthUnavailable, JwtVerifier
 from .http import ApiError, error_body, error_response, respond, result_response
 from .workflow import ActionProcessor
 from ...orchestrator.workflow_ports import WorkflowError
-from ...ingestion.service import SourceExtractor
 from ...ingestion.workflow import SourceOperations
 from ...assessment.materials import MaterialOperations, MAX_BYTES as MATERIAL_MAX_BYTES
-from ...assessment.questions import AssessmentQuestionOperations, DeepSeekQuestionGenerator
+from ...assessment.questions import AssessmentQuestionOperations
 from ...assessment.attempts import QuizAttemptOperations
 from ...assessment.stats import TopicStatsOperations
 from ...assessment.recommendations import RevisionRecommendationOperations
-from ...learning.answer import DeepSeekLearningModel
 from ...learning.indexing import index_document
 from ...learning.materials import LearningMaterialOperations, MAX_BODY_BYTES as LEARNING_MAX_BODY_BYTES
 from ...learning.outcome import LearningOutcomeOperations
@@ -63,40 +61,22 @@ class Api:
             self.rpc,
             settings,
             embedder=learning_embedder,
-            model=learning_model or DeepSeekLearningModel(
-                settings.deepseek_base_url,
-                settings.deepseek_api_key,
-                settings.deepseek_model,
-                None,
-                timeout_seconds=settings.learning_model_timeout_seconds,
-                max_tokens=settings.learning_max_tokens,
-                max_response_bytes=settings.learning_max_response_bytes,
-            ),
+            model=learning_model,
         )
         self.questions = AssessmentQuestionOperations(
             self.rpc,
             self.materials,
             clock,
-            question_generator or DeepSeekQuestionGenerator(
-                settings.deepseek_base_url,
-                settings.deepseek_api_key,
-                settings.deepseek_model,
-                None,
-                timeout_seconds=settings.question_model_timeout_seconds,
-                max_tokens=settings.question_max_tokens,
-                max_input_chars=settings.question_max_input_chars,
-                max_context_chunks=settings.question_max_context_chunks,
-                max_response_bytes=settings.question_max_response_bytes,
-            ),
+            question_generator,
             max_context_chunks=settings.question_max_context_chunks,
         )
         self.attempts = QuizAttemptOperations(self.rpc, clock)
         self.topic_stats = TopicStatsOperations(self.rpc)
         self.recommendations = RevisionRecommendationOperations(self.rpc, clock)
         self.learning_outcomes = LearningOutcomeOperations(self.rpc, clock)
-        self.processor = ActionProcessor(self)
-        self.sources = SourceOperations(self.rpc, source_extractor or SourceExtractor(
-            settings.deepseek_base_url, settings.deepseek_api_key, settings.ingestion_model), clock)
+        self.processor = ActionProcessor(self.rpc, clock, extractor, settings.default_timezone, questions=self.questions,
+                                         recommendations=self.recommendations, learning_outcomes=self.learning_outcomes)
+        self.sources = SourceOperations(self.rpc, source_extractor, clock)
 
     # ----------------------------------------------------------------- xử lý chung
     async def authenticate(self, request: Request, request_id: str) -> Ctx:

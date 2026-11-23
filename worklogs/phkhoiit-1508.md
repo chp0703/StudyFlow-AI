@@ -678,3 +678,17 @@
 **Ghi chú**
 - Chưa chạy pgTAP và integration với Supabase local (không đổi SQL).
 - Test chỉ đối chiếu với migration mới nhất có `rpc_is_read`.
+
+## 2026-11-23 — Ngừng truyền cả đối tượng Api vào workflow
+
+**Mục tiêu:** Bỏ phụ thuộc ngược của `ActionProcessor` vào `Api` và để main.py là nơi duy nhất dựng client DeepSeek.
+
+**Đã làm**
+- `backend/app/api/v1/workflow.py`: `ActionProcessor` nhận `rpc, clock, extractor, timezone` và `questions, recommendations, learning_outcomes` qua tham số tường minh.
+- `backend/app/api/v1/routes.py`: `Api.__init__` truyền tham số tường minh, bỏ 3 fallback DeepSeek (câu hỏi, learning, source extractor) và các import không còn dùng.
+
+**Kết quả:** nhánh `refactor/workflow-wiring`; unit 219 test và acceptance_api_sol 79 test đều qua; integration với Supabase local 40 test qua; smoke test DeepSeek thật qua `create_app` cho chat, sinh câu hỏi quiz và learning (cần torch và sentence-transformers cài riêng).
+
+**Ghi chú**
+- Test dựng `Api` trực tiếp mà không truyền client rồi gọi endpoint question hoặc learning sẽ lỗi `AttributeError` thay vì gọi DeepSeek thật.
+- Chưa chạy pgTAP, frontend và `SourceExtractor` với DeepSeek thật.
