@@ -721,3 +721,20 @@
 - Không đổi code production (`grade_attempt`, sinh câu hỏi...), pgTAP và test integration của F2, hay evaluation F3.
 
 **Kết quả:** unit backend 211/211, contract checker đạt, `evaluate_planner.py` chạy đạt; `git grep` không còn tham chiếu tới các đường dẫn đã xoá ngoài worklog.
+
+## 2026-11-23 — Gỡ bộ đánh giá F3 cũ để làm lại
+
+**Mục tiêu:** xóa eval truy hồi Daily Learning cũ (corpus nhỏ, ngưỡng τ chọn trên chính bộ dev) để xây lại từ đầu, không giữ số liệu thiếu tin cậy trong repo.
+
+**Đã làm**
+
+- Xóa `backend/scripts/evaluate_learning.py`, `backend/tests/fixtures/learning_eval/corpus_vi.json`, `docs/features/daily-learning/evaluation/README.md` và `results/retrieval-dev.json`.
+- Sửa `backend/tests/unit/test_learning_outcome.py`: bỏ `KeywordModel` và test eval, giữ test planner context (đổi tên class thành `TestLearningPlannerContext`).
+- Sửa `docs/features/daily-learning/README.md`: bỏ link tới thư mục evaluation.
+
+**Kết quả:** nhánh `chore/remove-f3-eval`; `test_learning_outcome` 11 test pass, toàn bộ `test_learning*.py` 62 test pass.
+
+**Ghi chú**
+
+- Giữ `learning_grounding_threshold = 0.82` trong `backend/app/core/config.py` vì code đang dùng; giá trị này chưa còn tài liệu giải thích cho tới khi eval mới chọn lại τ.
+- Chưa chạy pgTAP, integration và toàn bộ backend unit test.

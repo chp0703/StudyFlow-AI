@@ -167,38 +167,7 @@ class TestOutcomeDecision(unittest.TestCase):
             self.decide(error("STALE_ENTITY_VERSION"))
 
 
-class KeywordModel:
-    """Maps a keyword per page to its own axis; anything else lands on a shared off-topic axis."""
-
-    KEYWORDS = ["chẵn", "nguyên tố"]
-
-    def __init__(self):
-        from backend.tests.unit.test_learning_indexing import FakeTokenizer
-        self.tokenizer = FakeTokenizer()
-
-    def encode(self, sentences, normalize_embeddings=True, **kwargs):
-        out = []
-        for text in sentences:
-            vec = [0.0] * 384
-            hits = [i for i, word in enumerate(self.KEYWORDS) if word in text.lower()]
-            vec[hits[0] if hits else 300] = 1.0
-            out.append(vec)
-        return out
-
-
-class TestLearningEvaluation(unittest.TestCase):
-    def test_metrics_and_conservative_threshold(self):
-        from backend.scripts.evaluate_learning import evaluate
-        corpus = {"pages": ["Số chẵn chia hết cho 2.", "Số nguyên tố có hai ước."],
-                  "questions": [{"id": "A", "page": 1, "text": "Số chẵn là gì?"},
-                                {"id": "B", "page": 2, "text": "Số nguyên tố là gì?"},
-                                {"id": "C", "page": None, "text": "Thủ đô nước Pháp?"}]}
-        report = evaluate(corpus, KeywordModel(), k=1)
-        self.assertEqual(report["hit@1"], 1.0)
-        self.assertEqual(report["recommended"]["refusal"], 1.0)
-        self.assertEqual(report["recommended"]["coverage"], 1.0)
-        self.assertEqual(report["recommended"]["fabrication"], 0.0)
-
+class TestLearningPlannerContext(unittest.TestCase):
     def test_planner_context_route_validates_contract(self):
         context = {"block_id": "d3110000-0000-4000-8000-000000000030", "task_id": "d3110000-0000-4000-8000-000000000031",
                    "task_title": "Ôn chương 2", "start_at": "2026-11-21T02:00:00Z", "end_at": "2026-11-21T03:00:00Z",
