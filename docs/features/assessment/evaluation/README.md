@@ -1,6 +1,6 @@
 # Assessment evaluation
 
-This directory holds the F2 (Learning Assessment & Adaptive Revision) evaluation protocol, the rater guide and machine-readable results. Its layout follows [Planner evaluation](../../planner/evaluation/README.md). The sources below define each metric; the acceptance thresholds are StudyFlow decisions.
+This directory holds the F2 (Learning Assessment & Adaptive Revision) evaluation protocol, the rater guide and machine-readable results. The sources below define each metric; the acceptance thresholds are StudyFlow decisions.
 
 ## Metrics
 

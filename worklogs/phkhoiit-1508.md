@@ -692,3 +692,20 @@
 **Ghi chú**
 - Test dựng `Api` trực tiếp mà không truyền client rồi gọi endpoint question hoặc learning sẽ lỗi `AttributeError` thay vì gọi DeepSeek thật.
 - Chưa chạy pgTAP, frontend và `SourceExtractor` với DeepSeek thật.
+
+## 2026-11-23 — Gỡ bộ đánh giá F1 cũ để làm lại
+
+**Mục tiêu:** xóa metric, dataset và kết quả đánh giá Planner cũ để xây lại bộ đánh giá từ đầu, không còn số liệu lỗi thời trong repo.
+
+**Đã làm**
+
+- Xóa `docs/features/planner/evaluation/README.md`, `annotation-guide.md`, `results/`; 4 dataset `backend/tests/fixtures/nlu_*_vi.json`; `eval/datasets/f1_nlu_acceptance.jsonl`, `eval/README_nlu.md`.
+- Xóa `backend/app/nlu/evaluation.py`, `backend/scripts/benchmark_f1.py`, `benchmark_scheduler_quality.py`, `evaluate_nlu.py`, `backend/requirements-evaluation.txt` và 3 unit test đi kèm.
+- Sửa link gãy trong `docs/features/planner/README.md`, `docs/features/assessment/evaluation/README.md`, `docs/architecture/overview.md`.
+- Giữ `backend/app/f1/scheduler/evaluation.py` và `evaluate_planner.py` vì CI và `test_engine.py` còn dùng; giữ các sửa lỗi sản phẩm trong `extractor.py`, `chat.py`.
+
+**Kết quả:** nhánh `chore/remove-f1-eval`; 221 backend unit test pass; `evaluate_planner.py` chạy thành công.
+
+**Ghi chú**
+
+- Chưa chạy contract check và acceptance test. Bộ đánh giá cũ vẫn xem được qua tag `eval-run-39aa48f`.
