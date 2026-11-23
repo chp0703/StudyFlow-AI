@@ -709,3 +709,15 @@
 **Ghi chú**
 
 - Chưa chạy contract check và acceptance test. Bộ đánh giá cũ vẫn xem được qua tag `eval-run-39aa48f`.
+
+## 2026-11-23 — Xoá bộ evaluation F2 cũ để làm lại
+
+**Mục tiêu:** bỏ toàn bộ metric, dữ liệu và kết quả evaluation F2 cũ để thiết kế lại từ đầu.
+
+**Đã làm**
+
+- Xoá `backend/app/assessment/evaluation.py`, `backend/scripts/evaluate_assessment.py`, `backend/tests/unit/test_assessment_evaluation.py`, `backend/tests/fixtures/assessment_eval/` và `docs/features/assessment/evaluation/` (README, hướng dẫn chấm, kết quả JSON và CSV).
+- `.gitattributes`: bỏ khối ép LF cho dữ liệu evaluation (gồm cả dòng `nlu_*.json` còn sót từ F1).
+- Không đổi code production (`grade_attempt`, sinh câu hỏi...), pgTAP và test integration của F2, hay evaluation F3.
+
+**Kết quả:** unit backend 211/211, contract checker đạt, `evaluate_planner.py` chạy đạt; `git grep` không còn tham chiếu tới các đường dẫn đã xoá ngoài worklog.
