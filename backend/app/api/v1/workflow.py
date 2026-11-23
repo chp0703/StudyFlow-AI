@@ -13,11 +13,10 @@ def terminal_reply(error: Terminal, request_id: str) -> tuple[int, dict]:
 
 
 class ActionProcessor:
-    def __init__(self, api):
-        self.actions = WorkflowActions(api.rpc, api.clock, api.extractor, api.settings.default_timezone,
-                                       questions=api.questions, recommendations=api.recommendations,
-                                       learning_outcomes=api.learning_outcomes)
-        self.receipts = ReceiptProcessor(api.rpc, self.actions.dispatch, terminal_reply)
+    def __init__(self, rpc, clock, extractor, timezone: str, *, questions, recommendations, learning_outcomes):
+        self.actions = WorkflowActions(rpc, clock, extractor, timezone, questions=questions,
+                                       recommendations=recommendations, learning_outcomes=learning_outcomes)
+        self.receipts = ReceiptProcessor(rpc, self.actions.dispatch, terminal_reply)
 
     def run(self, ctx, http_operation: str, key: str, fingerprint: str, body: dict, path: dict):
         result = self.receipts.run(ctx, http_operation, key, fingerprint, body, path)
