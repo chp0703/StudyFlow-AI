@@ -649,3 +649,17 @@
 
 **Ghi chú**
 - Chưa chạy test tích hợp Supabase local (`test_learning_interaction_local_supabase.py`).
+
+## 2026-11-23 — Gộp phần đọc request trong routes.py
+
+**Mục tiêu:** Mỗi luật đọc request (UUID trên path, Idempotency-Key) chỉ được viết một lần; trước đó có 4 chỗ parse UUID và hai regex khác nhau cho cùng một header.
+
+**Đã làm**
+- `backend/app/api/v1/routes.py`: xoá `source_id` và hai đoạn parse UUID inline (`get_material`, `post_review`), dùng `_uuid_param`; `post_review` chỉ kiểm tra và vẫn truyền `action_id` gốc vì nó nằm trong fingerprint receipt.
+- `backend/app/api/v1/routes.py`: thêm `_idempotency_key` (dùng `fullmatch`) cho `read_json` và `delete_learning_material`.
+- `backend/tests/unit/test_route_params.py`: 4 test cho `_uuid_param`, `_idempotency_key` và `post_review` giữ `action_id` gốc.
+
+**Kết quả:** nhánh `refactor/result-response`; 235 backend unit tests pass, 79 acceptance tests (`acceptance_api_sol`) pass.
+
+**Ghi chú**
+- Chưa chạy test tích hợp Supabase local.
