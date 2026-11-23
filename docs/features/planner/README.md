@@ -6,7 +6,7 @@ The Planner is the currently implemented StudyFlow AI feature. It owns task conf
 
 - [Domain schema](schema.md)
 - [Scheduling rules](scheduling.md)
-- [Evaluation protocol and evidence](evaluation/README.md)
+- [Usability protocol](evaluation/usability-protocol.md)
 - [Machine-readable integration contract](../../../contracts/README.md)
 - [Supabase migrations](../../../supabase/migrations/)
 - [Backend implementation](../../../backend/app/f1/)

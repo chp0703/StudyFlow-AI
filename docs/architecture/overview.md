@@ -51,7 +51,7 @@ Planner is implemented in the current runtime. Assessment owns quiz and revision
 | `backend/app/clients/rpc.py` | Approved RPC transport and request signing |
 | `backend/app/core/` | Configuration, contract validation and JWT verification |
 | `backend/app/f1/scheduler/` | Deterministic Planner implementation; path retained for compatibility |
-| `backend/app/nlu/` | Untrusted extraction and evaluation |
+| `backend/app/nlu/` | Untrusted extraction |
 | `backend/tests/` | Unit, independent acceptance and local integration tests |
 | `contracts/` | Approved OpenAPI, schema bundle, registries and fixtures |
 | `frontend/` | React/Vite user interface and API adapters |
