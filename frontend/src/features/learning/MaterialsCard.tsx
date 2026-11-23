@@ -198,7 +198,7 @@ export default function MaterialsCard({
       />
       <Card
         className="study-card learning-materials-card"
-        title="Tài liệu học"
+        title="Tài liệu của bạn"
         action={
           <Button
             className="primary learning-compact-action"
@@ -212,7 +212,7 @@ export default function MaterialsCard({
       >
         <div className="learning-card-body">
           <div className="learning-card-intro">
-            <p>Chọn tối đa 5 tài liệu đã sẵn sàng cho phiên học.</p>
+            <p>Nguồn được chọn sẽ giới hạn phạm vi trả lời của trợ lý.</p>
             <Button
               className="icon-button learning-refresh"
               aria-label="Tải lại danh sách tài liệu"
@@ -276,7 +276,9 @@ export default function MaterialsCard({
                         <FileText size={17} aria-hidden="true" />
                       </span>
                       <span className="learning-file-copy">
-                        <strong>{material.filename}</strong>
+                        <strong title={material.filename}>
+                          {material.filename}
+                        </strong>
                         <span>
                           {formatBytes(material.byte_size)}
                           {material.page_count
@@ -317,14 +319,30 @@ export default function MaterialsCard({
               })}
             </ul>
           ) : (
-            <div className="learning-state is-empty">
-              <FileText aria-hidden="true" />
-              <strong>Chưa có tài liệu</strong>
-              <span>Thêm PDF, TXT hoặc Markdown tối đa 5 MiB và 50 trang.</span>
+            <div className="learning-state is-empty learning-material-empty">
+              <span className="learning-empty-icon">
+                <FileText aria-hidden="true" />
+              </span>
+              <strong>Thêm tài liệu để bắt đầu</strong>
+              <span>
+                PDF, TXT hoặc Markdown tối đa 5 MiB và 50 trang. Tài liệu phải ở
+                trạng thái sẵn sàng mới có thể chọn.
+              </span>
+              <Button
+                className="secondary"
+                disabled={Boolean(busy)}
+                onClick={() => uploadRef.current?.click()}
+              >
+                <Upload size={16} aria-hidden="true" />
+                Chọn tài liệu
+              </Button>
             </div>
           )}
           <p className="learning-selection-count" role="status">
-            Đã chọn {selected.length}/{MAX_SELECTED_MATERIALS} tài liệu
+            <strong>
+              Đã chọn {selected.length}/{MAX_SELECTED_MATERIALS} tài liệu
+            </strong>
+            <span> · Chỉ tài liệu READY</span>
           </p>
         </div>
       </Card>

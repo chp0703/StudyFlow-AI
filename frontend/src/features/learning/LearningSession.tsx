@@ -4,6 +4,7 @@ import {
   CircleAlert,
   Lightbulb,
   LoaderCircle,
+  MessageSquareText,
   RotateCcw,
   Send,
   Sparkles,
@@ -38,6 +39,12 @@ type TurnAttempt = {
   text?: string
   key: string
 }
+
+const exampleQuestions = [
+  "Tóm tắt các ý chính trong tài liệu",
+  "Giải thích khái niệm khó nhất",
+  "Gợi ý câu hỏi để tự kiểm tra",
+]
 
 export default function LearningSession({
   userId,
@@ -341,7 +348,7 @@ export default function LearningSession({
   return (
     <Card
       className="study-card learning-session-card"
-      title="Phiên học cùng AI"
+      title="Trợ lý học tập"
       action={
         session && active ? (
           <Button
@@ -358,12 +365,17 @@ export default function LearningSession({
       <div className="learning-session-body">
         {!session ? (
           <div className="learning-session-setup">
-            <div className="learning-hero-icon">
-              <Sparkles aria-hidden="true" />
-            </div>
-            <div>
-              <h3>Bắt đầu với một mục tiêu rõ ràng</h3>
-              <p>Trợ lý chỉ trả lời dựa trên tài liệu bạn đã chọn.</p>
+            <div className="learning-setup-heading">
+              <span className="learning-hero-icon">
+                <Sparkles aria-hidden="true" />
+              </span>
+              <div>
+                <h3>Sẵn sàng học cùng bạn</h3>
+                <p>
+                  Chọn tài liệu và đặt mục tiêu để bắt đầu phiên học có dẫn
+                  nguồn.
+                </p>
+              </div>
             </div>
             {expired && (
               <p className="learning-expired" role="status">
@@ -375,29 +387,36 @@ export default function LearningSession({
               <textarea
                 value={goal}
                 maxLength={1000}
-                rows={3}
-                placeholder="Ví dụ: Hiểu cách áp dụng định lý Bayes"
+                rows={2}
+                placeholder="Ví dụ: Hiểu cách áp dụng định lý Bayes vào bài tập"
                 onChange={(event) => setGoal(event.target.value)}
               />
               <small>{goal.length}/1000 ký tự</small>
             </label>
-            <p className="learning-selected-summary">
-              {selectedMaterials.length
-                ? `${selectedMaterials.length} tài liệu sẵn sàng được chọn.`
-                : "Chọn ít nhất một tài liệu sẵn sàng ở bên trái."}
-            </p>
-            <Button
-              className="primary learning-start-button"
-              disabled={Boolean(busy) || !contextReady}
-              onClick={() => void createSession()}
-            >
-              {busy === "create" || busy === "recover" ? (
-                <LoaderCircle className="learning-spin" aria-hidden="true" />
-              ) : (
-                <Sparkles aria-hidden="true" />
-              )}
-              {busy === "recover" ? "Đang khôi phục…" : "Tạo phiên học"}
-            </Button>
+            <div className="learning-start-row">
+              <p className="learning-selected-summary">
+                {selectedMaterials.length
+                  ? `${selectedMaterials.length} tài liệu READY đã chọn.`
+                  : "Chọn ít nhất một tài liệu READY ở bên trái."}
+              </p>
+              <Button
+                className="primary learning-start-button"
+                disabled={
+                  Boolean(busy) ||
+                  !contextReady ||
+                  !goal.trim() ||
+                  !selectedMaterials.length
+                }
+                onClick={() => void createSession()}
+              >
+                {busy === "create" || busy === "recover" ? (
+                  <LoaderCircle className="learning-spin" aria-hidden="true" />
+                ) : (
+                  <Sparkles aria-hidden="true" />
+                )}
+                {busy === "recover" ? "Đang khôi phục…" : "Bắt đầu phiên học"}
+              </Button>
+            </div>
           </div>
         ) : (
           <>
@@ -406,7 +425,10 @@ export default function LearningSession({
                 <span>Mục tiêu hôm nay</span>
                 <strong>{session.goal}</strong>
               </div>
-              <span>{session.material_ids.length} tài liệu</span>
+              <span className="learning-session-status">
+                <i aria-hidden="true" />
+                Đang học · {session.material_ids.length} tài liệu
+              </span>
             </header>
             <div
               className="learning-transcript"
@@ -416,9 +438,24 @@ export default function LearningSession({
             >
               {!turnViews.length && (
                 <div className="learning-state is-empty">
-                  <Sparkles aria-hidden="true" />
+                  <span className="learning-empty-icon">
+                    <MessageSquareText aria-hidden="true" />
+                  </span>
                   <strong>Hãy đặt câu hỏi đầu tiên</strong>
-                  <span>Câu trả lời có căn cứ sẽ kèm trích dẫn trang.</span>
+                  <span>
+                    Câu trả lời có căn cứ sẽ kèm trích dẫn ngay bên dưới.
+                  </span>
+                  <div className="learning-question-suggestions">
+                    {exampleQuestions.map((question) => (
+                      <button
+                        key={question}
+                        type="button"
+                        onClick={() => setInput(question)}
+                      >
+                        {question}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
               {turnViews.map((turn) => (
@@ -476,47 +513,59 @@ export default function LearningSession({
             </div>
             {active ? (
               <form className="learning-composer" onSubmit={ask}>
-                <label className="sr-only" htmlFor="learning-question">
-                  Câu hỏi cho trợ lý học tập
-                </label>
-                <textarea
-                  id="learning-question"
-                  value={input}
-                  maxLength={4000}
-                  rows={2}
-                  placeholder="Nhập câu hỏi về tài liệu…"
-                  disabled={Boolean(busy)}
-                  onChange={(event) => setInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (
-                      event.key === "Enter" &&
-                      !event.shiftKey &&
-                      !event.nativeEvent.isComposing
-                    ) {
-                      event.preventDefault()
-                      event.currentTarget.form?.requestSubmit()
-                    }
-                  }}
-                />
-                <div className="learning-composer-actions">
-                  <Button
-                    className="secondary"
-                    type="button"
-                    disabled={Boolean(busy) || hint.exhausted || !turns.length}
-                    onClick={requestHint}
-                  >
-                    <Lightbulb size={16} aria-hidden="true" />
-                    {hintButtonLabel(hint)}
-                  </Button>
-                  <Button
-                    className="primary"
-                    type="submit"
-                    disabled={Boolean(busy) || !input.trim()}
-                  >
-                    <Send size={16} aria-hidden="true" />
-                    Gửi
-                  </Button>
+                <div className="learning-composer-box">
+                  <label className="sr-only" htmlFor="learning-question">
+                    Câu hỏi cho trợ lý học tập
+                  </label>
+                  <textarea
+                    id="learning-question"
+                    value={input}
+                    maxLength={4000}
+                    rows={1}
+                    placeholder="Hỏi về tài liệu của bạn…"
+                    disabled={Boolean(busy)}
+                    onChange={(event) => {
+                      setInput(event.target.value)
+                      event.currentTarget.style.height = "auto"
+                      event.currentTarget.style.height =
+                        String(
+                          Math.min(event.currentTarget.scrollHeight, 128),
+                        ) + "px"
+                    }}
+                    onKeyDown={(event) => {
+                      if (
+                        event.key === "Enter" &&
+                        !event.shiftKey &&
+                        !event.nativeEvent.isComposing
+                      ) {
+                        event.preventDefault()
+                        event.currentTarget.form?.requestSubmit()
+                      }
+                    }}
+                  />
+                  <div className="learning-composer-actions">
+                    <Button
+                      className="secondary"
+                      type="button"
+                      disabled={
+                        Boolean(busy) || hint.exhausted || !turns.length
+                      }
+                      onClick={requestHint}
+                    >
+                      <Lightbulb size={16} aria-hidden="true" />
+                      {hintButtonLabel(hint)}
+                    </Button>
+                    <Button
+                      className="primary learning-send-button"
+                      type="submit"
+                      disabled={Boolean(busy) || !input.trim()}
+                    >
+                      <Send size={16} aria-hidden="true" />
+                      <span>Gửi</span>
+                    </Button>
+                  </div>
                 </div>
+                <small>Enter để gửi · Shift+Enter để xuống dòng</small>
               </form>
             ) : (
               <div className="learning-closed-state">

@@ -354,3 +354,20 @@
 **Ghi chú**
 - Backend F3 không tồn tại tại baseline PR #55 nên upload/polling/AI/summary live là NOT VERIFIED; các endpoint mới được fixture/contract test, browser chỉ kiểm tra demo mode.
 - Chưa push hoặc cập nhật PR #55; Vite vẫn cảnh báo bundle JavaScript trên 500 kB và frontend tests in warning HMR port 24678 đã được dùng dù mọi assertion đạt.
+
+## 2026-11-23 — Polish F3 workspace and local full-stack startup
+
+**Mục tiêu:** Hoàn thiện hierarchy và responsive UX của Daily AI Learning, giữ nguyên F2 Assessment và giúp chạy toàn bộ môi trường local bằng một lệnh an toàn.
+
+**Đã làm**
+- Thiết kế lại F3 thành workspace tài liệu và trợ lý học tập rõ vai trò; thêm mục tiêu phiên, gợi ý câu hỏi, composer bám đáy, transcript/citation/hint states và chuyển panel trên mobile.
+- Giữ `AssessmentWorkspace` ở tab F2 khi API mode hoạt động; DemoQuiz chỉ xuất hiện khi thiếu cấu hình API, không thay đổi contract hoặc logic F2.
+- Thêm regression tests cho demo trung thực, điều kiện bắt đầu phiên và responsive layout; giữ nguyên ActionReference, idempotency, session recovery và learning API mappers.
+- Thêm `scripts/dev-up.sh`: tự bật Docker/Supabase local, đồng bộ khóa RPC, xác minh DeepSeek `/models`, tạo môi trường Python khi cần, bật FastAPI/Vite và mở web; secrets tiếp tục nằm trong `.env.local` bị Git ignore.
+- Kiểm tra browser API mode có đăng nhập: F2 hiển thị đủ bốn giai đoạn; F3 render đúng workspace và báo 404 trung thực vì backend Daily Learning chưa có `/v1/materials`.
+
+**Kết quả:** PR #55, nhánh đích `feat/f2-assessment-frontend-kent`; 137/137 frontend tests, TypeScript, targeted oxfmt, Vite production build, `bash -n scripts/dev-up.sh` và `git diff --check` đạt. Supabase Auth hoạt động, các API F1/F2 trả dữ liệu và DeepSeek key được xác minh HTTP 200 mà không gọi sinh nội dung.
+
+**Ghi chú**
+- Backend Daily Learning vẫn chưa triển khai `/v1/materials` và các endpoint phiên học, nên F3 live API chưa thể hoàn tất; không tạo dữ liệu hoặc trạng thái thành công giả.
+- Build vẫn cảnh báo bundle JavaScript trên 500 kB; tests in warning HMR port 24678 đang được dùng nhưng mọi assertion đạt. ShellCheck chưa chạy vì máy chưa cài công cụ.

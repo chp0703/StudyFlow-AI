@@ -101,6 +101,9 @@ const infoModals: Record<string, ModalInfo> = {
 
 export default function App() {
   const [page, setPage] = useState("Assistant")
+  const [studyArea, setStudyArea] = useState<"assessment" | "learning">(
+    "assessment",
+  )
 
   const [learningEntry, setLearningEntry] = useState<{
     blockId: string
@@ -355,10 +358,14 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    document.title = `${
-      destinations.find((d) => d.name === page)?.label ?? page
-    } | StudyFlow AI`
+    const title =
+      page === "Study" && studyArea === "learning"
+        ? "Học cùng AI"
+        : (destinations.find((d) => d.name === page)?.label ?? page)
+    document.title = `${title} | StudyFlow AI`
+  }, [page, studyArea])
 
+  useEffect(() => {
     if (firstPage.current) {
       firstPage.current = false
 
@@ -437,6 +444,13 @@ export default function App() {
   }, [session?.user.id, server])
 
   const info = pageInfo[page]
+  const visibleInfo =
+    page === "Study" && studyArea === "learning"
+      ? {
+          title: "Học cùng AI",
+          description: "Hiểu sâu hơn từ tài liệu của bạn.",
+        }
+      : info
 
   const email = session?.user.email ?? ""
 
@@ -744,13 +758,13 @@ export default function App() {
         id="main-content"
         tabIndex={-1}
       >
-        {info && (
+        {visibleInfo && (
           <div className="page-heading">
             <div>
               <h1 ref={mainHeadingRef} tabIndex={-1}>
-                {info.title}
+                {visibleInfo.title}
               </h1>
-              {info.description && <p>{info.description}</p>}
+              {visibleInfo.description && <p>{visibleInfo.description}</p>}
             </div>
           </div>
         )}
@@ -819,6 +833,7 @@ export default function App() {
                 ? () => void scheduleConfirmedTask()
                 : undefined
             }
+            onAreaChange={setStudyArea}
           />
         </div>
       </main>

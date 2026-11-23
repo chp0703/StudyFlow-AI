@@ -18,6 +18,7 @@ export default function Study({
   onRevisionTaskConfirmed,
   onOpenPlanner,
   onRetryScheduling,
+  onAreaChange,
 }: {
   userId: string
   plannerBlockId?: string | null
@@ -26,6 +27,7 @@ export default function Study({
   onRevisionTaskConfirmed?: (task: ApiTask) => void
   onOpenPlanner?: () => void
   onRetryScheduling?: () => void
+  onAreaChange?: (area: StudyArea) => void
 }) {
   const [area, setArea] = useState<StudyArea>(
     plannerBlockId ? "learning" : "assessment",
@@ -34,6 +36,10 @@ export default function Study({
   useEffect(() => {
     if (plannerBlockId) setArea("learning")
   }, [plannerBlockId])
+
+  useEffect(() => {
+    onAreaChange?.(area)
+  }, [area, onAreaChange])
 
   return (
     <div className="study-hub">
@@ -46,6 +52,8 @@ export default function Study({
           type="button"
           role="tab"
           aria-selected={area === "assessment"}
+          aria-controls="study-assessment-panel"
+          id="study-assessment-tab"
           className={area === "assessment" ? "is-active" : ""}
           onClick={() => setArea("assessment")}
         >
@@ -56,6 +64,8 @@ export default function Study({
           type="button"
           role="tab"
           aria-selected={area === "learning"}
+          aria-controls="study-learning-panel"
+          id="study-learning-tab"
           className={area === "learning" ? "is-active" : ""}
           onClick={() => setArea("learning")}
         >
@@ -64,8 +74,10 @@ export default function Study({
         </button>
       </div>
       <section
+        id="study-assessment-panel"
         className="study-area-panel"
         role="tabpanel"
+        aria-labelledby="study-assessment-tab"
         hidden={area !== "assessment"}
       >
         {apiEnabled ? (
@@ -84,8 +96,10 @@ export default function Study({
         )}
       </section>
       <section
+        id="study-learning-panel"
         className="study-area-panel"
         role="tabpanel"
+        aria-labelledby="study-learning-tab"
         hidden={area !== "learning"}
       >
         {apiEnabled ? (

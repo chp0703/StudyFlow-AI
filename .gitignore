@@ -32,3 +32,5 @@ history
 
 # Local Graphify generated knowledge graph
 /graphify-out/
+/.dev-runtime/
+/.venv/
