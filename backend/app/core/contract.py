@@ -10,6 +10,23 @@ from pathlib import Path
 from jsonschema import Draft202012Validator, FormatChecker
 
 SCHEMA = json.loads((Path(__file__).resolve().parents[3] / "contracts/schemas/f1.schema.json").read_text(encoding="utf-8"))
+SERVICE = json.loads((Path(__file__).resolve().parents[3] / "contracts/service-contract.json").read_text(encoding="utf-8"))
+
+
+def _entries(node):
+    # Thao tác nằm ở "operations", "internal_interfaces" và "extensions" lồng nhau.
+    if isinstance(node, dict):
+        if "read_only" in node:
+            yield node
+        for value in node.values():
+            yield from _entries(value)
+    elif isinstance(node, list):
+        for value in node:
+            yield from _entries(value)
+
+
+# Khóa "rpc", không phải "operation": generate_study_plan gọi RPC persist_plan_proposal.
+READ_RPCS = frozenset(entry["rpc"] for entry in _entries(SERVICE) if entry["read_only"])
 
 
 @lru_cache(maxsize=None)

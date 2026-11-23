@@ -11,19 +11,12 @@ from uuid import uuid4
 import httpx
 
 from ..core.config import Settings
-from ..core.contract import canonical, sha256_hex
+from ..core.contract import READ_RPCS, canonical, sha256_hex
 
 CONTRACT_VERSION = "1.0.1"
 SCHEMA_VERSION = "1.1"
-# Thao tác chỉ đọc không mang chứng thực; database cũng phân loại chúng là thao tác đọc.
-READ_OPERATIONS = frozenset({
-    "search_tasks", "get_study_plan", "list_time_windows", "get_scheduling_context", "lookup_operation_result",
-    "get_workflow_context", "get_workflow_continuation", "get_ingestion_source",
-    "get_assessment_material", "search_material_chunks", "list_questions", "get_quiz_attempt_context",
-    "get_topic_stats", "get_learning_material", "list_learning_materials",
-    "get_learning_session", "lookup_learning_turn_receipt", "search_learning_material_chunks",
-    "get_learning_planner_context",
-})
+# Thao tác chỉ đọc không mang chứng thực; lấy từ contracts/service-contract.json.
+READ_OPERATIONS = READ_RPCS
 
 
 class RpcUnavailable(Exception):

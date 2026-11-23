@@ -663,3 +663,18 @@
 
 **Ghi chú**
 - Chưa chạy test tích hợp Supabase local.
+
+## 2026-11-23 — Lấy danh sách thao tác đọc của RPC từ contract
+
+**Mục tiêu:** Tránh việc backend ký sai thao tác đọc/ghi (DB trả 403, người dùng thấy lỗi đăng nhập) khi danh sách thao tác đọc ở backend, SQL và contract lệch nhau.
+
+**Đã làm**
+- `backend/app/core/contract.py`: nạp `contracts/service-contract.json` và tạo `READ_RPCS` từ các mục `read_only` theo khóa `rpc`.
+- `backend/app/clients/rpc.py`: `READ_OPERATIONS` lấy từ `READ_RPCS`, bỏ danh sách viết tay.
+- `backend/tests/unit/test_read_operations.py`: so tên trong `app_private.rpc_is_read` của migration mới nhất với `READ_OPERATIONS`.
+
+**Kết quả:** nhánh `refactor/read-operations`; unit test, `acceptance_api_sol` (79 test) và `contracts/check_contract.py` đều đạt. Xóa tạm một tên khỏi migration thì test mới fail.
+
+**Ghi chú**
+- Chưa chạy pgTAP và integration với Supabase local (không đổi SQL).
+- Test chỉ đối chiếu với migration mới nhất có `rpc_is_read`.
