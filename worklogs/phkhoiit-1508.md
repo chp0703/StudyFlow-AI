@@ -636,3 +636,16 @@
 **Ghi chú**
 - Chưa chạy test tích hợp Supabase local (`test_learning_material_local_supabase.py`) và pgTAP.
 - Thông báo lỗi khi kết quả sai contract đổi thành "Kết quả không đúng contract.".
+
+## 2026-11-23 — Test luồng add_turn và gộp kiểm tra chủ sở hữu phiên học
+
+**Mục tiêu:** Các nhánh lỗi của `add_turn` chưa có unit test và kiểm tra chủ sở hữu bị lặp 4 lần trong `sessions.py`.
+
+**Đã làm**
+- `backend/app/learning/sessions.py`: thêm `_require_owner`, thay 4 đoạn kiểm tra `owner_id` lặp lại; hành vi và message giữ nguyên.
+- `backend/tests/unit/test_learning_turn.py`: 7 test cho `add_turn` (embedder lỗi → 503, model lỗi → 503, độ tương đồng thấp bỏ qua model, `STALE_ENTITY_VERSION` → 409, truy xuất `INVALID_PARAMETER` → 400, phiên của người khác → `INTERNAL_ERROR`).
+
+**Kết quả:** nhánh `refactor/result-response`; 231 backend unit tests pass, 79 acceptance tests (`acceptance_api_sol`) pass.
+
+**Ghi chú**
+- Chưa chạy test tích hợp Supabase local (`test_learning_interaction_local_supabase.py`).
