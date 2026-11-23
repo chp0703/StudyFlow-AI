@@ -620,3 +620,19 @@
 - Cập nhật README theo backend Assessment hiện có và trạng thái frontend PR #55.
 
 **Kết quả:** PR #35 (`docs/readme-studyflow`); kiểm tra liên kết và xung đột được thực hiện trước khi push.
+
+## 2026-11-23 — Gom kết quả RPC thành một hàm phản hồi HTTP
+
+**Mục tiêu:** Mỗi feature backend tự viết lại bước "kết quả RPC → HTTP" và các bản sao đã lệch nhau, khiến `GET /v1/materials` trả 422 trong khi contract F3 chỉ khai báo 400.
+
+**Đã làm**
+- `backend/app/api/v1/http.py`: thêm `result_response` (kiểm schema tuỳ chọn, bảng status truyền vào, suy replay từ outcome `READ` khi không truyền) và `LEARNING_STATUS`.
+- `backend/app/api/v1/routes.py`: xoá `Api.result_response` và bốn chỗ tự tính `replayed`; mọi kết quả RPC đi qua hàm mới.
+- `backend/app/learning/sessions.py`, `materials.py`: xoá hai `_response` và `_LEARNING_STATUS`; dùng `result_response(..., statuses=LEARNING_STATUS)`, nên materials trả 400 thay cho 422 với `INVALID_PARAMETER`.
+- `backend/tests/unit/test_result_response.py`: test bảng status, `Retry-After`, header replay, `request_id`, lỗi schema và hồi quy cursor materials → 400.
+
+**Kết quả:** nhánh `refactor/result-response`; 224 backend unit tests pass, 79 acceptance tests (`acceptance_api_sol`) pass.
+
+**Ghi chú**
+- Chưa chạy test tích hợp Supabase local (`test_learning_material_local_supabase.py`) và pgTAP.
+- Thông báo lỗi khi kết quả sai contract đổi thành "Kết quả không đúng contract.".

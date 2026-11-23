@@ -8,7 +8,7 @@ from typing import Any, Callable
 
 from fastapi.concurrency import run_in_threadpool
 
-from ..api.v1.http import STATUS, ApiError, respond
+from ..api.v1.http import LEARNING_STATUS, ApiError, result_response
 from ..core import contract
 from ..core.config import Settings
 from .answer import (
@@ -32,28 +32,6 @@ from .summary import SummaryNormalizationError, build_summary_messages, normaliz
 
 log = logging.getLogger(__name__)
 DEFAULT_RETRIEVAL_K = 6
-_LEARNING_STATUS = {
-    **STATUS,
-    "INVALID_PARAMETER": 400,
-    "MISSING_REQUIRED_FIELD": 400,
-}
-
-
-def _response(result: dict[str, Any], ctx, schema: str, *, write: bool = False, replayed: bool = False):
-    if not contract.is_valid(schema, result):
-        raise ApiError("INTERNAL_ERROR", "Kết quả phiên học không đúng contract.")
-    if result["outcome"] == "ERROR":
-        code = result["error"]["code"]
-        return respond(
-            result,
-            _LEARNING_STATUS.get(code, 500),
-            ctx.request_id,
-            post=write,
-            retry_after=1 if code == "SERVICE_UNAVAILABLE" else None,
-        )
-    return respond(result, 200, ctx.request_id, post=write, replayed=replayed)
-
-
 class LearningSessionOperations:
     def __init__(
         self,
@@ -80,15 +58,12 @@ class LearningSessionOperations:
         await self._purge(ctx)
         result = await run_in_threadpool(self.rpc, ctx, "create_learning_session", args, idempotency_key=key)
         if result["outcome"] == "ERROR":
-            return _response(result, ctx, "DailyLearningSessionCreateResult", write=True)
+            return result_response(result, ctx.request_id, schema="DailyLearningSessionCreateResult", statuses=LEARNING_STATUS, write=True)
         data = result["data"]
         session = data["session"]
         if session["owner_id"] != ctx.user_id:
             raise ApiError("INTERNAL_ERROR", "Kết quả phiên học không đúng chủ sở hữu.")
-        return _response(
-            {**result, "data": session},
-            ctx,
-            "DailyLearningSessionCreateResult",
+        return result_response({**result, "data": session}, ctx.request_id, schema="DailyLearningSessionCreateResult", statuses=LEARNING_STATUS,
             write=True,
             replayed=bool(data["replayed"]),
         )
@@ -102,7 +77,7 @@ class LearningSessionOperations:
 
     async def get_planner_context(self, ctx, block_id: str):
         result = await run_in_threadpool(self.rpc, ctx, "get_learning_planner_context", {"block_id": block_id})
-        return _response(result, ctx, "DailyLearningPlannerContextResult")
+        return result_response(result, ctx.request_id, schema="DailyLearningPlannerContextResult", statuses=LEARNING_STATUS)
 
     async def get_session(self, ctx, session_id: str):
         await self._purge(ctx)
@@ -111,7 +86,7 @@ class LearningSessionOperations:
             session = result["data"]["session"]
             if session["owner_id"] != ctx.user_id:
                 raise ApiError("INTERNAL_ERROR", "Kết quả phiên học không đúng chủ sở hữu.")
-        return _response(result, ctx, "DailyLearningSessionReadResult")
+        return result_response(result, ctx.request_id, schema="DailyLearningSessionReadResult", statuses=LEARNING_STATUS)
 
     async def add_turn(self, ctx, key: str, session_id: str, body: dict[str, Any]):
         if not contract.is_valid("DailyLearningTurnRequest", body):
@@ -125,19 +100,16 @@ class LearningSessionOperations:
             {"session_id": session_id, "idempotency_key": key, "fingerprint": fingerprint},
         )
         if receipt["outcome"] == "ERROR":
-            return _response(receipt, ctx, "DailyLearningTurnResult", write=True)
+            return result_response(receipt, ctx.request_id, schema="DailyLearningTurnResult", statuses=LEARNING_STATUS, write=True)
         if receipt["data"]["found"]:
-            return _response(
-                {**receipt, "outcome": "COMMITTED", "data": receipt["data"]["data"]},
-                ctx,
-                "DailyLearningTurnResult",
+            return result_response({**receipt, "outcome": "COMMITTED", "data": receipt["data"]["data"]}, ctx.request_id, schema="DailyLearningTurnResult", statuses=LEARNING_STATUS,
                 write=True,
                 replayed=True,
             )
 
         loaded = await run_in_threadpool(self.rpc, ctx, "get_learning_session", {"session_id": session_id})
         if loaded["outcome"] == "ERROR":
-            return _response(loaded, ctx, "DailyLearningTurnResult", write=True)
+            return result_response(loaded, ctx.request_id, schema="DailyLearningTurnResult", statuses=LEARNING_STATUS, write=True)
 
         session = loaded["data"]["session"]
         turns = loaded["data"]["turns"]
@@ -196,7 +168,7 @@ class LearningSessionOperations:
             },
         )
         if retrieved["outcome"] == "ERROR":
-            return _response(retrieved, ctx, "DailyLearningTurnResult", write=True)
+            return result_response(retrieved, ctx.request_id, schema="DailyLearningTurnResult", statuses=LEARNING_STATUS, write=True)
 
         chunks = retrieved["data"]["chunks"]
         if not has_sufficient_grounding(chunks, threshold=self.settings.learning_grounding_threshold):
@@ -282,15 +254,12 @@ class LearningSessionOperations:
             self.rpc, ctx, "append_learning_turn", append_args, idempotency_key=key
         )
         if persisted["outcome"] == "ERROR":
-            return _response(persisted, ctx, "DailyLearningTurnResult", write=True)
+            return result_response(persisted, ctx.request_id, schema="DailyLearningTurnResult", statuses=LEARNING_STATUS, write=True)
 
         data = persisted["data"]
         replayed = bool(data["replayed"])
         payload = {"user_turn": data["user_turn"], "assistant_turn": data["assistant_turn"]}
-        return _response(
-            {**persisted, "data": payload},
-            ctx,
-            "DailyLearningTurnResult",
+        return result_response({**persisted, "data": payload}, ctx.request_id, schema="DailyLearningTurnResult", statuses=LEARNING_STATUS,
             write=True,
             replayed=replayed,
         )
@@ -301,7 +270,7 @@ class LearningSessionOperations:
         fingerprint = contract.sha256_hex({"session_id": session_id, "body": body})
         loaded = await run_in_threadpool(self.rpc, ctx, "get_learning_session", {"session_id": session_id})
         if loaded["outcome"] == "ERROR":
-            return _response(loaded, ctx, "DailyLearningSummaryResult", write=True)
+            return result_response(loaded, ctx.request_id, schema="DailyLearningSummaryResult", statuses=LEARNING_STATUS, write=True)
         session, turns = loaded["data"]["session"], loaded["data"]["turns"]
         if session["owner_id"] != ctx.user_id:
             raise ApiError("INTERNAL_ERROR", "Kết quả phiên học không đúng chủ sở hữu.")
@@ -325,7 +294,7 @@ class LearningSessionOperations:
                 "expected_session_version": session["version"], **draft}
         result = await run_in_threadpool(self.rpc, ctx, "prepare_learning_summary", args, idempotency_key=key)
         if result["outcome"] == "ERROR":
-            return _response(result, ctx, "DailyLearningSummaryResult", write=True)
+            return result_response(result, ctx.request_id, schema="DailyLearningSummaryResult", statuses=LEARNING_STATUS, write=True)
         data = dict(result["data"])
         replayed = bool(data.pop("replayed"))
-        return _response({**result, "data": data}, ctx, "DailyLearningSummaryResult", write=True, replayed=replayed)
+        return result_response({**result, "data": data}, ctx.request_id, schema="DailyLearningSummaryResult", statuses=LEARNING_STATUS, write=True, replayed=replayed)

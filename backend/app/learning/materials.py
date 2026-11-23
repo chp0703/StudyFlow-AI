@@ -17,7 +17,7 @@ from uuid import UUID
 
 from fastapi.concurrency import run_in_threadpool
 
-from ..api.v1.http import ApiError, STATUS, respond
+from ..api.v1.http import LEARNING_STATUS, ApiError, result_response
 from ..core import contract
 from ..ingestion.document import IndexingError
 from ..ingestion.models import MIME_EXTENSIONS, decode_upload
@@ -72,15 +72,6 @@ def _read_cursor(cursor: str | None) -> tuple[str | None, str | None]:
         raise ApiError("INVALID_PARAMETER", "Cursor tài liệu không hợp lệ.", status=400, field="cursor") from None
 
 
-def _response(result: dict, ctx, schema: str, *, write=False, replayed=False):
-    if not contract.is_valid(schema, result):
-        raise ApiError("INTERNAL_ERROR", "Kết quả tài liệu không đúng contract.")
-    if result["outcome"] == "ERROR":
-        code = result["error"]["code"]
-        return respond(result, STATUS.get(code, 500), ctx.request_id, post=write, retry_after=1 if code == "SERVICE_UNAVAILABLE" else None)
-    return respond(result, 200, ctx.request_id, post=write, replayed=replayed)
-
-
 class LearningMaterialOperations:
     def __init__(self, rpc, indexer=index_document):
         self.rpc, self.indexer = rpc, indexer
@@ -97,13 +88,13 @@ class LearningMaterialOperations:
                 {**metadata, "claim_allowed": slot_acquired}, idempotency_key=key,
             )
             if result["outcome"] == "ERROR":
-                return _response(result, ctx, "DailyMaterialUploadResult", write=True)
+                return result_response(result, ctx.request_id, schema="DailyMaterialUploadResult", statuses=LEARNING_STATUS, write=True)
             data = result["data"]
             material, claim = data["material"], data["claim"]
             if material["owner_id"] != ctx.user_id or (claim is not None and not slot_acquired):
                 raise ApiError("INTERNAL_ERROR", "Kết quả giữ chỗ lập chỉ mục không hợp lệ.")
             if claim is None:
-                return _response({**result, "data": material}, ctx, "DailyMaterialUploadResult",
+                return result_response({**result, "data": material}, ctx.request_id, schema="DailyMaterialUploadResult", statuses=LEARNING_STATUS,
                                  write=True, replayed=data["replayed"])
 
             args = {"material_id": material["material_id"], "claim": claim}
@@ -113,7 +104,7 @@ class LearningMaterialOperations:
             except Exception:
                 log.error("Learning index worker submission failed request_id=%s", ctx.request_id)
                 result = await self.fail(ctx, key, args, "INDEX_UNAVAILABLE")
-                return _response(result, ctx, "DailyMaterialUploadResult", write=True)
+                return result_response(result, ctx.request_id, schema="DailyMaterialUploadResult", statuses=LEARNING_STATUS, write=True)
             # A request timing out must not release a worker that is still running.
             future.add_done_callback(lambda _: _worker_slot.release())
             slot_acquired = False
@@ -139,7 +130,7 @@ class LearningMaterialOperations:
             result = await run_in_threadpool(self.rpc, ctx, "store_learning_material_chunks", args, idempotency_key=key)
             if result["outcome"] == "ERROR" and result["error"]["code"] in ("INVALID_PARAMETER", "INTERNAL_ERROR"):
                 result = await self.fail(ctx, key, args, "INDEX_UNAVAILABLE")
-        return _response(result, ctx, "DailyMaterialUploadResult", write=True)
+        return result_response(result, ctx.request_id, schema="DailyMaterialUploadResult", statuses=LEARNING_STATUS, write=True)
 
     async def fail(self, ctx, key, args, code):
         failure = {"material_id": args["material_id"], "claim": args["claim"], "error_code": code}
@@ -147,7 +138,7 @@ class LearningMaterialOperations:
 
     async def get(self, ctx, material_id: str):
         result = await run_in_threadpool(self.rpc, ctx, "get_learning_material", {"material_id": material_id})
-        return _response(result, ctx, "DailyMaterialReadResult")
+        return result_response(result, ctx.request_id, schema="DailyMaterialReadResult", statuses=LEARNING_STATUS)
 
     async def list(self, ctx, limit: int, cursor: str | None):
         before_at, before_id = _read_cursor(cursor)
@@ -157,7 +148,7 @@ class LearningMaterialOperations:
             materials = result["data"]["materials"]
             next_cursor = _cursor(materials[-1]) if result["data"]["has_more"] else None
             result = {**result, "data": {"materials": materials, "next_cursor": next_cursor}}
-        return _response(result, ctx, "DailyMaterialListResult")
+        return result_response(result, ctx.request_id, schema="DailyMaterialListResult", statuses=LEARNING_STATUS)
 
     async def delete(self, ctx, key: str, material_id: str):
         args = {"material_id": material_id}
@@ -167,4 +158,4 @@ class LearningMaterialOperations:
         if result["outcome"] == "COMMITTED":
             replayed = result["data"]["replayed"]
             result = {**result, "data": {"material_id": result["data"]["material_id"], "deleted": True}}
-        return _response(result, ctx, "DailyMaterialDeleteResult", write=True, replayed=replayed)
+        return result_response(result, ctx.request_id, schema="DailyMaterialDeleteResult", statuses=LEARNING_STATUS, write=True, replayed=replayed)
