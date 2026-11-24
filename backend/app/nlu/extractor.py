@@ -19,7 +19,7 @@ Intents and slots:
 - CREATE_TASK: title, description, start_at (RFC3339 with offset), deadline_precision ("DATE" or "DATETIME"), deadline_date (YYYY-MM-DD, DATE only),
   deadline_at (RFC3339 with offset, DATETIME only), deadline_timezone ("Asia/Ho_Chi_Minh"), estimated_minutes (integer), priority (0.1|0.5|1), color ("#RRGGBB").
 - SEARCH_TASKS: query (text or null), status_filter (list of TODO|IN_PROGRESS|COMPLETED|CANCELLED).
-- SET_AVAILABILITY / SET_BUSY_INTERVAL: change_type "ADD", window {kind AVAILABILITY|BUSY, label, recurrence NONE|WEEKLY, timezone "Asia/Ho_Chi_Minh",
+- SET_BUSY_INTERVAL: change_type "ADD", window {kind BUSY, label, recurrence NONE|WEEKLY, timezone "Asia/Ho_Chi_Minh",
   start_at/end_at (NONE) or weekday 1-7 + start_time/end_time "HH:mm" + valid_from (WEEKLY)}.
 - SET_SCHEDULING_PREFERENCES: policy_patch {min_block_minutes, max_block_minutes, allow_short_final_block, max_daily_minutes, break_minutes}.
 - GENERATE_STUDY_PLAN: start_at, end_at (RFC3339) when the user names a period; otherwise leave slots empty.
@@ -32,6 +32,7 @@ Intents and slots:
 - SEARCH_TASKS status_filter: "chưa làm" means only TODO; "đang làm" is IN_PROGRESS; "xong"/"hoàn thành" is COMPLETED.
   Use recurrence NONE only for one dated interval.
 - ambiguities items are objects {"code": "AMBIGUOUS", "message": text, "field": slot name or null, "details": {}}; never plain strings.
+- Free time is not declared by users (the whole day is available except busy intervals): statements about being free/available ("tôi rảnh", "giờ rảnh") are UNSUPPORTED.
 - UNKNOWN: you cannot tell what the user wants. UNSUPPORTED: a request outside these intents.
 Period rules: end_at is EXCLUSIVE - use 00:00:00 of the day after the last day named (e.g. "hết ngày 10/11" -> 11/11T00:00:00); never 23:59:59.
   GET_STUDY_PLAN uses the whole calendar day/week (week = Monday 00:00 to next Monday 00:00; "cuối tuần" = Saturday 00:00 to Monday 00:00).
@@ -53,6 +54,14 @@ def _wrap_string_ambiguities(result) -> None:
         if isinstance(notes, list):
             item["ambiguities"] = [{"code": "AMBIGUOUS", "message": n, "field": None, "details": {}}
                                    if isinstance(n, str) and n.strip() else n for n in notes]
+
+
+def _drop_removed_intents(result) -> None:
+    """Giờ rảnh không còn là tính năng: nếu mô hình vẫn trả SET_AVAILABILITY thì coi là UNSUPPORTED thay vì lỗi cả kết quả."""
+    items = result.get("intents") if isinstance(result, dict) else None
+    for item in items if isinstance(items, list) else []:
+        if isinstance(item, dict) and item.get("intent") == "SET_AVAILABILITY":
+            item["intent"], item["slots"] = "UNSUPPORTED", {}
 
 
 def _fill_defaults(result, now: datetime, timezone: str) -> None:
@@ -122,6 +131,7 @@ class DeepSeekExtractor:
         except ValueError:
             raise ExtractionError("not JSON") from None
         _wrap_string_ambiguities(result)
+        _drop_removed_intents(result)
         _fill_defaults(result, now, timezone)
         if not contract.is_valid("ExtractionResult", result):
             raise ExtractionError("not an ExtractionResult")

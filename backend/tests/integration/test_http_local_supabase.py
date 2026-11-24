@@ -176,10 +176,6 @@ class LocalSupabaseHttp(unittest.TestCase):
         generate = lambda: {"schema_version": "1.1", "conversation_id": str(uuid4()), "operation": "generate_study_plan",
                             "arguments": {"generation_scope": scope, "policy_overrides": {}}}
         slot_day = (tomorrow + timedelta(days=1)).date()
-        weekly = {"kind": "AVAILABILITY", "label": "Giờ học", "recurrence": "WEEKLY", "timezone": "Asia/Ho_Chi_Minh",
-                  "start_at": None, "end_at": None, "weekday": slot_day.isoweekday(),
-                  "start_time": "09:00", "end_time": "24:00", "valid_from": datetime.now(timezone.utc).date().isoformat(),
-                  "valid_until": None}
         with self.client() as app:
             self.approve(app, self.task_body(
                 str(uuid4()),
@@ -187,9 +183,6 @@ class LocalSupabaseHttp(unittest.TestCase):
                 start_at=f"{slot_day.isoformat()}T09:00:00+07:00",
                 deadline_date=(slot_day + timedelta(days=2)).isoformat(),
             ), "c")
-            self.approve(app, {"schema_version": "1.1", "conversation_id": str(uuid4()), "operation": "set_availability",
-                               "arguments": {"change_type": "ADD", "window_id": None, "expected_window_version": None,
-                                             "window": weekly}}, "c")
             prepared = self.post(app, "/v1/actions", generate(), who="c")
             self.assertEqual(prepared.status_code, 200, prepared.text)
             reply = prepared.json()
@@ -251,10 +244,6 @@ class LocalSupabaseHttp(unittest.TestCase):
                  "end_at": (tomorrow + timedelta(days=8)).strftime("%Y-%m-%dT%H:%M:%SZ"),
                  "selection_mode": "ALL_ELIGIBLE", "task_ids": []}
         slot_day = (tomorrow + timedelta(days=1)).date()
-        weekly = {"kind": "AVAILABILITY", "label": "Giờ học", "recurrence": "WEEKLY", "timezone": "Asia/Ho_Chi_Minh",
-                  "start_at": None, "end_at": None, "weekday": slot_day.isoweekday(),
-                  "start_time": "09:00", "end_time": "24:00", "valid_from": datetime.now(timezone.utc).date().isoformat(),
-                  "valid_until": None}
         conversation = str(uuid4())
         with self.client() as app:
             self.approve(app, self.task_body(
@@ -263,8 +252,6 @@ class LocalSupabaseHttp(unittest.TestCase):
                 start_at=f"{slot_day.isoformat()}T09:00:00+07:00",
                 deadline_date=(slot_day + timedelta(days=2)).isoformat(),
             ), "d")
-            self.approve(app, {"schema_version": "1.1", "conversation_id": str(uuid4()), "operation": "set_availability",
-                               "arguments": {"change_type": "ADD", "window_id": None, "expected_window_version": None, "window": weekly}}, "d")
             prepared = self.post(app, "/v1/actions", {"schema_version": "1.1", "conversation_id": conversation, "operation": "generate_study_plan",
                                                       "arguments": {"generation_scope": scope, "policy_overrides": {}}}, who="d")
             self.assertEqual(prepared.json()["state"], "AWAITING_APPROVAL", prepared.text)

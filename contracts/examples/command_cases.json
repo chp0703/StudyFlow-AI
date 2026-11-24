@@ -37,32 +37,6 @@
     }
   },
   {
-    "name": "set_availability",
-    "valid": true,
-    "command": {
-      "schema_version": "1.1",
-      "operation": "set_availability",
-      "arguments": {
-        "change_type": "ADD",
-        "window_id": null,
-        "expected_window_version": null,
-        "window": {
-          "kind": "AVAILABILITY",
-          "label": null,
-          "recurrence": "NONE",
-          "timezone": "Asia/Ho_Chi_Minh",
-          "start_at": "2026-11-05T08:00:00+07:00",
-          "end_at": "2026-11-05T09:00:00+07:00",
-          "weekday": null,
-          "start_time": null,
-          "end_time": null,
-          "valid_from": null,
-          "valid_until": null
-        }
-      }
-    }
-  },
-  {
     "name": "set_busy_interval",
     "valid": true,
     "command": {
@@ -195,58 +169,6 @@
         "status_filter": [],
         "page_size": 20,
         "cursor": null
-      }
-    }
-  },
-  {
-    "name": "wrong window kind",
-    "valid": false,
-    "command": {
-      "schema_version": "1.1",
-      "operation": "set_availability",
-      "arguments": {
-        "change_type": "ADD",
-        "window_id": null,
-        "expected_window_version": null,
-        "window": {
-          "kind": "BUSY",
-          "label": null,
-          "recurrence": "NONE",
-          "timezone": "Asia/Ho_Chi_Minh",
-          "start_at": "2026-11-05T08:00:00+07:00",
-          "end_at": "2026-11-05T09:00:00+07:00",
-          "weekday": null,
-          "start_time": null,
-          "end_time": null,
-          "valid_from": null,
-          "valid_until": null
-        }
-      }
-    }
-  },
-  {
-    "name": "add with window id",
-    "valid": false,
-    "command": {
-      "schema_version": "1.1",
-      "operation": "set_availability",
-      "arguments": {
-        "change_type": "ADD",
-        "window_id": "0b86db05-7591-4ec1-a8b2-95cf6848c732",
-        "expected_window_version": null,
-        "window": {
-          "kind": "AVAILABILITY",
-          "label": null,
-          "recurrence": "NONE",
-          "timezone": "Asia/Ho_Chi_Minh",
-          "start_at": "2026-11-05T08:00:00+07:00",
-          "end_at": "2026-11-05T09:00:00+07:00",
-          "weekday": null,
-          "start_time": null,
-          "end_time": null,
-          "valid_from": null,
-          "valid_until": null
-        }
       }
     }
   },

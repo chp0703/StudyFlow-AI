@@ -35,7 +35,7 @@ OLD_HELPERS = {
     "lookup_operation_result", "renew_api_receipt", "release_api_receipt",
 }
 PUBLIC_OPERATIONS = {
-    "create_task_candidate", "confirm_task", "search_tasks", "set_availability",
+    "create_task_candidate", "confirm_task", "search_tasks",
     "set_busy_interval", "set_scheduling_preferences", "generate_study_plan",
     "get_study_plan", "approve_study_plan", "reject_study_plan",
 }
@@ -140,14 +140,14 @@ class ApprovedAddendumAcceptance(unittest.TestCase):
                             for method in operations if method in {"get", "post", "put", "patch", "delete", "options", "head"}}
         self.assertEqual(actual_endpoints, PUBLIC_ENDPOINTS)
         self.assertEqual({entry["operation"] for entry in self.service["operations"]}, PUBLIC_OPERATIONS)
-        self.assertEqual(len(self.service["operations"]), 10)
+        self.assertEqual(len(self.service["operations"]), 9)
         self.assertEqual(set(self.defs["Operation"]["enum"]), PUBLIC_OPERATIONS)
         self.assertEqual(len(self.data["entities"]), 10)
         command_operations = {branch["properties"]["operation"]["const"] for branch in self.defs["ValidatedCommand"]["oneOf"]}
         assessment_operations = {"create_question_drafts", "verify_question_drafts", "list_questions"}
         self.assertEqual(command_operations, PUBLIC_OPERATIONS | assessment_operations)
         action_operations = {branch["properties"]["operation"]["const"] for branch in self.defs["ActionRequest"]["oneOf"]}
-        self.assertEqual(action_operations, {"create_task_candidate", "set_availability", "set_busy_interval", "set_scheduling_preferences", "generate_study_plan"})
+        self.assertEqual(action_operations, {"create_task_candidate", "set_busy_interval", "set_scheduling_preferences", "generate_study_plan"})
 
     def test_continuation_is_infrastructure_with_exact_mapping(self):
         entries = [entry for entry in self.data["infrastructure_records"] if entry["schema"] == "WorkflowContinuationRecord"]

@@ -122,16 +122,6 @@
       "valid": true
     },
     {
-      "file": "examples/valid/set_availability-command.json",
-      "schema": "ValidatedCommand",
-      "valid": true
-    },
-    {
-      "file": "examples/valid/set_availability-result.json",
-      "schema": "set_availabilityResult",
-      "valid": true
-    },
-    {
       "file": "examples/valid/set_busy_interval-command.json",
       "schema": "ValidatedCommand",
       "valid": true
@@ -248,18 +238,6 @@
       "schema": "ValidatedCommand",
       "valid": false,
       "reason": "Task mutation API outside F1"
-    },
-    {
-      "file": "examples/invalid/wrong-window-kind.json",
-      "schema": "set_availabilityArguments",
-      "valid": false,
-      "reason": "Operation and kind must match"
-    },
-    {
-      "file": "examples/invalid/archive-window-payload.json",
-      "schema": "set_availabilityArguments",
-      "valid": false,
-      "reason": "ARCHIVE requires window=null"
     },
     {
       "file": "examples/invalid/weekly-mixed-absolute.json",
@@ -446,12 +424,6 @@
       "schema": "TimeWindowInput",
       "valid": false,
       "reason": "IANA timezone must exist"
-    },
-    {
-      "file": "examples/invalid/wrong-kind-result.json",
-      "schema": "set_availabilityResult",
-      "valid": false,
-      "reason": "Availability operation cannot return BUSY result"
     },
     {
       "file": "examples/invalid/generate-terminal-proposal.json",

@@ -18,9 +18,9 @@ from .workflow_ports import ChatActions, Clock, WorkflowError
 from ..nlu.extractor import Extractor
 from .workflow_shared import AWAITING, DONE_TEXT, INTENT, PRODUCT_TIMEZONE, Terminal, _ok, reply
 
-WRITE_INTENTS = {"CREATE_TASK", "SET_AVAILABILITY", "SET_BUSY_INTERVAL", "SET_SCHEDULING_PREFERENCES", "GENERATE_STUDY_PLAN",
+WRITE_INTENTS = {"CREATE_TASK", "SET_BUSY_INTERVAL", "SET_SCHEDULING_PREFERENCES", "GENERATE_STUDY_PLAN",
                  "PROPOSE_REVISION"}
-APPROVAL_OPERATIONS = {"confirm_task", "set_availability", "set_busy_interval", "set_scheduling_preferences",
+APPROVAL_OPERATIONS = {"confirm_task", "set_busy_interval", "set_scheduling_preferences",
                        "approve_study_plan", "reject_study_plan"}
 DEFAULT_MATERIAL_TOPIC = "Tài liệu học tập"  # topic the database gives a material uploaded without a course label
 GENERIC_QUESTION = {"field": "intent", "message": "Bạn muốn thêm công việc, tìm công việc, đặt giờ rảnh/bận, lập kế hoạch, tạo câu hỏi ôn tập hay đề xuất ôn tập?",
@@ -323,7 +323,7 @@ class ChatProcessor:
                 "target_id": target[1], "target_version": target[2]}
 
     def operation_for(self, ctx, kind, slots):
-        if kind in ("SET_AVAILABILITY", "SET_BUSY_INTERVAL"):
+        if kind == "SET_BUSY_INTERVAL":
             operation = INTENT_TO_OPERATION[kind]
             window = dict(slots["window"]) if isinstance(slots.get("window"), dict) else slots.get("window")
             if isinstance(window, dict):
@@ -474,5 +474,5 @@ class ChatProcessor:
 
 WINDOW_KEYS = ("kind", "label", "recurrence", "timezone", "start_at", "end_at", "weekday",
                "start_time", "end_time", "valid_from", "valid_until")
-INTENT_TO_OPERATION = {"SET_AVAILABILITY": "set_availability", "SET_BUSY_INTERVAL": "set_busy_interval"}
+INTENT_TO_OPERATION = {"SET_BUSY_INTERVAL": "set_busy_interval"}
 _ = (APPROVAL_OPERATIONS, INTENT)

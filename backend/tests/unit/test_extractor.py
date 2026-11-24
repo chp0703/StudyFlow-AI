@@ -93,6 +93,12 @@ class DeepSeekExtractorTests(unittest.TestCase):
         }
         self.assertEqual(self.run_extract(answer(json.dumps(wanted))), wanted)
 
+    def test_a_declared_free_time_is_unsupported_not_an_error(self):
+        said = {"intents": [{"intent": "SET_AVAILABILITY", "slots": {"window": {"kind": "AVAILABILITY"}},
+                             "raw_expressions": {}, "ambiguities": []}]}
+        result = self.run_extract(answer(json.dumps(said)))
+        self.assertEqual((result["intents"][0]["intent"], result["intents"][0]["slots"]), ("UNSUPPORTED", {}))
+
     def test_create_task_canonical_slots_roundtrip(self):
         canonical_task = {
             "intents": [{

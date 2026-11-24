@@ -852,3 +852,14 @@
 **Kết quả:** unit backend 237, `acceptance_sol` 37 và `acceptance_api_sol` 79 đều pass.
 
 **Còn lại:** bỏ `SET_AVAILABILITY` khỏi chat/NLU, contract (`set_availability`), DB (xóa dữ liệu `AVAILABILITY`, chặn ghi mới), UI Planner và docs.
+
+**Giai đoạn 2: gỡ `set_availability` khỏi contract, DB, chat**
+
+- `contracts/`: bỏ operation/intent `set_availability` (schema, service contract, ví dụ, README, `check_contract.py` 10→9 tool); sinh lại contract migration `202611250006_availability_contract_schema.sql`.
+- `supabase/migrations/202611250005_drop_availability_windows.sql`: xóa các cửa sổ `AVAILABILITY` (không hoàn tác), tăng `schedule_revision` của người bị ảnh hưởng để đề xuất cũ bị coi là lỗi thời, gỡ RPC `app_api.set_availability`.
+- Backend: bỏ `SET_AVAILABILITY` khỏi chat, route, prompt NLU (nói "giờ rảnh" → `UNSUPPORTED`, và server chuẩn hóa nếu mô hình vẫn trả intent cũ).
+- Test: pgTAP 05/06/12 (test 12 chuyển sang `set_busy_interval`), unit, `acceptance_api_sol`, integration và harness concurrency bỏ bước tạo giờ rảnh.
+
+**Kết quả:** unit 238; `acceptance_sol` 37; `acceptance_api_sol` 79; integration thật 40; concurrency 9; pgTAP 25 file; `check_contract.py` và `--check` đạt. Đã kiểm migration trên dữ liệu mẫu trong giao dịch rollback.
+
+**Còn lại:** UI Planner (lớp phủ giờ rảnh, demo planner agent, mappers) và docs.

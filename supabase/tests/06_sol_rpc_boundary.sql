@@ -13,7 +13,7 @@ set local timezone = 'UTC';
 create temporary table sol_expected_rpc(name text primary key);
 insert into sol_expected_rpc values
  ('create_task_candidate'), ('confirm_task'), ('search_tasks'),
- ('set_availability'), ('set_busy_interval'), ('set_scheduling_preferences'),
+ ('set_busy_interval'), ('set_scheduling_preferences'),
  ('get_study_plan'), ('approve_study_plan'), ('reject_study_plan'),
  ('get_scheduling_context'), ('persist_plan_proposal'),
  ('prepare_pending_action'), ('review_pending_action'), ('update_candidate_draft'),
