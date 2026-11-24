@@ -755,3 +755,17 @@
 
 - Chưa chạy integration và `backend/tests/acceptance_api_sol/test_attempt_http.py` (dùng `SESSION_OUTCOME_1` tùy ý, có thể cần seed outcome nếu chạy với Postgres thật).
 - Orchestrator (intent chat, handoff F2→F1, frontend) còn các phase sau trên cùng nhánh.
+
+**Phase 1 (DB, tiếp)**
+
+- `contracts/schemas/f1.schema.json`: thêm `WorkflowStepOperation` (Operation + `verify_question_drafts`, `decide_revision_recommendation`, `decide_learning_session_outcome`) cho `WorkflowStepOutcome`; thêm `conversation_id` tùy chọn vào `CreateLearningSessionArguments` (chỉ RPC nội bộ, API công khai không đổi). Sinh lại contract migration `202611250002_orchestrator_rpc_contract_schema.sql` (đổi `TARGET` trong script).
+- Migration `202611250003_orchestrator_cross_feature_rpcs.sql`: `create_learning_session` nhận `conversation_id`; `get_assessment_material`, `create_question_drafts`, `create_revision_recommendation` chấp nhận material F3 READY của chính user ở conversation khác; `checkpoint_workflow_continuation` yêu cầu action COMPLETED cho 3 write liên feature.
+- `backend/app/assessment/materials.py`: bỏ so khớp conversation ở Python (RPC đã kiểm).
+- `supabase/tests/28_orchestrator_cross_feature.sql`: 6 test (session gắn conversation, F2 đọc material F3, user khác bị từ chối, checkpoint).
+
+**Kết quả (Phase 1):** `supabase test db` 25 file/803 test pass; unit backend 210/210; `check_contract.py` và `--check` đạt.
+
+**Ghi chú (Phase 1)**
+
+- Thu hẹp phạm vi chat: chỉ `SUMMARIZE_LEARNING`, `CREATE_QUIZ`, `PROPOSE_REVISION` (đều tạo pending action). `ASK_LEARNING` và thống kê vẫn qua REST vì kết quả không khớp `ToolResult` đóng của hàng đợi workflow.
+- Phiên học theo conversation dùng idempotency key xác định (conversation + tài liệu), không thêm RPC tra cứu.
