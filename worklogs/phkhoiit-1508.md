@@ -818,3 +818,8 @@
 - Lỗi tìm thấy khi chạy: trả lời bổ sung cho task nháp do đề xuất ôn tập tạo ra bị DB từ chối ("presentation does not match the stored target") vì `answer_open_queue` re-prepare như task tạo từ chat. `chat.py` giờ đi qua `review_pending_action` cho trường hợp này; thêm test.
 - Đề xuất ôn tập chỉ chạy khi chủ đề đã có bài làm hợp lệ (quy tắc F2); chưa có UI làm quiz nên phải làm bài qua REST.
 - Upload tài liệu học ở API mode báo `INDEX_UNAVAILABLE` nếu chưa cài `sentence-transformers` (không có trong `backend/requirements.txt`); test dùng tài liệu F2 được đánh dấu READY làm fixture trong DB local.
+
+**Lỗi tìm thấy khi test tay trên trình duyệt**
+
+- Sau khi duyệt bộ câu hỏi, trợ lý hiện "Có lỗi xảy ra" dù server trả 200: `listing()` trong `apiAssistant.ts` coi mọi `data.items` là danh sách công việc nên `t.deadline_at.slice` ném TypeError với kết quả `QuestionDraftBatchData`. Đã giới hạn chỉ liệt kê khi phần tử là công việc; thêm test.
+- Chưa sửa: mô tả task do đề xuất ôn tập tạo ra có kèm `recommendation_id`, `attempt_ids`, `chunk_ids` (hành vi có sẵn của F2 SQL); tiêu đề mang chủ đề mặc định "Tài liệu học tập" khi tài liệu không có `course_label`.
