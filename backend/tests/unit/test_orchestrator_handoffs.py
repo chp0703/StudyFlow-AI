@@ -14,8 +14,8 @@ CTX = SimpleNamespace(request_id="req-1", user_id="00300000-0000-4000-8000-00000
 NOW = datetime(2026, 11, 24, 9, tzinfo=timezone.utc)
 
 
-def material(material_id, filename, status="READY"):
-    return {"material_id": material_id, "filename": filename, "status": status}
+def material(material_id, filename, status="READY", course_label=None):
+    return {"material_id": material_id, "filename": filename, "status": status, "course_label": course_label}
 
 
 def intent(kind, **slots):
@@ -90,7 +90,7 @@ class RevisionPlanTests(unittest.TestCase):
 
 class PickMaterialTests(unittest.TestCase):
     def pick(self, materials, name=None):
-        return chat_for(FakeProc(materials)).pick_material(CTX, name)
+        return chat_for(FakeProc(materials)).pick_material(CTX, name)["material_id"]
 
     def test_the_only_ready_material_is_chosen(self):
         self.assertEqual(self.pick([material(MAT_A, "so.pdf"), material(MAT_B, "x.pdf", "INDEXING")]), MAT_A)
@@ -98,6 +98,12 @@ class PickMaterialTests(unittest.TestCase):
     def test_name_selects_among_several_case_insensitively(self):
         both = [material(MAT_A, "Giai-tich.pdf"), material(MAT_B, "dai-so.pdf")]
         self.assertEqual(self.pick(both, "DAI-SO"), MAT_B)
+
+    def test_a_named_material_that_does_not_match_is_an_error_not_a_fallback(self):
+        with self.assertRaises(Terminal) as raised:
+            self.pick([material(MAT_A, "history.pdf")], "algebra.pdf")
+        self.assertEqual(raised.exception.error["code"], "ENTITY_NOT_FOUND")
+        self.assertIn("algebra.pdf", raised.exception.error["message"])
 
     def test_ambiguous_or_missing_material_is_a_clear_error(self):
         both = [material(MAT_A, "a.pdf"), material(MAT_B, "b.pdf")]
@@ -120,8 +126,13 @@ class WriteLearningTests(unittest.TestCase):
         receipt, _, body = proc.drafts[0]
         self.assertEqual(receipt["action_id"], action_id_for(MSG, 0))
         self.assertEqual((body["topic"], body["count"], body["question_type"], body["material_id"]),
-                         ("Số chẵn", 5, "MCQ", MAT_A))
+                         ("Tài liệu học tập", 5, "MCQ", MAT_A))
         self.assertEqual(ref["action_id"], action_id_for(MSG, 0))
+
+    def test_f2_gets_the_materials_own_topic_not_the_spoken_one(self):
+        proc = FakeProc([material(MAT_A, "so.pdf", course_label="Toán rời rạc")])
+        self.run_step(proc, intent("CREATE_QUIZ", topic="số chẵn"))
+        self.assertEqual(proc.drafts[0][2]["topic"], "Toán rời rạc")
 
     def test_revision_defaults_and_does_not_rerecord_the_chat_message(self):
         proc = FakeProc([material(MAT_A, "so.pdf")])

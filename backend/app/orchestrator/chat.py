@@ -22,6 +22,7 @@ WRITE_INTENTS = {"CREATE_TASK", "SET_AVAILABILITY", "SET_BUSY_INTERVAL", "SET_SC
                  "PROPOSE_REVISION"}
 APPROVAL_OPERATIONS = {"confirm_task", "set_availability", "set_busy_interval", "set_scheduling_preferences",
                        "approve_study_plan", "reject_study_plan"}
+DEFAULT_MATERIAL_TOPIC = "Tài liệu học tập"  # topic the database gives a material uploaded without a course label
 GENERIC_QUESTION = {"field": "intent", "message": "Bạn muốn thêm công việc, tìm công việc, đặt giờ rảnh/bận, lập kế hoạch, tạo câu hỏi ôn tập hay đề xuất ôn tập?",
                     "choices": []}
 
@@ -267,8 +268,10 @@ class ChatProcessor:
         if not isinstance(topic, str) or not topic.strip():
             return self.outcome(cont, index, None, "FAILED", error=self.error(
                 "INVALID_PARAMETER", "Bạn muốn ôn chủ đề nào? Hãy nêu tên chủ đề.")), None
-        material_id = self.pick_material(ctx, slots.get("material"))
-        body = {"schema_version": "1.1", "conversation_id": conversation, "material_id": material_id, "topic": topic.strip()}
+        material = self.pick_material(ctx, slots.get("material"))
+        # F3 materials carry one topic (their course label, else the default); F2 only accepts topics of the material.
+        body = {"schema_version": "1.1", "conversation_id": conversation, "material_id": material["material_id"],
+                "topic": material.get("course_label") or DEFAULT_MATERIAL_TOPIC}
         receipt = {"action_id": action_id, "message_id": message_id}
         step_key = child_key(key, f"learning{index}")
         if item["intent"] == "CREATE_QUIZ":
@@ -296,13 +299,16 @@ class ChatProcessor:
         ready = [m for m in data["materials"] if m["status"] == "READY"]  # shortcut: first 20 materials only, paginate when users exceed it
         if isinstance(name, str) and name.strip():
             wanted = name.strip().lower()
-            ready = [m for m in ready if wanted in m["filename"].lower()] or ready
+            matching = [m for m in ready if wanted in m["filename"].lower()]
+            if not matching and ready:
+                raise Terminal("ENTITY_NOT_FOUND", f"Không thấy tài liệu \"{name.strip()}\" trong các tài liệu sẵn sàng của bạn.")
+            ready = matching
         if not ready:
             raise Terminal("ENTITY_NOT_FOUND", "Bạn chưa có tài liệu học nào sẵn sàng. Hãy tải tài liệu lên ở trang Học.")
         if len(ready) > 1:
             names = ", ".join(m["filename"] for m in ready[:5])
             raise Terminal("INVALID_PARAMETER", f"Bạn có nhiều tài liệu ({names}). Hãy nêu tên tài liệu muốn dùng.")
-        return ready[0]["material_id"]
+        return ready[0]
 
     @staticmethod
     def reference_for(action_context):
