@@ -18,10 +18,10 @@ class WindowDefaultsTests(unittest.TestCase):
         self.assertEqual((arguments["window"]["label"], arguments["window"]["valid_until"]), (None, None))
 
     def test_one_off_window_gets_the_missing_weekly_keys_as_null(self):
-        window = {"kind": "AVAILABILITY", "recurrence": "NONE", "start_at": "2026-11-19T09:00:00+07:00",
+        window = {"kind": "BUSY", "recurrence": "NONE", "start_at": "2026-11-19T09:00:00+07:00",
                   "end_at": "2026-11-19T11:00:00+07:00"}
-        operation, arguments = self.operation("SET_AVAILABILITY", window)
-        self.assertEqual(operation, "set_availability")
+        operation, arguments = self.operation("SET_BUSY_INTERVAL", window)
+        self.assertEqual(operation, "set_busy_interval")
         self.assertEqual(arguments["window"]["timezone"], "Asia/Ho_Chi_Minh")
         self.assertIsNone(arguments["window"]["weekday"])
 

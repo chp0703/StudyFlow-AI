@@ -76,7 +76,6 @@ class RealDatabaseTransactions(unittest.TestCase):
 
     def planning_fixture(self):
         task = self.fixture.confirmed_task()
-        self.fixture.availability()
         return task
 
     def test_competing_proposal_approvals_use_one_owner_lock_across_conversations(self):

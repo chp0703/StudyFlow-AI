@@ -294,14 +294,6 @@ class Fixture:
         _, call = self.candidate()
         return self.db.success(self, call, "COMMITTED")
 
-    def availability(self):
-        args = {"change_type": "ADD", "window_id": None, "expected_window_version": None,
-            "window": {"kind": "AVAILABILITY", "label": "Acceptance availability", "recurrence": "NONE",
-                "timezone": "Asia/Ho_Chi_Minh", "start_at": stamp(self.start), "end_at": stamp(self.start + timedelta(hours=6)),
-                "weekday": None, "start_time": None, "end_time": None, "valid_from": None, "valid_until": None}}
-        call = self.prepare("set_availability", args, intent="SET_AVAILABILITY", target_type="PENDING_ACTION")
-        return self.db.success(self, call, "COMMITTED")
-
     def policy_change(self):
         profile = self.profile_now()
         policy = {**profile["scheduling_policy"], "break_minutes": profile["scheduling_policy"]["break_minutes"] + 1}

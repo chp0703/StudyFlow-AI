@@ -66,7 +66,7 @@ begin
 end $$;
 create temporary table q12_last(k int primary key default 1, action_id uuid, conv uuid);
 create function pg_temp.q_weekly(label text default 'Giờ học thứ Sáu', wd int default 5) returns jsonb language sql as $$
- select jsonb_build_object('kind','AVAILABILITY','label',label,'recurrence','WEEKLY','timezone','Asia/Ho_Chi_Minh',
+ select jsonb_build_object('kind','BUSY','label',label,'recurrence','WEEKLY','timezone','Asia/Ho_Chi_Minh',
  'start_at',null,'end_at',null,'weekday',wd,'start_time','09:00','end_time','24:00','valid_from','2026-11-05','valid_until',null) $$;
 create function pg_temp.q_add(w jsonb) returns jsonb language sql as $$
  select jsonb_build_object('change_type','ADD','window_id',null,'expected_window_version',null,'window',w) $$;
@@ -78,10 +78,10 @@ create temporary table q12(name text primary key, res jsonb);
 create temporary table q12_base as select (select count(*) from app_private.approval_actions) a;
 
 -- ADD khung giờ rảnh lặp hằng tuần.
-insert into q12 values ('w1',pg_temp.q_set('set_availability','SET_AVAILABILITY',pg_temp.q_add(pg_temp.q_weekly()),'q12-avail-add-00001'));
-select ok(res->>'outcome'='COMMITTED' and res#>>'{data,kind}'='AVAILABILITY' and res#>>'{data,version}'='1'
+insert into q12 values ('w1',pg_temp.q_set('set_busy_interval','SET_BUSY_INTERVAL',pg_temp.q_add(pg_temp.q_weekly()),'q12-avail-add-00001'));
+select ok(res->>'outcome'='COMMITTED' and res#>>'{data,kind}'='BUSY' and res#>>'{data,version}'='1'
  and res#>>'{data,start_time}'='09:00' and res#>>'{data,end_time}'='24:00' and res#>>'{data,recurrence}'='WEEKLY'
- and res#>>'{data,weekday}'='5' and res#>'{data,archived_at}'='null'::jsonb,'availability is stored with 24:00 preserved') from q12 where name='w1';
+ and res#>>'{data,weekday}'='5' and res#>'{data,archived_at}'='null'::jsonb,'a weekly busy window is stored with 24:00 preserved') from q12 where name='w1';
 select ok((select schedule_revision from app_private.user_profiles where user_id='d1210000-0000-4000-8000-000000000001')=1
  and (select count(*) from app_private.approval_actions)=(select a from q12_base)+1
  and (select state='COMPLETED' from app_private.pending_actions where action_id=(select action_id from q12_last)),
@@ -90,7 +90,7 @@ select is((select target_type from app_private.approval_actions order by created
 -- Phát lại: cùng khóa và arguments trả cùng khung giờ, không ghi thêm.
 create temporary table q12_snap as select (select count(*) from app_private.time_windows) w,
  (select count(*) from app_private.approval_actions) a;
-select is(pg_temp.q_call('set_availability',pg_temp.q_add(pg_temp.q_weekly()),'q12-avail-add-00001',(select conv from q12_last),
+select is(pg_temp.q_call('set_busy_interval',pg_temp.q_add(pg_temp.q_weekly()),'q12-avail-add-00001',(select conv from q12_last),
  jsonb_build_object('approval_action_id',extensions.gen_random_uuid(),'user_id','d1210000-0000-4000-8000-000000000001',
  'target_type','PENDING_ACTION','target_id',(select action_id from q12_last),'target_version',1,'decision','APPROVE','source','UI',
  'source_message_id',null,'created_at','2026-11-05T01:00:00.000000Z'),
@@ -102,12 +102,10 @@ select ok((select count(*) from app_private.time_windows)=(select w from q12_sna
 
 -- Bảo vệ phê duyệt và nội dung hiển thị để duyệt.
 truncate q12_snap; insert into q12_snap select (select count(*) from app_private.time_windows),(select count(*) from app_private.approval_actions);
-select ok(pg_temp.q_is(pg_temp.q_call('set_availability',pg_temp.q_add(pg_temp.q_weekly('Khác')),'q12-avail-add-00002'),'APPROVAL_REQUIRED'),
+select ok(pg_temp.q_is(pg_temp.q_call('set_busy_interval',pg_temp.q_add(pg_temp.q_weekly('Khác')),'q12-avail-add-00002'),'APPROVAL_REQUIRED'),
  'no approval context is refused');
-select ok(pg_temp.q_is(pg_temp.q_set('set_availability','SET_AVAILABILITY',pg_temp.q_add(pg_temp.q_weekly()),'q12-avail-add-00003',
+select ok(pg_temp.q_is(pg_temp.q_set('set_busy_interval','SET_BUSY_INTERVAL',pg_temp.q_add(pg_temp.q_weekly()),'q12-avail-add-00003',
  pg_temp.q_add(pg_temp.q_weekly('Đã đổi sau khi trình bày'))),'APPROVAL_REQUIRED'),'a command different from the presented one is refused');
-select ok(pg_temp.q_set('set_busy_interval','SET_BUSY_INTERVAL',pg_temp.q_add(pg_temp.q_weekly()),'q12-busy-add-00001')->>'outcome'='ERROR',
- 'an availability-kind window cannot be sent through the busy routine');
 select ok((select count(*) from app_private.time_windows)=(select w from q12_snap)
  and (select count(*) from app_private.approval_actions)=(select a from q12_snap),'refused commands wrote nothing');
 
@@ -141,15 +139,12 @@ select ok(res->>'outcome'='COMMITTED' and res#>>'{data,kind}'='BUSY' and res#>>'
 create function pg_temp.q_upd(window_id text, version bigint, label text) returns jsonb language sql as $$
  select jsonb_build_object('change_type','UPDATE','window_id',window_id,'expected_window_version',version,
  'window',pg_temp.q_weekly(label)) $$;
-insert into q12 select 'u1',pg_temp.q_set('set_availability','SET_AVAILABILITY',pg_temp.q_upd(res#>>'{data,window_id}',1,'Đã sửa'),'q12-avail-upd-00001')
+insert into q12 select 'u1',pg_temp.q_set('set_busy_interval','SET_BUSY_INTERVAL',pg_temp.q_upd(res#>>'{data,window_id}',1,'Đã sửa'),'q12-avail-upd-00001')
  from q12 where name='w1';
 select ok(res->>'outcome'='COMMITTED' and res#>>'{data,version}'='2' and res#>>'{data,label}'='Đã sửa','an update bumps the window version') from q12 where name='u1';
-select ok(pg_temp.q_is(pg_temp.q_set('set_availability','SET_AVAILABILITY',pg_temp.q_upd((select res#>>'{data,window_id}' from q12 where name='w1'),1,'Cũ'),
+select ok(pg_temp.q_is(pg_temp.q_set('set_busy_interval','SET_BUSY_INTERVAL',pg_temp.q_upd((select res#>>'{data,window_id}' from q12 where name='w1'),1,'Cũ'),
  'q12-avail-upd-00002'),'STALE_ENTITY_VERSION'),'an outdated window version is stale');
-select ok(pg_temp.q_is(pg_temp.q_set('set_busy_interval','SET_BUSY_INTERVAL',jsonb_build_object('change_type','UPDATE',
- 'window_id',(select res#>>'{data,window_id}' from q12 where name='w1'),'expected_window_version',2,'window',
- jsonb_set(pg_temp.q_weekly(),'{kind}','"BUSY"')),'q12-busy-upd-00001'),'ENTITY_NOT_FOUND'),'a window cannot be edited through the other kind''s routine');
-insert into q12 select 'a1',pg_temp.q_set('set_availability','SET_AVAILABILITY',jsonb_build_object('change_type','ARCHIVE',
+insert into q12 select 'a1',pg_temp.q_set('set_busy_interval','SET_BUSY_INTERVAL',jsonb_build_object('change_type','ARCHIVE',
  'window_id',res#>>'{data,window_id}','expected_window_version',2,'window',null),'q12-avail-arc-00001') from q12 where name='u1';
 select ok(res->>'outcome'='COMMITTED' and res#>>'{data,archived_at}' is not null and res#>>'{data,version}'='3','archive soft-deletes with archived_at') from q12 where name='a1';
 select ok((select count(*) from app_private.time_windows)=2,'archiving removes no row');
@@ -160,7 +155,8 @@ create function pg_temp.q_list(kind text, arch boolean, size int, cur text, uid 
  'page_size',size,'cursor',cur),null,null,null,null,uid) $$;
 select is(jsonb_array_length(pg_temp.q_list(null,false,50,null)#>'{data,items}'),1,'archived windows are hidden by default');
 select is(jsonb_array_length(pg_temp.q_list(null,true,50,null)#>'{data,items}'),2,'include_archived shows them');
-select is(jsonb_array_length(pg_temp.q_list('BUSY',true,50,null)#>'{data,items}'),1,'the kind filter applies');
+select is(jsonb_array_length(pg_temp.q_list('BUSY',true,50,null)#>'{data,items}'),2,'the kind filter applies');
+select is(jsonb_array_length(pg_temp.q_list('AVAILABILITY',true,50,null)#>'{data,items}'),0,'no availability windows exist');
 insert into q12 values ('l1',pg_temp.q_list(null,true,1,null));
 select ok(jsonb_array_length(res#>'{data,items}')=1 and res#>>'{data,next_cursor}' is not null,'page of one has a cursor') from q12 where name='l1';
 select is(jsonb_array_length(pg_temp.q_list(null,true,1,(select res#>>'{data,next_cursor}' from q12 where name='l1'))#>'{data,items}'),1,
@@ -176,7 +172,7 @@ begin raise exception using errcode='XX000',message='Q12_INJECTED'; end $$;
 create trigger q12_fail after insert on app_private.time_windows for each row execute function pg_temp.q_fail();
 truncate q12_snap; insert into q12_snap select (select count(*) from app_private.time_windows),(select count(*) from app_private.approval_actions);
 create temporary table q12_rev as select schedule_revision r from app_private.user_profiles where user_id='d1210000-0000-4000-8000-000000000001';
-insert into q12 values ('fail',pg_temp.q_set('set_availability','SET_AVAILABILITY',pg_temp.q_add(pg_temp.q_weekly('Lỗi')),'q12-avail-fail-0001'));
+insert into q12 values ('fail',pg_temp.q_set('set_busy_interval','SET_BUSY_INTERVAL',pg_temp.q_add(pg_temp.q_weekly('Lỗi')),'q12-avail-fail-0001'));
 select ok(pg_temp.q_is(res,'INTERNAL_ERROR')
  and (select count(*) from app_private.approval_actions)=(select a from q12_snap)
  and (select state from app_private.pending_actions where action_id=(select action_id from q12_last))='AWAITING_CONFIRMATION'
@@ -224,8 +220,6 @@ insert into q12 values ('w_busy',pg_temp.q_set('set_busy_interval','SET_BUSY_INT
 select ok(res->>'outcome'='COMMITTED' and res#>>'{warnings,0,code}'='APPROVED_BLOCKS_MAY_BE_AFFECTED'
  and res#>'{warnings,0,details,block_ids}'='["d1210000-0000-4000-8000-0000000000e1"]'::jsonb,
  'a new busy interval warns about future approved blocks only') from q12 where name='w_busy';
-insert into q12 values ('w_avail',pg_temp.q_set('set_availability','SET_AVAILABILITY',pg_temp.q_add(pg_temp.q_weekly('Thêm giờ rảnh',3)),'q12-avail-warn-001'));
-select ok(res->>'outcome'='COMMITTED' and res->'warnings'='[]'::jsonb,'adding availability cannot hurt approved blocks') from q12 where name='w_avail';
 insert into q12 values ('w_pref',pg_temp.q_set('set_scheduling_preferences','SET_SCHEDULING_PREFERENCES',
  pg_temp.q_prefs('{"break_minutes":15}',pg_temp.q_rev()),'q12-prefs-warn-001'));
 select ok(res->>'outcome'='COMMITTED' and res#>>'{warnings,0,code}'='APPROVED_BLOCKS_MAY_BE_AFFECTED','a policy change warns too') from q12 where name='w_pref';

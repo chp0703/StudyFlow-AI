@@ -33,7 +33,7 @@ from ...learning.sessions import LearningSessionOperations
 log = logging.getLogger("studyflow.api")
 _KEY = re.compile(r"^[A-Za-z0-9._:-]{16,128}$")
 _INT = re.compile(r"^[0-9]{1,16}$")
-ACTION_OPERATIONS = ("create_task_candidate", "set_availability", "set_busy_interval",
+ACTION_OPERATIONS = ("create_task_candidate", "set_busy_interval",
                      "set_scheduling_preferences", "generate_study_plan")
 
 

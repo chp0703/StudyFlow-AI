@@ -49,19 +49,6 @@
       ]
     },
     {
-      "operation": "set_availability",
-      "arguments_schema": "set_availabilityArguments",
-      "result_schema": "set_availabilityResult",
-      "read_only": false,
-      "idempotency_required": true,
-      "approval_target": "PENDING_ACTION",
-      "rpc": "set_availability",
-      "http_entrypoint": "POST /v1/actions or POST /v1/messages",
-      "success_outcomes": [
-        "COMMITTED"
-      ]
-    },
-    {
       "operation": "set_busy_interval",
       "arguments_schema": "set_busy_intervalArguments",
       "result_schema": "set_busy_intervalResult",

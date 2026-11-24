@@ -12,12 +12,12 @@ DEFAULT_TASK_COLOR = "#596CF0"
 DEFAULT_TASK_PRIORITY = 0.5
 POLICY_DEFAULT = {"min_block_minutes": 25, "max_block_minutes": 90, "allow_short_final_block": True,
                   "max_daily_minutes": 240, "break_minutes": 10}
-INTENT = {"create_task_candidate": "CREATE_TASK", "set_availability": "SET_AVAILABILITY",
+INTENT = {"create_task_candidate": "CREATE_TASK",
           "set_busy_interval": "SET_BUSY_INTERVAL", "set_scheduling_preferences": "SET_SCHEDULING_PREFERENCES"}
-FORM_TEXT = {"create_task_candidate": "Thêm công việc bằng biểu mẫu", "set_availability": "Cập nhật giờ rảnh bằng biểu mẫu",
+FORM_TEXT = {"create_task_candidate": "Thêm công việc bằng biểu mẫu",
              "set_busy_interval": "Cập nhật giờ bận bằng biểu mẫu", "set_scheduling_preferences": "Cập nhật tùy chọn lập lịch bằng biểu mẫu",
              "generate_study_plan": "Tạo kế hoạch học bằng biểu mẫu"}
-DONE_TEXT = {"confirm_task": "Đã lưu công việc.", "set_availability": "Đã cập nhật giờ rảnh.",
+DONE_TEXT = {"confirm_task": "Đã lưu công việc.",
              "set_busy_interval": "Đã cập nhật giờ bận.", "set_scheduling_preferences": "Đã cập nhật tùy chọn lập lịch.",
              "approve_study_plan": "Đã duyệt kế hoạch học.", "reject_study_plan": "Đã từ chối kế hoạch.",
              "verify_question_drafts": "Đã xác nhận bộ câu hỏi.", "decide_revision_recommendation": "Đã áp dụng đề xuất ôn tập.",

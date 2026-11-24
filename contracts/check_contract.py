@@ -427,7 +427,7 @@ def main():
     assert api['info']['version'] == '1.0.1'
     assert bundle['$id'] == 'urn:studyflow:f1:1.1:integration:1.0.1'
     operations = {o['operation'] for o in service['operations']}
-    assert len(operations) == 10
+    assert len(operations) == 9
     assert operations == set(definitions['Operation']['enum'])
     assert len(api['paths']) == 8
     for op in service['operations']:
@@ -530,7 +530,7 @@ def main():
             raise AssertionError(f"Invalid example accepted: {case['file']}")
         if case.get('expected_error') and not any(case['expected_error'] in e for e in errors):
             raise AssertionError(f"Wrong rejection for {case['file']}: {errors[:3]}")
-    print(f"PASS: {len(definitions)} definitions; 8 API paths; 10 tools; 10 entities; {len(manifest['cases'])} positive/negative fixtures; OpenAPI 3.1; source/mapping/reference checks.")
+    print(f"PASS: {len(definitions)} definitions; 8 API paths; 9 tools; 10 entities; {len(manifest['cases'])} positive/negative fixtures; OpenAPI 3.1; source/mapping/reference checks.")
     print('Scope: static contracts and pure payload invariants only. DB/auth/transaction/UI runtime cases remain unrun.')
 
 

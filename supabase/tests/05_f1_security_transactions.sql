@@ -55,7 +55,7 @@ select ok(exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronames
  and not has_function_privilege('anon',p.oid,'EXECUTE')),
  e.name || ' is an authenticated-only safe DEFINER p_request wrapper')
  from (values ('create_task_candidate'),('confirm_task'),('search_tasks'),
- ('set_availability'),('set_busy_interval'),('set_scheduling_preferences'),
+ ('set_busy_interval'),('set_scheduling_preferences'),
  ('get_study_plan'),('approve_study_plan'),('reject_study_plan'),
  ('get_scheduling_context'),('persist_plan_proposal'),('prepare_pending_action'),
  ('review_pending_action'),('update_candidate_draft'),('cancel_pending_action'),

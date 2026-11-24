@@ -77,7 +77,7 @@ Schema v1.1 đã có mã lỗi domain; package này thêm đúng bốn mã **tra
 | `GET /v1/preferences` | Không có body | `PreferencesResult` | Đọc policy đầy đủ và schedule_revision |
 | `GET /v1/plans` | view=CURRENT, version?, proposal_id?, start_at?, end_at? | `get_study_planResult` | Đọc current/history/proposal |
 
-`ActionRequest` chỉ cho phép `create_task_candidate`, `set_availability`, `set_busy_interval`, `set_scheduling_preferences`, `generate_study_plan`. Đây là yêu cầu **chuẩn bị**, không phải API gọi raw tool tùy ý. TimeWindow/policy chỉ ghi PendingAction ở bước này; chưa gọi tool ghi chính thức. Candidate được ghi nháp; proposal được lưu riêng. `confirm_task`/`approve_study_plan`/`reject_study_plan` chỉ được routing từ quyết định đã kiểm chứng. Không công bố endpoint create/patch/delete AcademicTask hoặc tạo/dời riêng StudyBlock.
+`ActionRequest` chỉ cho phép `create_task_candidate`, `set_busy_interval`, `set_scheduling_preferences`, `generate_study_plan`. Đây là yêu cầu **chuẩn bị**, không phải API gọi raw tool tùy ý. TimeWindow/policy chỉ ghi PendingAction ở bước này; chưa gọi tool ghi chính thức. Candidate được ghi nháp; proposal được lưu riêng. `confirm_task`/`approve_study_plan`/`reject_study_plan` chỉ được routing từ quyết định đã kiểm chứng. Không công bố endpoint create/patch/delete AcademicTask hoặc tạo/dời riêng StudyBlock.
 
 Form nhập task tạo synthetic message `source=UI` ở kho hội thoại server, rồi mới tạo candidate; không bịa `source_message_id` từ client. Tin nhắn chat được lưu trước khi trích xuất và có thể tạo nhiều action theo thứ tự phụ thuộc; chỉ một action AWAITING tại một thời điểm.
 
@@ -124,8 +124,7 @@ engine.schedule(SchedulingContext) -> SchedulingResult
 | create_task_candidate | slots | DRAFTED/TaskCandidate | Context có message/conversation cùng owner; chỉ ghi nháp |
 | confirm_task | candidate_id, expected_candidate_version | COMMITTED/AcademicTask | Approval TASK_CANDIDATE đúng version, candidate READY |
 | search_tasks | query, status_filter, page_size, cursor | READ/SearchTasksData | Không ghi |
-| set_availability | change_type, window_id, expected_window_version, window | COMMITTED/TimeWindow | Approval PENDING_ACTION; kind=AVAILABILITY |
-| set_busy_interval | Như trên | COMMITTED/TimeWindow | Approval PENDING_ACTION; kind=BUSY |
+| set_busy_interval | change_type, window_id, expected_window_version, window | COMMITTED/TimeWindow | Approval PENDING_ACTION; kind=BUSY |
 | set_scheduling_preferences | policy_patch, expected_schedule_revision | COMMITTED/PreferencesData | Approval PENDING_ACTION; merge/validate full policy |
 | generate_study_plan | generation_scope, policy_overrides | PROPOSED/PlanProposal hoặc READ/SchedulingReadData | Không commit lịch; override không ghi User |
 | get_study_plan | view, version, proposal_id, start_at, end_at | READ/PlanView hoặc ProposalView | Chỉ đọc |
@@ -236,7 +235,7 @@ Attestation không gửi ra FE, không được nhận từ `/v1/messages/action
 | create_task_candidate | create_task_candidate arguments → result | Owner lock, không tăng revision |
 | confirm_task | confirm_task arguments + trusted approval → result | Owner lock; tăng revision khi tạo task |
 | search_tasks | search_tasks arguments → result | Read-only |
-| set_availability / set_busy_interval | arguments + trusted approval → result | Owner lock; tăng revision |
+| set_busy_interval | arguments + trusted approval → result | Owner lock; tăng revision |
 | set_scheduling_preferences | arguments + trusted approval → result | Owner lock; so revision; tăng revision |
 | get_study_plan | get_study_plan arguments → result | Read-only |
 | approve_study_plan | arguments + trusted approval → result | Owner lock; revalidate; tăng revision |
