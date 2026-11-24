@@ -839,3 +839,16 @@
 
 - Chưa chạy lại pgTAP local; lần CI trước lỗi do cổng `54324` bị chiếm, không phải do migration.
 - `listMaterials`/`uploadMaterial`/`deleteMaterial` trong `frontend/src/api/endpoints.ts` hiện không còn nơi gọi sau khi bỏ bản `Study.tsx` cũ.
+## 2026-11-24 — Bỏ giờ rảnh: lịch tự dùng khung 06:00–22:00
+
+**Mục tiêu:** người dùng không phải nhập giờ rảnh; khoảng nào không có task thì để trống. Nhánh `refactor/drop-availability-windows` xếp chồng lên `feat/orchestrator-handoffs` (PR #79).
+
+**Đã làm (giai đoạn 1: scheduler)**
+
+- `backend/app/f1/planning/generate.py`: `generate()` dựng sẵn khung rảnh 06:00–22:00 mỗi ngày theo múi giờ người dùng (`default_availability`) và bỏ qua các cửa sổ `AVAILABILITY` trong snapshot; giờ bận vẫn được tránh.
+- `backend/tests/acceptance_sol/test_schedule_confirmation.py`: test "phần việc chưa xếp" tạo thiếu chỗ bằng trần phút/ngày (mã lý do `DAILY_LIMIT_REACHED`) thay vì khung rảnh hẹp.
+- `backend/tests/unit/test_default_availability.py`: 4 test mới.
+
+**Kết quả:** unit backend 237, `acceptance_sol` 37 và `acceptance_api_sol` 79 đều pass.
+
+**Còn lại:** bỏ `SET_AVAILABILITY` khỏi chat/NLU, contract (`set_availability`), DB (xóa dữ liệu `AVAILABILITY`, chặn ghi mới), UI Planner và docs.

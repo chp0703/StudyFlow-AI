@@ -133,11 +133,11 @@ class CompleteScheduleConfirmationAcceptance(unittest.TestCase):
         self.assertEqual(confirmation["unscheduled_work"], [])
 
     def test_partial_proposal_exposes_unscheduled_work(self):
+        # Free time is implicit, so capacity is limited by the daily cap: 30 of the 90 minutes fit.
+        snap = snapshot(remaining=90)
+        snap["user"]["scheduling_policy"]["max_daily_minutes"] = 30
         outcome = generate(
-            snapshot(
-                remaining=90,
-                windows=[availability("2026-11-05T12:00:00Z", "2026-11-05T12:30:00Z")],
-            ),
+            snap,
             COMMAND,
             now=datetime(2026, 11, 5, 7, tzinfo=timezone.utc),
             block_id_factory=lambda: FRESH_BLOCK,
@@ -151,7 +151,7 @@ class CompleteScheduleConfirmationAcceptance(unittest.TestCase):
             "task_name": "Ôn xác suất",
             "color": "#FF5733",
             "unscheduled_minutes": 60,
-            "reason_codes": ["INSUFFICIENT_CAPACITY"],
+            "reason_codes": ["DAILY_LIMIT_REACHED"],
         }])
 
     def test_exact_start_at_busy_leaves_task_unscheduled_in_confirmation(self):
