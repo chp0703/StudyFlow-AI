@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Callable
-from uuid import UUID, uuid4
+from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 from zoneinfo import ZoneInfo
 
 from ..scheduler.constraints import validate_context
@@ -23,6 +23,21 @@ from ..scheduler.service import PlanningService
 
 DEFAULT_POLICY = {"min_block_minutes": 25, "max_block_minutes": 90, "allow_short_final_block": True,
                   "max_daily_minutes": 240, "break_minutes": 10}
+
+
+DEFAULT_DAY_START, DEFAULT_DAY_END = "06:00", "22:00"  # khớp khung giờ lịch hiển thị (6h-22h)
+
+
+def default_availability(user: dict) -> list[dict]:
+    """Người dùng không nhập giờ rảnh: mọi ngày 06:00-22:00 theo giờ của họ đều xếp được, chỉ giờ bận bị loại.
+
+    Khoảng nào không có khối học thì để trống."""
+    stamp = "2020-01-01T00:00:00Z"
+    return [{"window_id": str(uuid5(NAMESPACE_URL, f"default-availability:{user['user_id']}:{weekday}")),
+             "user_id": user["user_id"], "version": 1, "kind": "AVAILABILITY", "label": None, "recurrence": "WEEKLY",
+             "timezone": user["timezone"], "start_at": None, "end_at": None, "weekday": weekday,
+             "start_time": DEFAULT_DAY_START, "end_time": DEFAULT_DAY_END, "valid_from": "2020-01-01", "valid_until": None,
+             "archived_at": None, "created_at": stamp, "updated_at": stamp} for weekday in range(1, 8)]
 
 
 @dataclass(frozen=True)
@@ -100,7 +115,7 @@ def generate(snapshot: dict, command: dict, *, now: datetime, block_id_factory: 
         return Generated(None, {"kind": "SCHEDULING_REPORT", "coverage": "NONE", "task_summaries": [],
                                 "plan_diff": {"added": [], "moved": [], "removed": [], "unchanged": []}})
     windows = [w for w in snapshot["time_windows"] if w.get("archived_at") is None]
-    available = normalize_time_windows([w for w in windows if w["kind"] == "AVAILABILITY"], start_at=start, end_at=end)
+    available = normalize_time_windows(default_availability(user), start_at=start, end_at=end)
     busy = normalize_time_windows([w for w in windows if w["kind"] == "BUSY"], start_at=start, end_at=end)
     scope = GenerationScope(start, end, SelectionMode(scope_raw["selection_mode"]), tuple(UUID(i) for i in scope_raw["task_ids"]))
     blocks = tuple(_block(b) for b in snapshot["base_plan"]["study_blocks"])
