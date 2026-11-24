@@ -2,6 +2,8 @@ import type { ApiClient } from "./client.ts"
 
 import type {
   ActionReference,
+  ApiLearningMaterial,
+  LearningMaterialPage,
   CandidateReviewPatch,
   ApiTask,
   ApiTimeWindow,
@@ -118,6 +120,44 @@ export function createEndpoints(client: ApiClient) {
           body: { schema_version: SCHEMA, conversation_id: conversationId },
           idempotencyKey: key,
         },
+      ),
+
+    // Daily Learning materials: the documents chat quizzes and revision proposals are generated from.
+    uploadMaterial: (
+      filename: string,
+      mimeType: "text/plain" | "text/markdown" | "application/pdf",
+      contentBase64: string,
+      key?: string,
+    ) =>
+      client.request<Read<ApiLearningMaterial>>("POST", "/v1/materials", {
+        body: { schema_version: SCHEMA, filename, mime_type: mimeType, content_base64: contentBase64 },
+        idempotencyKey: key,
+        retry: false,
+      }),
+
+    listMaterials: async () => {
+      const items: ApiLearningMaterial[] = []
+
+      let cursor: string | undefined
+
+      for (;;) {
+        const page = await client.request<Read<LearningMaterialPage>>("GET", "/v1/materials", {
+          query: { limit: 20, cursor },
+        })
+
+        items.push(...page.data.materials)
+
+        if (!page.data.next_cursor) return items
+
+        cursor = page.data.next_cursor
+      }
+    },
+
+    deleteMaterial: (materialId: string, key?: string) =>
+      client.request<Read<{ material_id: string; deleted: boolean }>>(
+        "DELETE",
+        `/v1/materials/${encodeURIComponent(materialId)}`,
+        { idempotencyKey: key },
       ),
 
     uploadAssessmentMaterial: (

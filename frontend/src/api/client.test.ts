@@ -359,3 +359,15 @@ test("availability POST retries a network failure with the same idempotency key"
   )
   assert.equal(calls[0].init.body, calls[1].init.body)
 })
+
+test("a DELETE carries an idempotency key and no body", async () => {
+  const { client, calls } = setup([json({ data: { material_id: "m-1", deleted: true } })])
+
+  await client.request("DELETE", "/v1/materials/m-1")
+
+  const headers = calls[0].init.headers as Record<string, string>
+
+  assert.equal(calls[0].init.method, "DELETE")
+  assert.match(headers["Idempotency-Key"], /^[0-9a-f-]{36}$/)
+  assert.equal(calls[0].init.body, undefined)
+})

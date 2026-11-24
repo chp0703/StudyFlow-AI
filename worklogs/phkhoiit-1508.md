@@ -790,3 +790,17 @@
 
 - Chưa chạy integration thật: chuỗi chat → duyệt đề xuất → task nháp → bổ sung (`answer_open_queue` hoặc `/v1/actions/{id}/review`) → plan proposal chỉ được kiểm bằng fake ở ranh giới RPC; cần chạy với Supabase local và DeepSeek.
 - `ASK_LEARNING`, thống kê chủ đề và tóm tắt phiên học chưa vào chat (kết quả không khớp `ToolResult` đóng; chat chưa có phiên học). `create_learning_session` đã nhận `conversation_id` ở RPC để làm tiếp.
+
+**Phase 4 (frontend tối thiểu)**
+
+- `frontend/src/api/client.ts`: hỗ trợ `DELETE` kèm `Idempotency-Key`; `endpoints.ts`/`types.ts`: `uploadMaterial`, `listMaterials`, `deleteMaterial` cho `/v1/materials`.
+- `frontend/src/pages/Study.tsx`: ở API mode card tài liệu tải lên/liệt kê/xóa tài liệu học thật (PDF, TXT, MD); demo giữ nguyên.
+- `frontend/src/features/assistant/apiAssistant.ts`, `types/assistant.ts`: thẻ `VERIFY_QUESTION_DRAFTS`, `ACCEPT_REVISION_RECOMMENDATION`, `SAVE_SESSION_OUTCOME` không còn bị gắn nhãn `CREATE_TASK`.
+- Test: `api/materials.test.ts`, test DELETE trong `client.test.ts`, test intent trong `apiAssistant.test.ts`.
+
+**Kết quả (Phase 4):** `npx tsc --noEmit` sạch; `node --test` 85/85; `npm run build` đạt.
+
+**Ghi chú (Phase 4)**
+
+- Không chạy `npm run format` trên cả repo: oxfmt định dạng lại 72 file không liên quan và làm vỡ `tsc` (TS1005); các file đổi giữ nguyên kiểu hiện có. Cần format riêng trước khi merge nếu CI yêu cầu.
+- Chưa kiểm thủ công trên trình duyệt (upload PDF thật, chat tạo quiz/ôn tập); chưa có UI làm quiz hay mở phiên học.
