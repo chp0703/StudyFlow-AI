@@ -476,7 +476,6 @@
 .planner-calendar .schedule-day-column.today-column { background: rgba(89, 108, 240, .04); }
 .planner-calendar .schedule-time-grid { position: relative; overflow: hidden; }
 .planner-calendar .calendar-window { position: absolute; left: 0; right: 0; z-index: 0; pointer-events: none; border-left: 3px solid; padding: 3px 5px; overflow: hidden; font-size: 10px; font-weight: 600; }
-.planner-calendar .calendar-window.is-free { color: var(--color-primary); background: var(--color-info-bg); }
 .planner-calendar .calendar-window.is-busy { color: var(--color-warning-text); background: var(--color-warning-bg); }
 .planner-calendar .calendar-window.is-proposed-window { border-left-style: dashed; outline: 1px dashed var(--color-primary); outline-offset: -1px; }
 .planner-calendar .schedule-time-slot {
@@ -806,7 +805,6 @@
 .month-calendar { min-width: 0; padding: 4px 16px 18px; }
 .month-window-list { display: flex; flex-wrap: wrap; gap: 4px; }
 .month-window { border-radius: 6px; padding: 2px 5px; font-size: 10px; line-height: 1.35; }
-.month-window.is-free { background: var(--color-info-bg); color: var(--color-primary); }
 .month-window.is-busy { background: var(--color-warning-bg); color: var(--color-warning-text); }
 .month-event-detail { display: grid; gap: 4px; margin-top: 10px; padding: 10px; border-radius: 8px; background: var(--color-info-bg); font-size: 12px; }
 .month-event-detail p { margin: 0; }

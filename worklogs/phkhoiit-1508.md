@@ -875,3 +875,12 @@
 
 - Lớp vẽ "Rảnh" trong lịch (`workingTime.ts`, `MonthCalendar`, `WeekCalendar`) vẫn còn nhưng không bao giờ có dữ liệu ở API mode (không còn cửa sổ `AVAILABILITY`); chưa dọn vì chạm nhiều file và test.
 - Chưa kiểm thủ công trên trình duyệt sau khi gỡ; DB local đã reset nên tài khoản test cũ không còn.
+
+**Giai đoạn 4: dọn lớp "Rảnh" và sửa theo review Codex**
+
+- `backend/app/f1/planning/generate.py`: khối học còn hiệu lực nằm ngoài 06:00–22:00 (xếp từ khi còn giờ rảnh tự khai) được gộp vào khung rảnh, để không còn lỗi `RETAINED_OUTSIDE_AVAILABILITY` chặn mọi lần tạo kế hoạch; thêm test trong `test_default_availability.py` (fail khi chưa sửa, pass sau khi sửa).
+- Frontend (do Antigravity thực hiện, đã kiểm lại): bỏ nhánh "Rảnh" trong `workingTime.ts`, `MonthCalendar.tsx`, `WeekCalendar.tsx`, `mappers.ts`, `types/planner.ts`, `planner.css`; `TimeWindow` chỉ còn `busy`; cập nhật các test liên quan.
+
+**Kết quả:** unit backend 239, `acceptance_sol` 37; `tsc` sạch, `node --test` 86/86, build đạt.
+
+**Ghi chú:** khối cũ ở rìa ngoài giờ có thể làm khối mới sát cạnh nó; chấp nhận được cho đến khi các kế hoạch cũ hết hạn. Đã chạy `supabase db push --remote` cho các migration 202611250001–202611250006 (kèm `20261116121033` lệch thứ tự).

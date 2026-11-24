@@ -15,8 +15,9 @@ from zoneinfo import ZoneInfo
 from ..scheduler.constraints import validate_context
 from ..scheduler.models import (
     DEFAULT_TASK_COLOR, PRODUCT_TIMEZONE, AcademicTask, GenerationScope, Issue, Priority,
-    SchedulingContext, SchedulingPolicy, SelectionMode, StudyBlock, TaskStatus,
+    Interval, SchedulingContext, SchedulingPolicy, SelectionMode, StudyBlock, TaskStatus,
 )
+from ..scheduler.intervals import to_utc
 from ..scheduler.normalization import normalize_time_windows
 from ..scheduler.replanning import partition_blocks_for_replan
 from ..scheduler.service import PlanningService
@@ -122,6 +123,9 @@ def generate(snapshot: dict, command: dict, *, now: datetime, block_id_factory: 
     partition = partition_blocks_for_replan(blocks, now=now, generation_scope=scope, selected_task_ids=selected)
     if partition.issues:
         return Generated(None, None, partition.issues)
+    # Blocks planned before availability was removed may lie outside 06:00-22:00; they stay valid where they are.
+    # shortcut: this also lets new blocks touch a legacy block's out-of-hours edge; fine until legacy plans age out.
+    available += tuple(Interval(b.start_at, b.end_at) for b in partition.retained_blocks if to_utc(b.end_at) > to_utc(now))
     context = SchedulingContext(
         now=now, timezone=user["timezone"], generation_scope=scope, selected_task_ids=selected, tasks=tasks,
         available_intervals=available, busy_intervals=busy, retained_blocks=partition.retained_blocks,

@@ -141,19 +141,10 @@ export function expandWindows(
     for (let hour = FIRST_HOUR; hour <= LAST_HOUR; hour++) {
       const segments = hourSegments(date, hour, windows)
 
-      const kind = segments.some((segment) => segment.kind === "busy")
-        ? "busy"
-        : segments.length === 1 &&
-            segments[0].kind === "free" &&
-            segments[0].start === hour * 60 &&
-            segments[0].end === (hour + 1) * 60
-          ? "free"
-          : null
-
-      if (kind) {
+      if (segments.some((segment) => segment.kind === "busy")) {
         const id = `${date}-${hour}`
 
-        cells.set(id, { id, date, hour, kind })
+        cells.set(id, { id, date, hour, kind: "busy" })
       }
     }
   }

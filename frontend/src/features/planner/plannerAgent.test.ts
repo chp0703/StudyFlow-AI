@@ -33,7 +33,7 @@ test("rejects missing info and out-of-range hours", () => {
 test("free-time commands are read-only while busy operations remain supported", () => {
   const day = toIsoDate(today)
   const existing = [
-    { id: `${day}-9`, date: day, hour: 9, kind: "free" as const },
+    { id: `${day}-9`, date: day, hour: 9, kind: "busy" as const },
   ]
   const free = runPlannerCommand("rảnh hôm nay từ 9h đến 12h", [], existing)
   assert.equal(free.availability, existing)
@@ -56,7 +56,7 @@ test("free-time commands are read-only while busy operations remain supported", 
   assert.equal(added.tasks[0].hour, 11)
 
   r = runPlannerCommand("xóa bận hôm nay", [], r.availability)
-  assert.deepEqual(r.availability, existing)
+  assert.deepEqual(r.availability, [])
 })
 
 test("parses dd/mm dates", () => {

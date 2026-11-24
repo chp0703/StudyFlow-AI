@@ -126,17 +126,8 @@ export default function MonthCalendar({
                 {Number(date.slice(-2))}
               </button>
               {segments.length > 0 && (
-                <span
-                  className="month-window-dots"
-                  aria-label={
-                    segments.some((segment) => segment.kind === "busy")
-                      ? "Có giờ bận"
-                      : "Có giờ rảnh"
-                  }
-                >
-                  {segments.some((segment) => segment.kind === "busy")
-                    ? "●"
-                    : "○"}
+                <span className="month-window-dots" aria-label="Có giờ bận">
+                  ●
                 </span>
               )}
               <div className="month-event-list">
@@ -206,10 +197,9 @@ export default function MonthCalendar({
             {windowsFor(selectedDate).map((segment) => (
               <span
                 key={`${segment.start}-${segment.end}`}
-                className={`month-window is-${segment.kind}`}
+                className="month-window is-busy"
               >
-                {segment.kind === "busy" ? "Bận" : "Rảnh"}{" "}
-                {clock(segment.start)}–{clock(segment.end)}
+                Bận {clock(segment.start)}–{clock(segment.end)}
               </span>
             ))}
           </div>
