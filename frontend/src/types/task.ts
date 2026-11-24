@@ -27,6 +27,9 @@ export type Task = {
 }
 
 export type StudyFile = {
+  // API mode: the server material this row represents (needed to delete it).
+  id?: string
+
   name: string
 
   course: string

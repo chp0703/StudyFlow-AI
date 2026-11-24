@@ -30,6 +30,12 @@ const INTENTS: IntentCandidate[] = [
   "GENERATE_STUDY_PLAN",
 
   "GET_STUDY_PLAN",
+
+  "VERIFY_QUESTION_DRAFTS",
+
+  "ACCEPT_REVISION_RECOMMENDATION",
+
+  "SAVE_SESSION_OUTCOME",
 ]
 
 // A card the user can approve or cancel: what the server says it will do, plus the reference to send back.

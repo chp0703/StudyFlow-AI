@@ -150,3 +150,18 @@ test("a failed call is shown with the Vietnamese text for its code", () => {
 
   assert.equal(message.error?.code, "STALE_PROPOSAL")
 })
+
+test("quiz, revision and outcome approvals keep their own intent instead of CREATE_TASK", () => {
+  const reply = example("OrchestratorReply.json") as OrchestratorReply
+
+  for (const intent of ["VERIFY_QUESTION_DRAFTS", "ACCEPT_REVISION_RECOMMENDATION", "SAVE_SESSION_OUTCOME"]) {
+    const data = reply.result!.data as { pending_action: { intent: string } }
+
+    const other = {
+      ...reply,
+      result: { ...reply.result!, data: { ...data, pending_action: { ...data.pending_action, intent } } },
+    } as OrchestratorReply
+
+    assert.equal(replyToMessage(other).intent, intent)
+  }
+})

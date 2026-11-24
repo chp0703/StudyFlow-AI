@@ -317,6 +317,30 @@ export type OrchestratorReply = {
   error: ApiErrorBody | null
 }
 
+// Daily Learning material (contracts/learning-openapi.yaml): upload returns it with its indexing state.
+
+export type LearningMaterialStatus = "UPLOADED" | "INDEXING" | "READY" | "FAILED"
+
+export type ApiLearningMaterial = {
+  material_id: string
+
+  filename: string
+
+  course_label: string | null
+
+  byte_size: number
+
+  status: LearningMaterialStatus
+
+  error_code: string | null
+}
+
+export type LearningMaterialPage = {
+  materials: ApiLearningMaterial[]
+
+  next_cursor: string | null
+}
+
 export type ListResult<T,> = {
   data: Page<T>
 }
