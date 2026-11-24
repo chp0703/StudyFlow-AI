@@ -165,3 +165,33 @@ test("quiz, revision and outcome approvals keep their own intent instead of CREA
     assert.equal(replyToMessage(other).intent, intent)
   }
 })
+
+test("an approved question batch is a plain success, not a task listing", () => {
+  const reply = {
+    ...base,
+
+    state: "SUCCEEDED",
+
+    message: "Đã xác nhận bộ câu hỏi.",
+
+    result: {
+      schema_version: "1.1",
+
+      request_id: "r",
+
+      outcome: "COMMITTED",
+
+      data: { items: [{ question_id: "q-1", stem: "Câu hỏi" }], source_chunks: [] },
+
+      error: null,
+
+      warnings: [],
+    },
+  } as unknown as OrchestratorReply
+
+  const message = replyToMessage(reply)
+
+  assert.equal(message.category, "MESSAGE")
+
+  assert.match(message.text, /Đã xác nhận bộ câu hỏi\./)
+})

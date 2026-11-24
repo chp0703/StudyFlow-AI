@@ -74,6 +74,9 @@ function listing(reply: OrchestratorReply): string {
 
   if (!Array.isArray(data?.items) || data.items.length === 0) return ""
 
+  // Other results (e.g. approved question drafts) also carry an `items` array; only tasks are listed here.
+  if (!data.items.every((t) => typeof t?.title === "string" && typeof t.deadline_at === "string")) return ""
+
   const lines = data.items
 
     .slice(0, 5)
