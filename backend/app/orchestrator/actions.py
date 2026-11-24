@@ -295,13 +295,16 @@ class ActionProcessor:
                 raise Terminal("STALE_ENTITY_VERSION", "Thao tác đã thay đổi; hãy tải lại trước khi quyết định.")
         last = (action["last_presentation"] or {}).get("presentation") or {}
         if pending.get("intent") == "ACCEPT_REVISION_RECOMMENDATION":
-            return self.recommendations_ops.decide(ctx, receipt, key, body, pending)
+            return self.resume_cross_feature(ctx, receipt, key, body, "decide_revision_recommendation",
+                                             self.recommendations_ops.decide(ctx, receipt, key, body, pending))
         if pending.get("intent") == "SAVE_SESSION_OUTCOME":
             if self.learning_outcomes_ops is None:
                 raise Terminal("UNSUPPORTED_OPERATION", "Learning outcomes are not configured.")
-            return self.learning_outcomes_ops.decide(ctx, receipt, key, body)
+            return self.resume_cross_feature(ctx, receipt, key, body, "decide_learning_session_outcome",
+                                             self.learning_outcomes_ops.decide(ctx, receipt, key, body))
         if pending.get("intent") == "VERIFY_QUESTION_DRAFTS":
-            return self._decide_question_drafts(ctx, receipt, key, conversation, ref, pending, decision)
+            return self.resume_cross_feature(ctx, receipt, key, body, "verify_question_drafts",
+                                             self._decide_question_drafts(ctx, receipt, key, conversation, ref, pending, decision))
         command = last.get("normalized_command")
         if decision == "REJECT":
             return self.reject(ctx, receipt, key, conversation, ref, action, command)
@@ -319,6 +322,13 @@ class ActionProcessor:
         if resumed is not None:
             return 200, resumed
         return 200, reply(ctx.request_id, "SUCCEEDED", DONE_TEXT.get(operation, "Đã hoàn tất."), result=result)
+
+    def resume_cross_feature(self, ctx, receipt, key, body, operation, done):
+        """Sau quyết định F2/F3: nếu thao tác thuộc hàng đợi chat thì tiếp tục hàng đợi, nếu không trả nguyên phản hồi."""
+        status, payload = done
+        resumed = self.chat.resume(ctx, receipt, key, body["conversation_id"], body["action_reference"], operation,
+                                   payload["result"], body["decision"] == "REJECT", payload)
+        return status, resumed or payload
 
     def reject(self, ctx, receipt, key, conversation, ref, action, command):
         if ref["target_type"] == "PLAN_PROPOSAL":
