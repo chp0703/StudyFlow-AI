@@ -10,10 +10,10 @@ export const clockMinutes = (value: string) => {
 export type MinuteSegment = {
   start: number
   end: number
-  kind: "free" | "busy"
+  kind: "busy"
 }
 
-// Exact fragments; a busy interval wins over a working interval at every minute.
+// Exact busy fragments within an hour; non-BUSY windows are ignored.
 export function hourSegments(
   date: string,
   hour: number,
@@ -25,7 +25,7 @@ export function hourSegments(
   const dayStart = Date.parse(`${date}T00:00:00+07:00`)
   const intervals: MinuteSegment[] = []
   for (const window of windows) {
-    if (window.archived_at) continue
+    if (window.archived_at || window.kind !== "BUSY") continue
     let a: number
     let b: number
     if (window.recurrence === "WEEKLY") {
@@ -48,12 +48,12 @@ export function hourSegments(
       intervals.push({
         start: Math.max(a, start),
         end: Math.min(b, end),
-        kind: window.kind === "BUSY" ? "busy" : "free",
+        kind: "busy",
       })
   }
   for (const cell of legacy)
-    if (cell.date === date && cell.hour === hour)
-      intervals.push({ start, end, kind: cell.kind })
+    if (cell.kind === "busy" && cell.date === date && cell.hour === hour)
+      intervals.push({ start, end, kind: "busy" })
   const boundaries = [
     ...new Set([start, end, ...intervals.flatMap((i) => [i.start, i.end])]),
   ].sort((a, b) => a - b)
@@ -61,19 +61,10 @@ export function hourSegments(
   for (let i = 0; i < boundaries.length - 1; i++) {
     const a = boundaries[i]
     const b = boundaries[i + 1]
-    const kind = intervals.some(
-      (item) => item.kind === "busy" && item.start < b && item.end > a,
-    )
-      ? "busy"
-      : intervals.some(
-            (item) => item.kind === "free" && item.start < b && item.end > a,
-          )
-        ? "free"
-        : null
-    if (!kind) continue
+    if (!intervals.some((item) => item.start < b && item.end > a)) continue
     const last = result.at(-1)
-    if (last?.kind === kind && last.end === a) last.end = b
-    else result.push({ start: a, end: b, kind })
+    if (last && last.end === a) last.end = b
+    else result.push({ start: a, end: b, kind: "busy" })
   }
   return result
 }

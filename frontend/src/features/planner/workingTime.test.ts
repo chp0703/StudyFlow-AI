@@ -4,9 +4,9 @@ import { visibleSegments } from "./workingTime.ts"
 import type { ApiTimeWindow } from "../../api/types.ts"
 
 const window = (over: Partial<ApiTimeWindow>): ApiTimeWindow => ({
-  window_id: "free",
+  window_id: "busy-weekly",
   version: 1,
-  kind: "AVAILABILITY",
+  kind: "BUSY",
   label: null,
   recurrence: "WEEKLY",
   timezone: "Asia/Ho_Chi_Minh",
@@ -21,9 +21,10 @@ const window = (over: Partial<ApiTimeWindow>): ApiTimeWindow => ({
   ...over,
 })
 
-test("visible Free/Busy intervals keep minutes, merge hours, and clip without mutation", () => {
+test("visible Busy intervals keep minutes, merge hours, ignore AVAILABILITY, and clip without mutation", () => {
   const windows = [
-    window({}),
+    window({ window_id: "free", kind: "AVAILABILITY" }),
+    window({ start_time: "09:45", end_time: "10:15" }),
     window({
       window_id: "busy",
       kind: "BUSY",
@@ -37,22 +38,22 @@ test("visible Free/Busy intervals keep minutes, merge hours, and clip without mu
   ]
   const before = structuredClone(windows)
   assert.deepEqual(visibleSegments("2026-11-09", 600, 720, windows), [
-    { start: 600, end: 630, kind: "free" },
+    { start: 600, end: 615, kind: "busy" },
     { start: 630, end: 675, kind: "busy" },
-    { start: 675, end: 705, kind: "free" },
   ])
   assert.deepEqual(windows, before)
   assert.deepEqual(visibleSegments("2026-11-09", 720, 780, windows), [])
 })
 
-test("legacy demo cells remain visible and Busy overrides Free", () => {
+test("legacy demo busy cells remain visible while AVAILABILITY windows are ignored", () => {
   assert.deepEqual(
-    visibleSegments("2026-11-09", 540, 660, [window({})], [
-      { id: "2026-11-09-9", date: "2026-11-09", hour: 9, kind: "busy" },
-    ]),
-    [
-      { start: 540, end: 600, kind: "busy" },
-      { start: 600, end: 660, kind: "free" },
-    ],
+    visibleSegments(
+      "2026-11-09",
+      540,
+      660,
+      [window({ window_id: "free", kind: "AVAILABILITY" })],
+      [{ id: "2026-11-09-9", date: "2026-11-09", hour: 9, kind: "busy" }],
+    ),
+    [{ start: 540, end: 600, kind: "busy" }],
   )
 })

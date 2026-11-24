@@ -146,8 +146,8 @@ export default function WeekCalendar({
                 >
                   {segments.map((segment) => (
                     <div
-                      key={`${segment.start}-${segment.end}-${segment.kind}`}
-                      className={`calendar-window is-${segment.kind}${
+                      key={`${segment.start}-${segment.end}`}
+                      className={`calendar-window is-busy${
                         proposedWindowIds.has(
                           `${dateKey}-${Math.floor(segment.start / 60)}`,
                         )
@@ -155,18 +155,14 @@ export default function WeekCalendar({
                           : ""
                       }`}
                       role="img"
-                      aria-label={`${
-                        segment.kind === "busy" ? "Bận" : "Rảnh"
-                      } ${timeLabel(segment.start)}–${timeLabel(segment.end)}`}
+                      aria-label={`Bận ${timeLabel(segment.start)}–${timeLabel(segment.end)}`}
                       style={{
                         top: (segment.start - gridFrom) * pxPerMinute,
                         height: (segment.end - segment.start) * pxPerMinute,
                       }}
                     >
                       {segment.end - segment.start >= 30
-                        ? `${
-                            segment.kind === "busy" ? "Bận" : "Rảnh"
-                          } ${timeLabel(segment.start)}–${timeLabel(segment.end)}`
+                        ? `Bận ${timeLabel(segment.start)}–${timeLabel(segment.end)}`
                         : ""}
                     </div>
                   ))}

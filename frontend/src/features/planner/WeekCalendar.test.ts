@@ -17,7 +17,7 @@ import { createServer } from "vite"
 
 import { DEFAULT_DISPLAY_RANGES } from "./calendarDisplay.ts"
 
-test("calendar renders Free/Busy and proposals behind exact-time events", async () => {
+test("calendar renders Busy windows and proposals behind exact-time events", async () => {
   const server = await createServer({
     server: { middlewareMode: true, hmr: false },
 
@@ -80,8 +80,6 @@ test("calendar renders Free/Busy and proposals behind exact-time events", async 
         windows: [],
 
         availability: [
-          { id: "2026-11-09-9", date: "2026-11-09", hour: 9, kind: "free" },
-
           { id: "2026-11-09-10", date: "2026-11-09", hour: 10, kind: "busy" },
         ],
 
@@ -97,7 +95,7 @@ test("calendar renders Free/Busy and proposals behind exact-time events", async 
       }),
     )
 
-    assert.match(html, /Rảnh 09:00–10:00/)
+    assert.doesNotMatch(html, /Rảnh/)
 
     assert.match(html, /Bận 10:00–11:00/)
 
@@ -177,6 +175,35 @@ test("calendar renders Free/Busy and proposals behind exact-time events", async 
 
             archived_at: null,
           },
+          {
+            window_id: "api-free",
+
+            version: 1,
+
+            kind: "AVAILABILITY",
+
+            label: null,
+
+            recurrence: "NONE",
+
+            timezone: "Asia/Ho_Chi_Minh",
+
+            start_at: "2026-11-09T10:15:00+07:00",
+
+            end_at: "2026-11-09T10:45:00+07:00",
+
+            weekday: null,
+
+            start_time: null,
+
+            end_time: null,
+
+            valid_from: null,
+
+            valid_until: null,
+
+            archived_at: null,
+          },
         ],
 
         availability: [],
@@ -196,6 +223,8 @@ test("calendar renders Free/Busy and proposals behind exact-time events", async 
     assert.match(apiHtml, /Bận 10:00–10:15/)
 
     assert.doesNotMatch(apiHtml, /Bận 09:45/)
+
+    assert.doesNotMatch(apiHtml, /Rảnh/)
   } finally {
     await server.close()
   }

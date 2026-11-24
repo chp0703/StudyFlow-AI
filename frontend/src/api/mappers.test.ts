@@ -174,7 +174,7 @@ const win = (over: Partial<ApiTimeWindow>): ApiTimeWindow => ({
 
   version: 1,
 
-  kind: "AVAILABILITY",
+  kind: "BUSY",
 
   label: null,
 
@@ -236,7 +236,7 @@ test("weekly windows expand to hour cells, clipped to the grid, honouring validi
   )
 })
 
-test("a one-off busy interval overrides availability on the same hour", () => {
+test("expandWindows includes busy intervals and ignores availability windows", () => {
   const monday = new Date("2026-11-09T12:00:00Z")
 
   const busy = win({
@@ -257,38 +257,38 @@ test("a one-off busy interval overrides availability on the same hour", () => {
     end_at: at(2026, 11, 9, 11),
   })
 
-  const cells = expandWindows([win({}), busy], monday, 1)
+  const cells = expandWindows([win({ kind: "AVAILABILITY" }), busy], monday, 1)
 
   assert.deepEqual(
     cells.map((c) => [c.hour, c.kind]),
 
-    [
-      [9, "free"],
-
-      [10, "busy"],
-    ],
+    [[10, "busy"]],
   )
 })
 
-test("partial working intervals do not become complete legacy hour cells", () => {
+test("partial busy intervals mark overlapped hours while availability is ignored", () => {
   const monday = new Date("2026-11-09T12:00:00Z")
 
   assert.deepEqual(
-    expandWindows([win({ start_time: "08:15", end_time: "09:45" })], monday, 1),
+    expandWindows(
+      [win({ kind: "AVAILABILITY", start_time: "08:15", end_time: "10:00" })],
+      monday,
+      1,
+    ),
 
     [],
   )
 
   assert.deepEqual(
     expandWindows(
-      [win({ start_time: "08:15", end_time: "10:00" })],
+      [win({ start_time: "08:15", end_time: "09:45" })],
 
       monday,
 
       1,
     ).map((cell) => cell.hour),
 
-    [9],
+    [8, 9],
   )
 })
 

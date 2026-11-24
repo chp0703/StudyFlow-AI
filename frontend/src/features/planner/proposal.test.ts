@@ -110,22 +110,18 @@ test("an invalid command is a no-op against the pending preview", () => {
   assert.match(result.reply, /Ví dụ/)
 })
 
-test("diffWindows reports new, changed and removed windows", async () => {
+test("diffWindows reports added and removed busy windows", async () => {
   const { diffWindows } = await import("./proposal.ts")
-  const w = (hour: number, kind: "free" | "busy") => ({
+  const w = (hour: number) => ({
     id: `d-${hour}`,
     date: "d",
     hour,
-    kind,
+    kind: "busy" as const,
   })
-  const out = diffWindows([w(9, "free"), w(10, "free")], [
-    w(9, "busy"),
-    w(11, "free"),
-  ])
+  const out = diffWindows([w(9), w(10)], [w(9), w(11)])
   assert.deepEqual(
     out.map((c) => [c.kind, c.window.hour]),
     [
-      ["added", 9],
       ["added", 11],
       ["removed", 10],
     ],

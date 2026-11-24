@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timezone
 
 from backend.app.f1.planning.generate import default_availability, generate
-from backend.tests.acceptance_sol.test_schedule_confirmation import COMMAND, FRESH_BLOCK, availability, snapshot
+from backend.tests.acceptance_sol.test_schedule_confirmation import COMMAND, FRESH_BLOCK, OWNER, TASK, availability, snapshot
 
 NOW = datetime(2026, 11, 5, 7, tzinfo=timezone.utc)
 
@@ -32,6 +32,13 @@ class DefaultAvailabilityTests(unittest.TestCase):
         outcome = generate({**snapshot(), "time_windows": [busy]}, COMMAND, now=NOW, block_id_factory=lambda: FRESH_BLOCK)
         placed = outcome.proposal["payload"]["schedule_confirmation"]["entries"] if outcome.proposal else []
         self.assertEqual(placed, [])
+
+    def test_a_locked_block_outside_the_default_day_does_not_block_planning(self):
+        # 22:00-22:30 local (15:00Z) was planned when users could declare any availability.
+        legacy = {"block_id": "00000000-0000-4000-8000-000000000050", "user_id": OWNER, "task_id": TASK,
+                  "start_at": "2026-11-05T15:00:00Z", "end_at": "2026-11-05T15:30:00Z", "is_locked": True}
+        outcome = generate(snapshot(blocks=[legacy]), COMMAND, now=NOW, block_id_factory=lambda: FRESH_BLOCK)
+        self.assertNotIn("RETAINED_OUTSIDE_AVAILABILITY", [c.code for c in outcome.conflicts])
 
     def test_every_weekday_gets_one_window_in_the_users_timezone(self):
         windows = default_availability({"user_id": "00000000-0000-4000-8000-000000000001", "timezone": "Asia/Ho_Chi_Minh"})

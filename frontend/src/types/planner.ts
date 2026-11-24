@@ -28,7 +28,7 @@ export type PlannerIssue = {
   taskId: string
 }
 
-// Một giờ người dùng khai báo rảnh/bận; id là "<date>-<hour>" để mỗi giờ chỉ có một khung.
+// Một giờ người dùng khai báo bận; id là "<date>-<hour>" để mỗi giờ chỉ có một khung.
 
 export type TimeWindow = {
   id: string
@@ -37,7 +37,7 @@ export type TimeWindow = {
 
   hour: number
 
-  kind: "free" | "busy"
+  kind: "busy"
 }
 
 export type WindowChange = {
