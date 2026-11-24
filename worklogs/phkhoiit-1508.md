@@ -804,3 +804,10 @@
 
 - Không chạy `npm run format` trên cả repo: oxfmt định dạng lại 72 file không liên quan và làm vỡ `tsc` (TS1005); các file đổi giữ nguyên kiểu hiện có. Cần format riêng trước khi merge nếu CI yêu cầu.
 - Chưa kiểm thủ công trên trình duyệt (upload PDF thật, chat tạo quiz/ôn tập); chưa có UI làm quiz hay mở phiên học.
+
+**Sửa theo review Codex**
+
+- `chat.py`: gọi F2 bằng chủ đề của chính tài liệu (`course_label` hoặc "Tài liệu học tập") vì F2 chỉ nhận chủ đề thuộc tài liệu; chủ đề người dùng nói không được giữ lại trong đề xuất. Nêu tên tài liệu mà không khớp thì báo lỗi, không tự dùng tài liệu khác.
+- `Study.tsx`: xóa tài liệu ở API mode phải qua hộp thoại xác nhận (`Modal`).
+- Test: `test_orchestrator_handoffs.py` thêm 2 test; unit backend 232/232, `tsc` sạch, build đạt.
+- Còn lại: `pick_material` chỉ duyệt 20 tài liệu đầu (có comment `shortcut:`); chưa kiểm thủ công hộp thoại xóa trên trình duyệt.
