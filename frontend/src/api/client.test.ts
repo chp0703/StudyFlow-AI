@@ -253,7 +253,7 @@ test("decide sends the action reference untouched", async () => {
 
 test("weekly window archive prepares an action without approving it", async () => {
   const { client, calls } = setup([json({ state: "AWAITING_APPROVAL" })])
-  await createEndpoints(client).prepareAvailability(
+  await createEndpoints(client).prepareBusyInterval(
     "conv",
     {
       change_type: "ARCHIVE",
@@ -268,7 +268,7 @@ test("weekly window archive prepares an action without approving it", async () =
   assert.deepEqual(JSON.parse(calls[0].init.body as string), {
     schema_version: "1.1",
     conversation_id: "conv",
-    operation: "set_availability",
+    operation: "set_busy_interval",
     arguments: {
       change_type: "ARCHIVE",
       window_id: "window-id",
@@ -284,7 +284,7 @@ test("weekly ADD and UPDATE send exact schema 1.1 arguments and version", async 
     json({ state: "AWAITING_APPROVAL" }),
   ])
   const window = {
-    kind: "AVAILABILITY" as const,
+    kind: "BUSY" as const,
     label: null,
     recurrence: "WEEKLY" as const,
     timezone: "Asia/Ho_Chi_Minh",
@@ -297,7 +297,7 @@ test("weekly ADD and UPDATE send exact schema 1.1 arguments and version", async 
     valid_until: null,
   }
   const endpoints = createEndpoints(client)
-  await endpoints.prepareAvailability(
+  await endpoints.prepareBusyInterval(
     "conv",
     {
       change_type: "ADD",
@@ -307,7 +307,7 @@ test("weekly ADD and UPDATE send exact schema 1.1 arguments and version", async 
     },
     "add-key",
   )
-  await endpoints.prepareAvailability(
+  await endpoints.prepareBusyInterval(
     "conv",
     {
       change_type: "UPDATE",
@@ -321,7 +321,7 @@ test("weekly ADD and UPDATE send exact schema 1.1 arguments and version", async 
   const add = JSON.parse(calls[0].init.body as string)
   const update = JSON.parse(calls[1].init.body as string)
   assert.equal(add.schema_version, "1.1")
-  assert.equal(add.operation, "set_availability")
+  assert.equal(add.operation, "set_busy_interval")
   assert.deepEqual(add.arguments, {
     change_type: "ADD",
     window_id: null,
@@ -338,7 +338,7 @@ test("availability POST retries a network failure with the same idempotency key"
     new Error("timeout"),
     json({ state: "AWAITING_APPROVAL" }),
   ])
-  await createEndpoints(client).prepareAvailability(
+  await createEndpoints(client).prepareBusyInterval(
     "conv",
     {
       change_type: "ARCHIVE",

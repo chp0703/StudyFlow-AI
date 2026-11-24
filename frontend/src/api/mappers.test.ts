@@ -514,7 +514,7 @@ test("an archived weekly interval review names the exact existing interval", () 
       kind: "ACTION_PRESENTATION",
 
       pending_action: {
-        intent: "SET_AVAILABILITY",
+        intent: "SET_BUSY_INTERVAL",
 
         state: "AWAITING_APPROVAL",
 
@@ -528,7 +528,7 @@ test("an archived weekly interval review names the exact existing interval", () 
       proposal: null,
 
       normalized_command: {
-        operation: "set_availability",
+        operation: "set_busy_interval",
 
         arguments: {
           change_type: "ARCHIVE",
@@ -544,10 +544,10 @@ test("an archived weekly interval review names the exact existing interval", () 
       effective_policy: null,
     },
 
-    [win({})],
+    [win({ kind: "BUSY" })],
   )
 
-  assert.equal(summary.title, "Xóa thời gian học")
+  assert.equal(summary.title, "Xóa giờ bận")
 
   assert.deepEqual(summary.details[1], {
     label: "Sẽ xóa",
@@ -563,12 +563,12 @@ const windowPresentation = (
 
   window_id: string | null = "w",
 
-  operation = "set_availability",
+  operation = "set_busy_interval",
 ): ActionPresentation => ({
   kind: "ACTION_PRESENTATION",
 
   pending_action: {
-    intent: "SET_AVAILABILITY",
+    intent: "SET_BUSY_INTERVAL",
 
     state: "AWAITING_APPROVAL",
 
@@ -599,7 +599,7 @@ const windowPresentation = (
 })
 
 const windowInput = (over: Partial<ApiTimeWindow>) => {
-  const { window_id, version, archived_at, ...input } = win(over)
+  const { window_id, version, archived_at, ...input } = win({ kind: "BUSY", ...over })
 
   void window_id
 
@@ -647,7 +647,7 @@ const restoredWindowProposal = (
 }
 
 test("restored weekly UPDATE and ARCHIVE show the authoritative old target", () => {
-  const existing = win({})
+  const existing = win({ kind: "BUSY" })
 
   const proposed = windowInput({ start_time: "10:00", end_time: "12:00" })
 
@@ -680,6 +680,7 @@ test("restored weekly UPDATE and ARCHIVE show the authoritative old target", () 
 
 test("restored one-off UPDATE and ARCHIVE use Vietnam civil date and clock", () => {
   const existing = win({
+    kind: "BUSY",
     recurrence: "NONE",
 
     weekday: null,
@@ -733,7 +734,7 @@ test("restored one-off UPDATE and ARCHIVE use Vietnam civil date and clock", () 
 })
 
 test("missing TimeWindow identity, record, or valid fields fails closed", () => {
-  const existing = win({})
+  const existing = win({ kind: "BUSY" })
 
   const malformed = windowInput({ end_time: null })
 

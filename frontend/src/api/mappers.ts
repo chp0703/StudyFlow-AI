@@ -443,8 +443,7 @@ export function formatTimeWindow(window: Partial<ApiTimeWindow>) {
     : `${start.date} ${start.time}–${end.date} ${end.time}`
 }
 
-const isWindowCommand = (operation: string) =>
-  operation === "set_availability" || operation === "set_busy_interval"
+const isWindowCommand = (operation: string) => operation === "set_busy_interval"
 
 const WINDOW_APPROVAL_ERROR =
   "Không thể xác minh đầy đủ khung giờ bị ảnh hưởng. Bạn có thể từ chối và tạo lại yêu cầu; Duyệt đã bị khóa."
@@ -471,8 +470,7 @@ function windowDetails(
 
   const changeType = args.change_type
 
-  const expectedKind =
-    operation === "set_busy_interval" ? "BUSY" : "AVAILABILITY"
+  const expectedKind = "BUSY"
 
   const needsPrevious = changeType === "UPDATE" || changeType === "ARCHIVE"
 
@@ -629,7 +627,7 @@ function summarizeBase(
             ? "Sửa"
             : "Thêm"
       } ${
-        command.operation === "set_busy_interval" ? "giờ bận" : "thời gian học"
+        "giờ bận"
       }`,
 
       ...windowSummary,

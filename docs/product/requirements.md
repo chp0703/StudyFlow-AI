@@ -14,14 +14,14 @@ StudyFlow AI helps a student plan academic work, assess understanding from autho
 
 ## Feature 1 — Intelligent Academic Planner
 
-The Planner turns confirmed tasks, personalized working time and busy intervals into reviewable study-plan proposals.
+The Planner turns confirmed tasks and busy intervals into reviewable study-plan proposals. Users do not declare free time: every day is planned inside an implicit 06:00–22:00 window (Vietnam time), and time that holds no study block stays empty.
 
 Required behavior:
 
 - Capture a task name, exact start time, duration, priority weight, color and optional description.
 - Interpret an exact requested start time as a commitment to begin at that time.
 - Use Vietnam time consistently at the product boundary.
-- Allow users to configure working time independently for each day.
+- Let users declare only busy intervals; free time is implicit and never has to be entered.
 - Accept supported images, documents and calendar inputs as untrusted sources for plan preparation.
 - Show extracted task and scheduling information before confirmation.
 - Generate deterministic plans that expose conflicts and unscheduled work.

@@ -457,7 +457,8 @@ export function createEndpoints(client: ApiClient) {
         idempotencyKey: key,
       }),
 
-    prepareAvailability: (
+    // Busy intervals are the only user-declared time windows; free time is implicit (06:00-22:00).
+    prepareBusyInterval: (
       conversationId: string,
       arguments_: {
         change_type: "ADD" | "UPDATE" | "ARCHIVE"
@@ -471,7 +472,7 @@ export function createEndpoints(client: ApiClient) {
         body: {
           schema_version: SCHEMA,
           conversation_id: conversationId,
-          operation: "set_availability",
+          operation: "set_busy_interval",
           arguments: arguments_,
         },
         idempotencyKey: key,
