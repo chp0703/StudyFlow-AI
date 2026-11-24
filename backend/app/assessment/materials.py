@@ -70,8 +70,8 @@ class MaterialOperations:
         data = result['data']
         chunks = data['items'] if operation == 'search_material_chunks' else data['chunks']
         material = data.get('material')
-        if (material is not None and (material['user_id'] != ctx.user_id or material['material_id'] != arguments['material_id']
-                                     or material['conversation_id'] != arguments['conversation_id'])
+        # Conversation scope is enforced by the RPC (own conversation or a READY F3 material), so it is not rechecked here.
+        if (material is not None and (material['user_id'] != ctx.user_id or material['material_id'] != arguments['material_id'])
                 or material is None and data['material_id'] != arguments['material_id']
                 or any(c['user_id'] != ctx.user_id or c['material_id'] != arguments['material_id'] for c in chunks)):
             raise WorkflowError('ENTITY_NOT_FOUND', 'Không tìm thấy tài liệu.')

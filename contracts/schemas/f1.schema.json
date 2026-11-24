@@ -29,6 +29,21 @@
         "reject_study_plan"
       ]
     },
+    "WorkflowStepOperation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Operation"
+        },
+        {
+          "type": "string",
+          "enum": [
+            "verify_question_drafts",
+            "decide_revision_recommendation",
+            "decide_learning_session_outcome"
+          ]
+        }
+      ]
+    },
     "AssessmentOperation": {
       "type": "string",
       "enum": [
@@ -7932,7 +7947,7 @@
         "operation": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Operation"
+              "$ref": "#/$defs/WorkflowStepOperation"
             },
             {
               "type": "null"
@@ -8013,7 +8028,7 @@
           "then": {
             "properties": {
               "operation": {
-                "$ref": "#/$defs/Operation"
+                "$ref": "#/$defs/WorkflowStepOperation"
               },
               "result": {
                 "$ref": "#/$defs/ToolResult"
@@ -15761,6 +15776,17 @@
           "uniqueItems": true
         },
         "planner_block_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "conversation_id": {
           "anyOf": [
             {
               "type": "string",
