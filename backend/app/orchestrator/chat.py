@@ -370,6 +370,14 @@ class ChatProcessor:
         merged = self.proc.normalize_slots({**candidate["slots"], **patch})
         if not contract.is_valid("CandidateTaskFields", merged):
             raise Terminal("INVALID_PARAMETER", "Mình chưa hiểu thông tin vừa nhập.")
+        last = (action["last_presentation"] or {}).get("presentation") or {}
+        if last.get("revision_recommendation") is not None:
+            # Task nháp do đề xuất ôn tập tạo ra được bổ sung bằng đường review có sẵn (cùng đường với /v1/actions/{id}/review).
+            stored = self.proc.step(ctx, "review_pending_action", {
+                "action_id": pending["action_id"], "expected_action_version": pending["version"], "presentation": last,
+                "candidate_patch": merged, "expected_candidate_version": candidate["version"]},
+                conversation_id=conversation, idempotency_key=child_key(key, "review"), message_id=message_id)["data"]
+            return self.proc.candidate_review_reply(ctx, stored)
         sources = {**{k: {"source": "USER_MESSAGE", "reference": message_id} for k in patch}}
         updated = self.proc.step(ctx, "update_candidate_draft", {
             "candidate_id": candidate["candidate_id"], "expected_candidate_version": candidate["version"], "slots": merged,

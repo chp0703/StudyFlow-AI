@@ -244,5 +244,44 @@ class CrossFeatureDecisionTests(unittest.TestCase):
         self.assertIs(seen["args"][7], True)  # rejected flag
 
 
+class AnswerRecommendationDraftTests(unittest.TestCase):
+    """A follow-up message completes the task draft a revision recommendation created, through review_pending_action."""
+
+    def test_answer_goes_through_the_review_path_not_a_reprepare(self):
+        from backend.app.nlu.extractor import ScriptedExtractor
+
+        slots = {"title": "Ôn tập: Số chẵn", "estimated_minutes": 30, "priority": 0.5, "color": "#596CF0"}
+        last = {"kind": "ACTION_PRESENTATION", "revision_recommendation": {"recommendation_id": "r"}}
+        action = {"pending_action": {"action_id": "a-1", "version": 3, "state": "AWAITING_CLARIFICATION",
+                                     "missing_fields": ["start_at"]},
+                  "candidate": {"candidate_id": "c-1", "version": 2, "slots": slots, "field_sources": {}},
+                  "last_presentation": {"presentation": last}}
+        calls = []
+
+        def step(ctx, operation, arguments, **kwargs):
+            calls.append((operation, arguments))
+            return {"data": {"stored": True}}
+
+        proc = SimpleNamespace(
+            step=step, normalize_slots=ActionProcessor.normalize_slots, questions=ActionProcessor.questions,
+            workflow_context=lambda *a, **k: {"selected_action": action},
+            candidate_review_reply=lambda ctx, stored: (200, {"state": "AWAITING_APPROVAL", "stored": stored}))
+        given = {"intents": [{"intent": "CREATE_TASK", "slots": {"start_at": "2026-11-25T08:00:00+07:00"},
+                              "raw_expressions": {}, "ambiguities": []}]}
+        chat = ChatProcessor(proc, ScriptedExtractor({"8h sáng mai": given}), clock=lambda: NOW)
+        queue = {**cont(0, [intent("PROPOSE_REVISION")]), "awaiting_reference": {"action_id": "a-1"}}
+        receipt = {"message_id": MSG, "request_fingerprint": "f", "lease_version": 1}
+
+        status, payload = chat.answer_open_queue(CTX, receipt, KEY, CONV, "8h sáng mai", queue)
+
+        self.assertEqual((status, payload["state"]), (200, "AWAITING_APPROVAL"))
+        self.assertEqual([op for op, _ in calls], ["review_pending_action"])
+        args = calls[0][1]
+        self.assertEqual((args["action_id"], args["expected_action_version"], args["expected_candidate_version"]),
+                         ("a-1", 3, 2))
+        self.assertEqual(args["candidate_patch"]["start_at"], "2026-11-25T08:00:00+07:00")
+        self.assertEqual(args["candidate_patch"]["title"], "Ôn tập: Số chẵn")
+
+
 if __name__ == "__main__":
     unittest.main()

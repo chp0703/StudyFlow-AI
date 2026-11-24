@@ -811,3 +811,10 @@
 - `Study.tsx`: xóa tài liệu ở API mode phải qua hộp thoại xác nhận (`Modal`).
 - Test: `test_orchestrator_handoffs.py` thêm 2 test; unit backend 232/232, `tsc` sạch, build đạt.
 - Còn lại: `pick_material` chỉ duyệt 20 tài liệu đầu (có comment `shortcut:`); chưa kiểm thủ công hộp thoại xóa trên trình duyệt.
+
+**Chạy thử localhost (Supabase local + DeepSeek thật, backend cổng 8001)**
+
+- Chuỗi chat → đề xuất ôn tập → duyệt → hỏi `start_at` → xác nhận task → plan proposal → duyệt kế hoạch chạy đúng; tạo quiz qua chat (nhận diện intent → sinh câu hỏi → duyệt) cũng đúng.
+- Lỗi tìm thấy khi chạy: trả lời bổ sung cho task nháp do đề xuất ôn tập tạo ra bị DB từ chối ("presentation does not match the stored target") vì `answer_open_queue` re-prepare như task tạo từ chat. `chat.py` giờ đi qua `review_pending_action` cho trường hợp này; thêm test.
+- Đề xuất ôn tập chỉ chạy khi chủ đề đã có bài làm hợp lệ (quy tắc F2); chưa có UI làm quiz nên phải làm bài qua REST.
+- Upload tài liệu học ở API mode báo `INDEX_UNAVAILABLE` nếu chưa cài `sentence-transformers` (không có trong `backend/requirements.txt`); test dùng tài liệu F2 được đánh dấu READY làm fixture trong DB local.
