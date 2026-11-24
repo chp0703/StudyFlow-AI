@@ -738,3 +738,20 @@
 
 - Giữ `learning_grounding_threshold = 0.82` trong `backend/app/core/config.py` vì code đang dùng; giá trị này chưa còn tài liệu giải thích cho tới khi eval mới chọn lại τ.
 - Chưa chạy pgTAP, integration và toàn bộ backend unit test.
+
+## 2026-11-24 — Orchestrator liên feature: docs và toàn vẹn handoff F3→F2
+
+**Mục tiêu:** chuẩn bị nền cho orchestrator nối Planner, Assessment và Daily Learning; đóng lỗ hổng quiz attempt `SESSION_HANDOFF` trích dẫn outcome không tồn tại hoặc của user khác.
+
+**Đã làm**
+
+- Cập nhật `docs/product/requirements.md`, `docs/architecture/overview.md`, `docs/features/daily-learning/README.md`, `backend/app/orchestrator/README.md` cho khớp hiện trạng (F2/F3 đã implement).
+- Migration `202611250001_orchestrator_attempt_outcome_fk.sql`: FK ghép `(user_id, session_outcome_id)` tới `session_outcome`, `NOT VALID` để không chạm dữ liệu cũ.
+- `supabase/tests/22_f2_b5_attempts_grading.sql`: seed outcome thật cho test handoff, thêm test từ chối outcome của user khác.
+
+**Kết quả:** nhánh `feat/orchestrator-handoffs`; `supabase db reset` + `supabase test db` 24 file/797 test pass; unit backend 210/210; `generate_contract_schema_migration.py --check` đạt.
+
+**Ghi chú**
+
+- Chưa chạy integration và `backend/tests/acceptance_api_sol/test_attempt_http.py` (dùng `SESSION_OUTCOME_1` tùy ý, có thể cần seed outcome nếu chạy với Postgres thật).
+- Orchestrator (intent chat, handoff F2→F1, frontend) còn các phase sau trên cùng nhánh.

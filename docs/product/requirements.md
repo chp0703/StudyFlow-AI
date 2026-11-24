@@ -115,7 +115,7 @@ Cross-feature handoffs use typed records and preserve provenance. No recommendat
 | Feature | Scope status | Implementation status |
 |---|---|---|
 | Intelligent Academic Planner | Current | Existing frontend, backend, contract, database and scheduler foundation |
-| Learning Assessment & Adaptive Revision | Current | Requirements defined; implementation pending |
-| Daily AI Learning | Current | Requirements defined; implementation pending |
+| Learning Assessment & Adaptive Revision | Current | Implemented: materials, verified questions, grading, topic stats, revision recommendations (REST + `/v1/decisions`) |
+| Daily AI Learning | Current | Implemented: materials, sessions, grounded Q&A and hints, summary, confirmed outcome (REST + `/v1/decisions`) |
 
 The legacy technical identifiers `F1`, `schema_version="1.1"`, `/v1` and `f1.schema.json` remain compatibility identifiers for the current Planner implementation. They do not define the product-wide feature scope.
