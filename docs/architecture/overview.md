@@ -2,7 +2,7 @@
 
 This document describes the code that currently exists and its runtime relationships. It is not a proposed directory tree.
 
-StudyFlow AI's product boundary includes Planner, Assessment & Adaptive Revision, and Daily AI Learning. The runtime below is the implemented Planner foundation; the other two modules are current delivery scope but are not yet wired into this runtime.
+StudyFlow AI's product boundary includes Planner, Assessment & Adaptive Revision, and Daily AI Learning. The runtime below is the implemented Planner foundation; Assessment and Daily Learning are implemented as REST endpoints sharing the pending-action and `/v1/decisions` path; wiring them into chat (intents) and automatic cross-feature handoffs is the orchestrator work in progress.
 
 ## Runtime flow
 

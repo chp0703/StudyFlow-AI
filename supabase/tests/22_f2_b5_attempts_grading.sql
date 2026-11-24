@@ -406,7 +406,22 @@ select is(
     'create_quiz_attempt succeeds with VERIFIED questions'
 );
 
--- Create SESSION_HANDOFF attempt with plain UUID session_outcome_id
+-- Seed a confirmed session outcome owned by user 1 (and one by user 2) for the SESSION_HANDOFF FK.
+insert into app_private.user_profiles(user_id, timezone, locale, scheduling_policy)
+select u, 'Asia/Ho_Chi_Minh', 'vi', app_private.default_policy()
+from unnest(array['b5000000-0000-4000-8000-000000000001', 'b5000000-0000-4000-8000-000000000002']::uuid[]) u
+on conflict do nothing;
+insert into app_private.conversation_records(user_id, conversation_id) values
+    ('b5000000-0000-4000-8000-000000000001', 'b5000000-0000-4000-8000-0000000007c1'),
+    ('b5000000-0000-4000-8000-000000000002', 'b5000000-0000-4000-8000-0000000007c2');
+insert into app_private.learning_session(session_id, user_id, conversation_id, goal, material_ids) values
+    ('b5000000-0000-4000-8000-0000000007a1', 'b5000000-0000-4000-8000-000000000001', 'b5000000-0000-4000-8000-0000000007c1', 'goal', array[gen_random_uuid()]),
+    ('b5000000-0000-4000-8000-0000000007a2', 'b5000000-0000-4000-8000-000000000002', 'b5000000-0000-4000-8000-0000000007c2', 'goal', array[gen_random_uuid()]);
+insert into app_private.session_outcome(outcome_id, user_id, session_id, summary, topics, duration_minutes) values
+    ('b5000000-0000-4000-8000-000000000777', 'b5000000-0000-4000-8000-000000000001', 'b5000000-0000-4000-8000-0000000007a1', 's', array['t'], 5),
+    ('b5000000-0000-4000-8000-000000000778', 'b5000000-0000-4000-8000-000000000002', 'b5000000-0000-4000-8000-0000000007a2', 's', array['t'], 5);
+
+-- Create SESSION_HANDOFF attempt citing the caller's own session outcome
 select is(
     (
         pg_temp.b5_call(
@@ -428,7 +443,32 @@ select is(
         ) ->> 'outcome'
     ),
     'COMMITTED',
-    'create_quiz_attempt supports SESSION_HANDOFF with plain UUID session_outcome_id'
+    'create_quiz_attempt supports SESSION_HANDOFF with the caller''s session_outcome_id'
+);
+
+-- A SESSION_HANDOFF attempt cannot cite another user's outcome or a nonexistent one.
+select is(
+    (
+        pg_temp.b5_call(
+            'create_quiz_attempt',
+            pg_temp.b5_sign(
+                pg_temp.b5_request(
+                    'create_quiz_attempt',
+                    jsonb_build_object(
+                        'attempt_id', 'b5000000-0000-4000-8000-000000000503',
+                        'material_id', 'b5000000-0000-4000-8000-000000000101',
+                        'question_ids', jsonb_build_array('b5000000-0000-4000-8000-000000000301'),
+                        'origin', 'SESSION_HANDOFF',
+                        'session_outcome_id', 'b5000000-0000-4000-8000-000000000778'
+                    ),
+                    'b5000000-0000-4000-8000-000000000001',
+                    'b5-attempt-create-0003'
+                )
+            )
+        ) ->> 'outcome'
+    ),
+    'ERROR',
+    'create_quiz_attempt rejects another user''s session_outcome_id'
 );
 
 -- 5. Cross-user access fails closed with ENTITY_NOT_FOUND

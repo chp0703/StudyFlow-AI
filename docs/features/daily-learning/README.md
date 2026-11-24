@@ -11,4 +11,4 @@ This feature owns source-grounded learning conversations, progressive hints, ses
 - A quiz handoff to Assessment is optional.
 - The feature cannot modify Planner tasks or schedules directly.
 
-Detailed requirements are maintained in [product requirements](../../product/requirements.md#feature-3--daily-ai-learning). Machine-readable contracts and persistence models must be added before implementation.
+Detailed requirements are maintained in [product requirements](../../product/requirements.md#feature-3--daily-ai-learning). Machine-readable contracts live in `contracts/learning-openapi.yaml`; persistence is in the F3 migrations under `supabase/migrations/`.
