@@ -80,6 +80,19 @@ class DeepSeekExtractorTests(unittest.TestCase):
         with self.assertRaises(ExtractorUnavailable):
             UnavailableExtractor().extract("a", now=NOW, timezone="Asia/Ho_Chi_Minh", active=None)
 
+    def test_learning_and_assessment_intents_roundtrip(self):
+        wanted = {
+            "intents": [
+                {"intent": "SUMMARIZE_LEARNING", "slots": {}, "raw_expressions": {}, "ambiguities": []},
+                {"intent": "CREATE_QUIZ", "slots": {"topic": "Số chẵn", "count": 5, "question_type": "MCQ"},
+                 "raw_expressions": {}, "ambiguities": []},
+                {"intent": "PROPOSE_REVISION", "slots": {"topic": "Số chẵn", "suggested_minutes": 30, "priority": 0.5,
+                                                         "material": "sohoc.pdf"},
+                 "raw_expressions": {}, "ambiguities": []},
+            ]
+        }
+        self.assertEqual(self.run_extract(answer(json.dumps(wanted))), wanted)
+
     def test_create_task_canonical_slots_roundtrip(self):
         canonical_task = {
             "intents": [{

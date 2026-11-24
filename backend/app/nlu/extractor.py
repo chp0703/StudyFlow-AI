@@ -24,6 +24,9 @@ Intents and slots:
 - SET_SCHEDULING_PREFERENCES: policy_patch {min_block_minutes, max_block_minutes, allow_short_final_block, max_daily_minutes, break_minutes}.
 - GENERATE_STUDY_PLAN: start_at, end_at (RFC3339) when the user names a period; otherwise leave slots empty.
 - GET_STUDY_PLAN: view CURRENT, optionally start_at/end_at.
+- SUMMARIZE_LEARNING: the user asks to summarize / wrap up the current study session ("tóm tắt phiên học"); slots empty.
+- CREATE_QUIZ: the user asks for quiz questions from their study material: topic, count (integer 1-10), question_type ("MCQ" or "TRUE_FALSE"), material (file name if the user names one, else omit).
+- PROPOSE_REVISION: the user wants to review/revise a topic: topic, suggested_minutes (integer 15-240), priority (0.1|0.5|1), material (file name if named, else omit).
 - Weekday names ("thứ 2", "Chủ nhật", "hằng tuần", "mỗi thứ 3") describe a repeating window: use recurrence WEEKLY with weekday (Monday=1 ... Sunday=7).
   Vietnamese names are offset by one: "thứ 2"=1, "thứ 3"=2, "thứ 4"=3, "thứ 5"=4, "thứ 6"=5, "thứ 7"=6, "Chủ nhật"=7.
 - SEARCH_TASKS status_filter: "chưa làm" means only TODO; "đang làm" is IN_PROGRESS; "xong"/"hoàn thành" is COMPLETED.
