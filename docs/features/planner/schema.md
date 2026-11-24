@@ -144,7 +144,7 @@ Deadline DATETIME dùng instant người dùng xác nhận, `deadline_date=null`
 window_id: UUID
 user_id: UUID
 version: integer >= 1
-kind: AVAILABILITY | BUSY
+kind: AVAILABILITY | BUSY   # AVAILABILITY is no longer written by users (set_availability was removed); planning uses an implicit 06:00-22:00 day
 label: string?
 recurrence: NONE | WEEKLY
 timezone: string
@@ -376,7 +376,7 @@ UserDecision:
 
 UserDecision là dữ liệu client gửi; server phải tải và đối chiếu đích, owner, version, trạng thái, requires_review và nội dung đã hiển thị trước khi tạo ApprovalAction. Field do client gửi không tự cấp quyền. Với chat, server lưu tin nhắn gốc và gắn source_message_id sau khi xác định đúng action đích. Khi còn mơ hồ phải hỏi lại; không dùng thời gian đã trôi qua làm bằng chứng đồng ý hay từ chối.
 
-Intent chuẩn trong giai đoạn này: `CREATE_TASK`, `SEARCH_TASKS`, `SET_AVAILABILITY`, `SET_BUSY_INTERVAL`, `SET_SCHEDULING_PREFERENCES`, `GENERATE_STUDY_PLAN`, `GET_STUDY_PLAN`. Extraction dùng `UNKNOWN` khi chưa phân loại được và `UNSUPPORTED` cho khả năng ngoài phạm vi. Chấp nhận/từ chối đi qua UserDecision hoặc routing pending action được backend kiểm chứng; không dùng intent LLM làm bằng chứng duyệt.
+Intent chuẩn trong giai đoạn này: `CREATE_TASK`, `SEARCH_TASKS`, `SET_BUSY_INTERVAL`, `SET_SCHEDULING_PREFERENCES`, `GENERATE_STUDY_PLAN`, `GET_STUDY_PLAN`. Extraction dùng `UNKNOWN` khi chưa phân loại được và `UNSUPPORTED` cho khả năng ngoài phạm vi. Chấp nhận/từ chối đi qua UserDecision hoặc routing pending action được backend kiểm chứng; không dùng intent LLM làm bằng chứng duyệt.
 
 Mỗi ExtractionResult item có `{intent: string, slots: object, raw_expressions: map<string,string>, ambiguities: Issue[]}`. Field slots chỉ được lấy trong allowlist của intent. ValidationReport có `{status, missing_fields: string[], issues: Issue[], resolved_references: map<string,UUID>}`; entity chỉ được thêm vào resolved_references sau khi lookup và kiểm tra quyền.
 
@@ -389,7 +389,6 @@ Các operation dưới đây là hợp đồng phải triển khai trong giai đ
 | `create_task_candidate` | slots + nguồn tin nhắn | Candidate; chỉ ghi nháp. |
 | `confirm_task` | candidate_id, expected_candidate_version | Task; server gắn approval hợp lệ, ghi chính thức. |
 | `search_tasks` | query?, status filter?, phân trang | Task của user; chỉ đọc. |
-| `set_availability` | thao tác ADD/UPDATE/ARCHIVE, window payload/version | TimeWindow kind=AVAILABILITY; ghi sau xác nhận. |
 | `set_busy_interval` | tương tự, kind=BUSY | TimeWindow bận; ghi sau xác nhận. |
 | `set_scheduling_preferences` | policy_patch, expected_schedule_revision | Cập nhật policy lưu trong hồ sơ sau xác nhận; trả policy đầy đủ và schedule_revision. Không tự sửa lịch hiện hành. |
 | `generate_study_plan` | GenerationScope + policy_overrides | PlanProposal có policy_snapshot thực tế; override chỉ cho lần lập lịch này. |
@@ -416,7 +415,7 @@ search_tasks:
   page_size: integer > 0               # giới hạn tối đa do transport công bố
   cursor: string?                     # null = trang đầu
 
-set_availability / set_busy_interval:
+set_busy_interval:
   change_type: ADD | UPDATE | ARCHIVE
   window_id: UUID?
   expected_window_version: integer >= 1?
@@ -453,7 +452,7 @@ view CURRENT yêu cầu version/proposal_id=null; HISTORY yêu cầu version kh�
 
 `get_study_plan` trả dữ liệu `PlanView {plan: StudyPlan|null, study_blocks: StudyBlock[]}` hoặc `ProposalView {proposal: PlanProposal}`, kèm discriminator `kind: PLAN_VIEW | PROPOSAL_VIEW`. `search_tasks` trả `{items: AcademicTask[], next_cursor: string|null}`. Candidate trả ở outcome DRAFTED; Task/TimeWindow/StudyPlan sau ghi thành công trả ở COMMITTED; cập nhật cấu hình trả `{scheduling_policy: SchedulingPolicy, schedule_revision: integer >= 0}` ở COMMITTED; PlanProposal trả ở PROPOSED; proposal từ chối trả ở REJECTED. Mọi response phải có typed payload tương ứng với operation và outcome.
 
-Các operation có ghi bắt buộc có idempotency context. `confirm_task`, `set_availability`, `set_busy_interval`, `set_scheduling_preferences`, `approve_study_plan` còn cần approval context đúng đích do backend gắn; những context này không nằm trong arguments cho LLM. Xác nhận sửa policy gắn với PENDING_ACTION và phải hiển thị toàn bộ policy sau merge. Kiểm tra expected_schedule_revision và tăng schedule_revision cùng transaction ghi User.scheduling_policy; revision cũ trả STALE_ENTITY_VERSION. Candidate được sửa qua service nội bộ với expected_candidate_version, tăng version và validate lại trước khi hiển thị xác nhận; không chỉnh trực tiếp AcademicTask.
+Các operation có ghi bắt buộc có idempotency context. `confirm_task`, `set_busy_interval`, `set_scheduling_preferences`, `approve_study_plan` còn cần approval context đúng đích do backend gắn; những context này không nằm trong arguments cho LLM. Xác nhận sửa policy gắn với PENDING_ACTION và phải hiển thị toàn bộ policy sau merge. Kiểm tra expected_schedule_revision và tăng schedule_revision cùng transaction ghi User.scheduling_policy; revision cũ trả STALE_ENTITY_VERSION. Candidate được sửa qua service nội bộ với expected_candidate_version, tăng version và validate lại trước khi hiển thị xác nhận; không chỉnh trực tiếp AcademicTask.
 
 `update_task`, hủy task, `propose_reschedule` một block và `CREATE_STUDY_BLOCK` chưa thuộc danh mục thực thi v1.1. Yêu cầu các khả năng này trả `UNSUPPORTED_OPERATION`; không tự ánh xạ thành một thao tác khác có tác động dữ liệu.
 

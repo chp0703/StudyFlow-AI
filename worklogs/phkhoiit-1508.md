@@ -863,3 +863,15 @@
 **Kết quả:** unit 238; `acceptance_sol` 37; `acceptance_api_sol` 79; integration thật 40; concurrency 9; pgTAP 25 file; `check_contract.py` và `--check` đạt. Đã kiểm migration trên dữ liệu mẫu trong giao dịch rollback.
 
 **Còn lại:** UI Planner (lớp phủ giờ rảnh, demo planner agent, mappers) và docs.
+
+**Giai đoạn 3: frontend và docs**
+
+- `frontend/src/api/endpoints.ts`: `prepareAvailability` thành `prepareBusyInterval` (`set_busy_interval`); `mappers.ts` chỉ còn lệnh cửa sổ `set_busy_interval`; bỏ `SET_AVAILABILITY` khỏi `apiAssistant.ts` và `types/assistant.ts`; cập nhật test tương ứng.
+- Docs: `requirements.md`, `scheduling.md`, `schema.md`, `frontend/DESIGN.md` ghi giờ rảnh là ngầm định 06:00–22:00, người dùng chỉ khai báo giờ bận.
+
+**Kết quả:** `tsc` sạch; `node --test` 86/86; build đạt; `check_contract.py` đạt.
+
+**Ghi chú**
+
+- Lớp vẽ "Rảnh" trong lịch (`workingTime.ts`, `MonthCalendar`, `WeekCalendar`) vẫn còn nhưng không bao giờ có dữ liệu ở API mode (không còn cửa sổ `AVAILABILITY`); chưa dọn vì chạm nhiều file và test.
+- Chưa kiểm thủ công trên trình duyệt sau khi gỡ; DB local đã reset nên tài khoản test cũ không còn.

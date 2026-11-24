@@ -21,8 +21,6 @@ const INTENTS: IntentCandidate[] = [
 
   "SEARCH_TASKS",
 
-  "SET_AVAILABILITY",
-
   "SET_BUSY_INTERVAL",
 
   "SET_SCHEDULING_PREFERENCES",
