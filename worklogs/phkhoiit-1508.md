@@ -769,3 +769,10 @@
 
 - Thu hẹp phạm vi chat: chỉ `SUMMARIZE_LEARNING`, `CREATE_QUIZ`, `PROPOSE_REVISION` (đều tạo pending action). `ASK_LEARNING` và thống kê vẫn qua REST vì kết quả không khớp `ToolResult` đóng của hàng đợi workflow.
 - Phiên học theo conversation dùng idempotency key xác định (conversation + tài liệu), không thêm RPC tra cứu.
+
+**Phase 2 (NLU)**
+
+- `contracts/schemas/f1.schema.json`: `ExtractionResult` thêm intent `SUMMARIZE_LEARNING`, `CREATE_QUIZ`, `PROPOSE_REVISION`; sinh migration contract `202611250004_orchestrator_intents_contract_schema.sql` (đổi `TARGET`).
+- `backend/app/nlu/extractor.py`: mô tả 3 intent và slot trong `PROMPT`; `test_extractor.py` thêm test roundtrip.
+
+**Kết quả (Phase 2):** unit backend 211/211; pgTAP 25 file/803 test pass; contract checker và `--check` đạt. Chưa gọi DeepSeek thật để kiểm chất lượng nhận diện intent.

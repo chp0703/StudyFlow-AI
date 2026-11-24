@@ -2492,6 +2492,9 @@
                   "SET_SCHEDULING_PREFERENCES",
                   "GENERATE_STUDY_PLAN",
                   "GET_STUDY_PLAN",
+                  "SUMMARIZE_LEARNING",
+                  "CREATE_QUIZ",
+                  "PROPOSE_REVISION",
                   "UNKNOWN",
                   "UNSUPPORTED"
                 ]
