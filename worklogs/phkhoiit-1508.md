@@ -776,3 +776,17 @@
 - `backend/app/nlu/extractor.py`: mô tả 3 intent và slot trong `PROMPT`; `test_extractor.py` thêm test roundtrip.
 
 **Kết quả (Phase 2):** unit backend 211/211; pgTAP 25 file/803 test pass; contract checker và `--check` đạt. Chưa gọi DeepSeek thật để kiểm chất lượng nhận diện intent.
+
+**Phase 3 (orchestrator)**
+
+- `backend/app/orchestrator/chat.py`: `CREATE_QUIZ` và `PROPOSE_REVISION` tạo pending action qua thao tác F2 có sẵn (`write_learning`, chọn tài liệu bằng `pick_material`); tự nối `GENERATE_STUDY_PLAN` sau đề xuất ôn tập (`with_revision_plan`); `resume` chờ lại (WAIT) trên task nháp do đề xuất tạo ra; `SUMMARIZE_LEARNING` trả lỗi không hỗ trợ trong chat.
+- `backend/app/orchestrator/actions.py`: quyết định F2/F3 gọi `resume_cross_feature` để hàng đợi chat đi tiếp; `workflow_shared.py` thêm `DONE_TEXT`.
+- `backend/app/assessment/recommendations.py`: `create(..., record_message=False)` để không ghi trùng tin nhắn chat.
+- `backend/tests/unit/test_orchestrator_handoffs.py`: 19 test (nối kế hoạch, chọn tài liệu, tạo action, retry, resume WAIT/ADVANCE).
+
+**Kết quả (Phase 3):** unit backend 230/230.
+
+**Ghi chú (Phase 3)**
+
+- Chưa chạy integration thật: chuỗi chat → duyệt đề xuất → task nháp → bổ sung (`answer_open_queue` hoặc `/v1/actions/{id}/review`) → plan proposal chỉ được kiểm bằng fake ở ranh giới RPC; cần chạy với Supabase local và DeepSeek.
+- `ASK_LEARNING`, thống kê chủ đề và tóm tắt phiên học chưa vào chat (kết quả không khớp `ToolResult` đóng; chat chưa có phiên học). `create_learning_session` đã nhận `conversation_id` ở RPC để làm tiếp.

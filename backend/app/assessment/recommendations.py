@@ -40,25 +40,26 @@ class RevisionRecommendationOperations:
             raise WorkflowError('INTERNAL_ERROR', 'Invalid OrchestratorReply payload')
         return payload
 
-    def create(self, ctx, receipt, key, body):
+    def create(self, ctx, receipt, key, body, record_message=True):
         action_id = receipt['action_id']
         recommendation_id = str(uuid5(UUID(action_id), 'revision-recommendation'))
         conversation = str(UUID(body['conversation_id']))
         material_id = str(UUID(body['material_id']))
-        source_msg = {
-            'message_id': receipt['message_id'],
-            'user_id': ctx.user_id,
-            'conversation_id': conversation,
-            'source': 'UI',
-            'role': 'USER',
-            'text': 'Đề xuất ôn tập theo kết quả làm bài',
-            'received_at': receipt['created_at'],
-        }
-        self._call(
-            ctx, 'record_source_message', {'message': source_msg},
-            idempotency_key=child_key(key, 'recommendation-message'),
-            conversation_id=conversation, message_id=receipt['message_id'],
-        )
+        if record_message:  # chat already recorded the user's message under this id
+            source_msg = {
+                'message_id': receipt['message_id'],
+                'user_id': ctx.user_id,
+                'conversation_id': conversation,
+                'source': 'UI',
+                'role': 'USER',
+                'text': 'Đề xuất ôn tập theo kết quả làm bài',
+                'received_at': receipt['created_at'],
+            }
+            self._call(
+                ctx, 'record_source_message', {'message': source_msg},
+                idempotency_key=child_key(key, 'recommendation-message'),
+                conversation_id=conversation, message_id=receipt['message_id'],
+            )
         args = {
             'recommendation_id': recommendation_id, 'pending_action_id': action_id,
             'material_id': material_id, 'topic': body['topic'],

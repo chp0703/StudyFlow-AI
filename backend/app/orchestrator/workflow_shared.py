@@ -19,7 +19,9 @@ FORM_TEXT = {"create_task_candidate": "Thêm công việc bằng biểu mẫu", 
              "generate_study_plan": "Tạo kế hoạch học bằng biểu mẫu"}
 DONE_TEXT = {"confirm_task": "Đã lưu công việc.", "set_availability": "Đã cập nhật giờ rảnh.",
              "set_busy_interval": "Đã cập nhật giờ bận.", "set_scheduling_preferences": "Đã cập nhật tùy chọn lập lịch.",
-             "approve_study_plan": "Đã duyệt kế hoạch học.", "reject_study_plan": "Đã từ chối kế hoạch."}
+             "approve_study_plan": "Đã duyệt kế hoạch học.", "reject_study_plan": "Đã từ chối kế hoạch.",
+             "verify_question_drafts": "Đã xác nhận bộ câu hỏi.", "decide_revision_recommendation": "Đã áp dụng đề xuất ôn tập.",
+             "decide_learning_session_outcome": "Đã lưu kết quả phiên học."}
 AWAITING = ("AWAITING_CLARIFICATION", "AWAITING_CONFIRMATION", "AWAITING_APPROVAL")
 
 

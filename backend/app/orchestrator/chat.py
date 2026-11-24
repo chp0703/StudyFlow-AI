@@ -18,10 +18,11 @@ from .workflow_ports import ChatActions, Clock, WorkflowError
 from ..nlu.extractor import Extractor
 from .workflow_shared import AWAITING, DONE_TEXT, INTENT, PRODUCT_TIMEZONE, Terminal, _ok, reply
 
-WRITE_INTENTS = {"CREATE_TASK", "SET_AVAILABILITY", "SET_BUSY_INTERVAL", "SET_SCHEDULING_PREFERENCES", "GENERATE_STUDY_PLAN"}
+WRITE_INTENTS = {"CREATE_TASK", "SET_AVAILABILITY", "SET_BUSY_INTERVAL", "SET_SCHEDULING_PREFERENCES", "GENERATE_STUDY_PLAN",
+                 "PROPOSE_REVISION"}
 APPROVAL_OPERATIONS = {"confirm_task", "set_availability", "set_busy_interval", "set_scheduling_preferences",
                        "approve_study_plan", "reject_study_plan"}
-GENERIC_QUESTION = {"field": "intent", "message": "Bạn muốn thêm công việc, tìm công việc, đặt giờ rảnh/bận hay lập kế hoạch?",
+GENERIC_QUESTION = {"field": "intent", "message": "Bạn muốn thêm công việc, tìm công việc, đặt giờ rảnh/bận, lập kế hoạch, tạo câu hỏi ôn tập hay đề xuất ôn tập?",
                     "choices": []}
 
 
@@ -58,7 +59,7 @@ class ChatProcessor:
                 if source_ids:
                     raise Terminal('ACTION_REVIEW_REQUIRED', 'Hãy xử lý thao tác đang chờ trước khi nhập nguồn mới.')
                 return self.answer_open_queue(ctx, receipt, key, conversation, text, open_queue)
-            extraction = {'intents': source_intents} if source_ids else self.extract(ctx, conversation, text, None)
+            extraction = {'intents': source_intents} if source_ids else self.with_revision_plan(self.extract(ctx, conversation, text, None))
             if source_ids and not extraction['intents']:
                 return 200, reply(ctx.request_id, 'SUCCEEDED', 'Không tìm thấy công việc hoặc sự kiện trong nguồn đã gửi.')
             if source_ids and text.strip():
@@ -71,6 +72,16 @@ class ChatProcessor:
                 return 200, reply(ctx.request_id, "NEEDS_CLARIFICATION", "Mình chưa hiểu bạn muốn làm gì.", questions=[GENERIC_QUESTION])
             own = self.initialize(ctx, receipt, key, conversation, message_id, extraction)
         return 200, self.advance(ctx, receipt, key, own)
+
+    @staticmethod
+    def with_revision_plan(extraction: dict) -> dict:
+        """Đề xuất ôn tập tạo task nháp; nếu người dùng chưa yêu cầu lập kế hoạch thì nối thêm một bước lập kế hoạch cuối hàng đợi."""
+        intents = extraction["intents"]
+        last = max((i for i, item in enumerate(intents) if item["intent"] == "PROPOSE_REVISION"), default=None)
+        if last is None or any(item["intent"] == "GENERATE_STUDY_PLAN" for item in intents[last + 1:]):
+            return extraction
+        plan = {"intent": "GENERATE_STUDY_PLAN", "slots": {}, "raw_expressions": {}, "ambiguities": []}
+        return {**extraction, "intents": [*intents, plan]}
 
     def source_intents(self, ctx, conversation, source_ids):
         intents = []
@@ -179,6 +190,11 @@ class ChatProcessor:
                 return self.read(ctx, cont, index, "search_tasks", self.search_args(item["slots"])), None
             if kind == "GET_STUDY_PLAN":
                 return self.read(ctx, cont, index, "get_study_plan", self.plan_view_args(item["slots"])), None
+            if kind == "SUMMARIZE_LEARNING":
+                return self.outcome(cont, index, None, "FAILED", error=self.error(
+                    "UNSUPPORTED_OPERATION", "Tóm tắt phiên học hiện chưa dùng được trong chat; hãy dùng màn hình học.")), None
+            if kind in ("CREATE_QUIZ", "PROPOSE_REVISION"):
+                return self.write_learning(ctx, key, cont, index, item)
             return self.write(ctx, key, cont, index, item, tag, conversation, message_id)
         except Terminal as exc:
             return self.outcome(cont, index, None, "FAILED", error=exc.error), None
@@ -235,6 +251,58 @@ class ChatProcessor:
         action = stored["pending_action"]
         return None, {"action_id": action["action_id"], "action_version": action["version"], "target_type": target[0],
                       "target_id": target[1], "target_version": target[2]}
+
+    def write_learning(self, ctx, key, cont, index, item):
+        """CREATE_QUIZ / PROPOSE_REVISION: chọn tài liệu, gọi thao tác F2 có sẵn để tạo pending action chờ duyệt."""
+        message_id, conversation = cont["source_message_id"], cont["conversation_id"]
+        action_id = action_id_for(message_id, index)
+        active = self.proc.workflow_context(ctx, conversation, None, key, True)["active_action"]
+        if active is not None and active["pending_action"]["action_id"] == action_id:
+            return None, self.reference_for(active)  # đã được tạo ở lần thử trước của chính bước này
+        if active is not None:
+            return self.outcome(cont, index, None, "FAILED", error=self.error(
+                "ACTION_REVIEW_REQUIRED", "Đang có một thao tác chờ xác nhận; hãy xác nhận hoặc hủy trước.")), None
+        slots = item["slots"]
+        topic = slots.get("topic")
+        if not isinstance(topic, str) or not topic.strip():
+            return self.outcome(cont, index, None, "FAILED", error=self.error(
+                "INVALID_PARAMETER", "Bạn muốn ôn chủ đề nào? Hãy nêu tên chủ đề.")), None
+        material_id = self.pick_material(ctx, slots.get("material"))
+        body = {"schema_version": "1.1", "conversation_id": conversation, "material_id": material_id, "topic": topic.strip()}
+        receipt = {"action_id": action_id, "message_id": message_id}
+        step_key = child_key(key, f"learning{index}")
+        if item["intent"] == "CREATE_QUIZ":
+            body |= {"question_type": slots.get("question_type") or "MCQ", "count": slots.get("count") or 5}
+            if not contract.is_valid("GenerateQuestionDraftsRequest", body):
+                return self.outcome(cont, index, None, "FAILED", error=self.error(
+                    "INVALID_PARAMETER", "Mình chưa hiểu yêu cầu tạo câu hỏi (số câu 1-10, dạng MCQ hoặc TRUE_FALSE).")), None
+            _, payload = self.proc.questions_ops.generate_drafts(ctx, receipt, step_key, body)
+        else:
+            priority = slots.get("priority", 0.5)
+            body |= {"suggested_minutes": slots.get("suggested_minutes") or 30, "priority": 1 if priority == 1 else priority}
+            if not contract.is_valid("CreateRevisionRecommendationRequest", body):
+                return self.outcome(cont, index, None, "FAILED", error=self.error(
+                    "INVALID_PARAMETER", "Mình chưa hiểu đề xuất ôn tập (15-240 phút, ưu tiên 0.1, 0.5 hoặc 1).")), None
+            _, payload = self.proc.recommendations_ops.create(ctx, receipt, step_key, body, record_message=False)
+        if payload.get("state") != "AWAITING_APPROVAL" or payload.get("action_reference") is None:
+            return self.outcome(cont, index, None, "FAILED", error=self.error(
+                "INVALID_PARAMETER", payload.get("message") or "Không tạo được thao tác chờ xác nhận.")), None
+        return None, payload["action_reference"]
+
+    def pick_material(self, ctx, name):
+        """Một tài liệu học đã index: khớp theo tên nếu người dùng nêu, tự chọn khi chỉ có một."""
+        data = self.proc.step(ctx, "list_learning_materials",
+                              {"limit": 20, "before_created_at": None, "before_material_id": None})["data"]
+        ready = [m for m in data["materials"] if m["status"] == "READY"]  # shortcut: first 20 materials only, paginate when users exceed it
+        if isinstance(name, str) and name.strip():
+            wanted = name.strip().lower()
+            ready = [m for m in ready if wanted in m["filename"].lower()] or ready
+        if not ready:
+            raise Terminal("ENTITY_NOT_FOUND", "Bạn chưa có tài liệu học nào sẵn sàng. Hãy tải tài liệu lên ở trang Học.")
+        if len(ready) > 1:
+            names = ", ".join(m["filename"] for m in ready[:5])
+            raise Terminal("INVALID_PARAMETER", f"Bạn có nhiều tài liệu ({names}). Hãy nêu tên tài liệu muốn dùng.")
+        return ready[0]["material_id"]
 
     @staticmethod
     def reference_for(action_context):
@@ -323,6 +391,11 @@ class ChatProcessor:
         if queue is None or queue["awaiting_reference"] is None or queue["awaiting_reference"]["action_id"] != reference["action_id"]:
             return None
         index = queue["cursor"]
+        follow = None if rejected or operation != "decide_revision_recommendation" else self.follow_up(result)
+        if follow is not None:
+            # Đề xuất ôn tập vừa tạo task nháp: bước này tiếp tục chờ người dùng bổ sung/xác nhận task đó.
+            queue = self.checkpoint(ctx, key, queue, self.binding(receipt, "submit_decision", key), "WAIT", reference=follow)
+            return self.compose(ctx, queue, conversation, cancelled_reply)
         if rejected:
             outcome = self.outcome(queue, index, None, "REJECTED")
         else:
@@ -330,6 +403,13 @@ class ChatProcessor:
         queue = self.checkpoint(ctx, key, queue, self.binding(receipt, "submit_decision", key), "ADVANCE", outcome=outcome)
         # Các bước sau dùng ID tin nhắn gốc của hàng đợi; chỉ receipt và khóa con lấy từ yêu cầu này.
         return self.advance(ctx, receipt, key, queue, "submit_decision", fallback=cancelled_reply)
+
+    def follow_up(self, result):
+        data = (result or {}).get("data") or {}
+        pending = data.get("pending_action") if isinstance(data, dict) else None
+        if pending is None or pending.get("state") not in AWAITING or data.get("candidate") is None:
+            return None
+        return self.reference_for({"pending_action": pending, "candidate": data["candidate"], "proposal": None})
 
     # ------------------------------------------------------------ ghép phản hồi từ trạng thái đã lưu
     def compose(self, ctx, cont, conversation, fallback=None):
