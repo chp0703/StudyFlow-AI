@@ -36,7 +36,10 @@
 .task-panel-wrap .task-panel {
   width: 300px;
   height: 100%;
+  max-height: 100%;
+  min-height: 0;
   flex: 1;
+  overflow: hidden;
 }
 .planner-page.is-tasks-closed {
   gap: 0;
@@ -581,6 +584,14 @@
   border-radius: 50%;
   background: var(--pink);
 }
+.now-line.is-highlighted {
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--pink) 16%, transparent);
+  animation: now-line-pulse 0.8s ease-out 2;
+}
+@keyframes now-line-pulse {
+  50% { opacity: 0.55; }
+}
+.calendar-now-btn { display: inline-flex; align-items: center; gap: 5px; }
 
 /* Nút điều khiển lịch có kiểu dáng như nút chat */
 .planner-calendar .dashboard-calendar-controls {
@@ -947,6 +958,7 @@
   flex-direction: column;
   gap: 10px;
   padding: 12px 14px 14px;
+  overflow: hidden;
 }
 .task-panel-search-wrap {
   position: relative;
@@ -1010,6 +1022,18 @@
   display: grid;
   align-content: start;
   gap: 6px;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-primary) 45%, transparent) transparent;
+}
+.task-panel-list::-webkit-scrollbar { width: 7px; }
+.task-panel-list::-webkit-scrollbar-thumb { border-radius: 8px; background: color-mix(in srgb, var(--color-primary) 38%, transparent); }
+.task-panel-list:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-primary) 45%, transparent); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .now-line.is-highlighted { animation: none; }
 }
 .task-panel-list li {
   display: grid;
@@ -1021,13 +1045,32 @@
   transition: background 0.15s, border-color 0.15s;
 }
 .task-panel-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; font-size: 12px; color: var(--color-muted); }
-.task-panel-description { font-size: 12px; line-height: 1.4; color: var(--color-muted); overflow-wrap: anywhere; }
+.task-panel-description { min-width: 0; font-size: 12px; line-height: 1.4; color: var(--color-muted); overflow-wrap: anywhere; }
+.task-panel-description summary { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; cursor: pointer; list-style: none; }
+.task-panel-description summary::-webkit-details-marker { display: none; }
+.task-panel-description summary::after { content: " · Xem thêm"; color: var(--color-primary); font-weight: 600; white-space: nowrap; }
+.task-panel-description[open] summary { display: none; }
+.task-panel-description:not([open]) > span { display: none; }
+.task-panel-description[open] > span { display: block; max-height: 9.8em; overflow-y: auto; }
+.task-panel-description-text { font-size: 12px; line-height: 1.4; color: var(--color-muted); overflow-wrap: anywhere; }
 .task-panel-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .status-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 100px; font-size: 11.5px; font-weight: 600; }
 .status-chip.is-draft { border: 1px dashed var(--color-primary); color: var(--color-primary); }
 .status-chip.is-confirmed { background: rgba(34, 160, 107, 0.12); }
 .status-chip.is-unscheduled { background: #f0f2fc; }
 .task-panel-empty { margin: 8px 0 0; font-size: 12.5px; color: var(--color-muted); line-height: 1.5; }
+
+.schedule-event { appearance: none; width: auto; padding: 0; text-align: left; font: inherit; cursor: pointer; }
+.schedule-event:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; z-index: 4; }
+.calendar-event-detail { display: grid; gap: 14px; min-width: min(420px, 78vw); }
+.calendar-event-detail > strong { font-size: 17px; color: var(--color-ink); }
+.calendar-event-detail dl { display: grid; gap: 8px; margin: 0; }
+.calendar-event-detail dl > div { display: grid; grid-template-columns: 100px 1fr; gap: 12px; }
+.calendar-event-detail dt { color: var(--color-muted); }
+.calendar-event-detail dd { margin: 0; color: var(--color-ink); font-weight: 600; }
+.calendar-event-detail p { margin: 0; color: var(--color-muted); line-height: 1.5; }
+.calendar-event-contract-note { padding: 10px 12px; border-radius: 10px; background: var(--color-info-bg); color: var(--color-info-text) !important; }
+.calendar-event-learn-button { justify-self: end; min-height: 44px; gap: 8px; }
 
 .proposal-issues { font-size: 12px; margin-top: 2px; }
 .proposal-issues summary { cursor: pointer; font-weight: 600; }
@@ -1108,12 +1151,13 @@
   }
   .task-panel-wrap {
     flex: none;
-    height: 280px;
+    height: 420px;
   }
   .planner-page.is-month .task-panel-wrap {
-    height: 280px;
+    height: 420px;
   }
   .planner-page.is-tasks-closed .task-panel-wrap {
     display: none;
   }
 }
+.task-panel-retry { min-height: 28px; padding: 4px 9px; font-size: 11px; }

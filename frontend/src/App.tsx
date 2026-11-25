@@ -39,6 +39,15 @@ import { loadPending, plannerConversationId, savePending } from "./api/pending"
 import { api } from "./api"
 
 import { proposalFromReply } from "./api/mappers"
+import { mapTask } from "./api/mappers"
+import { ApiError, errorText } from "./api/client"
+import type { ApiTask } from "./api/types"
+import {
+  revisionScheduleArguments,
+  revisionScheduleAttempt,
+  type RevisionScheduleAttempt,
+  type RevisionSchedulingState,
+} from "./features/planner/revisionScheduling"
 
 import Study from "./pages/Study"
 
@@ -70,7 +79,7 @@ const pageInfo: Record<string, PageInfo> = {
   Study: {
     title: "Học tập",
 
-    description: "Tài liệu học tập, luyện đề và trao đổi cùng trợ lý AI.",
+    description: "Tài liệu, câu hỏi và luyện tập có kiểm chứng.",
   },
 }
 
@@ -92,6 +101,14 @@ const infoModals: Record<string, ModalInfo> = {
 
 export default function App() {
   const [page, setPage] = useState("Assistant")
+  const [studyArea, setStudyArea] = useState<"assessment" | "learning">(
+    "assessment",
+  )
+
+  const [learningEntry, setLearningEntry] = useState<{
+    blockId: string
+    goal: string
+  } | null>(null)
 
   // Demo mode keeps everything in memory; API mode reads it from the server (see api/useServerData).
 
@@ -106,6 +123,14 @@ export default function App() {
   // Thay đổi lịch đang chờ người dùng duyệt và số phiên bản sửa đổi của lịch đã xác nhận.
 
   const [proposal, setProposal] = useState<Proposal | null>(null)
+
+  const [revisionScheduling, setRevisionScheduling] =
+    useState<RevisionSchedulingState | null>(null)
+
+  const revisionAttempt = useRef<RevisionScheduleAttempt | null>(null)
+
+  const activeUserId = useRef(session?.user.id)
+  activeUserId.current = session?.user.id
 
   const [demoRevision, setRevision] = useState(0)
 
@@ -333,10 +358,14 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    document.title = `${
-      destinations.find((d) => d.name === page)?.label ?? page
-    } | StudyFlow AI`
+    const title =
+      page === "Study" && studyArea === "learning"
+        ? "Học cùng AI"
+        : (destinations.find((d) => d.name === page)?.label ?? page)
+    document.title = `${title} | StudyFlow AI`
+  }, [page, studyArea])
 
+  useEffect(() => {
     if (firstPage.current) {
       firstPage.current = false
 
@@ -351,6 +380,7 @@ export default function App() {
   }, [page])
 
   const go = (p: string) => {
+    if (p === "Study") setLearningEntry(null)
     setPage(p)
   }
 
@@ -407,10 +437,20 @@ export default function App() {
         } else savePending(userId, null)
       })
 
-      .catch(() => savePending(userId, null))
+      .catch((cause) => {
+        if (cause instanceof ApiError && !cause.retryable)
+          savePending(userId, null)
+      })
   }, [session?.user.id, server])
 
   const info = pageInfo[page]
+  const visibleInfo =
+    page === "Study" && studyArea === "learning"
+      ? {
+          title: "Học cùng AI",
+          description: "Hiểu sâu hơn từ tài liệu của bạn.",
+        }
+      : info
 
   const email = session?.user.email ?? ""
 
@@ -419,6 +459,174 @@ export default function App() {
 
     [session?.user.id],
   )
+
+  useEffect(() => {
+    revisionAttempt.current = null
+    setRevisionScheduling(null)
+  }, [session?.user.id])
+
+  const scheduleConfirmedTask = async (
+    task?: ApiTask,
+    confirmedByPlanner = false,
+    availabilityConfirmed = false,
+  ) => {
+    const userId = session?.user.id
+    if (!apiEnabled || !userId) return
+
+    const attempt = task
+      ? revisionScheduleAttempt(revisionAttempt.current, userId, task)
+      : revisionAttempt.current
+    if (!attempt || attempt.running) {
+      if (task && !attempt)
+        setRevisionScheduling({
+          taskId: task.task_id,
+          status: "failed",
+          message:
+            "Đã quá hạn hoàn thành. Cần điều chỉnh hạn trước khi xếp lịch.",
+        })
+      return
+    }
+    revisionAttempt.current = attempt
+
+    if ((!confirmedByPlanner && proposal) || loadPending(userId)) {
+      setRevisionScheduling({
+        taskId: attempt.task.task_id,
+        status: "blocked",
+        message:
+          "Planner đang có một đề xuất chờ duyệt. Hãy xử lý đề xuất đó rồi thử lại.",
+      })
+      return
+    }
+
+    if (
+      !availabilityConfirmed &&
+      !server.windows.some(
+        (window) =>
+          window.kind === "AVAILABILITY" && window.archived_at === null,
+      )
+    ) {
+      setRevisionScheduling({
+        taskId: attempt.task.task_id,
+        status: "needs_availability",
+        message:
+          "Chưa có giờ rảnh đã xác nhận. Hãy thiết lập thời gian học trong Planner.",
+      })
+      return
+    }
+
+    attempt.running = true
+    setRevisionScheduling({
+      taskId: attempt.task.task_id,
+      status: "finding",
+      message: "Đang tìm lịch học phù hợp…",
+    })
+
+    try {
+      await server.reload()
+      if (activeUserId.current !== attempt.userId) return
+      if (!attempt.sent) {
+        const currentArguments = revisionScheduleArguments(attempt.task)
+        if (!currentArguments)
+          throw new Error(
+            "Đã quá hạn hoàn thành. Cần điều chỉnh hạn trước khi xếp lịch.",
+          )
+        attempt.arguments = currentArguments
+      }
+      attempt.sent = true
+      const reply = await api.prepareStudyPlan(
+        conversationId,
+        attempt.arguments,
+        attempt.key,
+      )
+      if (activeUserId.current !== attempt.userId) return
+
+      if (reply.state === "AWAITING_APPROVAL") {
+        const sourceTasks = server.tasks.some(
+          (item) => item.id === attempt.task.task_id,
+        )
+          ? server.tasks
+          : [...server.tasks, mapTask(attempt.task)]
+        const next = proposalFromReply(reply, {
+          tasks: sourceTasks,
+          events: server.events,
+          windows: server.windows,
+          availability: server.availability,
+          revision: server.revision,
+        })
+        if (!next || !reply.action_reference)
+          throw new Error("Máy chủ chưa trả về đề xuất lịch có thể duyệt.")
+        setProposal(next)
+        savePending(userId, {
+          conversationId,
+          reference: reply.action_reference,
+        })
+        setRevisionScheduling({
+          taskId: attempt.task.task_id,
+          status: "pending",
+          message:
+            "Đã tìm được thời gian học. Xem và xác nhận lịch trong Planner.",
+        })
+      } else {
+        attempt.key = crypto.randomUUID()
+        attempt.sent = false
+        setRevisionScheduling({
+          taskId: attempt.task.task_id,
+          status: "failed",
+          message:
+            reply.error?.message ??
+            reply.message ??
+            "Chưa tìm được khung giờ phù hợp.",
+        })
+      }
+    } catch (cause) {
+      if (cause instanceof ApiError && !cause.retryable) {
+        attempt.key = crypto.randomUUID()
+        attempt.sent = false
+      }
+      if (activeUserId.current === attempt.userId)
+        setRevisionScheduling({
+          taskId: attempt.task.task_id,
+          status: "failed",
+          message: errorText(cause),
+        })
+    } finally {
+      attempt.running = false
+    }
+  }
+
+  const handleProposalDecision = (
+    decision: "APPROVE" | "REJECT",
+    taskIds: string[],
+  ) => {
+    const taskId = revisionScheduling?.taskId
+    if (
+      decision === "APPROVE" &&
+      taskIds.length === 0 &&
+      revisionScheduling?.status === "needs_availability"
+    ) {
+      void scheduleConfirmedTask(undefined, true, true)
+      return
+    }
+    if (!taskId || !taskIds.includes(taskId)) return
+    if (decision === "APPROVE") {
+      revisionAttempt.current = null
+      setRevisionScheduling({
+        taskId,
+        status: "scheduled",
+        message: "Đã xếp lịch.",
+      })
+    } else {
+      if (revisionAttempt.current) {
+        revisionAttempt.current.key = crypto.randomUUID()
+        revisionAttempt.current.sent = false
+      }
+      setRevisionScheduling({
+        taskId,
+        status: "failed",
+        message: "Đã từ chối đề xuất. Lịch đã xác nhận không thay đổi.",
+      })
+    }
+  }
 
   if (apiEnabled && sessionLoading) return null
 
@@ -550,13 +758,13 @@ export default function App() {
         id="main-content"
         tabIndex={-1}
       >
-        {info && (
+        {visibleInfo && (
           <div className="page-heading">
             <div>
               <h1 ref={mainHeadingRef} tabIndex={-1}>
-                {info.title}
+                {visibleInfo.title}
               </h1>
-              {info.description && <p>{info.description}</p>}
+              {visibleInfo.description && <p>{visibleInfo.description}</p>}
             </div>
           </div>
         )}
@@ -585,13 +793,48 @@ export default function App() {
             revision={revision}
             setRevision={setRevision}
             notify={setNotice}
+            revisionScheduling={revisionScheduling}
+            onRetryRevisionScheduling={
+              revisionAttempt.current
+                ? () => void scheduleConfirmedTask()
+                : undefined
+            }
+            onProposalDecision={handleProposalDecision}
+            onTaskConfirmed={(task) => void scheduleConfirmedTask(task, true)}
+            onScheduleTask={(taskId) => {
+              const task = server.apiTasks.find(
+                (item) => item.task_id === taskId,
+              )
+              if (task) void scheduleConfirmedTask(task)
+            }}
+            onStartLearning={
+              apiEnabled
+                ? (blockId, goal) => {
+                    setLearningEntry({ blockId, goal })
+                    setPage("Study")
+                  }
+                : undefined
+            }
           />
         )}
         <div
           hidden={page !== "Study"}
           className={page === "Study" ? "study-page-wrapper" : ""}
         >
-          <Study />
+          <Study
+            userId={session?.user.id ?? "demo"}
+            plannerBlockId={learningEntry?.blockId ?? null}
+            plannerGoal={learningEntry?.goal ?? ""}
+            revisionScheduling={revisionScheduling}
+            onRevisionTaskConfirmed={(task) => void scheduleConfirmedTask(task)}
+            onOpenPlanner={() => go("Planner")}
+            onRetryScheduling={
+              revisionAttempt.current
+                ? () => void scheduleConfirmedTask()
+                : undefined
+            }
+            onAreaChange={setStudyArea}
+          />
         </div>
       </main>
       {modal === "account" && apiEnabled && (

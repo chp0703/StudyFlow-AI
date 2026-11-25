@@ -24,7 +24,8 @@ import { proposalFromReply } from "../../api/mappers"
 
 import { savePending } from "../../api/pending"
 
-import type { ApiTimeWindow, OrchestratorReply } from "../../api/types"
+import type { ApiTask, ApiTimeWindow, OrchestratorReply } from "../../api/types"
+import { confirmedTask } from "./revisionScheduling"
 
 import {
   buildDemoClarificationQuestions,
@@ -59,6 +60,21 @@ export type PlannerProps = {
   setRevision: Dispatch<SetStateAction<number>>
 
   notify?: (message: string) => void
+
+  revisionScheduling?: import("./revisionScheduling").RevisionSchedulingState | null
+
+  onRetryRevisionScheduling?: () => void
+
+  onProposalDecision?: (
+    decision: "APPROVE" | "REJECT",
+    taskIds: string[],
+  ) => void
+
+  onTaskConfirmed?: (task: ApiTask) => void
+
+  onScheduleTask?: (taskId: string) => void
+
+  onStartLearning?: (blockId: string, goal: string) => void
 }
 
 export type PlannerFeedback = {
@@ -97,6 +113,9 @@ export function usePlanner(
     revision,
 
     setRevision,
+
+    onProposalDecision,
+    onTaskConfirmed,
   }: PlannerProps,
 
   showPlannerNotice: (message: string) => void,
@@ -331,6 +350,8 @@ export function usePlanner(
 
     setBusy(true)
 
+    const taskIds = proposal.server.taskIds
+
     try {
       const r = await api.decide(
         conversationId,
@@ -354,6 +375,11 @@ export function usePlanner(
         setFeedback({ kind: "success", text: r.message })
 
         showPlannerNotice(r.message)
+
+        onProposalDecision?.(decision, taskIds)
+
+        const task = decision === "APPROVE" ? confirmedTask(r) : null
+        if (task) onTaskConfirmed?.(task)
       } else if (decision === "REJECT" && r.state === "SUCCEEDED") {
         setProposal(null)
 
@@ -364,6 +390,8 @@ export function usePlanner(
         setReply(r.message)
 
         setFeedback({ kind: "info", text: r.message })
+
+        onProposalDecision?.(decision, taskIds)
       } else {
         setFeedback({
           kind: "error",

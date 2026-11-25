@@ -17,6 +17,7 @@ import {
 import { visibleSegments } from "./workingTime"
 
 import { monthDates } from "./monthGrid"
+import CalendarEventDetails from "./CalendarEventDetails"
 
 const weekdays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
 
@@ -237,16 +238,14 @@ export default function MonthCalendar({
           ) : (
             <p>Chưa có lịch học trong ngày.</p>
           )}
-          {selectedEvent && (
-            <div className="month-event-detail">
-              <strong>{selectedEvent.title}</strong>
-              <span>
-                {selectedEvent.time} · {selectedEvent.effort} phút
-              </span>
-              {selectedEvent.description && <p>{selectedEvent.description}</p>}
-            </div>
-          )}
         </section>
+      )}
+      {selectedEvent && (
+        <CalendarEventDetails
+          event={selectedEvent}
+          change={changeOf.get(selectedEvent.id)}
+          close={() => setSelectedEventId(null)}
+        />
       )}
     </div>
   )

@@ -519,6 +519,8 @@ test("an archived weekly interval review names the exact existing interval", () 
         state: "AWAITING_APPROVAL",
 
         action_id: "a",
+
+        version: 1,
       },
 
       candidate: null,
@@ -571,6 +573,8 @@ const windowPresentation = (
     state: "AWAITING_APPROVAL",
 
     action_id: "a",
+
+    version: 1,
   },
 
   candidate: null,
@@ -806,6 +810,7 @@ test("question draft presentation summarizes stems, options, answer keys, explan
       intent: "VERIFY_QUESTION_DRAFTS",
       state: "AWAITING_APPROVAL",
       action_id: "act-1",
+      version: 1,
     },
 
     candidate: null,

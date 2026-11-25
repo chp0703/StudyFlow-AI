@@ -79,3 +79,51 @@ test("an unresolved TimeWindow warning disables approval but keeps rejection", a
     await server.close()
   }
 })
+
+test("a schedule proposal uses the contextual approval label", async () => {
+  const server = await createServer({
+    server: { middlewareMode: true, hmr: false },
+    appType: "custom",
+  })
+  try {
+    const { default: ProposalReview } = await server.ssrLoadModule(
+      "/src/features/planner/ProposalReview.tsx",
+    )
+    const html = renderToStaticMarkup(
+      createElement(ProposalReview, {
+        proposal: {
+          id: "p-1",
+          createdAt: 0,
+          baseRevision: 1,
+          next: { tasks: [], availability: [] },
+          changes: [],
+          windowChanges: [],
+          issues: [],
+          reply: "Đã tìm được lịch",
+          server: {
+            reference: {
+              action_id: "a-1",
+              action_version: 1,
+              target_type: "PLAN_PROPOSAL",
+              target_id: "p-1",
+              target_version: 1,
+            },
+            title: "Lịch học đề xuất",
+            details: [],
+            taskIds: ["task-1"],
+            coverage: "FULL",
+          },
+        },
+        stale: false,
+        busy: false,
+        reply: "",
+        approve: () => {},
+        reject: () => {},
+      }),
+    )
+    assert.match(html, /Xác nhận lịch/)
+    assert.match(html, /Từ chối/)
+  } finally {
+    await server.close()
+  }
+})

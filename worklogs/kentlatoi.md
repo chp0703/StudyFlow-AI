@@ -203,3 +203,171 @@
 
 **Ghi chú**
 - Chưa chạy API E2E có đăng nhập vì không có backend/tài khoản thử nghiệm.
+
+## 2026-11-18 — Implement F2 assessment frontend
+
+**Mục tiêu:** Đưa luồng đánh giá học tập theo contract vào trang Study và giữ bài quiz minh họa riêng cho Demo Mode.
+
+**Đã làm**
+- Tách quiz Demo khỏi `frontend/src/pages/Study.tsx` vào `frontend/src/features/assessment/`, ghi rõ câu hỏi và kết quả minh họa.
+- Thêm giao diện API Mode cho tải tài liệu, duyệt câu hỏi nháp bằng tham chiếu server, làm bài với câu hỏi VERIFIED, kết quả và thống kê chủ đề.
+- Thêm test biên VERIFIED và cập nhật `docs/features/assessment/README.md` theo khả năng backend hiện có.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; TypeScript, build, 81/81 frontend tests và `git diff --check` đạt.
+
+**Ghi chú**
+- Chưa chạy browser QA hoặc E2E với backend/DeepSeek có cấu hình.
+- Backend main chưa đăng ký route recommendations; giao diện báo chưa khả dụng. Contract chưa có danh sách tài liệu hoặc khôi phục attempt.
+
+## 2026-11-19 — Redesign F2 Study workspace
+
+**Mục tiêu:** Đồng bộ PR #55 với `main` và biến trang Study API Mode thành workspace đánh giá rõ giai đoạn, dễ đọc và dùng tốt trên nhiều kích thước màn hình.
+
+**Đã làm**
+- Merge `origin/main` vào `feat/f2-assessment-frontend-kent` không xung đột; giữ App shell, design token và Planner mới cùng toàn bộ luồng F2.
+- Thiết kế lại `AssessmentWorkspace`: bốn bước Tài liệu/Câu hỏi/Luyện tập/Kết quả, drop zone và tóm tắt tài liệu, duyệt từng draft, quiz có tiến độ, kết quả và thống kê trung thực.
+- Giữ ActionReference do server cấp, duyệt rõ ràng, chỉ dùng câu VERIFIED, grading từ backend và câu bỏ trống; thêm test khóa/mở bước từ trạng thái backend.
+- Làm rõ Demo Quiz là dữ liệu minh họa, thêm tiến độ và trạng thái radio truy cập được; bổ sung responsive, focus và reduced-motion trong `study.css`.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; 83/83 Node tests, TypeScript, Vite build và `git diff --check` đạt. Browser QA API Mode đã đăng nhập đạt ở 360, 390, 430, 768, 1024, 1280, 1440 và 1920 px, không tràn ngang.
+
+**Ghi chú**
+- Upload E2E trên Chrome bị chặn vì extension chưa được bật quyền truy cập file URL; chưa gọi DeepSeek trả phí. Các bước sau upload được bảo vệ bởi test contract/state nhưng chưa QA lại trực quan trong phiên này.
+- Console còn cảnh báo GSAP target/scope từ App shell đã có sau merge; không có JavaScript error. Vite vẫn cảnh báo bundle JS trên 500 kB.
+
+## 2026-11-19 — Resolve PR #55 assessment review blockers
+
+**Mục tiêu:** Đồng bộ PR #55 với B7 trên main và sửa an toàn bốn blocker về quyết định, giới hạn quiz, nguồn đối chiếu và đề xuất ôn tập.
+
+**Đã làm**
+- Merge `origin/main` (`2d0a9f3`) vào `feat/f2-assessment-frontend-kent`, giữ F2 redesign và hợp nhất tài liệu recommendation/durability.
+- Giữ draft, chỉ mục duyệt và ActionReference khi kết quả decision bất định; dùng một idempotency key cho cùng quyết định, khóa đổi APPROVE/REJECT và tách decision thành công khỏi lỗi tải lại câu hỏi.
+- Giới hạn request tạo quiz ở 50 câu VERIFIED theo thứ tự máy chủ; hiển thị rõ tổng số và giới hạn khi có nhiều hơn 50 câu.
+- Hiển thị đúng văn bản từng source chunk được trích dẫn bằng `details/summary`, gồm tài liệu, trang, chỉ mục và trạng thái thiếu nguồn.
+- Tích hợp B7 từ tạo recommendation đến duyệt đề xuất, bổ sung thời gian TaskCandidate và xác nhận công việc riêng; giữ nguyên reference/provenance và không tự lập lịch.
+- Bổ sung regression tests cho 503/network/unknown/non-retryable, stable key/reference, partial success, 0–68 câu, source lookup, request 50 câu, fixture recommendation và UI recovery.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; 96/96 frontend tests, TypeScript và Vite production build đạt. Contract check đạt 194 definitions/135 fixtures; generated schema check đạt; 13/13 backend B7/assessment unit tests đạt.
+
+**Ghi chú**
+- Browser local chỉ tới màn hình đăng nhập; chưa có phiên Supabase/backend có dữ liệu để QA E2E F2. Viewport in-app bị kẹp ở 487px nên chưa xác nhận trực quan 390/768/1440; failure states được kiểm tra bằng mocks xác định.
+- Không chạy DeepSeek trả phí, Supabase reset/integration hay database tests. Console không có error nhưng còn warning GSAP target/scope đã tồn tại ở App shell/login; Vite vẫn cảnh báo bundle JS trên 500 kB.
+
+## 2026-11-19 — Polish F2 question controls and quiz dashboard
+
+**Mục tiêu:** Cho người học chọn số câu AI và số câu luyện tập đúng giới hạn contract, đồng thời làm giao diện quiz gọn, dễ điều hướng và truy cập tốt hơn.
+
+**Đã làm**
+- Thay số câu nháp cố định bằng select 1–10, mặc định 5; kiểm tra count trước API, khóa request trùng và báo đúng số draft server thực trả.
+- Cho chọn 1–50 câu luyện tập theo số câu VERIFIED của material, mặc định tối đa 5; request giữ thứ tự ổn định, chỉ lấy đúng material và đúng số đã chọn.
+- Thiết kế quiz thành dashboard hai cột với tiến độ, navigator theo question IDs của attempt, số đã/chưa trả lời và trạng thái hiện tại không tiết lộ chấm điểm.
+- Thêm modal xác nhận nộp bài, hiển thị số omissions, giữ radio/answer theo question ID và dùng lại quy trình submit/grading của server.
+- Thu gọn hero/stepper khi đang làm bài; thêm responsive stack, mobile collapsible overview, touch target, focus và aria semantics.
+- Bổ sung test contract count, partial batch, duplicate generation, selected quiz payload, active-attempt answer count, navigator và confirmation markup.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; 104/104 frontend tests, TypeScript, Vite production build và `git diff --check` đạt.
+
+**Ghi chú**
+- Browser authenticated đạt ở viewport hiện tại 1680×828, không horizontal overflow và không có JavaScript console error. HMR làm mất material state chỉ lưu trong phiên; active quiz tại 390/768/1366/1440 chưa tái kiểm tra và không gọi DeepSeek trả phí để dựng dữ liệu mới.
+- Vite vẫn cảnh báo bundle JavaScript trên 500 kB; SSR tests in cảnh báo HMR port 24678 đã được dùng nhưng toàn bộ assertion đạt.
+
+## 2026-11-20 — Optimize F2 Study viewport layout
+
+**Mục tiêu:** Đưa các điều khiển chính của Study vào khung nhìn laptop thông thường mà không cắt nội dung hoặc thay đổi luồng Assessment.
+
+**Đã làm**
+- Bỏ hero Assessment trùng với tiêu đề trang, rút stepper bốn giai đoạn thành thanh điều hướng cao 48px và giữ nguyên quy tắc mở khóa bước.
+- Thu gọn card, drop zone, form, review, quiz và kết quả trong `frontend/src/styles/study.css`; trả API Mode về cuộn trang tự nhiên thay vì vùng fixed-height có `overflow: hidden`.
+- Giữ upload dạng hai cột trên desktop, sidebar quiz hiện có và layout một cột trên mobile; sửa content-box khiến workspace tràn ngang ở 390px.
+- Thêm regression test cho một tiêu đề, bốn bước, natural scrolling, kích thước compact và mobile box sizing.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; 106/106 frontend tests, TypeScript, Vite production build và `git diff --check` đạt. Fixture dùng CSS sản phẩm xác nhận Step 1 vừa 1366×768/1440×900 và không tràn ngang ở 360/390px.
+
+**Ghi chú**
+- Visual QA dùng dữ liệu tổng hợp và Chrome headless, không gọi DeepSeek; chưa chạy E2E đăng nhập với material thật. Step 2 có nội dung review dài vẫn cuộn tự nhiên.
+- Vite vẫn cảnh báo bundle JavaScript trên 500 kB; SSR tests vẫn in cảnh báo HMR port 24678 đã được dùng nhưng mọi assertion đạt.
+
+## 2026-11-20 — Auto-propose F2 revision schedule
+
+**Mục tiêu:** Sau khi người học xác nhận công việc ôn tập F2, tự dùng scheduler F1 để tạo lịch đề xuất cho đúng task và vẫn yêu cầu duyệt trước khi ghi lịch.
+
+**Đã làm**
+- Chỉ kích hoạt sau kết quả xác nhận TaskCandidate `SUCCEEDED/COMMITTED`; lấy `task_id` máy chủ, tạo scope hữu hạn `SELECTED_TASKS` từ hiện tại/`available_from_at` đến deadline và gọi typed `generate_study_plan` bằng conversation Planner hiện có.
+- Dùng lại proposal overlay, `ProposalReview` và `/v1/decisions`; thêm trạng thái đang tìm/chờ duyệt/đã xếp/thất bại vào Study và TaskPanel, hành động xem Planner/thiết lập giờ rảnh/thử lại, không đổi cấu trúc lịch.
+- Giữ body và idempotency key cho kết quả mạng chưa rõ, khóa request đồng thời, chặn action đang chờ, làm mới scope sau thất bại đã xác định và bỏ kết quả nếu tài khoản đã đổi.
+- Bổ sung test typed endpoint, trigger chỉ sau commit, server task ID/scope, retry/concurrency và nhãn “Xác nhận lịch”; chạy lại toàn bộ scheduler F1 cho availability, busy, deadline, partial, retained block và split/break.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; 112/112 frontend tests, 29/29 scheduler unit tests, 15/15 scheduler acceptance tests, TypeScript, Vite production build và `git diff --check` đạt. Browser API Mode có đăng nhập xác nhận Planner render, không tràn ngang ở 1680×828 và không có console error; demo viewport bị công cụ kẹp ở 487×1055 nhưng không tràn ngang.
+
+**Ghi chú**
+- Không gọi DeepSeek trả phí và không tạo dữ liệu F2 thật trong browser; luồng proposal/decision được kiểm tra bằng fixture và component tests. Công cụ browser không áp dụng được chính xác 390/768/1366/1440 trong phiên này.
+- `npm run format -- --check` còn báo hai file có sẵn ngoài diff (`src/api/client.ts`, `src/api/sources.test.ts`); các file thay đổi của công việc này đã được format. Build vẫn cảnh báo chunk JavaScript trên 500 kB.
+
+## 2026-11-20 — Fix Planner tasks, scheduling and event details
+
+**Mục tiêu:** Giữ nguyên bố cục Planner nhưng làm task F2 gọn, danh sách cuộn ổn định và dùng chung luồng đề xuất lịch cho task đã xác nhận.
+
+**Đã làm**
+- Giới hạn đúng chuỗi chiều cao của task panel, tăng vùng list responsive và giữ search/filter cố định khi cuộn.
+- Ẩn provenance UUID chỉ với đúng định dạng task ôn tập B7; giữ nguyên description gốc và thêm disclosure cho nội dung dài.
+- Nối task thủ công đã COMMITTED và nút “Tìm giờ học” vào coordinator `generate_study_plan` đang dùng cho F2, giữ idempotency và approval hiện hành.
+- Thêm dialog chi tiết block cho lịch tuần/tháng; ghi rõ dời/bỏ block đang bị chặn bởi contract backend.
+- Bổ sung kiểm thử presentation, UUID task và height/overflow chain; QA responsive bằng dữ liệu demo xác định.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; contract checks, scheduler unit tests, frontend tests, TypeScript và Vite build đạt.
+
+**Ghi chú**
+- Chưa chạy authenticated API E2E vì không có tài khoản thử nghiệm; browser QA scheduling dùng demo, còn API flow được xác minh bằng contract/unit tests.
+- Contract F1 v1.1 chưa hỗ trợ dời chính xác hoặc bỏ riêng StudyBlock; không thêm mutation giả.
+
+## 2026-11-20 — Refine Planner time UX and F2 revision duration
+
+**Mục tiêu:** Khôi phục khả năng tới giờ hiện tại, làm task panel cuộn bằng chuột/bàn phím và tương thích contract B7 nhận mọi thời lượng nguyên 15–240 phút mà không nới lỏng F1 Availability.
+
+**Đã làm**
+- Thêm “Đến hiện tại” vào toolbar Planner: về tuần hiện tại, chuyển Month sang Week, dùng range hiển thị tạm chứa giờ Việt Nam thật, tự cuộn và highlight vạch đỏ; không ghi đè setting hoặc dữ liệu lịch.
+- Cho task list nhận focus/PageDown, giữ search/filter cố định và thêm scrollbar gọn; browser đo `scrollHeight 1630 > clientHeight 451`, `scrollTop 0 → 380 → 1106` và task cuối hiển thị.
+- Thêm CTA “Thiết lập giờ học mặc định” qua composer/approval TimeWindow hiện có; sau khi Availability được duyệt, tự thử lại scheduler cho task đã giữ, không giả lập “ô trắng = rảnh”.
+- Thay select thời lượng F2 bằng number input 15–240 bước 1 và chip chọn nhanh; kiểm tra raw input, khóa đổi tham số khi retry chưa rõ và xác minh payload `suggested_minutes: 20`.
+- Bổ sung test range hiện tại, biên thời lượng, payload recommendation; chạy lại frontend, contract và scheduler.
+
+**Kết quả:** PR #55, nhánh `feat/f2-assessment-frontend-kent`; 120/120 frontend tests, 29/29 scheduler unit tests, 37/37 scheduler acceptance tests, contract 194 definitions/135 fixtures, generated schema, TypeScript, Vite build và `git diff --check` đạt. Browser desktop 1366×768 không tràn ngang, task cuối truy cập được, “Đến hiện tại” lúc 20:29 hiển thị range 11:29–21:29 và không có console error.
+
+**Ghi chú**
+- Không có phiên authenticated/backend có dữ liệu F2 nên manual/F2 scheduling và input 20 phút chỉ được xác minh bằng contract/unit/fixture, chưa phải E2E live.
+- Backend chưa có policy “mọi ô trống là rảnh”; sản phẩm vẫn yêu cầu người dùng duyệt Availability. Công cụ mobile áp viewport 390×844 nhưng báo CSS viewport 487×1055; không tràn ngang, song kích thước pixel chính xác 390 chưa được xác nhận.
+- Vite vẫn cảnh báo chunk JavaScript trên 500 kB; không gọi DeepSeek, không reset Supabase.
+
+## 2026-11-23 — Implement F3 Daily AI Learning frontend
+
+**Mục tiêu:** Hoàn thiện frontend Daily AI Learning theo contract main, giữ nguyên F1/F2 và ranh giới xác nhận trước mọi ghi kết quả.
+
+**Đã làm**
+- Tạo workspace F3 độc lập từ HEAD PR #55; thêm typed endpoints cho materials, sessions, turns, summary, decisions và Planner context với JWT/idempotency/retry semantics hiện có.
+- Triển khai upload/list/poll/delete tài liệu, chọn tối đa năm tài liệu READY, phiên học khôi phục 30 ngày, transcript có citation/unsupported state và progressive hints theo mức máy chủ.
+- Thêm review summary bằng ActionReference nguyên vẹn, APPROVE/REJECT qua `/v1/decisions`, khóa double-submit và xử lý retry/stale reference.
+- Giữ F2 trong tab riêng đủ chiều rộng; thêm “Học ngay” trên StudyBlock đã xác nhận và xác minh context qua server trước khi tạo phiên.
+- Làm demo mode trung thực, responsive và accessible; bổ sung mapper/status/hint/recovery/idempotency/decision tests và browser QA 1440/1366/768/390/320.
+
+**Kết quả:** PR #55 đích, nhánh local `feat/f3-daily-learning-kent`; 134/134 frontend tests, TypeScript, targeted oxfmt, Vite production build, `git diff --check` và contract main 259 definitions/177 fixtures đạt. Browser demo không tràn ngang, console sạch, F2 render bình thường và modal trả focus đúng.
+
+**Ghi chú**
+- Backend F3 không tồn tại tại baseline PR #55 nên upload/polling/AI/summary live là NOT VERIFIED; các endpoint mới được fixture/contract test, browser chỉ kiểm tra demo mode.
+- Chưa push hoặc cập nhật PR #55; Vite vẫn cảnh báo bundle JavaScript trên 500 kB và frontend tests in warning HMR port 24678 đã được dùng dù mọi assertion đạt.
+
+## 2026-11-23 — Polish F3 workspace and local full-stack startup
+
+**Mục tiêu:** Hoàn thiện hierarchy và responsive UX của Daily AI Learning, giữ nguyên F2 Assessment và giúp chạy toàn bộ môi trường local bằng một lệnh an toàn.
+
+**Đã làm**
+- Thiết kế lại F3 thành workspace tài liệu và trợ lý học tập rõ vai trò; thêm mục tiêu phiên, gợi ý câu hỏi, composer bám đáy, transcript/citation/hint states và chuyển panel trên mobile.
+- Giữ `AssessmentWorkspace` ở tab F2 khi API mode hoạt động; DemoQuiz chỉ xuất hiện khi thiếu cấu hình API, không thay đổi contract hoặc logic F2.
+- Thêm regression tests cho demo trung thực, điều kiện bắt đầu phiên và responsive layout; giữ nguyên ActionReference, idempotency, session recovery và learning API mappers.
+- Thêm `scripts/dev-up.sh`: tự bật Docker/Supabase local, đồng bộ khóa RPC, xác minh DeepSeek `/models`, tạo môi trường Python khi cần, bật FastAPI/Vite và mở web; secrets tiếp tục nằm trong `.env.local` bị Git ignore.
+- Kiểm tra browser API mode có đăng nhập: F2 hiển thị đủ bốn giai đoạn; F3 render đúng workspace và báo 404 trung thực vì backend Daily Learning chưa có `/v1/materials`.
+
+**Kết quả:** PR #55, nhánh đích `feat/f2-assessment-frontend-kent`; 137/137 frontend tests, TypeScript, targeted oxfmt, Vite production build, `bash -n scripts/dev-up.sh` và `git diff --check` đạt. Supabase Auth hoạt động, các API F1/F2 trả dữ liệu và DeepSeek key được xác minh HTTP 200 mà không gọi sinh nội dung.
+
+**Ghi chú**
+- Backend Daily Learning vẫn chưa triển khai `/v1/materials` và các endpoint phiên học, nên F3 live API chưa thể hoàn tất; không tạo dữ liệu hoặc trạng thái thành công giả.
+- Build vẫn cảnh báo bundle JavaScript trên 500 kB; tests in warning HMR port 24678 đang được dùng nhưng mọi assertion đạt. ShellCheck chưa chạy vì máy chưa cài công cụ.
