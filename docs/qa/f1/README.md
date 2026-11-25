@@ -20,7 +20,7 @@ node docs/qa/f1/run_f1_ui_qa.mjs --browser --url http://127.0.0.1:5173 --email <
 
 ## Danh mục Tài liệu & Script trong `docs/qa/f1/`
 
-1. **[F1_Huong_Dan_QA.pdf](F1_Huong_Dan_QA.pdf)** — *Hướng dẫn Cầm tay Chỉ việc cho QA (2 trang A4)*: Trang 1 chạy 2 lệnh tự động, Trang 2 gồm 3 việc cần người thật mở Chrome thử tay + 5 Cổng chặn Release.
+1. **[F1_Huong_Dan_QA.pdf](F1_Huong_Dan_QA.pdf)** — *Hướng dẫn Cầm tay Chỉ việc cho QA (3 trang A4)*: Trang 1 chạy 2 lệnh tự động, Trang 2 thao tác cụ thể từng bước cho 3 việc QA thật làm trên Chrome, Trang 3 cách chụp bằng chứng báo Bug & 5 Cổng chặn Release.
 2. **[run_f1_auto_qa.py](run_f1_auto_qa.py)** — *Script Auto-QA API & Real DeepSeek E2E*: Hỗ trợ `--mode live` (FastAPI + Local Supabase) và `--mode embedded`, đo `Pass@k` / `Pass^k`, tự khóa an toàn không chạm Cloud Supabase `phomrutsdhdgejlskwcb`.
 3. **[run_f1_ui_qa.mjs](run_f1_ui_qa.mjs)** — *Script Auto-QA Frontend & Playwright Chaos*: Chạy kiểm chứng `clarification.ts`, giới hạn `8.000` ký tự, chính sách retry `503`, unit tests thuần TS và tùy chọn `--browser` phá giao diện.
 4. **[01-repository-and-architecture-audit.md](01-repository-and-architecture-audit.md)** — *Deliverable 1: Repository & Architecture Audit* (luồng thực thi 11 bước, Active Model, ma trận Tools/Skills, 12 lỗi `CF-01..CF-12`).
