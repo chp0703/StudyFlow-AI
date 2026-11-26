@@ -113,7 +113,7 @@ Toàn bộ các bản vá trên nhánh riêng `fix/f1-chat-planner-qa-kent @ 7b5
   1. **BE & DB — Công thức hạn mặc định:** Cập nhật đồng thời [workflow_shared.py:56-66](../../../backend/app/orchestrator/workflow_shared.py#L56-L66) ([actions.py:107-118](../../../backend/app/orchestrator/actions.py#L107-L118)) và tạo migration mới cập nhật `confirm_task` (dựa trên [202611140001_...sql:128](../../../supabase/migrations/202611140001_f1_be01_require_start_at_in_confirm_task.sql#L128)): khi người dùng không nêu deadline rõ ràng, tính tối thiểu `estimated_minutes + ceil(estimated_minutes / max_block_minutes - 1) * break_minutes` (hoặc áp dụng phương án chốt từ PO/Lead bên dưới).
   2. **BE — Chuẩn hóa đầu ra LLM ([actions.py:96-118](../../../backend/app/orchestrator/actions.py#L96-L118), `normalize_slots`):** Nếu LLM tự điền `deadline_at <= start_at` (hoặc không có biểu thức deadline trong `raw_expressions` mà model trả `deadline_at == start_at`), xóa giá trị sai của model để áp dụng công thức mặc định hợp lệ hoặc yêu cầu làm rõ.
   3. **BE & DB — Siết điều kiện chặn ([202611140001_...sql:134](../../../supabase/migrations/202611140001_f1_be01_require_start_at_in_confirm_task.sql#L134) & validation tạo nháp):** Đổi `v_start_at > v_deadline` thành `v_deadline <= v_start_at` và kiểm tra tối thiểu `v_deadline - v_start_at >= estimated_minutes`.
-- > **Cần Product/Lead chốt nhanh trước khi code:** Khi người dùng chỉ nói giờ bắt đầu + thời lượng mà không nói hạn hoàn thành, chọn quy tắc nào: **(a)** tự động cộng thêm đủ `break_minutes` giữa các block, **(b)** mặc định cuối ngày `23:59`, hay **(c)** bắt buộc hỏi thêm `deadline` trong `questions()`?
+- > **Quy tắc đã chốt:** Mặc định hạn hoàn thành là **cuối ngày `23:59`** của ngày `start_at` (nếu thời lượng + thời gian nghỉ vượt quá nửa đêm thì lấy `max(cuối ngày 23:59, start_at + estimated_minutes + breaks)`); cập nhật đồng bộ cả backend lẫn migration `confirm_task`.
 
 ---
 
@@ -149,7 +149,7 @@ Toàn bộ các bản vá trên nhánh riêng `fix/f1-chat-planner-qa-kent @ 7b5
 - **Đặc tả sửa lỗi:**
   1. Nếu chọn phương án linh hoạt (`>= task.start_at`): cập nhật `_eligible_windows` ([engine.py:171-181](../../../backend/app/f1/scheduler/engine.py#L171-L181)) và [constraints.py:452-462](../../../backend/app/f1/scheduler/constraints.py#L452-L462) cho phép đặt block trong bất kỳ khoảng rảnh nào `>= max(task.start_at, available_from_at)` và `<= deadline_at`, ưu tiên gần `task.start_at` nhất (chỉ giữ `==` khi có cờ cố định giờ riêng).
   2. Dù chọn phương án linh hoạt hay khóa cứng, bổ sung mã lý do riêng (ví dụ `START_TIME_OUTSIDE_AVAILABILITY`) và ánh xạ sang tiếng Việt rõ ràng để không báo chung chung `INSUFFICIENT_CAPACITY`.
-- > **Cần Product/Lead chốt nhanh trước khi code:** `task.start_at` mang ý nghĩa là **"thời điểm sớm nhất có thể bắt đầu"** (`>= start_at`, tương tự `available_from_at`) hay **"khóa cứng đúng phút bắt đầu"** (`== start_at`)?
+- > **Quy tắc đã chốt:** Dùng chế độ **linh hoạt (`>= task.start_at`)** — ưu tiên xếp đúng giờ `task.start_at` trước; nếu `task.start_at` bị bận hoặc nằm ngoài giờ rảnh thì tự động đề xuất khung rảnh gần nhất từ `task.start_at` trở đi trước `deadline_at` kèm ghi chú tiếng Việt giải thích trên thẻ đề xuất (nhớ cập nhật lại unit test cũ của PR #32 nếu đang assert khóa cứng `==`).
 
 ---
 
@@ -170,7 +170,7 @@ Toàn bộ các bản vá trên nhánh riêng `fix/f1-chat-planner-qa-kent @ 7b5
   1. **FE — [conversationHistory.ts:436-517](../../../frontend/src/features/assistant/conversationHistory.ts#L436-L517):** Đổi tên IndexedDB theo phiên người dùng: `studyflow-assistant-history-${userId}` (và `studyflow-assistant-history-demo` khi ở Demo mode). Xóa/không đọc lại DB legacy `studyflow-assistant-history` không có `userId` để tránh lộ dữ liệu cũ.
   2. **FE — [useConversationHistory.ts:34-106](../../../frontend/src/features/assistant/useConversationHistory.ts#L34-L106):** Truyền `userId` vào hook và đưa vào dependency array của `useEffect`; khi `userId` thay đổi hoặc trở về `null` (đăng xuất), lập tức xóa state hội thoại/draft trong RAM, đóng handle DB cũ và mở đúng DB của `userId` mới.
   3. **FE — Rà soát lưu trữ cục bộ:** Xác minh toàn bộ khóa `localStorage` / `sessionStorage` liên quan đến Planner/Assistant đều có tiền tố theo `userId` hoặc được dọn sạch khi đăng xuất.
-- > **Cần Product/Lead chốt nhanh trước khi code:** Khi người dùng bấm **Đăng xuất** trên trình duyệt dùng chung, muốn **(a)** giữ nguyên DB cục bộ đã tách theo `userId` (để cùng user đăng nhập lại vẫn thấy lịch sử chat local) hay **(b)** xóa sạch luôn IndexedDB của user vừa đăng xuất để đảm bảo an toàn tuyệt đối trên máy công cộng?
+- > **Quy tắc đã chốt:** **Giữ IndexedDB tách riêng theo `userId`** (`studyflow-assistant-history-${userId}`), xóa sạch state trong RAM và đóng handle DB cũ khi đăng xuất (không xóa mất lịch sử cục bộ của chính user đó khi đăng nhập lại).
 
 ---
 
@@ -248,7 +248,7 @@ Toàn bộ các bản vá trên nhánh riêng `fix/f1-chat-planner-qa-kent @ 7b5
   1. **BE & DB — Hàm validate nghiệp vụ dùng chung:** Áp dụng tại `chat.py:write`, `chat.py:answer_open_queue`, `actions.py:prepare` (và bổ sung guard tại `create_task_candidate` nếu cần):
      - Kiểm tra riêng `estimated_minutes <= 0` trước schema check → trả lỗi `INVALID_PARAMETER`, `field="estimated_minutes"`, `"Thời lượng dự kiến phải lớn hơn 0 phút."`.
      - Kiểm tra `start_at >= deadline_at` hoặc `available_from_at > deadline_at` → trả lỗi `INVALID_PARAMETER`, `"Thời gian bắt đầu phải trước hạn hoàn thành."`, không tạo `pending_action` / `AWAITING_APPROVAL`.
-  2. **Contract & DB Schema — [f1.schema.json:337-348](../../../contracts/schemas/f1.schema.json#L337-L348):** Đặt giới hạn `maximum` hợp lý cho `estimated_minutes`, đồng bộ migration sinh từ contract và backend kèm thông báo lỗi tiếng Việt nêu rõ giới hạn tối đa.
+  2. **Contract & DB Schema — [f1.schema.json:337-348](../../../contracts/schemas/f1.schema.json#L337-L348):** Đặt giới hạn `maximum` cho `estimated_minutes` = **`1440` phút** (24 giờ), đồng bộ migration sinh từ contract và backend kèm thông báo lỗi tiếng Việt nêu rõ giới hạn tối đa.
   3. **FE — [frontend/src/api/client.ts:179](../../../frontend/src/api/client.ts#L179), [:207-210](../../../frontend/src/api/client.ts#L207-L210):** Trong `errorText()`, ưu tiên hiển thị `error.message` tiếng Việt chi tiết từ backend (khi không phải thông báo kỹ thuật tiếng Anh) thay vì luôn ghi đè bằng `MESSAGES.INVALID_PARAMETER` (`"Dữ liệu chưa hợp lệ."`).
 
 ---
@@ -520,24 +520,23 @@ Toàn bộ các bản vá trên nhánh riêng `fix/f1-chat-planner-qa-kent @ 7b5
 
 ### 4.1. Cách báo cáo tối giản cho DEV
 
-1. **Khi mở PR trên GitHub** (tiêu đề tiếng Anh, mô tả tiếng Việt, kèm cập nhật `worklogs/<github-username>.md`), dán đúng 3 dòng ngắn:
+1. **Khi mở PR trên GitHub** (tiêu đề tiếng Anh, mô tả tiếng Việt, kèm cập nhật `worklogs/<github-username>.md`), dán đúng 2 dòng ngắn:
    ```markdown
    - **Mã lỗi đã sửa:** `F1-FIX-xx`
-   - **Tác động môi trường:** Không / Cần `supabase db reset` / Cần đổi `.env`
-   - **Quy tắc đã chốt (nếu có):** ...
+   - **Tóm tắt thay đổi (nếu cần lưu ý):** ...
    ```
 2. **Cập nhật tiến độ bằng 1 cú tick:**
-   - **Dùng Google Sheet:** Import file [F1_Bang_Nghiem_Thu_Fix.csv](./F1_Bang_Nghiem_Thu_Fix.csv) vào Google Sheets → chọn 3 cột `DEV_da_fix`, `Can_DB_reset_hoac_Env`, `QA_da_duyet` → bấm **Insert → Checkbox**. DEV sửa xong chỉ điền `PR_hoac_Commit_SHA` rồi **tick `DEV_da_fix`**; QA kiểm tra lại xong chỉ **tick `QA_da_duyet`**.
+   - **Dùng Google Sheet:** Import file [F1_Bang_Nghiem_Thu_Fix.csv](./F1_Bang_Nghiem_Thu_Fix.csv) vào Google Sheets → chọn 2 cột `DEV_da_fix`, `QA_da_duyet` → bấm **Insert → Checkbox**. DEV sửa xong chỉ điền `PR_hoac_Commit_SHA` rồi **tick `DEV_da_fix`**; QA kiểm tra lại xong chỉ **tick `QA_da_duyet`**.
    - **Dùng GitHub Issue / Markdown:** Copy trực tiếp danh sách checklist bên dưới vào 1 GitHub Tracking Issue để tick nhanh.
 
 ### 4.2. Checklist Tick nhanh trên GitHub
 
 **Lỗi sản phẩm (`21` mã):**
 - [ ] `F1-FIX-01` (`P0`, `BE + FE`) — Horizon `minute-aligned` HTTP 422 *(PR/SHA: ...)*
-- [ ] `F1-FIX-02` (`P0`, `BE + DB`) — Hạn mặc định `CF-01` & chặn `deadline_at <= start_at` *(Chờ chốt rule; PR/SHA: ...)*
+- [ ] `F1-FIX-02` (`P0`, `BE + DB`) — Hạn mặc định `CF-01` (cuối ngày `23:59`) & chặn `deadline_at <= start_at` *(PR/SHA: ...)*
 - [ ] `F1-FIX-03` (`P0`, `BE + FE`) — Replan `CF-02` `retained block is outside current availability` *(PR/SHA: ...)*
-- [ ] `F1-FIX-04` (`P0`, `BE`) — Ràng buộc cứng `start_at == expected_utc` (`hcọ Lý`) *(Chờ chốt rule; PR/SHA: ...)*
-- [ ] `F1-FIX-05` (`P0 · Gate 3`, `FE`) — Cô lập IndexedDB lịch sử chat theo `userId` (`QA-SEC-01`) *(Chờ chốt rule đăng xuất; PR/SHA: ...)*
+- [ ] `F1-FIX-04` (`P0`, `BE`) — `start_at` linh hoạt `>=` (ưu tiên đúng giờ trước) (`hcọ Lý`) *(PR/SHA: ...)*
+- [ ] `F1-FIX-05` (`P0 · Gate 3`, `FE`) — Cô lập IndexedDB lịch sử chat theo `userId` (`QA-SEC-01`) *(PR/SHA: ...)*
 - [ ] `F1-FIX-06` (`P0 · Gate 4`, `BE + DB + FE`) — Kẹt `409` khi làm rõ, đóng popup Planner & F5 giữa chừng (`CF-04`) *(PR/SHA: ...)*
 - [ ] `F1-FIX-07` (`P1`, `FE`) — Tab bị `409 STALE_ENTITY_VERSION` phải ẩn nút Xác nhận/Hủy *(PR/SHA: ...)*
 - [ ] `F1-FIX-08` (`P1`, `BE + Contract/DB + FE`) — Validate sớm `start_at >= deadline_at` & `estimated_minutes` *(PR/SHA: ...)*
