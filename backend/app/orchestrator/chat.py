@@ -232,7 +232,7 @@ class ChatProcessor:
         action_id = action_id_for(message_id, index)
         if kind == "CREATE_TASK":
             fields = self.proc.normalize_slots(slots)
-            self.proc.validate_task_slots(fields)
+            self.proc.validate_task_slots(fields, now=self.proc.clock())
             if not contract.is_valid("CandidateTaskFields", fields):
                 return self.outcome(cont, index, None, "FAILED", error=self.error(
                     "INVALID_PARAMETER", "Mình chưa hiểu thông tin công việc.")), None
@@ -386,7 +386,7 @@ class ChatProcessor:
         message_id = receipt["message_id"]
         patch = {k: v for k, v in given["slots"].items() if v is not None}
         merged = self.proc.normalize_slots({**candidate["slots"], **patch})
-        self.proc.validate_task_slots(merged)
+        self.proc.validate_task_slots(merged, now=self.proc.clock())
         if not contract.is_valid("CandidateTaskFields", merged):
             raise Terminal("INVALID_PARAMETER", "Mình chưa hiểu thông tin vừa nhập.")
         last = (action["last_presentation"] or {}).get("presentation") or {}

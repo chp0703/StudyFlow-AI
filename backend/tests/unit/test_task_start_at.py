@@ -165,6 +165,17 @@ class TaskStartAtRequirementTests(unittest.TestCase):
             self.assertEqual(field, caught.exception.error["field"])
         self.assertFalse(contract.is_valid("CandidateTaskFields", {**base, "estimated_minutes": 1441}))
 
+    def test_past_deadline_is_rejected_only_when_now_is_given(self) -> None:
+        from datetime import datetime, timezone
+        from backend.app.orchestrator.workflow_shared import Terminal
+        slots = ActionProcessor.normalize_slots({"start_at": "2026-11-20T09:00:00+07:00", "estimated_minutes": 60,
+                                                 "deadline_at": "2026-11-20T10:00:00+07:00"})
+        ActionProcessor.validate_task_slots(slots)
+        now = datetime(2026, 11, 27, tzinfo=timezone.utc)
+        with self.assertRaises(Terminal) as caught:
+            ActionProcessor.validate_task_slots(slots, now=now)
+        self.assertEqual("deadline_at", caught.exception.error["field"])
+
     def test_chat_deadline_only_clarification_keeps_asking_start_at_until_supplied(self) -> None:
         rpc = InMemoryWorkflowRpc()
         script = {

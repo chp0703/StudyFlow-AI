@@ -1,4 +1,4 @@
-import type { ActionReference } from "../../api/types.ts"
+import type { ActionReference, CandidateTaskFields } from "../../api/types.ts"
 
 import type {
   ChatMessage,
@@ -317,6 +317,10 @@ function safeMessage(value: unknown): ChatMessage | null {
 
       ...(isReference(value.clarification.reference)
         ? { reference: value.clarification.reference }
+        : {}),
+
+      ...(isObject(value.clarification.slots)
+        ? { slots: value.clarification.slots as CandidateTaskFields }
         : {}),
     }
   }

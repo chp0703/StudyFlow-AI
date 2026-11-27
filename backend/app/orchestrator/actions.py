@@ -78,7 +78,7 @@ class ActionProcessor:
         slots = None
         if operation == "create_task_candidate":
             slots = self.normalize_slots(arguments["slots"])
-            self.validate_task_slots(slots)
+            self.validate_task_slots(slots, now=self.clock())
             questions = self.questions(slots)
             if questions:
                 return 200, reply(ctx.request_id, "NEEDS_CLARIFICATION", "Cần thêm thông tin để lưu công việc.", questions=questions)
@@ -143,7 +143,7 @@ class ActionProcessor:
         return slots
 
     @staticmethod
-    def validate_task_slots(slots: dict) -> None:
+    def validate_task_slots(slots: dict, now: datetime | None = None) -> None:
         minutes = slots.get("estimated_minutes")
         if type(minutes) is int and minutes <= 0:
             raise Terminal("INVALID_PARAMETER", "Thời lượng dự kiến phải lớn hơn 0 phút.", "estimated_minutes")
@@ -155,6 +155,8 @@ class ActionProcessor:
             available = datetime.fromisoformat(slots["available_from_at"].replace("Z", "+00:00")) if slots.get("available_from_at") else None
         except (TypeError, ValueError):
             return
+        if now and deadline and deadline < now:
+            raise Terminal("INVALID_PARAMETER", "Hạn hoàn thành đã qua.", "deadline_at")
         if start and deadline and deadline <= start:
             raise Terminal("INVALID_PARAMETER", "Thời gian bắt đầu phải trước hạn hoàn thành.", "start_at")
         if available and deadline and available > deadline:

@@ -250,7 +250,7 @@ class DeepSeekExtractor:
     def extract(self, text, *, now, timezone, active):
         context = {"current_time": now.isoformat(), "timezone": timezone, "open_item": active}
         body = {"model": self._model, "temperature": 0, "response_format": {"type": "json_object"},
-                "max_tokens": 1024, "thinking": {"type": "disabled"},
+                "max_tokens": 4096, "thinking": {"type": "enabled"},
                 "messages": [{"role": "system", "content": PROMPT},
                              {"role": "user", "content": json.dumps({"context": context, "message": text}, ensure_ascii=False)}]}
         try:

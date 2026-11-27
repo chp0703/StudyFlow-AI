@@ -113,7 +113,11 @@ export function replyToMessage(
     }
   }
 
-  if (reply.state === "NEEDS_CLARIFICATION")
+  if (reply.state === "NEEDS_CLARIFICATION") {
+    const presentation = reply.result?.data as ActionPresentation | undefined
+
+    const slots = presentation?.candidate?.slots
+
     return {
       role: "assistant",
 
@@ -133,8 +137,11 @@ export function replyToMessage(
         ...(reply.action_reference
           ? { reference: reply.action_reference }
           : {}),
+
+        ...(slots ? { slots } : {}),
       },
     }
+  }
 
   if (reply.state === "ERROR" || reply.error)
     return {

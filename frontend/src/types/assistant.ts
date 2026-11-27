@@ -1,4 +1,8 @@
-import type { ActionReference, Question } from "../api/types"
+import type {
+  ActionReference,
+  CandidateTaskFields,
+  Question,
+} from "../api/types"
 
 export type IntentCandidate = "SEARCH_TASKS" | "SET_BUSY_INTERVAL" | "SET_SCHEDULING_PREFERENCES" | "CREATE_TASK" | "UPDATE_TASK" | "DELETE_TASK" | "GENERATE_STUDY_PLAN" | "RESCHEDULE_STUDY_BLOCK" | "GET_STUDY_PLAN" | "CREATE_STUDY_BLOCK" | "VERIFY_QUESTION_DRAFTS" | "ACCEPT_REVISION_RECOMMENDATION" | "SAVE_SESSION_OUTCOME"
 
@@ -71,6 +75,8 @@ export type ChatMessage = {
     questions: Question[]
 
     reference?: ActionReference
+
+    slots?: CandidateTaskFields
   }
 
   error?: {

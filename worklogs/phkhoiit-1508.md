@@ -962,3 +962,20 @@
 
 - Chưa chạy pgTAP, integration và Auto-QA live với DeepSeek.
 - PR #82 và #83 cần rebase lên nhánh mới này.
+## 2026-11-27 — Form bổ sung thông tin task giữ đúng dữ liệu server
+
+**Mục tiêu:** form hỏi thêm trong chat sai tên công việc và mất giờ hạn vì parse lại câu gốc bằng regex thay vì dùng dữ liệu server đã trích xuất.
+
+**Đã làm**
+- `frontend/src/features/planner/clarification.ts`: điền form từ `candidate.slots` của server (tên, hạn có giờ, giờ bắt đầu, thời lượng, ưu tiên, màu); hạn kiểu DATETIME được gửi lại kèm giờ; regex tên bỏ chữ "task" và dấu ngoặc kép.
+- `frontend/src/features/assistant/AssistantTaskClarificationForm.tsx`, `Assistant.tsx`, `apiAssistant.ts`, `conversationHistory.ts`, `types/assistant.ts`: truyền và lưu `slots` cùng tin nhắn clarification.
+- `backend/app/orchestrator/actions.py`, `chat.py`: từ chối hạn đã qua ("Hạn hoàn thành đã qua.", field `deadline_at`).
+- `backend/app/nlu/extractor.py`, `test_extractor.py`: `max_tokens` 4096, `thinking` enabled.
+- Test: `clarification.test.ts`, `apiAssistant.test.ts`, `test_task_start_at.py`.
+
+**Kết quả:** nhánh `fix/f1-clarification-form`. `python -m unittest discover -s backend/tests/unit -t .`: 225/225 OK. `npx tsc --noEmit` và `npm run build`: sạch. `node --test src/api/*.test.ts src/features/assistant/*.test.ts src/features/planner/*.test.ts`: 103 pass, 5 lỗi.
+
+**Ghi chú**
+- 5 test lỗi là test render React (`useState` null); đã đối chiếu trên code gốc với `monthCalendar.test.ts`, 4 test còn lại chưa đối chiếu.
+- Chưa chạy lại các prompt 1, 6, 7, 8, 15 trên trình duyệt; chưa chạy `npm run format`, pgTAP, integration.
+- Codex review lỗi 401 Invalid API key.

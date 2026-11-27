@@ -270,3 +270,55 @@ test("createClarificationDraft recognizes đêm nay and avoids turning 12h into 
   assert.equal(draft["start_at.date"], "2026-11-25")
   assert.notEqual(draft.estimated_minutes, "720")
 })
+
+test("createClarificationDraft prefers the server draft over re-parsing the prompt", () => {
+  const questions = [{ field: "start_at", message: "?", choices: [] }]
+  const draft = createClarificationDraft(
+    questions,
+    'Thêm task "Ôn Toán rời rạc" hạn 28/11 lúc 20:00, mất 2 tiếng',
+    "2026-11-27",
+    {
+      title: "Ôn Toán rời rạc",
+      deadline_precision: "DATETIME",
+      deadline_at: "2026-11-28T13:00:00.000000Z",
+      estimated_minutes: 120,
+    },
+  )
+  assert.equal(draft.title, "Ôn Toán rời rạc")
+  assert.equal(draft["deadline_at.date"], "2026-11-28")
+  assert.equal(draft["deadline_at.time"], "20:00")
+  assert.equal(draft.estimated_minutes, "120")
+})
+
+test("a datetime server deadline is sent back with its time", () => {
+  const questions = [{ field: "start_at", message: "?", choices: [] }]
+  const result = formatClarificationFollowUp(
+    {
+      source: "api",
+      originalPrompt: "",
+      message: "",
+      questions,
+      slots: { deadline_precision: "DATETIME" },
+    },
+    {
+      title: "Ôn Toán rời rạc",
+      "start_at.date": "2026-11-28",
+      "start_at.time": "18:00",
+      "deadline_at.date": "2026-11-28",
+      "deadline_at.time": "20:00",
+      estimated_minutes: "120",
+      priority: "MEDIUM",
+    },
+  )
+  assert.ok(result.ok)
+  assert.match(result.text, /hạn 28\/11\/2026 lúc 20:00/)
+})
+
+test("title extraction drops the task keyword and wrapping quotes", () => {
+  const typed = createClarificationDraft(
+    [{ field: "start_at", message: "?", choices: [] }],
+    'Thêm task "Ôn Toán rời rạc" hạn 28/11',
+    "2026-11-27",
+  )
+  assert.equal(typed.title, "Ôn Toán rời rạc")
+})
