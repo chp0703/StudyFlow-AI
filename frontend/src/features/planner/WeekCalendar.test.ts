@@ -80,6 +80,8 @@ test("calendar renders Busy windows and proposals behind exact-time events", asy
         windows: [],
 
         availability: [
+          { id: "2026-11-09-7", date: "2026-11-09", hour: 7, kind: "busy" },
+
           { id: "2026-11-09-10", date: "2026-11-09", hour: 10, kind: "busy" },
         ],
 
@@ -94,6 +96,8 @@ test("calendar renders Busy windows and proposals behind exact-time events", asy
         nowMinutes: 0,
       }),
     )
+
+    assert.match(html, /1 khung giờ ngoài khung · Hiện/)
 
     assert.doesNotMatch(html, /Rảnh/)
 
