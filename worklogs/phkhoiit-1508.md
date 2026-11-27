@@ -979,3 +979,18 @@
 - 5 test lỗi là test render React (`useState` null); đã đối chiếu trên code gốc với `monthCalendar.test.ts`, 4 test còn lại chưa đối chiếu.
 - Chưa chạy lại các prompt 1, 6, 7, 8, 15 trên trình duyệt; chưa chạy `npm run format`, pgTAP, integration.
 - Codex review lỗi 401 Invalid API key.
+
+## 2026-11-27 — Rebase PR #83 lên PR #81 mới
+
+**Mục tiêu:** giữ form bổ sung thông tin và chặn hạn đã qua trên nền #81 đã rebase lên `main`.
+
+**Đã làm**
+
+- Rebase `fix/f1-clarification-form` lên `fix/f1-qa-acceptance` mới; `apiAssistant.test.ts` giữ cả test thẻ quiz/ôn tập và test `slots`.
+- `backend/tests/unit/test_orchestrator_handoffs.py`: thêm `clock` cho processor giả vì `answer_open_queue` giờ kiểm tra hạn đã qua.
+
+**Kết quả:** PR #83. Unit backend 254/254, `tsc --noEmit` sạch, `node --test` 127/127 (5 test render React trước đây lỗi là do `node_modules`, nay đạt), `npm run build` đạt.
+
+**Ghi chú**
+
+- Giữ `max_tokens` 4096 và `thinking` bật theo quyết định; chưa đo lại P95 độ trễ chat.
