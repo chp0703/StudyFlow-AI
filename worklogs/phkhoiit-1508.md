@@ -994,3 +994,16 @@
 **Ghi chú**
 
 - Giữ `max_tokens` 4096 và `thinking` bật theo quyết định; chưa đo lại P95 độ trễ chat.
+
+## 2026-11-27 — Rebase PR #82 lên PR #81 mới
+
+**Mục tiêu:** giữ lịch tuần mặc định 00:00–24:00 và các sửa trích xuất giờ của #82 trên nền đã bỏ giờ rảnh.
+
+**Đã làm**
+
+- Rebase `fix/f1-planner-qa-followups` lên `fix/f1-qa-acceptance` mới.
+- Bỏ phần `backend/app/f1/planning/generate.py` coi cả phạm vi là rảnh: lập lịch vẫn trong khung 06:00–22:00 mặc định (`default_availability`); giữ ca Auto-QA E06-02.
+- Bỏ commit gỡ `needs_availability` vì `main` đã gỡ.
+- `WeekCalendar.test.ts`: khung ẩn ngoài phạm vi hiển thị là giờ bận, không còn nhãn "Rảnh".
+
+**Kết quả:** PR #82. Unit backend 253/253, `tsc --noEmit` sạch, `node --test` 123/123, `npm run build` đạt.

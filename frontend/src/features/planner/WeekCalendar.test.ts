@@ -97,7 +97,7 @@ test("calendar renders Busy windows and proposals behind exact-time events", asy
       }),
     )
 
-    assert.match(html, /Rảnh 07:00–08:00/)
+    assert.match(html, /Bận 07:00–08:00/)
 
     assert.match(html, /lúc 00:00; nhập yêu cầu lịch học/)
 
