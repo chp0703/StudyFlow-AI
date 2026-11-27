@@ -42,8 +42,21 @@ test("saved display ranges are isolated by account and malformed values are igno
 
     assert.deepEqual(loadDisplayRanges("user-b"), DEFAULT_DISPLAY_RANGES)
 
+    const formerDefault = DEFAULT_DISPLAY_RANGES.map(() => ({
+      start: "08:00",
+      end: "18:00",
+    })) as unknown as CalendarDisplayRanges
+
+    values.set("studyflow_display_ranges_user-c", JSON.stringify(formerDefault))
+    assert.deepEqual(loadDisplayRanges("user-c"), DEFAULT_DISPLAY_RANGES)
+    saveDisplayRanges("user-c", formerDefault)
+    assert.deepEqual(loadDisplayRanges("user-c"), formerDefault)
+
+    values.set("studyflow_display_ranges_user-d", JSON.stringify(changed))
+    assert.deepEqual(loadDisplayRanges("user-d"), changed)
+
     values.set(
-      "studyflow_display_ranges_user-a",
+      "studyflow_display_ranges_v2_user-a",
       '[{"start":"25:00","end":"01:00"}]',
     )
 
