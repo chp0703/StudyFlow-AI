@@ -7,17 +7,18 @@ khi có quyết định phê duyệt.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, time, timedelta, timezone
+import math
 from typing import Callable
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from ..scheduler.constraints import validate_context
 from ..scheduler.models import (
     DEFAULT_TASK_COLOR, PRODUCT_TIMEZONE, AcademicTask, GenerationScope, Issue, Priority,
     Interval, SchedulingContext, SchedulingPolicy, SelectionMode, StudyBlock, TaskStatus,
 )
-from ..scheduler.intervals import to_utc
+from ..scheduler.intervals import clip, merge_intervals, to_utc
 from ..scheduler.normalization import normalize_time_windows
 from ..scheduler.replanning import partition_blocks_for_replan
 from ..scheduler.service import PlanningService
@@ -26,7 +27,50 @@ DEFAULT_POLICY = {"min_block_minutes": 25, "max_block_minutes": 90, "allow_short
                   "max_daily_minutes": 240, "break_minutes": 10}
 
 
-DEFAULT_DAY_START, DEFAULT_DAY_END = "06:00", "22:00"  # khớp khung giờ lịch hiển thị (6h-22h)
+DEFAULT_DAY_START, DEFAULT_DAY_END = "06:00", "22:00"  # giờ rảnh mặc định; task có start_at khuya/sớm được mở thêm khung riêng
+
+
+def _aware(value: object) -> bool:
+    return isinstance(value, datetime) and value.tzinfo is not None and value.utcoffset() is not None
+
+
+def _explicit_start_intervals(
+    tasks: tuple[AcademicTask, ...],
+    *,
+    start: datetime,
+    end: datetime,
+    timezone_name: str,
+    policy: dict,
+) -> tuple[Interval, ...]:
+    """Mở rộng khung khả dụng cho các task có start_at tường minh ngoài 06:00–22:00 (học khuya/sáng sớm)."""
+    if not (_aware(start) and _aware(end)):
+        return ()
+    horizon = Interval(to_utc(start), to_utc(end))
+    if horizon.start_at >= horizon.end_at:
+        return ()
+    try:
+        tz = ZoneInfo(timezone_name)
+    except (ZoneInfoNotFoundError, KeyError, ValueError):
+        return ()
+    max_block = max(1, int(policy.get("max_block_minutes", DEFAULT_POLICY["max_block_minutes"])))
+    break_min = max(0, int(policy.get("break_minutes", DEFAULT_POLICY["break_minutes"])))
+    extra: list[Interval] = []
+    for task in tasks:
+        if task.start_at is None or task.remaining_minutes <= 0:
+            continue
+        if not (_aware(task.start_at) and _aware(task.deadline_at)):
+            continue
+        t_start = to_utc(task.start_at)
+        local_day = t_start.astimezone(tz).date()
+        next_midnight = datetime.combine(local_day + timedelta(days=1), time(0, 0), tzinfo=tz).astimezone(timezone.utc)
+        needed_blocks = max(1, math.ceil(task.remaining_minutes / max_block))
+        span_minutes = task.remaining_minutes + max(0, needed_blocks - 1) * break_min
+        t_end = min(t_start + timedelta(minutes=span_minutes), next_midnight, to_utc(task.deadline_at), horizon.end_at)
+        if t_end > t_start:
+            clipped = clip(Interval(t_start, t_end), horizon)
+            if clipped is not None:
+                extra.append(clipped)
+    return tuple(extra)
 
 
 def default_availability(user: dict) -> list[dict]:
@@ -123,9 +167,16 @@ def generate(snapshot: dict, command: dict, *, now: datetime, block_id_factory: 
     partition = partition_blocks_for_replan(blocks, now=now, generation_scope=scope, selected_task_ids=selected)
     if partition.issues:
         return Generated(None, None, partition.issues)
-    # Blocks planned before availability was removed may lie outside 06:00-22:00; they stay valid where they are.
-    # shortcut: this also lets new blocks touch a legacy block's out-of-hours edge; fine until legacy plans age out.
-    available += tuple(Interval(b.start_at, b.end_at) for b in partition.retained_blocks if to_utc(b.end_at) > to_utc(now))
+    # Blocks planned before availability was removed and explicit out-of-hours task starts stay plannable outside 06:00-22:00.
+    extra_available = (
+        tuple(Interval(b.start_at, b.end_at) for b in partition.retained_blocks if to_utc(b.end_at) > to_utc(now))
+        + _explicit_start_intervals(
+            tuple(tasks_by_id[task_id] for task_id in selected if task_id in tasks_by_id),
+            start=start, end=end, timezone_name=user["timezone"], policy=policy_raw,
+        )
+    )
+    if extra_available:
+        available = tuple(merge_intervals([*available, *extra_available]))
     context = SchedulingContext(
         now=now, timezone=user["timezone"], generation_scope=scope, selected_task_ids=selected, tasks=tasks,
         available_intervals=available, busy_intervals=busy, retained_blocks=partition.retained_blocks,
