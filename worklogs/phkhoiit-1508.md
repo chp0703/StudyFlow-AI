@@ -823,3 +823,19 @@
 
 - Sau khi duyệt bộ câu hỏi, trợ lý hiện "Có lỗi xảy ra" dù server trả 200: `listing()` trong `apiAssistant.ts` coi mọi `data.items` là danh sách công việc nên `t.deadline_at.slice` ném TypeError với kết quả `QuestionDraftBatchData`. Đã giới hạn chỉ liệt kê khi phần tử là công việc; thêm test.
 - Chưa sửa: mô tả task do đề xuất ôn tập tạo ra có kèm `recommendation_id`, `attempt_ids`, `chunk_ids` (hành vi có sẵn của F2 SQL); tiêu đề mang chủ đề mặc định "Tài liệu học tập" khi tài liệu không có `course_label`.
+
+## 2026-11-27 — Rebase PR #79 lên `main`
+
+**Mục tiêu:** gỡ xung đột để PR #79 merge được vào `main`.
+
+**Đã làm**
+
+- Rebase `feat/orchestrator-handoffs` lên `main` (không merge `main` vào nhánh).
+- `frontend/src/pages/Study.tsx`, `frontend/src/api/client.ts`: lấy bản của `main`; `main` đã tách trang học sang `features/learning/` (`MaterialsCard` có sẵn tải tài liệu qua API, giới hạn PDF/TXT/MD và xác nhận khi xóa) và đã gắn `Idempotency-Key` cho `DELETE`.
+
+**Kết quả:** PR #79 (`feat/orchestrator-handoffs`). Unit backend 233/233, `generate_contract_schema_migration.py --check` đạt, `tsc --noEmit` sạch, `node --test` 115/115, `npm run build` đạt.
+
+**Ghi chú**
+
+- Chưa chạy lại pgTAP local; lần CI trước lỗi do cổng `54324` bị chiếm, không phải do migration.
+- `listMaterials`/`uploadMaterial`/`deleteMaterial` trong `frontend/src/api/endpoints.ts` hiện không còn nơi gọi sau khi bỏ bản `Study.tsx` cũ.
