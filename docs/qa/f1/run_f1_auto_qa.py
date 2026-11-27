@@ -1222,15 +1222,19 @@ def tc_e06_02(s: QaSession) -> TrialOutcome:
     tok, conv = s.new_user(), str(uuid4())
     t0 = time.perf_counter()
     s.add_task_via_action(tok, conv, title="Task không có giờ rảnh", start_at=vn_dt(s.now_vn, 1, 8), minutes=60, deadline_at=vn_dt(s.now_vn, 1, 12))
-    _, gp_none = s.prepare_action(tok, conv, "generate_study_plan", {
+    _, proposal = s.prepare_action(tok, conv, "generate_study_plan", {
         "generation_scope": {"start_at": vn_dt(s.now_vn, 1, 7), "end_at": vn_dt(s.now_vn, 1, 13), "selection_mode": "ALL_ELIGIBLE", "task_ids": []},
         "policy_overrides": {},
     })
+    data = (proposal.get("result") or {}).get("data") or {}
+    entries = (data.get("schedule_confirmation") or {}).get("entries") or []
+    ref = proposal.get("action_reference")
+    if not ref or len(entries) != 1 or local_hhmm(entries[0]["start_at"])[1] != "08:00":
+        return TrialOutcome(False, f"Giờ trống phải xếp được buổi 08:00: {proposal}", "RC-BACKEND")
+    status, _, _, _ = s.decide(tok, conv, ref)
     ms = round((time.perf_counter() - t0) * 1000, 1)
-    data = (gp_none.get("result") or {}).get("data") or {}
-    if gp_none.get("action_reference") is not None or data.get("coverage") != "NONE":
-        return TrialOutcome(False, f"Thiếu availability phải trả coverage=NONE không proposal rỗng, thực tế: {gp_none}", "RC-BACKEND", ms)
-    return TrialOutcome(True, "OK: NO_AVAILABILITY trả coverage=NONE, không tạo proposal rỗng", "", ms)
+    return TrialOutcome(status == 200, f"Đề xuất trong giờ trống được duyệt: HTTP {status}", "RC-BACKEND" if status != 200 else "", ms)
+
 
 
 def tc_e06_03(s: QaSession) -> TrialOutcome:
@@ -1466,7 +1470,7 @@ CATALOG: list[tuple[str, str, str, str, bool, Callable[[QaSession], TrialOutcome
     ("F1-E05-01", "E05", "P0", "3 công việc trong 1 câu chat (hàng đợi tuần tự)", False, tc_e05_01),
     ("F1-E05-03", "E05", "P0", "Đa môn cạnh tranh EDF + Priority + trần 240p", False, tc_e05_03),
     ("F1-E06-01", "E06", "P0", "Tránh khung BUSY ở giữa (0 Hard Constraint Violation)", False, tc_e06_01),
-    ("F1-E06-02", "E06", "P0", "Không có giờ rảnh -> coverage=NONE, không proposal rỗng", False, tc_e06_02),
+    ("F1-E06-02", "E06", "P0", "Không khai báo giờ rảnh vẫn xếp và duyệt được lịch", False, tc_e06_02),
     ("F1-E06-03", "E06", "P1", "Mâu thuẫn start_at > deadline_at [CF-07]", False, tc_e06_03),
     ("F1-E07-02", "E07", "P0", "Câu mơ hồ thiếu giờ/phút -> hỏi lại, 0 ghi DB", False, tc_e07_02),
     ("F1-E08-01", "E08", "P0", "Hội thoại 3 lượt gộp dần slot giữ ngữ cảnh", False, tc_e08_01),
