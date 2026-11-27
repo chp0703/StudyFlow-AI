@@ -81,7 +81,7 @@ class DeepSeekExtractorTests(unittest.TestCase):
         def task():
             return {"intent": "CREATE_TASK", "slots": {"title": "ôn", "start_at": "2026-11-06T09:00:00+07:00",
                                                         "deadline_precision": "DATETIME", "deadline_at": "2026-11-06T09:00:00+07:00"},
-                    "raw_expressions": {}, "ambiguities": []}
+                    "raw_expressions": {"deadline_at": "lúc 9h mai"}, "ambiguities": []}
         self.assertNotIn("deadline_at", self.extract_text("học ôn lúc 9h mai", [task()])[0]["slots"])
         self.assertIn("deadline_at", self.extract_text("học ôn lúc 9h mai, hạn 9h", [task()])[0]["slots"])
         self.assertIn("deadline_at", self.extract_text("ngày mai", [task()], active={"intent": "CREATE_TASK"})[0]["slots"])
@@ -158,6 +158,9 @@ class DeepSeekExtractorTests(unittest.TestCase):
     def test_colloquial_task_time_corrects_model_omission_and_half_hour(self):
         for prompt, raw, expected in (
             ("Học Hóa lúc 8r tối nay trong 1 tiếng rưỡi", "8r tối nay", "2026-11-05T20:30:00+07:00"),
+            ("Ngày mai học Lý lúc 11 giờ sáng trong 45 phút, hạn ngày mai lúc 18 giờ", "11 giờ sáng", "2026-11-06T11:00:00+07:00"),
+            ("Mai 8h tối học Lịch sử trong 60 phút, à thôi đổi sang 9h tối nha", "8h tối",
+             "2026-11-06T21:00:00+07:00"),
             ("lm bt toan mai 9h sang nha, 45p", "mai 9h sang", "2026-11-06T09:00:00+07:00"),
             ("Học Sinh lúc 10h kém 15 sáng mai", "10h kém 15 sáng mai", "2026-11-06T09:45:00+07:00"),
         ):

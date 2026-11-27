@@ -90,7 +90,10 @@ def _fill_defaults(result, now: datetime, timezone: str) -> None:
 
 _MIDNIGHT = re.compile(r"^(\d{4}-\d{2}-\d{2})T24:00(?::00)?(.*)$")
 _DEADLINE_WORDS = re.compile(r"\b(hạn|han|trước|truoc|nộp|nop|deadline|chót|chot|xong)\b", re.I)
-_DURATION_PREFIX = re.compile(r"(trong|mất|mat)\s*$")
+_DURATION_PREFIX = re.compile(r"\b(?:trong|mất|mat)\s*$")
+_CLOCK = re.compile(r"\b(\d{1,2})\s*(?:r\b|h\s*(?:kém\s*(\d{1,2})|(\d{1,2}))?\b|giờ\b|gio\b|:([0-5]\d)\b)")
+_TIME_CORRECTION = re.compile(r"\b(?:à thôi|à không|ý là|đổi sang|sửa thành)\b")
+_RELATIVE_DAY = re.compile(r"\b(mai|hôm nay|hom nay|nay)\b")
 _WEEKDAY_RANGE = re.compile(r"\b(?:thứ|thu|t)\s*([2-7])\s*(?:đến|den|tới|toi|-|–|→)\s*(?:(?:thứ|thu|t)\s*([2-7])|(cn|chủ nhật|chu nhat))", re.I)
 
 
@@ -119,10 +122,7 @@ def _drop_invented_deadline(result, text: str, active) -> None:
         return
     for item in items if isinstance(items, list) else []:
         slots = item.get("slots") if isinstance(item, dict) else None
-        raw = item.get("raw_expressions") if isinstance(item, dict) else None
-        if item.get("intent") != "CREATE_TASK" or not isinstance(slots, dict):
-            continue
-        if isinstance(raw, dict) and any(raw.get(k) for k in ("deadline_at", "deadline_date")):
+        if not isinstance(slots, dict) or item.get("intent") != "CREATE_TASK":
             continue
         for field in ("deadline_at", "deadline_date", "deadline_precision"):
             slots.pop(field, None)
@@ -174,27 +174,28 @@ def _normalize_task_time(result: dict, text: str, now: datetime, timezone: str) 
     item = items[0]
     if item.get("intent") != "CREATE_TASK" or not isinstance(item.get("slots"), dict):
         return
-    raw = item.get("raw_expressions") or {}
-    phrase = raw.get("start_at") if isinstance(raw, dict) else None
-    phrase = phrase if isinstance(phrase, str) and phrase.strip() else text
-    lower = phrase.lower()
-    date_words = lower if re.search(r"\b(mai|hôm nay|hom nay|nay)\b", lower) else text.lower()
-    if not re.search(r"\b(mai|hôm nay|hom nay|nay)\b", date_words):
+    slots = item["slots"]
+    start_clause = _DEADLINE_WORDS.split(text.lower(), maxsplit=1)[0]
+    day_word = _RELATIVE_DAY.search(start_clause)
+    if not day_word:
         return
-    match = re.search(r"\b(\d{1,2})\s*(?:r\b|h\s*(?:kém\s*(\d{1,2})|(\d{1,2}))?\b)", lower)
-    if not match:
+    corrected = _TIME_CORRECTION.split(start_clause)[-1]
+    clock_clause = corrected if _CLOCK.search(corrected) else start_clause
+    day_word = _RELATIVE_DAY.search(clock_clause) or day_word
+    has_duration = False
+    for match in _CLOCK.finditer(clock_clause):
+        if _DURATION_PREFIX.search(clock_clause[:match.start()]):
+            has_duration = True
+            continue
+        break
+    else:
+        if has_duration or re.search(r"\b(?:trong|mất|mat)\s+\d+\s*(?:tiếng|tieng|phút|phut|p)\b", start_clause):
+            slots.pop("start_at", None)
+            slots.pop("available_from_at", None)
         return
-    if _DURATION_PREFIX.search(lower[:match.start()]):
-        # "trong 2h" là thời lượng, không phải giờ bắt đầu: bỏ giờ sai của mô hình để form hỏi lại.
-        start = item["slots"].get("start_at")
-        try:
-            if isinstance(start, str) and datetime.fromisoformat(start).astimezone(ZoneInfo(timezone)).hour == int(match.group(1)):
-                item["slots"].pop("start_at")
-        except ValueError:
-            pass
-        return
+    lower = clock_clause[match.start():].split(",", 1)[0]
     hour = int(match.group(1))
-    minute = 30 if "r" in match.group(0) else int(match.group(3) or 0)
+    minute = 30 if match.group(0).endswith("r") else int(match.group(3) or match.group(4) or 0)
     if match.group(2):
         before = int(match.group(2))
         if not 1 <= before <= 59:
@@ -206,9 +207,12 @@ def _normalize_task_time(result: dict, text: str, now: datetime, timezone: str) 
     if hour <= 12 and re.search(r"\b(tối|toi|chiều|chieu)\b", lower):
         hour = hour % 12 + 12
     local_now = now.astimezone(ZoneInfo(timezone))
-    day = local_now.date() + timedelta(days=1 if "mai" in date_words else 0)
+    day = local_now.date() + timedelta(days=1 if day_word.group(1) == "mai" else 0)
     normalized = datetime.combine(day, datetime.min.time(), ZoneInfo(timezone)).replace(hour=hour, minute=minute)
-    item["slots"]["start_at"] = normalized.isoformat()
+    previous_start = slots.get("start_at")
+    slots["start_at"] = normalized.isoformat()
+    if slots.get("available_from_at") == previous_start and previous_start is not None:
+        slots["available_from_at"] = slots["start_at"]
 
 
 class ExtractorUnavailable(Exception):
