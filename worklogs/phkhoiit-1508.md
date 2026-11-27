@@ -901,3 +901,18 @@
 
 - `202611250005_drop_availability_windows.sql` xóa vĩnh viễn mọi khung giờ rảnh đã lưu; chưa chạy pgTAP local.
 - Bộ QA `docs/qa/f1` còn các ca giờ rảnh (F1-FIX-02, 04, 10, 18) cần viết lại.
+
+## 2026-11-27 — Viết lại QA nghiệm thu theo quy tắc không khai báo giờ rảnh
+
+**Mục tiêu:** hướng dẫn nghiệm thu F1 khớp với việc bỏ giờ rảnh đã merge (PR #79, #80).
+
+**Đã làm**
+
+- `docs/qa/f1/F1_Huong_Dan_QA_Nghiem_Thu.md`: thêm quy tắc mới (ngày mặc định rảnh 06:00–22:00, chỉ trừ giờ bận); đổi các ca F1-FIX-01, 02, 04, 09, 10, 11, 18, 20 sang giờ bận; thêm ca F1-FIX-23.
+- `docs/qa/f1/F1_Bang_Nghiem_Thu_Fix.csv`: sửa tóm tắt các dòng liên quan và thêm dòng F1-FIX-23.
+
+**Kết quả:** chỉ sửa tài liệu; CSV đọc được (24 dòng, 9 cột). Chưa chạy thử các kịch bản trên app.
+
+**Ghi chú**
+
+- Chưa sửa 45 ca E2E (`04-e2e-test-cases.md`, `f1_e2e_test_cases.*`) và `run_f1_auto_qa.py`, các file này còn ca giờ rảnh.
