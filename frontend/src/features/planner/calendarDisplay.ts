@@ -54,11 +54,16 @@ export const displayRangeError = ({ start, end }: CalendarDisplayRange) => {
   return ""
 }
 
-const rangesKey = (userId: string) => `studyflow_display_ranges_${userId}`
+const legacyRangesKey = (userId: string) => `studyflow_display_ranges_${userId}`
+
+const rangesKey = (userId: string) => `studyflow_display_ranges_v2_${userId}`
 
 export function loadDisplayRanges(userId: string): CalendarDisplayRanges {
   try {
-    const value = JSON.parse(localStorage.getItem(rangesKey(userId)) ?? "null")
+    const saved = localStorage.getItem(rangesKey(userId))
+    const value = JSON.parse(
+      saved ?? localStorage.getItem(legacyRangesKey(userId)) ?? "null",
+    )
 
     if (
       Array.isArray(value) &&
@@ -71,7 +76,10 @@ export function loadDisplayRanges(userId: string): CalendarDisplayRanges {
           !displayRangeError(range),
       )
     )
-      return value as unknown as CalendarDisplayRanges
+      return saved === null &&
+        value.every(({ start, end }) => start === "08:00" && end === "18:00")
+        ? DEFAULT_DISPLAY_RANGES
+        : value as unknown as CalendarDisplayRanges
   } catch {
     /* Storage may be unavailable. */
   }
