@@ -430,7 +430,7 @@ export default function App() {
               )
             : pendingReply
 
-        if (!reply) {
+        if (!reply || reply.state !== "AWAITING_APPROVAL") {
           if (pending) savePending(userId, null)
 
           return

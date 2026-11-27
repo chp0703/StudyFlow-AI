@@ -1,4 +1,4 @@
-import test from "node:test"
+import test, { after, before } from "node:test"
 
 import assert from "node:assert/strict"
 
@@ -6,16 +6,22 @@ import { createElement, createRef } from "react"
 
 import { renderToStaticMarkup } from "react-dom/server"
 
-import { createServer } from "vite"
+import { createServer, type ViteDevServer } from "vite"
 
-test("composer renders a compact truthful state before focus", async () => {
-  const server = await createServer({
+let server: ViteDevServer
+
+before(async () => {
+  server = await createServer({
     server: { middlewareMode: true, hmr: false },
-
     appType: "custom",
   })
+})
 
-  try {
+after(async () => {
+  await server.close()
+})
+
+test("composer renders a compact truthful state before focus", async () => {
     const { default: Composer } = await server.ssrLoadModule(
       "/src/features/planner/PlannerCommandComposer.tsx",
     )
@@ -79,19 +85,9 @@ test("composer renders a compact truthful state before focus", async () => {
     assert.doesNotMatch(api, /DeepSeek|kết nối AI/)
 
     assert.match(api, /Đang gửi yêu cầu/)
-  } finally {
-    await server.close()
-  }
 })
 
 test("composer textarea grows to content and caps at its CSS maximum", async () => {
-  const server = await createServer({
-    server: { middlewareMode: true, hmr: false },
-
-    appType: "custom",
-  })
-
-  try {
     const { resizePlannerComposer } = await server.ssrLoadModule(
       "/src/features/planner/composerTextarea.ts",
     )
@@ -107,19 +103,9 @@ test("composer textarea grows to content and caps at its CSS maximum", async () 
     resizePlannerComposer(textarea as unknown as HTMLTextAreaElement)
 
     assert.deepEqual(textarea.style, { height: "112px", overflowY: "auto" })
-  } finally {
-    await server.close()
-  }
 })
 
 test("composer keyboard behavior protects newlines, IME and duplicate sends", async () => {
-  const server = await createServer({
-    server: { middlewareMode: true, hmr: false },
-
-    appType: "custom",
-  })
-
-  try {
     const { composerKeyAction } = await server.ssrLoadModule(
       "/src/features/planner/composerKeyboard.ts",
     )
@@ -152,19 +138,9 @@ test("composer keyboard behavior protects newlines, IME and duplicate sends", as
     assert.equal(action({ key: "Tab" }), "none")
 
     assert.equal(action({ key: "Escape", hasText: false }), "collapse")
-  } finally {
-    await server.close()
-  }
 })
 
 test("API draft only clears after accepted or completed responses", async () => {
-  const server = await createServer({
-    server: { middlewareMode: true, hmr: false },
-
-    appType: "custom",
-  })
-
-  try {
     const { shouldClearPlannerDraft } = await server.ssrLoadModule(
       "/src/features/planner/usePlanner.ts",
     )
@@ -176,7 +152,38 @@ test("API draft only clears after accepted or completed responses", async () => 
     assert.equal(shouldClearPlannerDraft("NEEDS_CLARIFICATION"), false)
 
     assert.equal(shouldClearPlannerDraft("ERROR"), false)
-  } finally {
-    await server.close()
-  }
+})
+
+test("PlannerClarificationPopup prefills from server slots after F5 without forcing deadline_at", async () => {
+    const { default: Popup } = await server.ssrLoadModule(
+      "/src/features/planner/PlannerClarificationPopup.tsx",
+    )
+    const html = renderToStaticMarkup(
+      createElement(Popup, {
+        clarification: {
+          source: "api",
+          originalPrompt: "",
+          message: "Cần thêm thông tin.",
+          questions: [
+            {
+              field: "estimated_minutes",
+              message: "Bạn dự kiến cần bao nhiêu phút?",
+              choices: [],
+            },
+          ],
+          slots: {
+            title: "Học Toán",
+            start_at: "2026-11-28T13:00:00.000000Z",
+          },
+        },
+        busy: false,
+        onDismiss: () => {},
+        onSubmit: () => {},
+      }),
+    )
+    assert.match(html, /value="Học Toán"/)
+    assert.match(html, /value="2026-11-28"/)
+    assert.match(html, /value="20:00"/)
+    assert.doesNotMatch(html, /Đã điền sẵn từ yêu cầu/)
+    assert.doesNotMatch(html, /Giờ hạn hoàn thành/)
 })

@@ -219,6 +219,19 @@ class DeepSeekExtractorTests(unittest.TestCase):
         got = self.extract_text("Tối mai học bài Đại số tuyến tính", [vague])
         self.assertNotIn("start_at", got[0]["slots"])
 
+    def test_context_uses_vietnam_local_date_before_0700_vn(self):
+        seen = []
+
+        def handler(request):
+            seen.append(json.loads(request.content))
+            return answer(json.dumps(GOOD))(request)
+
+        early_vn_in_utc = datetime(2026, 11, 26, 19, 30, tzinfo=timezone.utc)  # 2026-11-27 02:30 +07:00
+        extractor(handler).extract("tìm OOP", now=early_vn_in_utc, timezone="Asia/Ho_Chi_Minh", active=None)
+        ctx = json.loads(seen[0]["messages"][1]["content"])["context"]
+        self.assertEqual(ctx["current_time"], "2026-11-27T02:30:00+07:00")
+        self.assertEqual(ctx["today"], "2026-11-27")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -118,6 +118,88 @@ export default function WeekCalendar({
 
   const axisTicks = buildTicks(gridFrom, gridTo)
 
+  const startOf = (event: Task) =>
+    event.time.match(/\d{2}:\d{2}/)?.[0] ??
+    `${String(event.hour ?? 0).padStart(2, "0")}:00`
+
+  const columns = weekDays.map((date, day) => {
+    const range = ranges[day]
+
+    const from = displayMinutes(range.start)
+
+    const to = displayMinutes(range.end)
+
+    const dateKey = date.toISOString().slice(0, 10)
+
+    const ticks = buildTicks(from, to)
+
+    const dayEvents = events.filter((event) => event.date === dateKey)
+
+    const placed = dayEvents.flatMap((event) => {
+      const position = eventPosition(startOf(event), range)
+
+      return position ? [{ event, position }] : []
+    })
+
+    const outside = dayEvents.flatMap((event) => {
+      const start = displayMinutes(startOf(event))
+      const end = start + event.effort
+      return start < from || start >= to || end > to ? [{ start, end }] : []
+    })
+
+    const lanes = eventLanes(
+      placed.map(({ event, position }) => ({
+        id: event.id,
+
+        start: from + position.top,
+
+        // Khối được vẽ cao tối thiểu 28px (~35 phút) nên tính chồng theo chiều cao thật.
+        end:
+          from +
+          position.top +
+          Math.max(35, Math.min(event.effort, position.visibleMinutes)),
+      })),
+    )
+
+    const daySegments = visibleSegments(
+      dateKey,
+      0,
+      24 * 60,
+      windows,
+      availability,
+    )
+    const hiddenWindows = daySegments.filter(
+      (segment) => segment.start < from || segment.end > to,
+    )
+    const hiddenLabel = [
+      outside.length && `${outside.length} buổi`,
+      hiddenWindows.length && `${hiddenWindows.length} khung giờ`,
+    ]
+      .filter(Boolean)
+      .join(", ")
+    const segments = daySegments.flatMap((segment) => {
+      const start = Math.max(segment.start, from)
+      const end = Math.min(segment.end, to)
+      return start < end ? [{ ...segment, start, end }] : []
+    })
+
+    return {
+      date,
+      day,
+      range,
+      from,
+      to,
+      dateKey,
+      ticks,
+      placed,
+      outside,
+      lanes,
+      hiddenWindows,
+      hiddenLabel,
+      segments,
+    }
+  })
+
   return (
     <div
       ref={calendarRef}
@@ -136,7 +218,7 @@ export default function WeekCalendar({
               />
             )}
           </div>
-          {weekDays.map((date, day) => (
+          {columns.map(({ date, day, outside, hiddenWindows, hiddenLabel }) => (
             <div
               key={day}
               className={`schedule-day ${
@@ -145,6 +227,32 @@ export default function WeekCalendar({
             >
               <strong>{weekdayNames[day]}</strong>
               <span>{`${String(date.getUTCDate()).padStart(2, "0")}/${String(date.getUTCMonth() + 1).padStart(2, "0")}`}</span>
+              {hiddenLabel &&
+                (onRangesChange ? (
+                  <button
+                    type="button"
+                    className="schedule-hidden-events"
+                    title="Mở rộng khung giờ để xem các mục ngoài khung"
+                    onClick={() =>
+                      onRangesChange(
+                        ranges.map((item, index) =>
+                          index === day
+                            ? rangeCoveringSpans(item, [
+                                ...outside,
+                                ...hiddenWindows,
+                              ])
+                            : item,
+                        ) as unknown as CalendarDisplayRanges,
+                      )
+                    }
+                  >
+                    {hiddenLabel} ngoài khung · Hiện
+                  </button>
+                ) : (
+                  <span className="schedule-hidden-events">
+                    {hiddenLabel} ngoài khung
+                  </span>
+                ))}
             </div>
           ))}
         </div>
@@ -168,235 +276,163 @@ export default function WeekCalendar({
               </span>
             ))}
           </div>
-          {weekDays.map((date, day) => {
-            const range = ranges[day]
-
-            const from = displayMinutes(range.start)
-
-            const to = displayMinutes(range.end)
-
-            const dateKey = date.toISOString().slice(0, 10)
-
-            const ticks = buildTicks(from, to)
-
-            const dayEvents = events.filter((event) => event.date === dateKey)
-
-            const startOf = (event: Task) =>
-              event.time.match(/\d{2}:\d{2}/)?.[0] ??
-              `${String(event.hour ?? 0).padStart(2, "0")}:00`
-
-            const placed = dayEvents.flatMap((event) => {
-              const position = eventPosition(startOf(event), range)
-
-              return position ? [{ event, position }] : []
-            })
-
-            const outside = dayEvents
-              .filter((event) => !placed.some((item) => item.event === event))
-              .map((event) => {
-                const start = displayMinutes(startOf(event))
-
-                return { start, end: start + event.effort }
-              })
-
-            const lanes = eventLanes(
-              placed.map(({ event, position }) => ({
-                id: event.id,
-
-                start: from + position.top,
-
-                // Khối được vẽ cao tối thiểu 28px (~35 phút) nên tính chồng theo chiều cao thật.
-                end:
-                  from +
-                  position.top +
-                  Math.max(35, Math.min(event.effort, position.visibleMinutes)),
-              })),
-            )
-
-            const now = nowHour * 60 + nowMinutes
-
-            const daySegments = visibleSegments(
+          {columns.map(
+            ({
+              date,
+              day,
+              range,
+              from,
+              to,
               dateKey,
-              0,
-              24 * 60,
-              windows,
-              availability,
-            )
-            const hiddenWindows = daySegments.filter(
-              (segment) => segment.start < from || segment.end > to,
-            )
-            const hiddenLabel = [
-              outside.length && `${outside.length} buổi`,
-              hiddenWindows.length && `${hiddenWindows.length} khung giờ`,
-            ]
-              .filter(Boolean)
-              .join(", ")
-            const segments = daySegments.flatMap((segment) => {
-              const start = Math.max(segment.start, from)
-              const end = Math.min(segment.end, to)
-              return start < end ? [{ ...segment, start, end }] : []
-            })
+              ticks,
+              placed,
+              lanes,
+              segments,
+            }) => {
+              const now = nowHour * 60 + nowMinutes
 
-            return (
-              <section
-                key={dateKey}
-                className={`schedule-day-column ${
-                  week === 0 && day === todayIndex ? "today-column" : ""
-                }`}
-                aria-label={`${weekdayNames[day]} ${dateKey}, hiển thị ${range.start} đến ${range.end}`}
-              >
-                <div
-                  className="schedule-time-grid"
-                  style={{ height: gridHeight }}
+              return (
+                <section
+                  key={dateKey}
+                  className={`schedule-day-column ${
+                    week === 0 && day === todayIndex ? "today-column" : ""
+                  }`}
+                  aria-label={`${weekdayNames[day]} ${dateKey}, hiển thị ${range.start} đến ${range.end}`}
                 >
-                  {segments.map((segment) => (
-                    <div
-                      key={`${segment.start}-${segment.end}`}
-                      className={`calendar-window is-busy${
-                        proposedWindowIds.has(
-                          `${dateKey}-${Math.floor(segment.start / 60)}`,
-                        )
-                          ? " is-proposed-window"
-                          : ""
-                      }`}
-                      role="img"
-                      aria-label={`Bận ${timeLabel(sourceRange(dateKey, segment, windows)?.start ?? segment.start)}–${timeLabel(sourceRange(dateKey, segment, windows)?.end ?? segment.end)}`}
-                      style={{
-                        top: (segment.start - gridFrom) * pxPerMinute,
-
-                        height: (segment.end - segment.start) * pxPerMinute,
-                      }}
-                    >
-                      {segment.end - segment.start >= 30
-                        ? `Bận ${timeLabel(sourceRange(dateKey, segment, windows)?.start ?? segment.start)}–${timeLabel(sourceRange(dateKey, segment, windows)?.end ?? segment.end)}`
-                        : ""}
-                    </div>
-                  ))}
-                  {ticks.map((minute) => (
-                    <button
-                      key={minute}
-                      type="button"
-                      className="schedule-time-slot"
-                      style={{
-                        top: (minute - gridFrom) * pxPerMinute,
-
-                        height: Math.min(60, to - minute) * pxPerMinute,
-                      }}
-                      aria-label={`${weekdayNames[day]} ${dateKey} lúc ${timeLabel(minute)}; nhập yêu cầu lịch học`}
-                      onClick={() => prefill(date, minute)}
-                    />
-                  ))}
-                  {hiddenLabel &&
-                    (onRangesChange ? (
-                      <button
-                        type="button"
-                        className="schedule-hidden-events"
-                        title="Mở rộng khung giờ để xem các mục ngoài khung"
-                        onClick={() =>
-                          onRangesChange(
-                            ranges.map((item, index) =>
-                              index === day
-                                ? rangeCoveringSpans(item, [
-                                    ...outside,
-                                    ...hiddenWindows,
-                                  ])
-                                : item,
-                            ) as unknown as CalendarDisplayRanges,
+                  <div
+                    className="schedule-time-grid"
+                    style={{ height: gridHeight }}
+                  >
+                    {segments.map((segment) => (
+                      <div
+                        key={`${segment.start}-${segment.end}`}
+                        className={`calendar-window is-busy${
+                          proposedWindowIds.has(
+                            `${dateKey}-${Math.floor(segment.start / 60)}`,
                           )
-                        }
+                            ? " is-proposed-window"
+                            : ""
+                        }`}
+                        role="img"
+                        aria-label={`Bận ${timeLabel(sourceRange(dateKey, segment, windows)?.start ?? segment.start)}–${timeLabel(sourceRange(dateKey, segment, windows)?.end ?? segment.end)}`}
+                        style={{
+                          top: (segment.start - gridFrom) * pxPerMinute,
+
+                          height: (segment.end - segment.start) * pxPerMinute,
+                        }}
                       >
-                        {hiddenLabel} ngoài khung · Hiện
-                      </button>
-                    ) : (
-                      <span className="schedule-hidden-events">
-                        {hiddenLabel} ngoài khung
-                      </span>
+                        {segment.end - segment.start >= 30
+                          ? `Bận ${timeLabel(sourceRange(dateKey, segment, windows)?.start ?? segment.start)}–${timeLabel(sourceRange(dateKey, segment, windows)?.end ?? segment.end)}`
+                          : ""}
+                      </div>
                     ))}
-                  {placed.map(({ event, position }) => {
-                    const slot = lanes.get(event.id) ?? { lane: 0, lanes: 1 }
-
-                    const duration = Math.min(
-                      event.effort,
-
-                      position.visibleMinutes,
-                    )
-
-                    const colors = calendarEventColors(event.color)
-
-                    const colorLabel = TASK_COLOR_OPTIONS.find(
-                      (option) =>
-                        option.value === colors?.["--evt"].toUpperCase(),
-                    )?.label
-
-                    return (
+                    {ticks.map((minute) => (
                       <button
+                        key={minute}
                         type="button"
-                        key={event.id}
-                        className={`schedule-event priority-${
-                          event.priority === 1 || event.priority === "Cao"
-                            ? "high"
-                            : event.priority === 0.1 ||
-                                event.priority === "Thấp"
-                              ? "low"
-                              : "mid"
-                        } ${event.done ? "is-done" : ""} ${
-                          changeOf.get(event.id) === "removed"
-                            ? "is-removed"
-                            : changeOf.has(event.id)
-                              ? "is-proposed"
-                              : ""
-                        }`}
-                        data-task-id={event.id}
-                        style={
-                          {
-                            top: (from - gridFrom + position.top) * pxPerMinute,
+                        className="schedule-time-slot"
+                        style={{
+                          top: (minute - gridFrom) * pxPerMinute,
 
-                            left: `calc(${(slot.lane / slot.lanes) * 100}% + 4px)`,
-
-                            width: `calc(${100 / slot.lanes}% - 8px)`,
-
-                            right: "auto",
-
-                            height: Math.max(28, duration * pxPerMinute),
-
-                            ...colors,
-                          } as CSSProperties
-                        }
-                        title={[event.title, event.time, colorLabel]
-
-                          .filter(Boolean)
-
-                          .join(" · ")}
-                        onClick={() => onSelectEvent?.(event)}
-                      >
-                        <strong>{event.title}</strong>
-                        <small>
-                          {event.time}
-                          {changeOf.get(event.id) === "removed"
-                            ? " · Sẽ xóa"
-                            : changeOf.has(event.id)
-                              ? " · Đề xuất"
-                              : ""}
-                        </small>
-                      </button>
-                    )
-                  })}
-                  {week === 0 &&
-                    day === todayIndex &&
-                    now >= from &&
-                    now < to && (
-                      <i
-                        className={`now-line${
-                          highlightNow ? " is-highlighted" : ""
-                        }`}
-                        aria-label={`Bây giờ ${timeLabel(now)}`}
-                        style={{ top: (now - gridFrom) * pxPerMinute }}
+                          height: Math.min(60, to - minute) * pxPerMinute,
+                        }}
+                        aria-label={`${weekdayNames[day]} ${dateKey} lúc ${timeLabel(minute)}; nhập yêu cầu lịch học`}
+                        onClick={() => prefill(date, minute)}
                       />
-                    )}
-                </div>
-              </section>
-            )
-          })}
+                    ))}
+                    {placed.map(({ event, position }) => {
+                      const slot = lanes.get(event.id) ?? { lane: 0, lanes: 1 }
+
+                      const duration = Math.min(
+                        event.effort,
+
+                        position.visibleMinutes,
+                      )
+
+                      const height = Math.max(28, duration * pxPerMinute)
+                      const isCompact = height < 44
+
+                      const colors = calendarEventColors(event.color)
+
+                      const colorLabel = TASK_COLOR_OPTIONS.find(
+                        (option) =>
+                          option.value === colors?.["--evt"].toUpperCase(),
+                      )?.label
+
+                      const fullSummary = [event.title, event.time, colorLabel]
+                        .filter(Boolean)
+                        .join(" · ")
+
+                      return (
+                        <button
+                          type="button"
+                          key={event.id}
+                          className={`schedule-event priority-${
+                            event.priority === 1 || event.priority === "Cao"
+                              ? "high"
+                              : event.priority === 0.1 ||
+                                  event.priority === "Thấp"
+                                ? "low"
+                                : "mid"
+                          } ${event.done ? "is-done" : ""} ${
+                            isCompact ? "is-compact" : ""
+                          } ${
+                            changeOf.get(event.id) === "removed"
+                              ? "is-removed"
+                              : changeOf.has(event.id)
+                                ? "is-proposed"
+                                : ""
+                          }`}
+                          data-task-id={event.id}
+                          style={
+                            {
+                              top:
+                                (from - gridFrom + position.top) * pxPerMinute,
+
+                              left: `calc(${(slot.lane / slot.lanes) * 100}% + 4px)`,
+
+                              width: `calc(${100 / slot.lanes}% - 8px)`,
+
+                              right: "auto",
+
+                              height,
+
+                              ...colors,
+                            } as CSSProperties
+                          }
+                          aria-label={fullSummary}
+                          title={fullSummary}
+                          onClick={() => onSelectEvent?.(event)}
+                        >
+                          <strong>{event.title}</strong>
+                          <small>
+                            {event.time}
+                            {changeOf.get(event.id) === "removed"
+                              ? " · Sẽ xóa"
+                              : changeOf.has(event.id)
+                                ? " · Đề xuất"
+                                : ""}
+                          </small>
+                        </button>
+                      )
+                    })}
+                    {week === 0 &&
+                      day === todayIndex &&
+                      now >= from &&
+                      now < to && (
+                        <i
+                          className={`now-line${
+                            highlightNow ? " is-highlighted" : ""
+                          }`}
+                          aria-label={`Bây giờ ${timeLabel(now)}`}
+                          style={{ top: (now - gridFrom) * pxPerMinute }}
+                        />
+                      )}
+                  </div>
+                </section>
+              )
+            },
+          )}
         </div>
       </div>
     </div>

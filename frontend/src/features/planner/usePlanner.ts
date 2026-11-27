@@ -30,7 +30,12 @@ import { proposalFromReply } from "../../api/mappers"
 
 import { savePending } from "../../api/pending"
 
-import type { ApiTask, ApiTimeWindow, OrchestratorReply } from "../../api/types"
+import type {
+  ActionPresentation,
+  ApiTask,
+  ApiTimeWindow,
+  OrchestratorReply,
+} from "../../api/types"
 
 import { confirmedTask } from "./revisionScheduling"
 
@@ -197,6 +202,8 @@ export function usePlanner(
     const text = questions ? `${r.message} ${questions}` : r.message
 
     if (r.state === "NEEDS_CLARIFICATION") {
+      const presentation = r.result?.data as ActionPresentation | undefined
+      const slots = presentation?.candidate?.slots
       setClarification((prev) => ({
         source: "api",
 
@@ -205,6 +212,8 @@ export function usePlanner(
         message: r.message,
 
         ...(r.action_reference ? { reference: r.action_reference } : {}),
+
+        ...(slots ? { slots } : {}),
 
         questions: r.questions.length
           ? r.questions

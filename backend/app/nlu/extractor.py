@@ -322,7 +322,13 @@ class DeepSeekExtractor:
             self._http = httpx.Client(transport=transport, timeout=timeout)
 
     def extract(self, text, *, now, timezone, active):
-        context = {"current_time": now.isoformat(), "timezone": timezone, "open_item": active}
+        local_now = now.astimezone(ZoneInfo(timezone))
+        context = {
+            "current_time": local_now.isoformat(),
+            "today": local_now.date().isoformat(),
+            "timezone": timezone,
+            "open_item": active,
+        }
         body = {"model": self._model, "temperature": 0, "response_format": {"type": "json_object"},
                 "max_tokens": 4096, "thinking": {"type": "enabled"}, "reasoning_effort": "low",
                 "messages": [{"role": "system", "content": PROMPT},

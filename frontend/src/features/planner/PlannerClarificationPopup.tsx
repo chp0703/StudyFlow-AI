@@ -5,6 +5,7 @@ import {
   createClarificationDraft,
   formatClarificationFollowUp,
   isTaskClarification,
+  usesDeadlineDatetime,
   type ClarificationDraftValues,
   type PlannerClarification,
 } from "./clarification"
@@ -34,6 +35,8 @@ export default function PlannerClarificationPopup({
     createClarificationDraft(
       clarification.questions,
       clarification.originalPrompt,
+      undefined,
+      clarification.slots,
     ),
   )
   const [error, setError] = useState<string | null>(null)
@@ -43,6 +46,8 @@ export default function PlannerClarificationPopup({
       createClarificationDraft(
         clarification.questions,
         clarification.originalPrompt,
+        undefined,
+        clarification.slots,
       ),
     )
     setError(null)
@@ -73,7 +78,10 @@ export default function PlannerClarificationPopup({
 
   const missingFields = new Set(clarification.questions.map((q) => q.field))
   const isTaskForm = isTaskClarification(clarification.questions)
-  const useDeadlineDatetime = missingFields.has("deadline_at")
+  const useDeadlineDatetime = usesDeadlineDatetime(
+    clarification.questions,
+    clarification.slots,
+  )
 
   return (
     <section
@@ -107,9 +115,11 @@ export default function PlannerClarificationPopup({
         </button>
       </div>
 
-      <p className="planner-clarification-context">
-        Đã điền sẵn từ yêu cầu: <span>“{clarification.originalPrompt}”</span>
-      </p>
+      {clarification.originalPrompt ? (
+        <p className="planner-clarification-context">
+          Đã điền sẵn từ yêu cầu: <span>“{clarification.originalPrompt}”</span>
+        </p>
+      ) : null}
 
       <form
         ref={formRef}

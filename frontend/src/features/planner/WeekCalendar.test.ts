@@ -1,4 +1,4 @@
-import test from "node:test"
+import test, { after, before } from "node:test"
 
 import assert from "node:assert/strict"
 
@@ -13,21 +13,27 @@ import {
 
 import { renderToStaticMarkup } from "react-dom/server"
 
-import { createServer } from "vite"
+import { createServer, type ViteDevServer } from "vite"
 
 import { DEFAULT_DISPLAY_RANGES } from "./calendarDisplay.ts"
 
-test("calendar renders Busy windows and proposals behind exact-time events", async () => {
-  const server = await createServer({
-    server: { middlewareMode: true, hmr: false },
+let server: ViteDevServer
 
+before(async () => {
+  server = await createServer({
+    server: { middlewareMode: true, hmr: false },
     appType: "custom",
   })
+})
 
-  try {
-    const { default: WeekCalendar } = await server.ssrLoadModule(
-      "/src/features/planner/WeekCalendar.tsx",
-    )
+after(async () => {
+  await server.close()
+})
+
+test("calendar renders Busy windows and proposals behind exact-time events", async () => {
+  const { default: WeekCalendar } = await server.ssrLoadModule(
+    "/src/features/planner/WeekCalendar.tsx",
+  )
 
     const day = new Date("2026-11-09T12:00:00Z")
 
@@ -239,9 +245,6 @@ test("calendar renders Busy windows and proposals behind exact-time events", asy
     assert.match(apiHtml, /Bận 09:45–10:15/)
 
     assert.doesNotMatch(apiHtml, /Rảnh/)
-  } finally {
-    await server.close()
-  }
 })
 
 const findSlot = (node: ReactNode, label: string): ReactElement | null => {
@@ -261,13 +264,6 @@ const findSlot = (node: ReactNode, label: string): ReactElement | null => {
 }
 
 test("slot clicks preserve exact minutes through Planner prefill without submitting", async () => {
-  const server = await createServer({
-    server: { middlewareMode: true, hmr: false },
-
-    appType: "custom",
-  })
-
-  try {
     const { default: WeekCalendar } = await server.ssrLoadModule(
       "/src/features/planner/WeekCalendar.tsx",
     )
@@ -427,7 +423,117 @@ test("slot clicks preserve exact minutes through Planner prefill without submitt
     } finally {
       globalThis.requestAnimationFrame = originalRaf
     }
-  } finally {
-    await server.close()
-  }
+})
+
+test("short 25m and 45m cards use compact single-row class and sticky header reveals hidden or clipped events", async () => {
+    const { default: WeekCalendar } = await server.ssrLoadModule(
+      "/src/features/planner/WeekCalendar.tsx",
+    )
+    const monday = new Date("2026-11-23T12:00:00Z")
+    const days = Array.from(
+      { length: 7 },
+      (_, i) => new Date(monday.getTime() + i * 86400000),
+    )
+    const narrowedRanges = DEFAULT_DISPLAY_RANGES.map((range, index) =>
+      index === 3 ? { start: "08:00", end: "18:00" } : range,
+    )
+    const expanded: unknown[] = []
+    const tree = WeekCalendar({
+      calendarRef: { current: null },
+      weekDays: days,
+      week: 0,
+      todayIndex: 4,
+      ranges: narrowedRanges as unknown as typeof DEFAULT_DISPLAY_RANGES,
+      onRangesChange: (next: unknown) => expanded.push(next),
+      events: [
+        {
+          id: "s-45",
+          title: "Ôn Chương 1",
+          date: "2026-11-28",
+          time: "09:00–09:45",
+          hour: 9,
+          effort: 45,
+          priority: 0.5,
+          done: false,
+          deadline: "2026-11-28",
+        },
+        {
+          id: "s-90",
+          title: "Ôn Chương 2",
+          date: "2026-11-28",
+          time: "09:55–11:25",
+          hour: 9,
+          effort: 90,
+          priority: 0.5,
+          done: false,
+          deadline: "2026-11-28",
+        },
+        {
+          id: "s-25",
+          title: "Ôn Chương 3",
+          date: "2026-11-28",
+          time: "11:35–12:00",
+          hour: 11,
+          effort: 25,
+          priority: 0.1,
+          done: false,
+          deadline: "2026-11-28",
+        },
+        {
+          id: "late-clipped",
+          title: "Học Lý",
+          date: "2026-11-26",
+          time: "17:30–19:00",
+          hour: 17,
+          effort: 90,
+          priority: 0.5,
+          done: false,
+          deadline: "2026-11-26",
+        },
+        {
+          id: "late-hidden",
+          title: "Học Hóa",
+          date: "2026-11-26",
+          time: "20:30–22:00",
+          hour: 20,
+          effort: 90,
+          priority: 1,
+          done: false,
+          deadline: "2026-11-26",
+        },
+      ],
+      windows: [],
+      availability: [],
+      proposedWindowIds: new Set(),
+      changeOf: new Map(),
+      prefill: () => {},
+      nowHour: 12,
+      nowMinutes: 0,
+    })
+    const html = renderToStaticMarkup(tree)
+
+    // 25m and 45m cards get compact 1-row class; 90m stays standard 2-row
+    assert.match(html, /is-compact[^"]*"[^>]*data-task-id="s-25"/)
+    assert.match(html, /is-compact[^"]*"[^>]*data-task-id="s-45"/)
+    assert.doesNotMatch(html, /is-compact[^"]*"[^>]*data-task-id="s-90"/)
+
+    // Sticky day header shows both completely outside (20:30) and end-clipped (17:30-19:00) events
+    assert.match(html, /schedule-header[\s\S]*2 buổi ngoài khung · Hiện[\s\S]*schedule-columns/)
+
+    // Clicking the reveal button expands only Thursday to cover up to 22:00
+    const findHiddenBtn = (node: ReactNode): ReactElement | null => {
+      if (!isValidElement(node)) return null
+      const props = node.props as Record<string, unknown>
+      if (node.type === "button" && props.className === "schedule-hidden-events") return node
+      for (const child of Children.toArray(props.children as ReactNode)) {
+        const hit = findHiddenBtn(child)
+        if (hit) return hit
+      }
+      return null
+    }
+    const btn = findHiddenBtn(tree)
+    assert.ok(btn)
+    ;(btn.props as { onClick: () => void }).onClick()
+    const nextRanges = expanded[0] as Array<{ start: string; end: string }>
+    assert.deepEqual(nextRanges[3], { start: "08:00", end: "22:00" })
 })

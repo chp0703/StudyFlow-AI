@@ -130,13 +130,12 @@ class ActionProcessor:
         if slots.get("start_at") is not None:
             if slots.get("available_from_at") is None:
                 slots["available_from_at"] = slots["start_at"]
-            if slots.get("deadline_precision") is None:
-                slots["deadline_precision"] = "DATETIME"
             if (
-                slots.get("deadline_precision") == "DATETIME"
+                slots.get("deadline_precision") in (None, "DATETIME")
                 and slots.get("deadline_at") is None
                 and slots.get("estimated_minutes") is not None
             ):
+                slots["deadline_precision"] = "DATETIME"
                 slots["deadline_at"] = end_instant_from_start(slots["start_at"], slots["estimated_minutes"])
         if not (isinstance(slots.get("color"), str) and slots["color"].strip()):
             slots["color"] = default_task_color(slots)

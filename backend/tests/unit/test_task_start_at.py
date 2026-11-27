@@ -244,6 +244,48 @@ class TaskStartAtRequirementTests(unittest.TestCase):
         self.assertEqual("2027-03-05", slots["deadline_date"])
         self.assertEqual(60, slots["estimated_minutes"])
 
+    def test_start_at_without_duration_or_deadline_asks_only_estimated_minutes(self) -> None:
+        rpc = InMemoryWorkflowRpc()
+        script = {
+            "Học Toán 8h tối mai": {
+                "intents": [{
+                    "intent": "CREATE_TASK",
+                    "slots": {"title": "Học Toán", "start_at": "2026-11-06T20:00:00+07:00"},
+                    "raw_expressions": {"start_at": "8h tối mai"},
+                    "ambiguities": [],
+                }],
+            },
+            "khoảng 60 phút": {
+                "intents": [{
+                    "intent": "CREATE_TASK",
+                    "slots": {"estimated_minutes": 60},
+                    "raw_expressions": {"estimated_minutes": "60 phút"},
+                    "ambiguities": [],
+                }],
+            },
+        }
+        processor = ActionProcessor(rpc, self.clock, ScriptedExtractor(script), "Asia/Ho_Chi_Minh")
+        receipt1 = {"message_id": "00000000-0000-4000-8000-000000000201", "created_at": "2026-11-05T01:00:00Z",
+                    "request_fingerprint": "fp-201", "lease_version": 1}
+        receipt2 = {"message_id": "00000000-0000-4000-8000-000000000202", "created_at": "2026-11-05T01:01:00Z",
+                    "request_fingerprint": "fp-202", "lease_version": 1}
+
+        _, ask = processor.chat.handle_message(
+            self.ctx, receipt1, "chat-key-opt-1", {"conversation_id": "conv-opt", "text": "Học Toán 8h tối mai"},
+        )
+        self.assertEqual("NEEDS_CLARIFICATION", ask["state"])
+        self.assertEqual(["estimated_minutes"], [q["field"] for q in ask["questions"]])
+        self.assertNotIn("deadline_precision", ask["result"]["data"]["candidate"]["slots"])
+
+        _, ready = processor.chat.handle_message(
+            self.ctx, receipt2, "chat-key-opt-2", {"conversation_id": "conv-opt", "text": "khoảng 60 phút"},
+        )
+        self.assertEqual("AWAITING_APPROVAL", ready["state"])
+        slots = ready["result"]["data"]["candidate"]["slots"]
+        self.assertEqual("DATETIME", slots["deadline_precision"])
+        self.assertEqual("2026-11-06T16:59:00.000000Z", slots["deadline_at"])
+        self.assertEqual(60, slots["estimated_minutes"])
+
 
 if __name__ == "__main__":
     unittest.main()
