@@ -215,17 +215,27 @@ export default function WeekCalendar({
 
             const now = nowHour * 60 + nowMinutes
 
-            const segments = visibleSegments(
+            const daySegments = visibleSegments(
               dateKey,
-
-              from,
-
-              to,
-
+              0,
+              24 * 60,
               windows,
-
               availability,
             )
+            const hiddenWindows = daySegments.filter(
+              (segment) => segment.start < from || segment.end > to,
+            )
+            const hiddenLabel = [
+              outside.length && `${outside.length} buổi`,
+              hiddenWindows.length && `${hiddenWindows.length} khung giờ`,
+            ]
+              .filter(Boolean)
+              .join(", ")
+            const segments = daySegments.flatMap((segment) => {
+              const start = Math.max(segment.start, from)
+              const end = Math.min(segment.end, to)
+              return start < end ? [{ ...segment, start, end }] : []
+            })
 
             return (
               <section
@@ -276,27 +286,30 @@ export default function WeekCalendar({
                       onClick={() => prefill(date, minute)}
                     />
                   ))}
-                  {outside.length > 0 &&
+                  {hiddenLabel &&
                     (onRangesChange ? (
                       <button
                         type="button"
                         className="schedule-hidden-events"
-                        title="Mở rộng khung giờ để xem các buổi này"
+                        title="Mở rộng khung giờ để xem các mục ngoài khung"
                         onClick={() =>
                           onRangesChange(
                             ranges.map((item, index) =>
                               index === day
-                                ? rangeCoveringSpans(item, outside)
+                                ? rangeCoveringSpans(item, [
+                                    ...outside,
+                                    ...hiddenWindows,
+                                  ])
                                 : item,
                             ) as unknown as CalendarDisplayRanges,
                           )
                         }
                       >
-                        {outside.length} buổi ngoài khung · Hiện
+                        {hiddenLabel} ngoài khung · Hiện
                       </button>
                     ) : (
                       <span className="schedule-hidden-events">
-                        {outside.length} buổi ngoài khung
+                        {hiddenLabel} ngoài khung
                       </span>
                     ))}
                   {placed.map(({ event, position }) => {
