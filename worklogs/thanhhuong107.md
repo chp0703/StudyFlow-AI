@@ -120,3 +120,14 @@
 - Chuyển cấu hình mặc định cũ sang khung mới và giữ các khung đã tùy chỉnh.
 
 **Kết quả.** PR #82. Frontend 145 bài kiểm thử, TypeScript và build đều đạt.
+
+## 2026-11-27 — Xếp lịch theo thời gian trống
+
+**Mục tiêu.** Cho phép tìm giờ học khi người dùng chưa khai báo khung giờ rảnh.
+
+**Đã làm**
+
+- Dùng toàn bộ phạm vi lập lịch làm khung khả dụng và giữ kiểm tra giờ bận, các buổi đã xếp và hạn công việc.
+- Bỏ bước bắt buộc thiết lập giờ rảnh trước khi tìm buổi học.
+
+**Kết quả.** PR #82. Backend 224 bài và frontend 145 bài đạt. Ba ca live xếp lịch từ giờ trống, tránh giờ bận và lập lại lịch đều đạt.
