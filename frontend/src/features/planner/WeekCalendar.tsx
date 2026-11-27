@@ -1,15 +1,30 @@
 import { calendarEventColors } from "./calendarEvents"
+
 import { TASK_COLOR_OPTIONS } from "./clarification.ts"
+
 import type { CSSProperties, RefObject } from "react"
+
 import type { Task } from "../../types/task"
+
 import type { TaskChange, TimeWindow } from "../../types/planner"
+
 import type { CalendarDisplayRanges } from "./calendarDisplay"
-import { displayMinutes, eventPosition } from "./calendarDisplay"
+
+import {
+  displayMinutes,
+  eventLanes,
+  eventPosition,
+  rangeCoveringSpans,
+} from "./calendarDisplay"
+
 import CalendarDisplaySettings from "./CalendarDisplaySettings"
+
 import type { ApiTimeWindow } from "../../api/types"
-import { visibleSegments } from "./workingTime"
+
+import { sourceRange, visibleSegments } from "./workingTime"
 
 const weekdayNames = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
+
 const pxPerMinute = 0.8
 
 const timeLabel = (minutes: number) =>
@@ -20,52 +35,87 @@ const buildTicks = (from: number, to: number) =>
     ? []
     : [
         from,
+
         ...Array.from(
           { length: Math.max(0, Math.ceil((to - from) / 60) - 1) },
+
           (_, i) => from + (i + 1) * 60,
         ),
       ]
 
 export default function WeekCalendar({
   calendarRef,
+
   weekDays,
+
   week,
+
   todayIndex,
+
   ranges,
+
   onRangesChange,
+
   events,
+
   windows,
+
   availability,
+
   proposedWindowIds,
+
   changeOf,
+
   prefill,
+
   nowHour,
+
   nowMinutes,
+
   highlightNow,
+
   onSelectEvent,
 }: {
   calendarRef: RefObject<HTMLDivElement | null>
+
   weekDays: Date[]
+
   week: number
+
   todayIndex: number
+
   ranges: CalendarDisplayRanges
+
   onRangesChange?: (ranges: CalendarDisplayRanges) => void
+
   events: Task[]
+
   windows: ApiTimeWindow[]
+
   availability: TimeWindow[]
+
   proposedWindowIds: Set<string>
+
   changeOf: Map<Task["id"], TaskChange["kind"]>
+
   prefill: (date: Date, minuteOfDay: number) => void
+
   nowHour: number
+
   nowMinutes: number
+
   highlightNow?: boolean
+
   onSelectEvent?: (event: Task) => void
 }) {
   const gridFrom = Math.min(
     ...ranges.map((range) => displayMinutes(range.start)),
   )
+
   const gridTo = Math.max(...ranges.map((range) => displayMinutes(range.end)))
+
   const gridHeight = Math.max(60, (gridTo - gridFrom) * pxPerMinute)
+
   const axisTicks = buildTicks(gridFrom, gridTo)
 
   return (
@@ -110,6 +160,7 @@ export default function WeekCalendar({
                 className="schedule-time-label"
                 style={{
                   top: (minute - gridFrom) * pxPerMinute,
+
                   height: Math.min(60, gridTo - minute) * pxPerMinute,
                 }}
               >
@@ -119,19 +170,63 @@ export default function WeekCalendar({
           </div>
           {weekDays.map((date, day) => {
             const range = ranges[day]
+
             const from = displayMinutes(range.start)
+
             const to = displayMinutes(range.end)
+
             const dateKey = date.toISOString().slice(0, 10)
+
             const ticks = buildTicks(from, to)
+
             const dayEvents = events.filter((event) => event.date === dateKey)
+
+            const startOf = (event: Task) =>
+              event.time.match(/\d{2}:\d{2}/)?.[0] ??
+              `${String(event.hour ?? 0).padStart(2, "0")}:00`
+
+            const placed = dayEvents.flatMap((event) => {
+              const position = eventPosition(startOf(event), range)
+
+              return position ? [{ event, position }] : []
+            })
+
+            const outside = dayEvents
+              .filter((event) => !placed.some((item) => item.event === event))
+              .map((event) => {
+                const start = displayMinutes(startOf(event))
+
+                return { start, end: start + event.effort }
+              })
+
+            const lanes = eventLanes(
+              placed.map(({ event, position }) => ({
+                id: event.id,
+
+                start: from + position.top,
+
+                // Khối được vẽ cao tối thiểu 28px (~35 phút) nên tính chồng theo chiều cao thật.
+                end:
+                  from +
+                  position.top +
+                  Math.max(35, Math.min(event.effort, position.visibleMinutes)),
+              })),
+            )
+
             const now = nowHour * 60 + nowMinutes
+
             const segments = visibleSegments(
               dateKey,
+
               from,
+
               to,
+
               windows,
+
               availability,
             )
+
             return (
               <section
                 key={dateKey}
@@ -155,14 +250,15 @@ export default function WeekCalendar({
                           : ""
                       }`}
                       role="img"
-                      aria-label={`Bận ${timeLabel(segment.start)}–${timeLabel(segment.end)}`}
+                      aria-label={`Bận ${timeLabel(sourceRange(dateKey, segment, windows)?.start ?? segment.start)}–${timeLabel(sourceRange(dateKey, segment, windows)?.end ?? segment.end)}`}
                       style={{
                         top: (segment.start - gridFrom) * pxPerMinute,
+
                         height: (segment.end - segment.start) * pxPerMinute,
                       }}
                     >
                       {segment.end - segment.start >= 30
-                        ? `Bận ${timeLabel(segment.start)}–${timeLabel(segment.end)}`
+                        ? `Bận ${timeLabel(sourceRange(dateKey, segment, windows)?.start ?? segment.start)}–${timeLabel(sourceRange(dateKey, segment, windows)?.end ?? segment.end)}`
                         : ""}
                     </div>
                   ))}
@@ -173,27 +269,52 @@ export default function WeekCalendar({
                       className="schedule-time-slot"
                       style={{
                         top: (minute - gridFrom) * pxPerMinute,
+
                         height: Math.min(60, to - minute) * pxPerMinute,
                       }}
                       aria-label={`${weekdayNames[day]} ${dateKey} lúc ${timeLabel(minute)}; nhập yêu cầu lịch học`}
                       onClick={() => prefill(date, minute)}
                     />
                   ))}
-                  {dayEvents.map((event) => {
-                    const start =
-                      event.time.match(/\d{2}:\d{2}/)?.[0] ??
-                      `${String(event.hour ?? 0).padStart(2, "0")}:00`
-                    const position = eventPosition(start, range)
-                    if (!position) return null
+                  {outside.length > 0 &&
+                    (onRangesChange ? (
+                      <button
+                        type="button"
+                        className="schedule-hidden-events"
+                        title="Mở rộng khung giờ để xem các buổi này"
+                        onClick={() =>
+                          onRangesChange(
+                            ranges.map((item, index) =>
+                              index === day
+                                ? rangeCoveringSpans(item, outside)
+                                : item,
+                            ) as unknown as CalendarDisplayRanges,
+                          )
+                        }
+                      >
+                        {outside.length} buổi ngoài khung · Hiện
+                      </button>
+                    ) : (
+                      <span className="schedule-hidden-events">
+                        {outside.length} buổi ngoài khung
+                      </span>
+                    ))}
+                  {placed.map(({ event, position }) => {
+                    const slot = lanes.get(event.id) ?? { lane: 0, lanes: 1 }
+
                     const duration = Math.min(
                       event.effort,
+
                       position.visibleMinutes,
                     )
+
                     const colors = calendarEventColors(event.color)
+
                     const colorLabel = TASK_COLOR_OPTIONS.find(
                       (option) =>
                         option.value === colors?.["--evt"].toUpperCase(),
                     )?.label
+
                     return (
                       <button
                         type="button"
@@ -216,12 +337,22 @@ export default function WeekCalendar({
                         style={
                           {
                             top: (from - gridFrom + position.top) * pxPerMinute,
+
+                            left: `calc(${(slot.lane / slot.lanes) * 100}% + 4px)`,
+
+                            width: `calc(${100 / slot.lanes}% - 8px)`,
+
+                            right: "auto",
+
                             height: Math.max(28, duration * pxPerMinute),
+
                             ...colors,
                           } as CSSProperties
                         }
                         title={[event.title, event.time, colorLabel]
+
                           .filter(Boolean)
+
                           .join(" · ")}
                         onClick={() => onSelectEvent?.(event)}
                       >

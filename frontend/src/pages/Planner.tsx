@@ -14,6 +14,8 @@ import {
   CALENDAR_VIEWS,
   DEFAULT_CALENDAR_VIEW,
   DEFAULT_DISPLAY_RANGES,
+  loadDisplayRanges,
+  saveDisplayRanges,
   calendarViewLabel,
   displaySettingsVisible,
   rangesIncludingNow,
@@ -38,6 +40,7 @@ import Card from "../components/ui/Card"
 import { apiEnabled } from "../api/config"
 
 import TaskPanel from "../features/planner/TaskPanel"
+
 import CalendarEventDetails from "../features/planner/CalendarEventDetails"
 
 import type { Task } from "../types/task"
@@ -84,8 +87,11 @@ export default function Planner({
   onRetryRevisionScheduling,
 
   onProposalDecision,
+
   onTaskConfirmed,
+
   onScheduleTask,
+
   onStartLearning,
 }: PlannerProps) {
   const [plannerNotice, setPlannerNotice] = useState("")
@@ -177,6 +183,7 @@ export default function Planner({
       setRevision,
 
       onProposalDecision,
+
       onTaskConfirmed,
     },
 
@@ -215,7 +222,7 @@ export default function Planner({
   const [selectedWeekEvent, setSelectedWeekEvent] = useState<Task | null>(null)
 
   const [displayRanges, setDisplayRanges] = useState<CalendarDisplayRanges>(
-    DEFAULT_DISPLAY_RANGES,
+    () => loadDisplayRanges(userId),
   )
 
   const [temporaryRanges, setTemporaryRanges] =
@@ -434,14 +441,15 @@ export default function Planner({
 
   const chooseView = (view: CalendarView) => {
     setTemporaryRanges(null)
+
     if (view === "month" && calendarView !== "month") {
       setMonth(mondayKey.slice(0, 7))
 
       setSelectedMonthDate(null)
     }
 
-    if (calendarView === "month" && view !== "month") {
-      const date = selectedMonthDate ?? `${month}-01`
+    if (calendarView === "month" && view !== "month" && selectedMonthDate) {
+      const date = selectedMonthDate
 
       const monday = addCivilDays(date, -civilWeekday(date))
 
@@ -471,28 +479,42 @@ export default function Planner({
 
   const goToNow = () => {
     const current = new Date()
+
     const currentDate = vietnamDate(current)
+
     const index = civilWeekday(currentDate)
+
     const [hour, minute] = vietnamClock(current).split(":").map(Number)
+
     setNow(current)
+
     setWeek(0)
+
     setSelectedMonthDate(currentDate)
+
     setCalendarView("detail")
+
     setTemporaryRanges(
       rangesIncludingNow(displayRanges, index, hour * 60 + minute),
     )
+
     setHighlightNow(true)
   }
 
   useEffect(() => {
     if (!highlightNow || calendarView !== "detail" || week !== 0) return
+
     const frame = window.requestAnimationFrame(() => {
       const line = calendarRef.current?.querySelector<HTMLElement>(".now-line")
+
       line?.scrollIntoView({ block: "center", behavior: "smooth" })
     })
+
     const timer = window.setTimeout(() => setHighlightNow(false), 1800)
+
     return () => {
       window.cancelAnimationFrame(frame)
+
       window.clearTimeout(timer)
     }
   }, [activeRanges, calendarView, highlightNow, week])
@@ -576,6 +598,7 @@ export default function Planner({
                   className="secondary calendar-today-btn"
                   onClick={() => {
                     setTemporaryRanges(null)
+
                     if (calendarView === "month") {
                       setMonth(todayKey.slice(0, 7))
 
@@ -601,6 +624,7 @@ export default function Planner({
                 }
                 onClick={() => {
                   setTemporaryRanges(null)
+
                   if (calendarView === "month") {
                     setMonth(addMonths(month, -1))
 
@@ -615,6 +639,7 @@ export default function Planner({
                 aria-label={calendarView === "month" ? "Tháng sau" : "Tuần sau"}
                 onClick={() => {
                   setTemporaryRanges(null)
+
                   if (calendarView === "month") {
                     setMonth(addMonths(month, 1))
 
@@ -644,8 +669,8 @@ export default function Planner({
               >
                 <ListTodo aria-hidden="true" size={15} />
                 <span>Công việc</span>
-                {shown.length > 0 && (
-                  <span className="planner-task-count">{shown.length}</span>
+                {tasks.length > 0 && (
+                  <span className="planner-task-count">{tasks.length}</span>
                 )}
               </Button>
             </div>
@@ -666,8 +691,8 @@ export default function Planner({
           <span className="legend-proposed">Đề xuất</span>
           <span>
             {weekEmpty
-              ? shown.length
-                ? `Tuần này chưa có buổi học; có ${shown.length} công việc chưa xếp.`
+              ? tasks.length
+                ? `Tuần này chưa có buổi học; có ${tasks.filter((task) => !task.date || !task.time || task.time === "Chưa xếp").length} công việc chưa xếp.`
                 : "Tuần này chưa có buổi học."
               : calendarView === "month"
                 ? "Chọn ngày để xem chi tiết"
@@ -698,7 +723,10 @@ export default function Planner({
               displaySettingsVisible(calendarView)
                 ? (ranges) => {
                     setTemporaryRanges(null)
+
                     setDisplayRanges(ranges)
+
+                    saveDisplayRanges(userId, ranges)
                   }
                 : undefined
             }

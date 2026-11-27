@@ -44,6 +44,7 @@ PUBLIC_ENDPOINTS = {
     ("post", "/v1/actions/{action_id}/review"), ("post", "/v1/decisions"),
     ("get", "/v1/tasks"), ("get", "/v1/time-windows"),
     ("get", "/v1/preferences"), ("get", "/v1/plans"),
+    ("get", "/v1/conversations/{conversation_id}/pending"),
 }
 RECORD_KEYS = {
     "user_id", "conversation_id", "source_message_id", "origin_http_operation",
@@ -135,7 +136,7 @@ class ApprovedAddendumAcceptance(unittest.TestCase):
                 if data_schema:
                     self.assertEqual(entry["data_schema"], data_schema)
 
-    def test_public_routes_operations_and_business_entities_do_not_expand(self):
+    def test_public_routes_include_pending_recovery_without_expanding_operations_or_entities(self):
         actual_endpoints = {(method, path) for path, operations in self.api["paths"].items()
                             for method in operations if method in {"get", "post", "put", "patch", "delete", "options", "head"}}
         self.assertEqual(actual_endpoints, PUBLIC_ENDPOINTS)

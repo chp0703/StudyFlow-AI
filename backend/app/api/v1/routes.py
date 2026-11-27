@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from uuid import UUID, uuid4
 
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.concurrency import run_in_threadpool
 
 from ...clients.rpc import RpcClient, RpcUnavailable, child_key
@@ -19,6 +20,7 @@ from ...core.security import AuthError, AuthUnavailable, JwtVerifier
 from .http import ApiError, error_body, error_response, respond, result_response
 from .workflow import ActionProcessor
 from ...orchestrator.workflow_ports import WorkflowError
+from ...orchestrator.workflow_shared import _ok, reply
 from ...ingestion.workflow import SourceOperations
 from ...assessment.materials import MaterialOperations, MAX_BYTES as MATERIAL_MAX_BYTES
 from ...assessment.questions import AssessmentQuestionOperations
@@ -216,6 +218,45 @@ class Api:
     async def post_decisions(self, request: Request, ctx: Ctx):
         return await self.post_pipeline(request, ctx, "submit_decision", "UserDecision")
 
+    async def get_conversation_pending(self, request: Request, ctx: Ctx):
+        self._query(request, set(), error_status=400)
+        conversation_id = self._uuid_param(request, "conversation_id")
+        data = await run_in_threadpool(self.rpc, ctx, "get_workflow_context", {
+            "conversation_id": conversation_id, "action_id": None, "message_id": None,
+        }, conversation_id=conversation_id)
+        if data.get("outcome") == "ERROR":
+            error = data.get("error") or {}
+            raise ApiError(error.get("code", "INTERNAL_ERROR"),
+                           error.get("message", "Không đọc được hội thoại."))
+        action = data["data"]["active_action"]
+        if action is None:
+            return JSONResponse(None, headers={"X-Request-ID": ctx.request_id})
+        else:
+            pending = action["pending_action"]
+            candidate, proposal = action["candidate"], action["proposal"]
+            last = action.get("last_presentation") or {}
+            target = (last.get("target_type", "PENDING_ACTION"),
+                      last.get("target_id", pending["action_id"]),
+                      last.get("target_version", pending["version"]))
+            reference = {"action_id": pending["action_id"], "action_version": pending["version"],
+                         "target_type": target[0], "target_id": target[1], "target_version": target[2]}
+            presentation = last.get("presentation")
+            if presentation is None:
+                presentation = {"kind": "ACTION_PRESENTATION", "pending_action": pending,
+                                "candidate": candidate, "proposal": proposal, "normalized_command": None,
+                                "effective_policy": None, "schedule_confirmation": None}
+            if pending["state"] == "AWAITING_CLARIFICATION":
+                questions = self.processor.actions.questions(candidate["slots"]) if candidate else []
+                result = reply(ctx.request_id, "NEEDS_CLARIFICATION", "Mình cần thêm thông tin.",
+                               reference=reference, questions=questions,
+                               result=_ok(ctx.request_id, "DRAFTED", presentation))
+            else:
+                result = reply(ctx.request_id, "AWAITING_APPROVAL", "Xem nội dung và xác nhận thao tác.",
+                               reference=reference, result=_ok(ctx.request_id, "DRAFTED", presentation))
+        if not contract.is_valid("OrchestratorReply", result):
+            raise ApiError("INTERNAL_ERROR", "Kết quả không đúng contract.")
+        return respond(result, 200, ctx.request_id, post=False)
+
     async def post_sources(self, request: Request, ctx: Ctx):
         body = await self.read_json(request, max_bytes=7 * 1024 * 1024)
         self.validated('SourceUploadRequest', body)
@@ -360,6 +401,7 @@ class Api:
             ("GET", "/v1/tasks", self.get_tasks), ("GET", "/v1/time-windows", self.get_time_windows),
             ("GET", "/v1/preferences", self.get_preferences), ("GET", "/v1/plans", self.get_plans),
             ("POST", "/v1/messages", self.post_messages), ("POST", "/v1/actions", self.post_actions),
+            ("GET", "/v1/conversations/{conversation_id}/pending", self.get_conversation_pending),
             ("POST", "/v1/actions/{action_id}/review", self.post_review), ("POST", "/v1/decisions", self.post_decisions),
             ("POST", "/v1/sources", self.post_sources), ("GET", "/v1/sources/{source_id}", self.get_source),
             ("POST", "/v1/sources/{source_id}/extract", self.post_extract_source),

@@ -10,13 +10,14 @@ from __future__ import annotations
 import uuid
 import copy
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from ..clients.rpc import child_key, iso
 from ..core import contract
 from ..nlu.extractor import ExtractionError, ExtractorUnavailable
 from .workflow_ports import ChatActions, Clock, WorkflowError
 from ..nlu.extractor import Extractor
-from .workflow_shared import AWAITING, DONE_TEXT, INTENT, PRODUCT_TIMEZONE, Terminal, _ok, reply
+from .workflow_shared import AWAITING, DONE_TEXT, INTENT, PRODUCT_TIMEZONE, Terminal, _ok, minute_instant, reply
 
 WRITE_INTENTS = {"CREATE_TASK", "SET_BUSY_INTERVAL", "SET_SCHEDULING_PREFERENCES", "GENERATE_STUDY_PLAN",
                  "PROPOSE_REVISION"}
@@ -231,6 +232,7 @@ class ChatProcessor:
         action_id = action_id_for(message_id, index)
         if kind == "CREATE_TASK":
             fields = self.proc.normalize_slots(slots)
+            self.proc.validate_task_slots(fields)
             if not contract.is_valid("CandidateTaskFields", fields):
                 return self.outcome(cont, index, None, "FAILED", error=self.error(
                     "INVALID_PARAMETER", "Mình chưa hiểu thông tin công việc.")), None
@@ -331,6 +333,15 @@ class ChatProcessor:
                 window = {key: None for key in WINDOW_KEYS} | window
                 if window.get("timezone") is None:
                     window["timezone"] = PRODUCT_TIMEZONE
+                if window.get("recurrence") == "NONE" and window.get("start_at") and window.get("end_at"):
+                    try:
+                        reversed_window = datetime.fromisoformat(window["start_at"].replace("Z", "+00:00")) >= datetime.fromisoformat(window["end_at"].replace("Z", "+00:00"))
+                    except ValueError:
+                        reversed_window = False
+                    if reversed_window:
+                        raise Terminal("INVALID_PARAMETER", "Giờ kết thúc phải sau giờ bắt đầu.")
+                if window.get("recurrence") == "WEEKLY" and window.get("start_time") and window.get("end_time") and window["start_time"] >= window["end_time"]:
+                    raise Terminal("INVALID_PARAMETER", "Giờ kết thúc phải sau giờ bắt đầu.")
             arguments = {"change_type": slots.get("change_type", "ADD"), "window_id": None,
                          "expected_window_version": None, "window": window}
             return operation, arguments if arguments["change_type"] == "ADD" and contract.is_valid(f"{operation}Arguments", arguments) else None
@@ -338,9 +349,16 @@ class ChatProcessor:
             profile = self.proc.step(ctx, "ensure_user_context", {})["data"]
             arguments = {"policy_patch": slots.get("policy_patch"), "expected_schedule_revision": profile["schedule_revision"]}
             return "set_scheduling_preferences", arguments if contract.is_valid("set_scheduling_preferencesArguments", arguments) else None
-        now = self.clock().replace(second=0, microsecond=0) + timedelta(minutes=1)
-        scope = {"start_at": slots.get("start_at") or iso(now).replace(".000000", ""),
-                 "end_at": slots.get("end_at") or iso(now + timedelta(days=7)).replace(".000000", ""),
+        current = self.clock()
+        now = current.replace(second=0, microsecond=0) + timedelta(minutes=1)
+        proposed_start = minute_instant(slots.get("start_at"), ceiling=True)
+        start = max(now, datetime.fromisoformat(proposed_start.replace("Z", "+00:00"))) if proposed_start else now
+        proposed_end = minute_instant(slots.get("end_at"))
+        end = datetime.fromisoformat(proposed_end.replace("Z", "+00:00")) if proposed_end else now + timedelta(days=7)
+        if end <= start:
+            end = start + timedelta(days=7)
+        scope = {"start_at": iso(start),
+                 "end_at": iso(end),
                  "selection_mode": "ALL_ELIGIBLE", "task_ids": []}
         arguments = {"generation_scope": scope, "policy_overrides": {}}
         return "generate_study_plan", arguments if contract.is_valid("generate_study_planArguments", arguments) else None
@@ -368,6 +386,7 @@ class ChatProcessor:
         message_id = receipt["message_id"]
         patch = {k: v for k, v in given["slots"].items() if v is not None}
         merged = self.proc.normalize_slots({**candidate["slots"], **patch})
+        self.proc.validate_task_slots(merged)
         if not contract.is_valid("CandidateTaskFields", merged):
             raise Terminal("INVALID_PARAMETER", "Mình chưa hiểu thông tin vừa nhập.")
         last = (action["last_presentation"] or {}).get("presentation") or {}
@@ -394,7 +413,9 @@ class ChatProcessor:
                                 conversation_id=conversation, idempotency_key=child_key(key, "reprepare"),
                                 message_id=message_id)["data"]
         if missing:
-            return 200, reply(ctx.request_id, "NEEDS_CLARIFICATION", "Mình cần thêm thông tin.", questions=self.proc.questions(merged))
+            return 200, reply(ctx.request_id, "NEEDS_CLARIFICATION", "Mình cần thêm thông tin.",
+                              reference=self.reference_for({"pending_action": stored["pending_action"], "candidate": updated, "proposal": None}),
+                              questions=self.proc.questions(merged), result=_ok(ctx.request_id, "DRAFTED", stored))
         return 200, self.proc.awaiting_reply(ctx, stored, ("TASK_CANDIDATE", updated["candidate_id"], updated["version"]))
 
     # ------------------------------------------------------------ tiếp tục sau quyết định
@@ -426,21 +447,118 @@ class ChatProcessor:
         return self.reference_for({"pending_action": pending, "candidate": data["candidate"], "proposal": None})
 
     # ------------------------------------------------------------ ghép phản hồi từ trạng thái đã lưu
+    def _window_query_line(self, ctx, cont, step, conversation):
+        intent_item = cont["extraction"]["intents"][step["intent_index"]]
+        slots = intent_item.get("slots") or {}
+        raw_start = slots.get("start_at")
+        if not isinstance(raw_start, str) or not raw_start.strip():
+            return None
+        try:
+            q_start = datetime.fromisoformat(raw_start.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+        raw_end = slots.get("end_at")
+        try:
+            q_end = datetime.fromisoformat(raw_end.replace("Z", "+00:00")) if isinstance(raw_end, str) and raw_end.strip() else q_start + timedelta(minutes=1)
+        except ValueError:
+            q_end = q_start + timedelta(minutes=1)
+        if q_end <= q_start:
+            q_end = q_start + timedelta(minutes=1)
+        zone = ZoneInfo(self.timezone)
+        q_start_local = q_start.astimezone(zone)
+        q_end_local = q_end.astimezone(zone)
+
+        try:
+            windows_resp = self.proc.step(ctx, "list_time_windows", {"kind": None, "include_archived": False, "page_size": 100, "cursor": None},
+                                          conversation_id=conversation, message_id=cont["source_message_id"])
+            windows = windows_resp["data"].get("items", [])
+        except Exception:
+            windows = []
+
+        busy_hits, free_hits = [], []
+        for w in windows:
+            if w.get("archived_at"):
+                continue
+            label = (w.get("label") or "").strip()
+            if w.get("recurrence") == "WEEKLY":
+                if w.get("weekday") != q_start_local.isoweekday():
+                    continue
+                day_str = q_start_local.date().isoformat()
+                if w.get("valid_from") and day_str < w["valid_from"]:
+                    continue
+                if w.get("valid_until") and day_str >= w["valid_until"]:
+                    continue
+                st, et = w.get("start_time"), w.get("end_time")
+                if not (st and et):
+                    continue
+                w_start = datetime.fromisoformat(f"{day_str}T{st}:00").replace(tzinfo=zone)
+                w_end = datetime.fromisoformat(f"{day_str}T{et}:00").replace(tzinfo=zone)
+            else:
+                sa, ea = w.get("start_at"), w.get("end_at")
+                if not (sa and ea):
+                    continue
+                w_start = datetime.fromisoformat(sa.replace("Z", "+00:00")).astimezone(zone)
+                w_end = datetime.fromisoformat(ea.replace("Z", "+00:00")).astimezone(zone)
+            if w_start < q_end_local and w_end > q_start_local:
+                span = f"{w_start:%H:%M}–{w_end:%H:%M}"
+                desc = f"{label} ({span})" if label else span
+                if w.get("kind") == "BUSY":
+                    busy_hits.append(desc)
+                else:
+                    free_hits.append(desc)
+
+        plan_data = (step.get("result") or {}).get("data") or {}
+        plan = plan_data.get("plan")
+        block_hits = []
+        for b in (plan.get("blocks", []) if isinstance(plan, dict) else []):
+            bsa, bea = b.get("start_at"), b.get("end_at")
+            if not (bsa and bea):
+                continue
+            b_start = datetime.fromisoformat(bsa.replace("Z", "+00:00")).astimezone(zone)
+            b_end = datetime.fromisoformat(bea.replace("Z", "+00:00")).astimezone(zone)
+            if b_start < q_end_local and b_end > q_start_local:
+                block_hits.append(f"{b.get('task_title') or 'Buổi học'} ({b_start:%H:%M}–{b_end:%H:%M})")
+
+        parts = []
+        if busy_hits:
+            parts.append(f"Bạn có lịch bận: {', '.join(busy_hits)}.")
+        if block_hits:
+            parts.append(f"Bạn có lịch học đã xếp: {', '.join(block_hits)}.")
+        if not busy_hits and not block_hits:
+            if free_hits:
+                parts.append(f"Bạn đang rảnh ({', '.join(free_hits)}) và không có lịch bận.")
+            elif not windows:
+                return None
+            else:
+                parts.append("Bạn chưa có lịch bận hay buổi học nào vào thời gian này.")
+        return " ".join(parts)
+
     def compose(self, ctx, cont, conversation, fallback=None):
         lines, last_ok = [], None
         for step in cont["completed_steps"]:
             line, result = self.describe(step)
-            lines.append(line)
+            if step["disposition"] == "SUCCEEDED" and step["operation"] == "get_study_plan":
+                custom = self._window_query_line(ctx, cont, step, conversation)
+                if custom:
+                    line = custom
+            if line not in lines:
+                lines.append(line)
             if result is not None:
                 last_ok = result
         reference = cont["awaiting_reference"]
         if reference is not None:
+            lines = [self.describe(step)[0] for step in cont["completed_steps"]
+                     if step["disposition"] != "FAILED"]
+            lines = list(dict.fromkeys(lines))
+            if any(step["disposition"] == "FAILED" for step in cont["completed_steps"]):
+                lines.append("Một phần yêu cầu trước chưa xử lý được.")
             action = self.proc.workflow_context(ctx, conversation, reference["action_id"], "", False)["selected_action"]
             stored = (action["last_presentation"] or {})["presentation"]
             pending = action["pending_action"]
             if pending["state"] == "AWAITING_CLARIFICATION":
                 return reply(ctx.request_id, "NEEDS_CLARIFICATION", " ".join(lines + ["Mình cần thêm thông tin."]),
-                             questions=self.proc.questions(action["candidate"]["slots"]))
+                             reference=reference, questions=self.proc.questions(action["candidate"]["slots"]),
+                             result=_ok(ctx.request_id, "DRAFTED", stored))
             target = (reference["target_type"], reference["target_id"], reference["target_version"])
             built = self.proc.awaiting_reply(ctx, stored, target)
             built["message"] = " ".join(lines + [built["message"]])

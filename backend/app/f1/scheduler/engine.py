@@ -178,7 +178,8 @@ def _eligible_windows(
     if expected_start is None:
         return windows
     expected_utc = to_utc(expected_start)
-    return [window for window in windows if to_utc(_ceil_to_minute(window.start_at)) == expected_utc]
+    return [Interval(max_instant(window.start_at, expected_start), window.end_at)
+            for window in windows if to_utc(window.end_at) > expected_utc]
 
 
 def _next_block(
@@ -241,8 +242,6 @@ def _reason_codes(
     if available_from is not None and to_utc(available_from) >= to_utc(min_instant(task.deadline_at, context.generation_scope.end_at)):
         return ("OUTSIDE_HORIZON",)
     expected_start = _expected_block_start(context, task, generated)
-    if expected_start is not None and to_utc(expected_start) < to_utc(lower):
-        return ("OUTSIDE_HORIZON",)
 
     if not context.available_intervals:
         return ("NO_AVAILABILITY",)
@@ -365,12 +364,19 @@ def generate_schedule(context: SchedulingContext) -> SchedulingResult:
     warnings = tuple(
         Issue(
             code="UNALLOCATED_WORK",
-            message="The greedy baseline could not allocate all remaining work.",
+            message="Chưa xếp hết thời lượng học còn lại.",
             field=None,
             details={"task_id": str(summary.task_id), "minutes": summary.unallocated_minutes, "reason_codes": list(summary.reason_codes)},
         )
         for summary in summaries
         if summary.unallocated_minutes > 0
+    ) + tuple(
+        Issue(code="START_TIME_SHIFTED", message="Giờ bắt đầu dự kiến không nằm trong khung giờ rảnh; đã chuyển sang khung gần nhất.",
+              field=None, details={"task_id": str(task.task_id)})
+        for task in ordered_tasks
+        if task.start_at is not None and (
+            first := next((block for block in generated if block.task_id == task.task_id), None)
+        ) is not None and to_utc(first.start_at) > to_utc(task.start_at)
     )
     return SchedulingResult(
         generated_blocks=tuple(generated),

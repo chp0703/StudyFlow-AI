@@ -98,9 +98,17 @@ export default function ChatTranscript({
                     {entry.category === "CLARIFICATION"
                       ? "Cần thêm thông tin"
                       : entry.category === "PROPOSAL"
-                        ? entry.proposal?.reference
+                        ? entry.proposal?.status === "awaiting_approval"
                           ? "Chờ xác nhận"
-                          : "Bản nháp cần xem lại"
+                          : entry.proposal?.status === "approved"
+                            ? "Đã xác nhận"
+                            : entry.proposal?.status === "demo_acknowledged"
+                              ? "Đã xác nhận (bản mẫu)"
+                              : entry.proposal?.status === "cancelled"
+                                ? "Đã hủy"
+                                : entry.proposal?.status === "stale"
+                                  ? "Không còn hiệu lực"
+                                  : "Cần xem lại"
                         : entry.category === "UNSUPPORTED"
                           ? "Chưa hỗ trợ"
                           : "Có lỗi"}
@@ -168,12 +176,19 @@ export default function ChatTranscript({
                         {entry.proposal.caveat}
                       </p>
                     )}
+                    {entry.proposal.approvalError && (
+                      <p className="assistant-caveat" role="alert">
+                        {entry.proposal.approvalError}
+                      </p>
+                    )}
                     {entry.proposal.status === "awaiting_approval" ? (
                       <div className="assistant-proposal-actions">
                         <button
                           className="button primary"
                           type="button"
-                          disabled={thinking}
+                          disabled={
+                            thinking || Boolean(entry.proposal.approvalError)
+                          }
                           onClick={() => decide(entry.id, "demo_acknowledged")}
                         >
                           <Check size={16} aria-hidden="true" />{" "}
@@ -211,9 +226,11 @@ export default function ChatTranscript({
                       <p className="assistant-result" role="status">
                         {entry.proposal.status === "cancelled"
                           ? "Đã hủy bản nháp. Không có thay đổi nào được lưu."
-                          : entry.proposal.status === "approved"
-                            ? "Đã xác nhận và lưu vào tài khoản."
-                            : "Đã ghi nhận xác nhận trong bản mẫu. Chưa gửi đến backend và chưa lưu thay đổi."}
+                          : entry.proposal.status === "stale"
+                            ? "Bản nháp này không còn hiệu lực, có thể đã được xác nhận hoặc hủy ở tab khác. Hãy kiểm tra Công việc và Lịch trước khi tạo lại."
+                            : entry.proposal.status === "approved"
+                              ? "Đã xác nhận và lưu vào tài khoản."
+                              : "Đã ghi nhận xác nhận trong bản mẫu. Chưa gửi đến backend và chưa lưu thay đổi."}
                       </p>
                     )}
                   </div>

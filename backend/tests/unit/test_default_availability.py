@@ -26,12 +26,14 @@ class DefaultAvailabilityTests(unittest.TestCase):
         self.assertEqual(sum(e["duration_minutes"] for e in entries(snap)), 90)
 
     def test_busy_time_is_still_avoided(self):
-        # The task must start at 12:00Z exactly, which is busy, so nothing may be placed on it.
+        # The task prefers 12:00Z, which is busy; start_at is the earliest start, so the block moves past the busy hour.
         busy = {**availability("2026-11-05T12:00:00Z", "2026-11-05T13:00:00Z"), "kind": "BUSY",
                 "window_id": "00000000-0000-4000-8000-000000000041"}
         outcome = generate({**snapshot(), "time_windows": [busy]}, COMMAND, now=NOW, block_id_factory=lambda: FRESH_BLOCK)
         placed = outcome.proposal["payload"]["schedule_confirmation"]["entries"] if outcome.proposal else []
-        self.assertEqual(placed, [])
+        self.assertTrue(placed)
+        for entry in placed:
+            self.assertFalse(entry["start_at"] < "2026-11-05T13:00:00" and entry["end_at"] > "2026-11-05T12:00:00", entry)
 
     def test_a_locked_block_outside_the_default_day_does_not_block_planning(self):
         # 22:00-22:30 local (15:00Z) was planned when users could declare any availability.

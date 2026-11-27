@@ -1,4 +1,5 @@
 import { TASK_COLOR_OPTIONS } from "./clarification"
+
 import { useState } from "react"
 
 import {
@@ -13,10 +14,13 @@ import {
 import Card from "../../components/ui/Card"
 
 import type { Task } from "../../types/task"
+
 import type { RevisionSchedulingState } from "./revisionScheduling"
+
 import Button from "../../components/ui/Button"
 
 import { daysUntil, formatShortDate } from "../../utils/date"
+
 import { presentTaskDescription } from "./taskPresentation"
 
 type Status = "draft" | "confirmed" | "unscheduled"
@@ -65,6 +69,7 @@ export default function TaskPanel({
   revisionScheduling,
 
   onRetryRevisionScheduling,
+
   onScheduleTask,
 }: {
   tasks: Task[]
@@ -174,12 +179,16 @@ export default function TaskPanel({
             const { label, Icon } = STATUS[statusOf(t, proposedIds)]
 
             const left = daysUntil(t.deadline)
+
             const colorLabel = TASK_COLOR_OPTIONS.find(
               (option) => option.value === t.color?.toUpperCase(),
             )?.label
+
             const scheduling =
               revisionScheduling?.taskId === t.id ? revisionScheduling : null
+
             const description = presentTaskDescription(t.description)
+
             const status = statusOf(t, proposedIds)
 
             return (
@@ -227,7 +236,8 @@ export default function TaskPanel({
                         : scheduling?.status === "scheduled"
                           ? "Đã xếp lịch"
                           : scheduling?.status === "failed"
-                            ? "Chưa tìm được khung giờ phù hợp"
+                            ? scheduling.message ||
+                              "Chưa tìm được khung giờ phù hợp"
                             : scheduling?.status === "blocked"
                               ? "Đang có đề xuất chờ duyệt"
                               : label}

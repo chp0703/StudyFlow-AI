@@ -27,6 +27,8 @@ import { getAssistantReply } from "./assistantService"
 
 import { api } from "../../api"
 
+import { ApiError, errorText, isStaleDecisionError } from "../../api/client"
+
 import { apiEnabled } from "../../api/config"
 
 import { errorToMessage, replyToMessage } from "./apiAssistant"
@@ -53,6 +55,7 @@ import {
   emptyDraft,
   setProposal as replaceProposal,
   setProposalStatus,
+  type Conversation,
   type Draft,
 } from "./conversationHistory"
 
@@ -66,18 +69,48 @@ const message = (item: Omit<ChatMessage, "id" | "timestamp">): ChatMessage => ({
   timestamp: nowIso(),
 })
 
+// Thao tác chờ lấy lại từ server: cập nhật thẻ cùng action_id thay vì thêm thẻ trùng.
+function upsertPending(
+  conversation: Conversation,
+  reply: Parameters<typeof replyToMessage>[0],
+): Conversation {
+  const actionId = reply.action_reference?.action_id
+  const fresh = message(replyToMessage(reply))
+  const existing = actionId
+    ? conversation.messages.find(
+        (entry) =>
+          (entry.proposal?.reference ?? entry.clarification?.reference)
+            ?.action_id === actionId,
+      )
+    : undefined
+
+  if (!existing) return appendMessages(conversation, [fresh])
+
+  if (!existing.proposal || !fresh.proposal) return conversation
+
+  return replaceProposal(conversation, existing.id, fresh.proposal)
+}
+
 export default function Assistant({
   onOpenPlanner,
 
   onServerChange,
+
+  userId,
 
   // Called after the server may have changed tasks or the schedule (API mode).
 }: {
   onOpenPlanner: () => void
 
   onServerChange?: () => void
+
+  userId: string
 }) {
   const [thinking, setThinking] = useState(false)
+
+  const [retryMessage, setRetryMessage] = useState<string | null>(null)
+
+  const [clarificationCancelError, setClarificationCancelError] = useState("")
 
   const {
     conversations,
@@ -97,7 +130,7 @@ export default function Assistant({
     clearHistory,
 
     patchActive,
-  } = useConversationHistory()
+  } = useConversationHistory(userId)
 
   const [emptyInput, setEmptyInput] = useState("")
 
@@ -223,6 +256,58 @@ export default function Assistant({
 
   const activeClarification =
     messages.at(-1)?.category === "CLARIFICATION" ? messages.at(-1)?.id : null
+
+  const recoveredPending = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (
+      !apiEnabled ||
+      !hydrated ||
+      !activeId ||
+      recoveredPending.current === activeId
+    )
+      return
+
+    recoveredPending.current = activeId
+
+    let cancelled = false
+
+    void api
+      .getConversationPending(activeId)
+      .then(async (pending) => {
+        const reply =
+          pending?.state === "AWAITING_APPROVAL" && pending.action_reference
+            ? await api.reviewAction(
+                activeId,
+                pending.action_reference.action_id,
+
+                pending.action_reference.action_version,
+              )
+            : pending
+
+        if (
+          cancelled ||
+          !reply ||
+          !["NEEDS_CLARIFICATION", "AWAITING_APPROVAL"].includes(reply.state)
+        )
+          return
+
+        setConversations((current) =>
+          current.map((conversation) =>
+            conversation.id === activeId
+              ? upsertPending(conversation, reply)
+              : conversation,
+          ),
+        )
+      })
+      .catch(() => {
+        /* New conversations have no server record yet. */
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeId, hydrated, setConversations])
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 800px)")
@@ -487,6 +572,7 @@ export default function Assistant({
 
     if (
       !hydrated ||
+      input.length > 8000 ||
       (!text && attachedFiles.length === 0) ||
       composition.current ||
       submitting.current
@@ -711,11 +797,16 @@ export default function Assistant({
   }
 
   async function sendApi(text: string) {
-    const user = message({ role: "user", category: "MESSAGE", text })
+    setRetryMessage(null)
 
     const starting = active ?? createConversation(text)
 
-    const updated = appendMessages(starting, [user])
+    const same =
+      attempt.current?.id === starting.id && attempt.current.text === text
+
+    const user = message({ role: "user", category: "MESSAGE", text })
+
+    const updated = same ? starting : appendMessages(starting, [user])
 
     shouldScroll.current = true
 
@@ -733,9 +824,6 @@ export default function Assistant({
 
     // Sending the same text again after a failure reuses the key, so a lost response never runs twice.
 
-    const same =
-      attempt.current?.id === starting.id && attempt.current.text === text
-
     const key = same ? attempt.current!.key : crypto.randomUUID()
 
     attempt.current = { key, text, id: starting.id }
@@ -745,11 +833,64 @@ export default function Assistant({
 
       attempt.current = null
 
+      setRetryMessage(null)
+
       appendAssistant(starting.id, message(replyToMessage(reply, text)))
+
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id === starting.id
+            ? { ...conversation, draftInput: "" }
+            : conversation,
+        ),
+      )
 
       if (reply.state === "SUCCEEDED") onServerChange?.()
     } catch (error) {
       appendAssistant(starting.id, message(errorToMessage(error)))
+
+      if (
+        error instanceof ApiError &&
+        error.code === "ACTION_REVIEW_REQUIRED"
+      ) {
+        void api
+          .getConversationPending(starting.id)
+          .then((pending) => {
+            if (
+              pending?.state === "NEEDS_CLARIFICATION" ||
+              pending?.state === "AWAITING_APPROVAL"
+            )
+              setConversations((current) =>
+                current.map((conversation) =>
+                  conversation.id === starting.id
+                    ? upsertPending(conversation, pending)
+                    : conversation,
+                ),
+              )
+          })
+          .catch(() => {})
+      }
+
+      if (
+        error instanceof ApiError &&
+        ["NETWORK_ERROR", "SERVICE_UNAVAILABLE"].includes(error.code)
+      ) {
+        setConversations((current) =>
+          current.map((conversation) =>
+            conversation.id === starting.id
+              ? { ...conversation, draftInput: text }
+              : conversation,
+          ),
+        )
+
+        setEmptyInput(text)
+
+        setRetryMessage(text)
+      } else {
+        attempt.current = null
+
+        setRetryMessage(null)
+      }
     } finally {
       setThinking(false)
     }
@@ -820,6 +961,15 @@ export default function Assistant({
 
       onServerChange?.()
     } catch (error) {
+      if (isStaleDecisionError(error))
+        setConversations((current) =>
+          current.map((conversation) =>
+            conversation.id === conversationId
+              ? setProposalStatus(conversation, entry.id, "stale")
+              : conversation,
+          ),
+        )
+
       appendAssistant(conversationId, message(errorToMessage(error)))
     } finally {
       setThinking(false)
@@ -1064,6 +1214,26 @@ export default function Assistant({
     patchActive((conversation) => appendMessages(conversation, [proposed]))
   }
 
+  async function cancelApiClarification(entry: ChatMessage) {
+    const reference = entry.clarification?.reference
+
+    if (!reference || !active || thinking) return
+
+    setThinking(true)
+
+    try {
+      const reply = await api.decide(active.id, reference, "REJECT")
+
+      setClarificationCancelError("")
+
+      appendAssistant(active.id, message(replyToMessage(reply)))
+    } catch (error) {
+      setClarificationCancelError(errorText(error))
+    } finally {
+      setThinking(false)
+    }
+  }
+
   function renderApiClarification(entry: ChatMessage) {
     if (
       !entry.clarification ||
@@ -1077,7 +1247,13 @@ export default function Assistant({
         originalPrompt={entry.clarification.originalPrompt}
         questions={entry.clarification.questions}
         busy={thinking}
+        externalError={clarificationCancelError}
         onSubmitApi={(followUpText) => void sendApi(followUpText)}
+        onCancel={
+          entry.clarification.reference
+            ? () => void cancelApiClarification(entry)
+            : undefined
+        }
       />
     )
   }
@@ -1270,6 +1446,10 @@ export default function Assistant({
           setIsDragging={setIsDragging}
           handleDrop={handleDrop}
           send={send}
+          retryMessage={retryMessage}
+          onRetry={() => {
+            if (retryMessage) void sendApi(retryMessage)
+          }}
           fileInputRef={fileInputRef}
           handleFileAttach={handleFileAttach}
           hydrated={hydrated}

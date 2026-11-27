@@ -1,51 +1,108 @@
 import { Check, Sparkles, X } from "lucide-react"
+
 import Button from "../../components/ui/Button"
+
 import type { Proposal } from "../../types/planner"
+
 import { approvalBlocked, describeChanges } from "./proposal"
+
+const ISSUE_TEXT: Record<string, string> = {
+  INSUFFICIENT_CAPACITY: "Không đủ khung giờ để xếp hết công việc.",
+
+  NO_AVAILABILITY: "Chưa có khung giờ rảnh.",
+
+  BLOCK_TOO_SHORT: "Khung giờ còn lại quá ngắn.",
+
+  DAILY_LIMIT_REACHED: "Đã đạt giới hạn học trong ngày.",
+
+  DEADLINE_PASSED: "Đã quá hạn hoàn thành.",
+
+  OUTSIDE_HORIZON: "Ngoài khoảng thời gian đang lập lịch.",
+
+  TASK_NOT_ELIGIBLE: "Công việc chưa đủ điều kiện xếp lịch.",
+
+  START_TIME_CONFLICT: "Giờ bắt đầu dự kiến bị trùng lịch.",
+
+  INVALID_CONTEXT: "Dữ liệu lập lịch chưa hợp lệ.",
+
+  UNALLOCATED_WORK: "Chưa xếp hết thời lượng học còn lại.",
+
+  START_TIME_SHIFTED:
+    "Đã chuyển sang khung giờ rảnh gần nhất sau giờ bắt đầu dự kiến.",
+}
+
+const issueText = (code: string, message?: string) =>
+  ISSUE_TEXT[code] ??
+  (message && /[À-ỹ]/u.test(message)
+    ? message
+    : "Không thể xếp lịch cho công việc này.")
 
 type Props = {
   proposal: Proposal | null
+
   stale: boolean
+
   busy: boolean
+
   reply: string
+
   approve: () => void
+
   reject: () => void
 }
 
 export default function ProposalReview({
   proposal,
+
   stale,
+
   busy,
+
   reply,
+
   approve,
+
   reject,
 }: Props) {
   const changes = new Map(
     proposal?.changes.map((change) => [change.task.id, change.kind]),
   )
+
   const entries =
     proposal && (!proposal.server || proposal.server.coverage)
       ? [
           ...proposal.next.tasks
+
             .filter(
               (task) => task.date && task.time && task.time !== "Chưa xếp",
             )
+
             .map((task) => ({
               task,
+
               kind: changes.get(task.id) ?? "unchanged",
             })),
+
           ...proposal.changes
+
             .filter((change) => change.kind === "removed" && change.task.date)
+
             .map((change) => ({ task: change.task, kind: "removed" })),
         ]
       : []
+
   const kindLabel: Record<string, string> = {
     added: "Thêm",
+
     scheduled: "Thêm",
+
     moved: "Dời",
+
     removed: "Xóa",
+
     unchanged: "Giữ nguyên",
   }
+
   const blocked = approvalBlocked(proposal, stale)
 
   return (
@@ -68,7 +125,9 @@ export default function ProposalReview({
             {proposal.server && proposal.server.details.length > 0 && (
               <span>
                 {proposal.server.details
+
                   .map((d) => `${d.label}: ${d.value}`)
+
                   .join(" · ")}
               </span>
             )}
@@ -130,7 +189,7 @@ export default function ProposalReview({
                     <li key={`${item.title}-${index}`}>
                       {item.title}: còn {item.minutes} phút chưa xếp
                       {item.reasons.length
-                        ? ` · ${item.reasons.join(", ")}`
+                        ? ` · ${item.reasons.map((code) => issueText(code)).join(", ")}`
                         : ""}
                     </li>
                   ))}
@@ -147,9 +206,7 @@ export default function ProposalReview({
                 </strong>
                 <ul>
                   {proposal.issues.map((i) => (
-                    <li key={i.taskId}>
-                      {i.code}: {i.message}
-                    </li>
+                    <li key={i.taskId}>{issueText(i.code, i.message)}</li>
                   ))}
                 </ul>
               </section>

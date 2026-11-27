@@ -437,7 +437,7 @@ export function formatTimeWindow(window: Partial<ApiTimeWindow>) {
 const isWindowCommand = (operation: string) => operation === "set_busy_interval"
 
 const WINDOW_APPROVAL_ERROR =
-  "Không thể xác minh đầy đủ khung giờ bị ảnh hưởng. Bạn có thể từ chối và tạo lại yêu cầu; Duyệt đã bị khóa."
+  "Khung giờ không hợp lệ hoặc không thể xác minh. Giờ kết thúc phải sau giờ bắt đầu. Duyệt đã bị khóa; hãy từ chối và tạo lại yêu cầu."
 
 function windowDetails(
   args: Record<string, unknown>,
@@ -717,6 +717,7 @@ function summarizeBase(
 
 export function summarize(
   p: ActionPresentation,
+
   windows: ApiTimeWindow[] = [],
 ): Summary {
   const base = summarizeBase(p, windows)
@@ -737,6 +738,7 @@ export function summarize(
 
       {
         label: "Kết quả quan sát",
+
         value: `${r.evidence.error_count}/${r.evidence.valid_response_count} câu sai (${Math.round(r.evidence.error_rate * 100)}%)`,
       },
 
@@ -744,6 +746,7 @@ export function summarize(
 
       {
         label: "Giới hạn tin cậy",
+
         value: `${r.confidence_limit.level}: ${r.confidence_limit.limitations.join(" ")}`,
       },
 
@@ -755,6 +758,7 @@ export function summarize(
 
       ...(p.revision_source_chunks ?? []).map((c) => ({
         label: `Nguồn trang ${c.page} (${c.chunk_id})`,
+
         value: c.text,
       })),
     ],

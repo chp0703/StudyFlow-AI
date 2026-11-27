@@ -429,7 +429,7 @@ def main():
     operations = {o['operation'] for o in service['operations']}
     assert len(operations) == 9
     assert operations == set(definitions['Operation']['enum'])
-    assert len(api['paths']) == 8
+    assert len(api['paths']) == 9
     for op in service['operations']:
         assert op['arguments_schema'] in definitions and op['result_schema'] in definitions
         assert op['idempotency_required'] == (not op['read_only'])
@@ -530,7 +530,7 @@ def main():
             raise AssertionError(f"Invalid example accepted: {case['file']}")
         if case.get('expected_error') and not any(case['expected_error'] in e for e in errors):
             raise AssertionError(f"Wrong rejection for {case['file']}: {errors[:3]}")
-    print(f"PASS: {len(definitions)} definitions; 8 API paths; 9 tools; 10 entities; {len(manifest['cases'])} positive/negative fixtures; OpenAPI 3.1; source/mapping/reference checks.")
+    print(f"PASS: {len(definitions)} definitions; 9 API paths; 9 tools; 10 entities; {len(manifest['cases'])} positive/negative fixtures; OpenAPI 3.1; source/mapping/reference checks.")
     print('Scope: static contracts and pure payload invariants only. DB/auth/transaction/UI runtime cases remain unrun.')
 
 

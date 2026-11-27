@@ -1110,7 +1110,7 @@
 }
 
 /* Use the Planner's available width, not the operating system, for laptop layouts. */
-@container (max-width: 1050px) {
+@container (max-width: 1200px) {
   .planner-page {
     flex-direction: column;
     gap: 12px;
@@ -1159,3 +1159,6 @@
   }
 }
 .task-panel-retry { min-height: 28px; padding: 4px 9px; font-size: 11px; }
+
+.schedule-hidden-events { position: absolute; top: 2px; right: 4px; z-index: 3; padding: 2px 8px; border: 0; border-radius: 100px; background: var(--color-primary); color: #fff; font: inherit; font-size: 11px; font-weight: 600; line-height: 1.4; }
+button.schedule-hidden-events { cursor: pointer; }

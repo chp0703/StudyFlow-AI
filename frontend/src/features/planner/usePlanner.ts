@@ -1,4 +1,10 @@
-import { useRef, useState, type Dispatch, type SetStateAction } from "react"
+import {
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react"
 
 import type { Task } from "../../types/task"
 
@@ -18,13 +24,14 @@ import { api } from "../../api"
 
 import { apiEnabled } from "../../api/config"
 
-import { ApiError, errorText } from "../../api/client"
+import { ApiError, errorText, isStaleDecisionError } from "../../api/client"
 
 import { proposalFromReply } from "../../api/mappers"
 
 import { savePending } from "../../api/pending"
 
 import type { ApiTask, ApiTimeWindow, OrchestratorReply } from "../../api/types"
+
 import { confirmedTask } from "./revisionScheduling"
 
 import {
@@ -67,6 +74,7 @@ export type PlannerProps = {
 
   onProposalDecision?: (
     decision: "APPROVE" | "REJECT",
+
     taskIds: string[],
   ) => void
 
@@ -115,6 +123,7 @@ export function usePlanner(
     setRevision,
 
     onProposalDecision,
+
     onTaskConfirmed,
   }: PlannerProps,
 
@@ -195,6 +204,8 @@ export function usePlanner(
 
         message: r.message,
 
+        ...(r.action_reference ? { reference: r.action_reference } : {}),
+
         questions: r.questions.length
           ? r.questions
           : [{ field: "details", message: r.message, choices: [] }],
@@ -217,6 +228,30 @@ export function usePlanner(
     if (r.state === "SUCCEEDED") await reload()
   }
 
+  useEffect(() => {
+    if (!apiEnabled) return
+
+    let cancelled = false
+
+    void api
+      .getConversationPending(conversationId)
+      .then((pending) => {
+        if (!cancelled && pending?.state === "NEEDS_CLARIFICATION")
+          void showReply(pending, "")
+      })
+      .catch(() => {
+        /* Conversation may not exist yet. */
+      })
+
+    return () => {
+      cancelled = true
+    }
+
+    // Recover the server draft once when the Planner conversation changes.
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId])
+
   const sendToServer = async (text: string) => {
     const key =
       attempt.current?.text === text ? attempt.current.key : crypto.randomUUID()
@@ -236,6 +271,14 @@ export function usePlanner(
     } catch (e) {
       setFeedback({ kind: "error", text: errorText(e) })
 
+      if (e instanceof ApiError && e.code === "ACTION_REVIEW_REQUIRED") {
+        void api
+          .getConversationPending(conversationId)
+          .then((pending) => pending && showReply(pending, ""))
+
+          .catch(() => {})
+      }
+
       // Only a failure that may have reached the server keeps the key for the retry.
 
       if (e instanceof ApiError && !e.retryable) attempt.current = null
@@ -247,7 +290,7 @@ export function usePlanner(
   const sendText = (rawText: string) => {
     const text = rawText.trim()
 
-    if (!text || busy) return
+    if (!text || text.length > 8000 || busy) return
 
     if (apiEnabled) return void sendToServer(text)
 
@@ -379,6 +422,7 @@ export function usePlanner(
         onProposalDecision?.(decision, taskIds)
 
         const task = decision === "APPROVE" ? confirmedTask(r) : null
+
         if (task) onTaskConfirmed?.(task)
       } else if (decision === "REJECT" && r.state === "SUCCEEDED") {
         setProposal(null)
@@ -403,6 +447,14 @@ export function usePlanner(
       }
     } catch (e) {
       setFeedback({ kind: "error", text: errorText(e) })
+
+      if (isStaleDecisionError(e)) {
+        setProposal(null)
+
+        savePending(userId, null)
+
+        await reload()
+      }
     } finally {
       setBusy(false)
     }
@@ -450,7 +502,28 @@ export function usePlanner(
   }
 
   const dismissClarification = () => {
-    setClarification(null)
+    if (!apiEnabled || !clarification?.reference) {
+      setClarification(null)
+
+      return
+    }
+
+    setBusy(true)
+
+    void api
+      .decide(conversationId, clarification.reference, "REJECT")
+
+      .then(async () => {
+        setClarification(null)
+
+        setFeedback({ kind: "info", text: "Đã hủy bản nháp." })
+
+        await reload()
+      })
+
+      .catch((error) => setFeedback({ kind: "error", text: errorText(error) }))
+
+      .finally(() => setBusy(false))
   }
 
   return {

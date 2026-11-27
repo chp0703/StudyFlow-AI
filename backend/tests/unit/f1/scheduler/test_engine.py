@@ -164,7 +164,7 @@ class SchedulingEngineTests(unittest.TestCase):
         self.assertEqual(1, len(result.generated_blocks))
         self.assertEqual((dt(4, 9, 30), dt(4, 10, 30)), (result.generated_blocks[0].start_at, result.generated_blocks[0].end_at))
 
-    def test_exact_start_at_conflict_with_busy_does_not_shift_to_later_slot(self) -> None:
+    def test_start_at_conflict_shifts_to_later_slot(self) -> None:
         item = task(150, remaining=60, start_at=dt(4, 9), deadline=dt(4, 12), priority=Priority.HIGH)
         result = generate_schedule(
             context(
@@ -173,12 +173,11 @@ class SchedulingEngineTests(unittest.TestCase):
                 busy=(Interval(dt(4, 9), dt(4, 10)),),
             )
         )
-        self.assertEqual(Coverage.NONE, result.coverage)
-        self.assertEqual((), result.generated_blocks)
+        self.assertEqual(Coverage.FULL, result.coverage)
+        self.assertEqual((dt(4, 10), dt(4, 11)), (result.generated_blocks[0].start_at, result.generated_blocks[0].end_at))
         self.assertEqual((), result.conflicts)
-        self.assertEqual(60, result.task_summaries[0].unallocated_minutes)
-        self.assertEqual(("START_TIME_CONFLICT",), result.task_summaries[0].reason_codes)
-        self.assertEqual("UNALLOCATED_WORK", result.warnings[0].code)
+        self.assertEqual(0, result.task_summaries[0].unallocated_minutes)
+        self.assertEqual("START_TIME_SHIFTED", result.warnings[0].code)
 
     def test_exact_start_at_conflict_keeps_other_tasks_schedulable(self) -> None:
         busy_item = task(160, remaining=60, start_at=dt(4, 9), deadline=dt(4, 12), priority=Priority.HIGH)
@@ -190,10 +189,10 @@ class SchedulingEngineTests(unittest.TestCase):
                 busy=(Interval(dt(4, 9), dt(4, 10)),),
             )
         )
-        self.assertEqual(Coverage.PARTIAL, result.coverage)
-        self.assertEqual([(free_item.task_id, dt(4, 10), dt(4, 11))], [(b.task_id, b.start_at, b.end_at) for b in result.generated_blocks])
+        self.assertEqual(Coverage.FULL, result.coverage)
+        self.assertEqual([(busy_item.task_id, dt(4, 10), dt(4, 11)), (free_item.task_id, dt(4, 11, 10), dt(4, 12, 10))], [(b.task_id, b.start_at, b.end_at) for b in result.generated_blocks])
         summaries = {s.task_id: s for s in result.task_summaries}
-        self.assertEqual((0, 60, ("START_TIME_CONFLICT",)), (summaries[busy_item.task_id].newly_scheduled_minutes, summaries[busy_item.task_id].unallocated_minutes, summaries[busy_item.task_id].reason_codes))
+        self.assertEqual((60, 0, ()), (summaries[busy_item.task_id].newly_scheduled_minutes, summaries[busy_item.task_id].unallocated_minutes, summaries[busy_item.task_id].reason_codes))
         self.assertEqual((60, 0, ()), (summaries[free_item.task_id].newly_scheduled_minutes, summaries[free_item.task_id].unallocated_minutes, summaries[free_item.task_id].reason_codes))
 
     def test_exact_start_at_splits_contiguously_and_stops_before_mid_busy_gap(self) -> None:
@@ -210,9 +209,9 @@ class SchedulingEngineTests(unittest.TestCase):
                 busy=(Interval(dt(4, 9, 30), dt(4, 10, 30)),),
             )
         )
-        self.assertEqual(Coverage.PARTIAL, partial.coverage)
-        self.assertEqual([(dt(4, 9), dt(4, 9, 30))], [(b.start_at, b.end_at) for b in partial.generated_blocks])
-        self.assertEqual(30, partial.task_summaries[0].unallocated_minutes)
+        self.assertEqual(Coverage.FULL, partial.coverage)
+        self.assertEqual([(dt(4, 9), dt(4, 9, 30)), (dt(4, 10, 30), dt(4, 11))], [(b.start_at, b.end_at) for b in partial.generated_blocks])
+        self.assertEqual(0, partial.task_summaries[0].unallocated_minutes)
 
 
 if __name__ == "__main__":

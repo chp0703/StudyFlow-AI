@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+
 import {
   clearConversations,
   loadHistory,
@@ -9,7 +10,7 @@ import {
   type Conversation,
 } from "./conversationHistory"
 
-export function useConversationHistory() {
+export function useConversationHistory(userId: string) {
   const [conversations, setConversations] = useState<Conversation[]>([])
 
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -34,6 +35,28 @@ export function useConversationHistory() {
   useEffect(() => {
     let cancelled = false
 
+    dbRef.current?.close()
+
+    dbRef.current = null
+
+    writeQueue.current = Promise.resolve()
+
+    storageEnabled.current = false
+
+    savedSnapshot.current = new Map()
+
+    savedActiveId.current = null
+
+    setConversations([])
+
+    setActiveId(null)
+
+    setHydrated(false)
+
+    setStorageMode("loading")
+
+    setStorageError("")
+
     // Công tắc giả lập lỗi chỉ dành cho phát triển, dùng kiểm tra nhánh lưu trữ dự phòng trên trình duyệt.
 
     const opening =
@@ -41,7 +64,7 @@ export function useConversationHistory() {
       new URLSearchParams(window.location.search).get("historyStorage") ===
         "unavailable"
         ? Promise.reject(new Error("Simulated IndexedDB unavailable"))
-        : openHistoryDatabase()
+        : openHistoryDatabase(userId)
 
     opening
 
@@ -102,8 +125,10 @@ export function useConversationHistory() {
       cancelled = true
 
       dbRef.current?.close()
+
+      dbRef.current = null
     }
-  }, [])
+  }, [userId])
 
   function reportWriteFailure(error: unknown) {
     storageEnabled.current = false
@@ -183,13 +208,21 @@ export function useConversationHistory() {
 
   return {
     conversations,
+
     setConversations,
+
     activeId,
+
     setActiveId,
+
     hydrated,
+
     storageMode,
+
     storageError,
+
     clearHistory,
+
     patchActive,
   }
 }

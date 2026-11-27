@@ -450,15 +450,8 @@ def validate_generated_result(
             key=lambda item: (to_utc(item[1].start_at), to_utc(item[1].end_at), item[0]),
         )
         if task is not None and task.start_at is not None and task_generated:
-            earliest_field, earliest_block = task_generated[0]
-            has_retained_start = any(
-                to_utc(block.start_at) <= to_utc(task.start_at) for block in retained_future_by_task[task_id]
-            )
-            if not has_retained_start and to_utc(earliest_block.start_at) > to_utc(task.start_at):
-                issues.append(_issue("GENERATED_START_MISMATCH", "generated block must start at task start_at", earliest_field, task_id=str(task_id)))
-            if not retained_future_by_task[task_id]:
-                for (_, prev_block), (next_field, next_block) in zip(task_generated, task_generated[1:]):
-                    if to_utc(next_block.start_at) != to_utc(add_minutes(prev_block.end_at, context.policy.break_minutes)):
-                        issues.append(_issue("GENERATED_START_MISMATCH", "continuation block must follow break_minutes from exact start_at", next_field, task_id=str(task_id)))
+            for (_, prev_block), (next_field, next_block) in zip(task_generated, task_generated[1:]):
+                if to_utc(next_block.start_at) < to_utc(add_minutes(prev_block.end_at, context.policy.break_minutes)):
+                    issues.append(_issue("GENERATED_START_MISMATCH", "continuation block must allow break_minutes", next_field, task_id=str(task_id)))
     issues.extend(_validate_calendar_policy(context, tuple(calendar_generated)))
     return tuple(issues)

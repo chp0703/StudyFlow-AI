@@ -39,9 +39,13 @@ import { loadPending, plannerConversationId, savePending } from "./api/pending"
 import { api } from "./api"
 
 import { proposalFromReply } from "./api/mappers"
+
 import { mapTask } from "./api/mappers"
+
 import { ApiError, errorText } from "./api/client"
+
 import type { ApiTask } from "./api/types"
+
 import {
   revisionScheduleArguments,
   revisionScheduleAttempt,
@@ -101,12 +105,14 @@ const infoModals: Record<string, ModalInfo> = {
 
 export default function App() {
   const [page, setPage] = useState("Assistant")
+
   const [studyArea, setStudyArea] = useState<"assessment" | "learning">(
     "assessment",
   )
 
   const [learningEntry, setLearningEntry] = useState<{
     blockId: string
+
     goal: string
   } | null>(null)
 
@@ -130,6 +136,7 @@ export default function App() {
   const revisionAttempt = useRef<RevisionScheduleAttempt | null>(null)
 
   const activeUserId = useRef(session?.user.id)
+
   activeUserId.current = session?.user.id
 
   const [demoRevision, setRevision] = useState(0)
@@ -362,6 +369,7 @@ export default function App() {
       page === "Study" && studyArea === "learning"
         ? "Học cùng AI"
         : (destinations.find((d) => d.name === page)?.label ?? page)
+
     document.title = `${title} | StudyFlow AI`
   }, [page, studyArea])
 
@@ -381,6 +389,7 @@ export default function App() {
 
   const go = (p: string) => {
     if (p === "Study") setLearningEntry(null)
+
     setPage(p)
   }
 
@@ -403,24 +412,37 @@ export default function App() {
 
     const pending = loadPending(userId)
 
-    if (!pending) return
+    const serverConversationId = plannerConversationId(userId)
 
     api
 
-      .reviewAction(
-        pending.conversationId,
+      .getConversationPending(serverConversationId)
 
-        pending.reference.action_id,
+      .then(async (pendingReply) => {
+        const reply =
+          pendingReply?.state === "AWAITING_APPROVAL" &&
+          pendingReply.action_reference
+            ? await api.reviewAction(
+                serverConversationId,
+                pendingReply.action_reference.action_id,
 
-        pending.reference.action_version,
-      )
+                pendingReply.action_reference.action_version,
+              )
+            : pendingReply
 
-      .then((reply) => {
+        if (!reply) {
+          if (pending) savePending(userId, null)
+
+          return
+        }
+
         const next = proposalFromReply(reply, {
           tasks: server.tasks,
 
           events: server.events,
+
           windows: server.windows,
+
           availability: server.availability,
 
           revision: server.revision,
@@ -430,11 +452,11 @@ export default function App() {
           setProposal(next)
 
           savePending(userId, {
-            conversationId: pending.conversationId,
+            conversationId: serverConversationId,
 
             reference: reply.action_reference,
           })
-        } else savePending(userId, null)
+        } else if (pending) savePending(userId, null)
       })
 
       .catch((cause) => {
@@ -444,10 +466,12 @@ export default function App() {
   }, [session?.user.id, server])
 
   const info = pageInfo[page]
+
   const visibleInfo =
     page === "Study" && studyArea === "learning"
       ? {
           title: "Học cùng AI",
+
           description: "Hiểu sâu hơn từ tài liệu của bạn.",
         }
       : info
@@ -462,65 +486,88 @@ export default function App() {
 
   useEffect(() => {
     revisionAttempt.current = null
+
     setRevisionScheduling(null)
   }, [session?.user.id])
 
   const scheduleConfirmedTask = async (
     task?: ApiTask,
+
     confirmedByPlanner = false,
   ) => {
     const userId = session?.user.id
+
     if (!apiEnabled || !userId) return
 
     const attempt = task
       ? revisionScheduleAttempt(revisionAttempt.current, userId, task)
       : revisionAttempt.current
+
     if (!attempt || attempt.running) {
       if (task && !attempt)
         setRevisionScheduling({
           taskId: task.task_id,
+
           status: "failed",
+
           message:
             "Đã quá hạn hoàn thành. Cần điều chỉnh hạn trước khi xếp lịch.",
         })
+
       return
     }
+
     revisionAttempt.current = attempt
 
     if ((!confirmedByPlanner && proposal) || loadPending(userId)) {
       setRevisionScheduling({
         taskId: attempt.task.task_id,
+
         status: "blocked",
+
         message:
           "Planner đang có một đề xuất chờ duyệt. Hãy xử lý đề xuất đó rồi thử lại.",
       })
+
       return
     }
 
     attempt.running = true
+
     setRevisionScheduling({
       taskId: attempt.task.task_id,
+
       status: "finding",
+
       message: "Đang tìm lịch học phù hợp…",
     })
 
     try {
       await server.reload()
+
       if (activeUserId.current !== attempt.userId) return
+
       if (!attempt.sent) {
         const currentArguments = revisionScheduleArguments(attempt.task)
+
         if (!currentArguments)
           throw new Error(
             "Đã quá hạn hoàn thành. Cần điều chỉnh hạn trước khi xếp lịch.",
           )
+
         attempt.arguments = currentArguments
       }
+
       attempt.sent = true
+
       const reply = await api.prepareStudyPlan(
         conversationId,
+
         attempt.arguments,
+
         attempt.key,
       )
+
       if (activeUserId.current !== attempt.userId) return
 
       if (reply.state === "AWAITING_APPROVAL") {
@@ -529,32 +576,48 @@ export default function App() {
         )
           ? server.tasks
           : [...server.tasks, mapTask(attempt.task)]
+
         const next = proposalFromReply(reply, {
           tasks: sourceTasks,
+
           events: server.events,
+
           windows: server.windows,
+
           availability: server.availability,
+
           revision: server.revision,
         })
+
         if (!next || !reply.action_reference)
           throw new Error("Máy chủ chưa trả về đề xuất lịch có thể duyệt.")
+
         setProposal(next)
+
         savePending(userId, {
           conversationId,
+
           reference: reply.action_reference,
         })
+
         setRevisionScheduling({
           taskId: attempt.task.task_id,
+
           status: "pending",
+
           message:
             "Đã tìm được thời gian học. Xem và xác nhận lịch trong Planner.",
         })
       } else {
         attempt.key = crypto.randomUUID()
+
         attempt.sent = false
+
         setRevisionScheduling({
           taskId: attempt.task.task_id,
+
           status: "failed",
+
           message:
             reply.error?.message ??
             reply.message ??
@@ -564,12 +627,16 @@ export default function App() {
     } catch (cause) {
       if (cause instanceof ApiError && !cause.retryable) {
         attempt.key = crypto.randomUUID()
+
         attempt.sent = false
       }
+
       if (activeUserId.current === attempt.userId)
         setRevisionScheduling({
           taskId: attempt.task.task_id,
+
           status: "failed",
+
           message: errorText(cause),
         })
     } finally {
@@ -579,25 +646,34 @@ export default function App() {
 
   const handleProposalDecision = (
     decision: "APPROVE" | "REJECT",
+
     taskIds: string[],
   ) => {
     const taskId = revisionScheduling?.taskId
     if (!taskId || !taskIds.includes(taskId)) return
+
     if (decision === "APPROVE") {
       revisionAttempt.current = null
+
       setRevisionScheduling({
         taskId,
+
         status: "scheduled",
+
         message: "Đã xếp lịch.",
       })
     } else {
       if (revisionAttempt.current) {
         revisionAttempt.current.key = crypto.randomUUID()
+
         revisionAttempt.current.sent = false
       }
+
       setRevisionScheduling({
         taskId,
+
         status: "failed",
+
         message: "Đã từ chối đề xuất. Lịch đã xác nhận không thay đổi.",
       })
     }
@@ -745,6 +821,8 @@ export default function App() {
         )}
         <div className="home-layout" hidden={page !== "Assistant"}>
           <Assistant
+            key={session?.user.id ?? "demo"}
+            userId={session?.user.id ?? "demo"}
             onOpenPlanner={() => go("Planner")}
             onServerChange={() => void server.reload()}
           />
@@ -780,12 +858,14 @@ export default function App() {
               const task = server.apiTasks.find(
                 (item) => item.task_id === taskId,
               )
+
               if (task) void scheduleConfirmedTask(task)
             }}
             onStartLearning={
               apiEnabled
                 ? (blockId, goal) => {
                     setLearningEntry({ blockId, goal })
+
                     setPage("Study")
                   }
                 : undefined
