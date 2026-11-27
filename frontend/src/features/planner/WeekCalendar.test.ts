@@ -97,7 +97,13 @@ test("calendar renders Busy windows and proposals behind exact-time events", asy
       }),
     )
 
-    assert.match(html, /1 khung giờ ngoài khung · Hiện/)
+    assert.match(html, /Rảnh 07:00–08:00/)
+
+    assert.match(html, /lúc 00:00; nhập yêu cầu lịch học/)
+
+    assert.match(html, /lúc 23:00; nhập yêu cầu lịch học/)
+
+    assert.doesNotMatch(html, /ngoài khung · Hiện/)
 
     assert.doesNotMatch(html, /Rảnh/)
 
@@ -111,13 +117,13 @@ test("calendar renders Busy windows and proposals behind exact-time events", asy
 
     assert.match(html, /Tím · Ôn tập/)
 
-    assert.match(html, /data-task-id="task"[^>]*top:60px/)
+    assert.match(html, /data-task-id="task"[^>]*top:444px/)
 
     assert.match(html, /09:15–10:15/)
 
     assert.equal(html.match(/class="schedule-time-column"/g)?.length, 1)
 
-    assert.equal(html.match(/class="schedule-time-label"/g)?.length, 10)
+    assert.equal(html.match(/class="schedule-time-label"/g)?.length, 24)
 
     assert.doesNotMatch(
       html,

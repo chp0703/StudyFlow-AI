@@ -60,8 +60,12 @@ test("current-time navigation only changes today's temporary display range when 
     DEFAULT_DISPLAY_RANGES,
   )
 
+  const customRanges = DEFAULT_DISPLAY_RANGES.map((range, day) =>
+    day === 2 ? { start: "08:00", end: "18:00" } : range,
+  ) as unknown as CalendarDisplayRanges
+
   for (const now of [17 * 60 + 59, 20 * 60 + 9, 0]) {
-    const ranges = rangesIncludingNow(DEFAULT_DISPLAY_RANGES, 2, now)
+    const ranges = rangesIncludingNow(customRanges, 2, now)
 
     const from =
       Number(ranges[2].start.slice(0, 2)) * 60 +
