@@ -97,3 +97,15 @@
 - Đồng bộ phản hồi quyết định với OrchestratorReply, sửa regex upload và tách dependency embedding.
 
 **Kết quả.** PR #64. 175 fixture hợp đồng, 37 fixture schema trên Supabase cục bộ và bài kiểm tra JavaScript ở đúng 5 MiB đều đạt.
+
+## 2026-11-27 — Sửa bổ sung sau nghiệm thu F1
+
+**Mục tiêu.** Giúp người dùng tạo việc đúng giờ và mở được bản web QA ổn định.
+
+**Đã làm**
+
+- Sửa trích xuất giờ bắt đầu, giờ đính chính và hạn mặc định trong `backend/app/nlu/extractor.py`.
+- Hiện cảnh báo và nút mở rộng khi có khung giờ bị ẩn trên Lịch Tuần.
+- Tách cache phụ thuộc Vite cho từng checkout để tránh trang trắng khi chạy song song.
+
+**Kết quả.** Nhánh `fix/f1-planner-qa-followups`. Backend 224 bài đạt. Frontend 145 bài, TypeScript và build đạt. Ca live đính chính giờ đạt 3/3 sau sửa. Chrome đã tải trang chủ sau đăng nhập.
