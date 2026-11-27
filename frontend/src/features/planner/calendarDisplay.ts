@@ -18,19 +18,19 @@ export const calendarViewLabel = (view: CalendarView) =>
 export const displaySettingsVisible = (view: CalendarView) => view === "detail"
 
 export const DEFAULT_DISPLAY_RANGES: CalendarDisplayRanges = [
-  { start: "08:00", end: "18:00" },
+  { start: "00:00", end: "24:00" },
 
-  { start: "08:00", end: "18:00" },
+  { start: "00:00", end: "24:00" },
 
-  { start: "08:00", end: "18:00" },
+  { start: "00:00", end: "24:00" },
 
-  { start: "08:00", end: "18:00" },
+  { start: "00:00", end: "24:00" },
 
-  { start: "08:00", end: "18:00" },
+  { start: "00:00", end: "24:00" },
 
-  { start: "08:00", end: "18:00" },
+  { start: "00:00", end: "24:00" },
 
-  { start: "08:00", end: "18:00" },
+  { start: "00:00", end: "24:00" },
 ]
 
 export const clockMinutes = (time: string) => {
