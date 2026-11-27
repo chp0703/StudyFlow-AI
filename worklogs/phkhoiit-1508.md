@@ -884,3 +884,20 @@
 **Kết quả:** unit backend 239, `acceptance_sol` 37; `tsc` sạch, `node --test` 86/86, build đạt.
 
 **Ghi chú:** khối cũ ở rìa ngoài giờ có thể làm khối mới sát cạnh nó; chấp nhận được cho đến khi các kế hoạch cũ hết hạn. Đã chạy `supabase db push --remote` cho các migration 202611250001–202611250006 (kèm `20261116121033` lệch thứ tự).
+
+## 2026-11-27 — Rebase PR #80 lên PR #79
+
+**Mục tiêu:** đưa việc bỏ giờ rảnh lên nhánh #79 đã rebase để merge được vào `main`.
+
+**Đã làm**
+
+- Áp lại 4 commit bỏ giờ rảnh lên `feat/orchestrator-handoffs` đã rebase.
+- Gỡ cổng "Chưa có giờ rảnh" (`needs_availability`) mà `main` mới thêm: `frontend/src/App.tsx`, `features/planner/TaskPanel.tsx`, `features/planner/revisionScheduling.ts`, `pages/Planner.tsx`, `features/assessment/AssessmentWorkspace.tsx`.
+- Sinh lại `supabase/migrations/202611250006_availability_contract_schema.sql`.
+
+**Kết quả:** PR #80 (`refactor/drop-availability-windows`). Unit backend đạt, `generate_contract_schema_migration.py --check` đạt, `tsc --noEmit` sạch, `node --test` 115/115, `npm run build` đạt.
+
+**Ghi chú**
+
+- `202611250005_drop_availability_windows.sql` xóa vĩnh viễn mọi khung giờ rảnh đã lưu; chưa chạy pgTAP local.
+- Bộ QA `docs/qa/f1` còn các ca giờ rảnh (F1-FIX-02, 04, 10, 18) cần viết lại.
