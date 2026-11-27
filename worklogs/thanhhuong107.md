@@ -109,3 +109,14 @@
 - Tách cache phụ thuộc Vite cho từng checkout để tránh trang trắng khi chạy song song.
 
 **Kết quả.** Nhánh `fix/f1-planner-qa-followups`. Backend 224 bài đạt. Frontend 145 bài, TypeScript và build đạt. Ca live đính chính giờ đạt 3/3 sau sửa. Chrome đã tải trang chủ sau đăng nhập.
+
+## 2026-11-27 — Mở rộng giờ hiển thị Lịch Tuần
+
+**Mục tiêu.** Hiển thị trọn ngày để người dùng nhìn thấy buổi học sáng sớm và buổi tối.
+
+**Đã làm**
+
+- Đổi mặc định của cả bảy ngày sang 00:00–24:00.
+- Chuyển cấu hình mặc định cũ sang khung mới và giữ các khung đã tùy chỉnh.
+
+**Kết quả.** PR #82. Frontend 145 bài kiểm thử, TypeScript và build đều đạt.
