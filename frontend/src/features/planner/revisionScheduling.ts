@@ -1,6 +1,6 @@
 import type { ApiTask, OrchestratorReply } from "../../api/types"
 
-export type RevisionSchedulingStatus = "finding" | "pending" | "scheduled" | "failed" | "needs_availability" | "blocked"
+export type RevisionSchedulingStatus = "finding" | "pending" | "scheduled" | "failed" | "blocked"
 
 export type RevisionSchedulingState = {
   taskId: string

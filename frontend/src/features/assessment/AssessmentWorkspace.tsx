@@ -1782,9 +1782,7 @@ export default function AssessmentWorkspace({
                       <div>
                         {onOpenPlanner && (
                           <Button className="secondary" onClick={onOpenPlanner}>
-                            {revisionScheduling?.status === "needs_availability"
-                              ? "Thiết lập giờ rảnh"
-                              : "Xem lịch học"}
+                            Xem lịch học
                           </Button>
                         )}
                         {(revisionScheduling?.status === "failed" ||
