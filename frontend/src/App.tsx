@@ -468,7 +468,6 @@ export default function App() {
   const scheduleConfirmedTask = async (
     task?: ApiTask,
     confirmedByPlanner = false,
-    availabilityConfirmed = false,
   ) => {
     const userId = session?.user.id
     if (!apiEnabled || !userId) return
@@ -494,22 +493,6 @@ export default function App() {
         status: "blocked",
         message:
           "Planner đang có một đề xuất chờ duyệt. Hãy xử lý đề xuất đó rồi thử lại.",
-      })
-      return
-    }
-
-    if (
-      !availabilityConfirmed &&
-      !server.windows.some(
-        (window) =>
-          window.kind === "AVAILABILITY" && window.archived_at === null,
-      )
-    ) {
-      setRevisionScheduling({
-        taskId: attempt.task.task_id,
-        status: "needs_availability",
-        message:
-          "Chưa có giờ rảnh đã xác nhận. Hãy thiết lập thời gian học trong Planner.",
       })
       return
     }
@@ -599,14 +582,6 @@ export default function App() {
     taskIds: string[],
   ) => {
     const taskId = revisionScheduling?.taskId
-    if (
-      decision === "APPROVE" &&
-      taskIds.length === 0 &&
-      revisionScheduling?.status === "needs_availability"
-    ) {
-      void scheduleConfirmedTask(undefined, true, true)
-      return
-    }
     if (!taskId || !taskIds.includes(taskId)) return
     if (decision === "APPROVE") {
       revisionAttempt.current = null

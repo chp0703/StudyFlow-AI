@@ -66,7 +66,6 @@ export default function TaskPanel({
 
   onRetryRevisionScheduling,
   onScheduleTask,
-  onSetupAvailability,
 }: {
   tasks: Task[]
 
@@ -82,7 +81,6 @@ export default function TaskPanel({
 
   onScheduleTask?: (taskId: string) => void
 
-  onSetupAvailability?: () => void
 }) {
   const [query, setQuery] = useState("")
 
@@ -230,11 +228,9 @@ export default function TaskPanel({
                           ? "Đã xếp lịch"
                           : scheduling?.status === "failed"
                             ? "Chưa tìm được khung giờ phù hợp"
-                            : scheduling?.status === "needs_availability"
-                              ? "Cần thiết lập giờ rảnh"
-                              : scheduling?.status === "blocked"
-                                ? "Đang có đề xuất chờ duyệt"
-                                : label}
+                            : scheduling?.status === "blocked"
+                              ? "Đang có đề xuất chờ duyệt"
+                              : label}
                   </span>
                   {(scheduling?.status === "failed" ||
                     scheduling?.status === "blocked") &&
@@ -244,15 +240,6 @@ export default function TaskPanel({
                         onClick={onRetryRevisionScheduling}
                       >
                         Thử lại
-                      </Button>
-                    )}
-                  {scheduling?.status === "needs_availability" &&
-                    onSetupAvailability && (
-                      <Button
-                        className="secondary task-panel-retry"
-                        onClick={onSetupAvailability}
-                      >
-                        Thiết lập giờ học mặc định
                       </Button>
                     )}
                   {status === "unscheduled" &&

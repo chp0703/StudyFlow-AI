@@ -765,12 +765,6 @@ export default function Planner({
           revisionScheduling={revisionScheduling}
           onRetryRevisionScheduling={onRetryRevisionScheduling}
           onScheduleTask={onScheduleTask}
-          onSetupAvailability={() => {
-            setInput(
-              "Thiết lập giờ học mặc định từ 19:00 đến 21:00, Thứ 2 đến Thứ 6",
-            )
-            window.requestAnimationFrame(() => inputRef.current?.focus())
-          }}
           onClose={() => setTaskPanelOpen(false)}
         />
       </div>
