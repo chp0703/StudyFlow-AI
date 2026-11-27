@@ -24,7 +24,7 @@ WRITE_INTENTS = {"CREATE_TASK", "SET_BUSY_INTERVAL", "SET_SCHEDULING_PREFERENCES
 APPROVAL_OPERATIONS = {"confirm_task", "set_busy_interval", "set_scheduling_preferences",
                        "approve_study_plan", "reject_study_plan"}
 DEFAULT_MATERIAL_TOPIC = "Tài liệu học tập"  # topic the database gives a material uploaded without a course label
-GENERIC_QUESTION = {"field": "intent", "message": "Bạn muốn thêm công việc, tìm công việc, đặt giờ rảnh/bận, lập kế hoạch, tạo câu hỏi ôn tập hay đề xuất ôn tập?",
+GENERIC_QUESTION = {"field": "intent", "message": "Bạn muốn thêm công việc, tìm công việc, đặt giờ bận, lập kế hoạch, tạo câu hỏi ôn tập hay đề xuất ôn tập?",
                     "choices": []}
 
 
@@ -54,7 +54,7 @@ class ChatProcessor:
             "role": "USER", "text": text, "received_at": receipt["created_at"]},
             **({'source_ids': source_ids} if source_ids else {})},
             conversation_id=conversation, idempotency_key=child_key(key, "message"), message_id=message_id)
-        own = self.continuation(ctx, conversation, message_id)
+        own = None if receipt.get("lease_version") == 1 else self.continuation(ctx, conversation, message_id)
         if own is None:
             open_queue = self.continuation(ctx, conversation, None)
             if open_queue is not None:
@@ -475,9 +475,9 @@ class ChatProcessor:
         except Exception:
             windows = []
 
-        busy_hits, free_hits = [], []
+        busy_hits = []
         for w in windows:
-            if w.get("archived_at"):
+            if w.get("archived_at") or w.get("kind") != "BUSY":
                 continue
             label = (w.get("label") or "").strip()
             if w.get("recurrence") == "WEEKLY":
@@ -502,10 +502,7 @@ class ChatProcessor:
             if w_start < q_end_local and w_end > q_start_local:
                 span = f"{w_start:%H:%M}–{w_end:%H:%M}"
                 desc = f"{label} ({span})" if label else span
-                if w.get("kind") == "BUSY":
-                    busy_hits.append(desc)
-                else:
-                    free_hits.append(desc)
+                busy_hits.append(desc)
 
         plan_data = (step.get("result") or {}).get("data") or {}
         plan = plan_data.get("plan")
@@ -525,12 +522,9 @@ class ChatProcessor:
         if block_hits:
             parts.append(f"Bạn có lịch học đã xếp: {', '.join(block_hits)}.")
         if not busy_hits and not block_hits:
-            if free_hits:
-                parts.append(f"Bạn đang rảnh ({', '.join(free_hits)}) và không có lịch bận.")
-            elif not windows:
+            if not any(not w.get("archived_at") and w.get("kind") == "BUSY" for w in windows):
                 return None
-            else:
-                parts.append("Bạn chưa có lịch bận hay buổi học nào vào thời gian này.")
+            parts.append("Bạn chưa có lịch bận hay buổi học nào vào thời gian này.")
         return " ".join(parts)
 
     def compose(self, ctx, cont, conversation, fallback=None):

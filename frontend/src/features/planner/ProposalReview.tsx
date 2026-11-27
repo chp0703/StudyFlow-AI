@@ -9,7 +9,7 @@ import { approvalBlocked, describeChanges } from "./proposal"
 const ISSUE_TEXT: Record<string, string> = {
   INSUFFICIENT_CAPACITY: "Không đủ khung giờ để xếp hết công việc.",
 
-  NO_AVAILABILITY: "Chưa có khung giờ rảnh.",
+  NO_AVAILABILITY: "Không còn khung giờ trống để xếp lịch.",
 
   BLOCK_TOO_SHORT: "Khung giờ còn lại quá ngắn.",
 
@@ -28,7 +28,7 @@ const ISSUE_TEXT: Record<string, string> = {
   UNALLOCATED_WORK: "Chưa xếp hết thời lượng học còn lại.",
 
   START_TIME_SHIFTED:
-    "Đã chuyển sang khung giờ rảnh gần nhất sau giờ bắt đầu dự kiến.",
+    "Đã chuyển sang khung giờ trống gần nhất sau giờ bắt đầu dự kiến.",
 }
 
 const issueText = (code: string, message?: string) =>

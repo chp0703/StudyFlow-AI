@@ -178,6 +178,8 @@ class SchedulingEngineTests(unittest.TestCase):
         self.assertEqual((), result.conflicts)
         self.assertEqual(0, result.task_summaries[0].unallocated_minutes)
         self.assertEqual("START_TIME_SHIFTED", result.warnings[0].code)
+        self.assertIn("khung giờ trống", result.warnings[0].message)
+        self.assertNotIn("giờ rảnh", result.warnings[0].message)
 
     def test_exact_start_at_conflict_keeps_other_tasks_schedulable(self) -> None:
         busy_item = task(160, remaining=60, start_at=dt(4, 9), deadline=dt(4, 12), priority=Priority.HIGH)

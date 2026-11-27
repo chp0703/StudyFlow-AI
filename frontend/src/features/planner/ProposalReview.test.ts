@@ -127,3 +127,65 @@ test("a schedule proposal uses the contextual approval label", async () => {
     await server.close()
   }
 })
+
+test("scheduling warnings describe empty slots without referencing removed free-time setup", async () => {
+  const server = await createServer({
+    server: { middlewareMode: true, hmr: false },
+    appType: "custom",
+  })
+  try {
+    const { default: ProposalReview } = await server.ssrLoadModule(
+      "/src/features/planner/ProposalReview.tsx",
+    )
+    const html = renderToStaticMarkup(
+      createElement(ProposalReview, {
+        proposal: {
+          id: "p-2",
+          createdAt: 0,
+          baseRevision: 1,
+          next: { tasks: [], availability: [] },
+          changes: [],
+          windowChanges: [],
+          issues: [
+            {
+              taskId: "task-1",
+              code: "START_TIME_SHIFTED",
+              message: "shifted",
+            },
+          ],
+          reply: "Đã xếp lịch",
+          server: {
+            reference: {
+              action_id: "a-2",
+              action_version: 1,
+              target_type: "PLAN_PROPOSAL",
+              target_id: "p-2",
+              target_version: 1,
+            },
+            title: "Lịch học đề xuất",
+            details: [],
+            taskIds: ["task-1"],
+            coverage: "PARTIAL",
+            unscheduled: [
+              {
+                title: "Ôn Toán",
+                minutes: 60,
+                reasons: ["NO_AVAILABILITY"],
+              },
+            ],
+          },
+        },
+        stale: false,
+        busy: false,
+        reply: "",
+        approve: () => {},
+        reject: () => {},
+      }),
+    )
+    assert.match(html, /Không còn khung giờ trống để xếp lịch/)
+    assert.match(html, /Đã chuyển sang khung giờ trống gần nhất/)
+    assert.doesNotMatch(html, /giờ rảnh/iu)
+  } finally {
+    await server.close()
+  }
+})

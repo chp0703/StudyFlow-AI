@@ -28,7 +28,7 @@ class JwtVerifier:
         self._clock = clock
         self._http = httpx.Client(transport=transport, timeout=settings.rpc_timeout_seconds)
         self._lock = threading.Lock()
-        self._keys: dict[str, dict] = {}
+        self._keys: dict[str, object] = {}
         self._fetched_at: datetime | None = None
 
     def _refresh(self, force: bool) -> None:
@@ -37,7 +37,15 @@ class JwtVerifier:
             return
         response = self._http.get(f"{self._settings.supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json")
         response.raise_for_status()
-        self._keys = {k["kid"]: k for k in response.json().get("keys", []) if k.get("kid")}
+        parsed: dict[str, object] = {}
+        for jwk in response.json().get("keys", []):
+            kid = jwk.get("kid")
+            if kid:
+                try:
+                    parsed[kid] = jwt.PyJWK(jwk).key
+                except jwt.PyJWTError:
+                    continue
+        self._keys = parsed
         self._fetched_at = now
 
     def _key_for(self, kid: str):
@@ -48,10 +56,10 @@ class JwtVerifier:
                     self._refresh(force=True)  # xoay vòng khóa: tải lại nhưng không tải cho mọi token lỗi
             except (httpx.HTTPError, ValueError):
                 raise AuthUnavailable("signing keys unavailable") from None
-            jwk = self._keys.get(kid)
-        if jwk is None:
+            key = self._keys.get(kid)
+        if key is None:
             raise AuthError("unknown signing key")
-        return jwt.PyJWK(jwk).key
+        return key
 
     def verify(self, authorization: str | None) -> str:
         """Trả subject đã xác minh (ID người dùng) hoặc ném AuthError."""

@@ -371,7 +371,7 @@ def generate_schedule(context: SchedulingContext) -> SchedulingResult:
         for summary in summaries
         if summary.unallocated_minutes > 0
     ) + tuple(
-        Issue(code="START_TIME_SHIFTED", message="Giờ bắt đầu dự kiến không nằm trong khung giờ rảnh; đã chuyển sang khung gần nhất.",
+        Issue(code="START_TIME_SHIFTED", message="Giờ bắt đầu dự kiến không nằm trong khung giờ trống; đã chuyển sang khung trống gần nhất.",
               field=None, details={"task_id": str(task.task_id)})
         for task in ordered_tasks
         if task.start_at is not None and (

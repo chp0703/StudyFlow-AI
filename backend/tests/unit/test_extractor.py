@@ -34,7 +34,8 @@ class DeepSeekExtractorTests(unittest.TestCase):
         self.assertEqual(self.run_extract(handler), GOOD)
         body = json.loads(seen[0].content)
         self.assertEqual((body["temperature"], body["response_format"]), (0, {"type": "json_object"}))
-        self.assertEqual((body["max_tokens"], body["thinking"]), (4096, {"type": "enabled"}))
+        self.assertEqual((body["max_tokens"], body["thinking"], body["reasoning_effort"]),
+                         (4096, {"type": "enabled"}, "low"))
         self.assertEqual(seen[0].headers["Authorization"], "Bearer test-key")
         message = json.loads(body["messages"][1]["content"])
         self.assertEqual(message["message"], "tìm OOP")
@@ -170,6 +171,53 @@ class DeepSeekExtractorTests(unittest.TestCase):
                 result = extractor(answer(json.dumps(extracted))).extract(
                     prompt, now=NOW, timezone="Asia/Ho_Chi_Minh", active=None)
                 self.assertEqual(result["intents"][0]["slots"]["start_at"], expected)
+
+    def test_single_vietnamese_weekday_word_normalizes_off_by_one_error(self):
+        for prompt, wrong_day, expected_day in (
+            ("Tôi bận học thêm mỗi thứ Bảy từ 8h sáng đến 11h trưa.", 7, 6),
+            ("Mỗi thứ Hai bận họp từ 14h đến 16h", 2, 1),
+            ("Bận mỗi Chủ nhật từ 9h đến 12h", 1, 7),
+        ):
+            with self.subTest(prompt=prompt):
+                window = {"kind": "BUSY", "recurrence": "WEEKLY", "timezone": "Asia/Ho_Chi_Minh",
+                          "weekday": wrong_day, "start_time": "08:00", "end_time": "11:00"}
+                item = {"intent": "SET_BUSY_INTERVAL", "slots": {"change_type": "ADD", "window": window},
+                        "raw_expressions": {}, "ambiguities": []}
+                got = self.extract_text(prompt, [item])
+                self.assertEqual(got[0]["slots"]["window"]["weekday"], expected_day)
+
+    def test_spelled_vietnamese_weekday_range_expands(self):
+        window = {"kind": "BUSY", "recurrence": "WEEKLY", "timezone": "Asia/Ho_Chi_Minh",
+                  "weekday": 1, "start_time": "07:00", "end_time": "11:00"}
+        item = {"intent": "SET_BUSY_INTERVAL", "slots": {"change_type": "ADD", "window": window},
+                "raw_expressions": {}, "ambiguities": []}
+        got = self.extract_text("Tôi bận từ thứ Hai đến thứ Sáu lúc 7h đến 11h", [item])
+        self.assertEqual([i["slots"]["window"]["weekday"] for i in got], [1, 2, 3, 4, 5])
+
+    def test_timed_review_request_reclassifies_from_propose_revision_to_create_task(self):
+        wrong = {"intent": "PROPOSE_REVISION",
+                 "slots": {"topic": "Giải tích", "suggested_minutes": 60, "priority": 1},
+                 "raw_expressions": {}, "ambiguities": []}
+        got = self.extract_text("Ngày mai tôi muốn ôn Giải tích lúc 9h sáng trong 60 phút, ưu tiên cao.", [wrong])
+        self.assertEqual(got[0]["intent"], "CREATE_TASK")
+        self.assertEqual(got[0]["slots"]["title"], "Giải tích")
+        self.assertEqual(got[0]["slots"]["estimated_minutes"], 60)
+        self.assertEqual(got[0]["slots"]["priority"], 1)
+        self.assertEqual(got[0]["slots"]["start_at"], "2026-11-06T09:00:00+07:00")
+
+    def test_material_revision_request_stays_propose_revision(self):
+        legit = {"intent": "PROPOSE_REVISION",
+                 "slots": {"topic": "Giải tích", "suggested_minutes": 60, "priority": 1, "material": "gt.pdf"},
+                 "raw_expressions": {}, "ambiguities": []}
+        got = self.extract_text("Đề xuất ôn tập Giải tích từ tài liệu gt.pdf trong 60 phút", [legit])
+        self.assertEqual(got[0]["intent"], "PROPOSE_REVISION")
+
+    def test_vague_part_of_day_without_clock_drops_invented_start_at(self):
+        vague = {"intent": "CREATE_TASK",
+                 "slots": {"title": "Đại số tuyến tính", "start_at": "2026-11-06T18:00:00+07:00"},
+                 "raw_expressions": {"start_at": "tối mai"}, "ambiguities": []}
+        got = self.extract_text("Tối mai học bài Đại số tuyến tính", [vague])
+        self.assertNotIn("start_at", got[0]["slots"])
 
 
 if __name__ == "__main__":

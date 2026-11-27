@@ -49,7 +49,11 @@ class RpcClient:
     def __init__(self, settings: Settings, transport: httpx.BaseTransport | None, clock):
         self._settings = settings
         self._clock = clock
-        self._http = httpx.Client(transport=transport, timeout=settings.rpc_timeout_seconds)
+        if transport is None:
+            limits = httpx.Limits(max_connections=100, max_keepalive_connections=20, keepalive_expiry=60.0)
+            self._http = httpx.Client(timeout=settings.rpc_timeout_seconds, limits=limits)
+        else:
+            self._http = httpx.Client(transport=transport, timeout=settings.rpc_timeout_seconds)
 
     def _attest(self, envelope: dict, user_id: str) -> dict:
         now = self._clock()

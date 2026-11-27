@@ -174,8 +174,13 @@ class ChatHttp(unittest.TestCase):
             done = self.decide(restarted, "u1", conversation, body["action_reference"])
             self.assertEqual(done.status_code, 200, done.text)
             # Ý định thứ ba (lập lịch) chạy sau phê duyệt từ hàng đợi đã lưu, không trích xuất lại.
-            self.assertEqual(done.json()["state"], "SUCCEEDED", done.text)
+            # Khung 06:00-22:00 mặc định giúp sinh được đề xuất lịch chờ duyệt ngay mà không cần khai báo giờ rảnh.
+            self.assertEqual(done.json()["state"], "AWAITING_APPROVAL", done.text)
+            self.assertEqual(done.json()["action_reference"]["target_type"], "PLAN_PROPOSAL")
             self.assertEqual(len(self.tasks(restarted, "u1")), 1)
+            planned = self.decide(restarted, "u1", conversation, done.json()["action_reference"])
+            self.assertEqual(planned.status_code, 200, planned.text)
+            self.assertEqual(planned.json()["state"], "SUCCEEDED", planned.text)
             queue = restarted.post("/v1/messages", json={"schema_version": "1.1", "conversation_id": conversation, "text": "tìm công việc"},
                                    headers={"Authorization": f"Bearer {self.token('u1')}", "Idempotency-Key": f"chat-{uuid4().hex}"})
             self.assertEqual(queue.status_code, 200, queue.text)  # hàng đợi đã xong không còn chặn hội thoại
