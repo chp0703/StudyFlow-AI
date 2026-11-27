@@ -92,6 +92,8 @@ def _fill_defaults(result, now: datetime, timezone: str) -> None:
 _MIDNIGHT = re.compile(r"^(\d{4}-\d{2}-\d{2})T24:00(?::00)?(.*)$")
 _DEADLINE_WORDS = re.compile(r"\b(hạn|han|trước|truoc|nộp|nop|deadline|chót|chot|xong)\b", re.I)
 _DURATION_PREFIX = re.compile(r"\b(?:trong|mất|mat)\s*$")
+_CLOCK_PREFIX = re.compile(r"\b(?:lúc|luc|vào|vao|từ|tu)\s*$")
+_DAYPART = re.compile(r"\b(?:sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem)\b")
 _CLOCK = re.compile(r"\b(\d{1,2})\s*(?:r\b|h\s*(?:kém\s*(\d{1,2})|(\d{1,2}))?\b|giờ\b|gio\b|:([0-5]\d)\b)")
 _TIME_CORRECTION = re.compile(r"\b(?:à thôi|à không|ý là|đổi sang|sửa thành)\b")
 _RELATIVE_DAY = re.compile(r"\b(mai|hôm nay|hom nay|nay)\b", re.I)
@@ -248,9 +250,33 @@ def _normalize_task_time(result: dict, text: str, now: datetime, timezone: str, 
     corrected = _TIME_CORRECTION.split(start_clause)[-1]
     clock_clause = corrected if _CLOCK.search(corrected) else start_clause
     day_word = _RELATIVE_DAY.search(clock_clause) or day_word
+    raw_expr = item.get("raw_expressions") if isinstance(item.get("raw_expressions"), dict) else {}
+    est_minutes = slots.get("estimated_minutes")
+    est_raw = str(raw_expr.get("estimated_minutes") or "").strip().lower()
+    has_other_duration = bool(re.search(r"\b\d+\s*(?:phút|phut|p\b|tiếng|tieng|min\b)", start_clause))
     has_duration = False
     for match in _CLOCK.finditer(clock_clause):
-        if _DURATION_PREFIX.search(clock_clause[:match.start()]):
+        prefix = clock_clause[:match.start()]
+        token = match.group(0).strip().lower()
+        tail = clock_clause[match.end():].split(",", 1)[0]
+        if _DURATION_PREFIX.search(prefix):
+            has_duration = True
+            continue
+        is_bare_whole_hour = (
+            not match.group(2)
+            and not match.group(3)
+            and not match.group(4)
+            and not token.endswith("r")
+            and not _CLOCK_PREFIX.search(prefix)
+            and not _DAYPART.search(tail[:20])
+        )
+        if (
+            is_bare_whole_hour
+            and type(est_minutes) is int
+            and est_minutes == int(match.group(1)) * 60
+            and not has_other_duration
+            and (not est_raw or token in est_raw or est_raw in token)
+        ):
             has_duration = True
             continue
         break

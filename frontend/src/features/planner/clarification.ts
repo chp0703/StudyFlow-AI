@@ -359,13 +359,17 @@ export function usesDeadlineDatetime(
 function applyServerSlots(
   values: ClarificationDraftValues,
   slots: CandidateTaskFields,
+  questions: Question[],
 ): ClarificationDraftValues {
   const next = { ...values }
+  const missing = new Set(questions.map((q) => q.field))
   if (slots.title?.trim()) next.title = slots.title
   const start = instantParts(slots.start_at)
   if (start) {
     next["start_at.date"] = start.date
     next["start_at.time"] = start.time
+  } else if (missing.has("start_at")) {
+    next["start_at.time"] = ""
   }
   if (slots.deadline_precision === "DATETIME") {
     const deadline = instantParts(slots.deadline_at)
@@ -400,7 +404,7 @@ export function createClarificationDraft(
       questions,
       todayIso,
     )
-    return slots ? applyServerSlots(parsed, slots) : parsed
+    return slots ? applyServerSlots(parsed, slots, questions) : parsed
   }
 
   const values: ClarificationDraftValues = {}

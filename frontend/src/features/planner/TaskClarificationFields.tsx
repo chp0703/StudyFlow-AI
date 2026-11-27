@@ -129,7 +129,7 @@ export default function TaskClarificationFields({
             type="number"
             min={5}
             step={5}
-            placeholder="60"
+            placeholder="Ví dụ: 60"
             value={values.estimated_minutes ?? ""}
             disabled={busy}
             onChange={(e) => setField("estimated_minutes", e.target.value)}

@@ -322,3 +322,16 @@ test("title extraction drops the task keyword and wrapping quotes", () => {
   )
   assert.equal(typed.title, "Ôn Toán rời rạc")
 })
+
+test("missing start_at on server draft never prefills regex-guessed 02:00 from bare 2h duration", () => {
+  const draft = createClarificationDraft(
+    [{ field: "start_at", message: "Thời gian bắt đầu là khi nào?", choices: [] }],
+    "hoc vtp 2h mai",
+    "2026-11-27",
+    { title: "hoc vtp", estimated_minutes: 120 },
+  )
+  assert.equal(draft.title, "hoc vtp")
+  assert.equal(draft["start_at.date"], "2026-11-28")
+  assert.equal(draft["start_at.time"], "")
+  assert.equal(draft.estimated_minutes, "120")
+})

@@ -232,6 +232,28 @@ class DeepSeekExtractorTests(unittest.TestCase):
         self.assertEqual(ctx["current_time"], "2026-11-27T02:30:00+07:00")
         self.assertEqual(ctx["today"], "2026-11-27")
 
+    def test_bare_hour_used_as_duration_does_not_double_count_as_start_at(self):
+        bare = {"intent": "CREATE_TASK",
+                "slots": {"title": "hoc vtp", "estimated_minutes": 120},
+                "raw_expressions": {"estimated_minutes": "2h"}, "ambiguities": []}
+        got = self.extract_text("hoc vtp 2h mai", [bare])[0]["slots"]
+        self.assertEqual(got["estimated_minutes"], 120)
+        self.assertNotIn("start_at", got)
+
+        with_daypart = {"intent": "CREATE_TASK",
+                        "slots": {"title": "hoc vtp"},
+                        "raw_expressions": {}, "ambiguities": []}
+        got_pm = self.extract_text("hoc vtp 2h chieu mai", [with_daypart])[0]["slots"]
+        self.assertEqual(got_pm["start_at"], "2026-11-06T14:00:00+07:00")
+        self.assertNotIn("estimated_minutes", got_pm)
+
+        with_luc = {"intent": "CREATE_TASK",
+                    "slots": {"title": "hoc vtp"},
+                    "raw_expressions": {}, "ambiguities": []}
+        got_luc = self.extract_text("hoc vtp luc 2h mai", [with_luc])[0]["slots"]
+        self.assertEqual(got_luc["start_at"], "2026-11-06T02:00:00+07:00")
+        self.assertNotIn("estimated_minutes", got_luc)
+
 
 if __name__ == "__main__":
     unittest.main()
