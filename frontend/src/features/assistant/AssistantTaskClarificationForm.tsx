@@ -2,13 +2,14 @@ import { useEffect, useState, type FormEvent } from "react"
 
 import { ArrowRight } from "lucide-react"
 
-import type { Question } from "../../api/types"
+import type { CandidateTaskFields, Question } from "../../api/types"
 
 import TaskClarificationFields from "../planner/TaskClarificationFields"
 
 import {
   createClarificationDraft,
   formatClarificationFollowUp,
+  usesDeadlineDatetime,
   type ClarificationDraftValues,
 } from "../planner/clarification"
 
@@ -33,6 +34,8 @@ export default function AssistantTaskClarificationForm({
 
   questions,
 
+  slots,
+
   busy = false,
 
   onSubmitApi,
@@ -49,6 +52,8 @@ export default function AssistantTaskClarificationForm({
 
   questions?: Question[]
 
+  slots?: CandidateTaskFields
+
   busy?: boolean
 
   onSubmitApi?: (followUpText: string) => void
@@ -62,17 +67,23 @@ export default function AssistantTaskClarificationForm({
   const effectiveQuestions =
     questions && questions.length > 0 ? questions : DEMO_TASK_QUESTIONS
 
-  const [values, setValues] = useState<ClarificationDraftValues>(() =>
-    createClarificationDraft(effectiveQuestions, originalPrompt),
-  )
+  const draft = () =>
+    createClarificationDraft(
+      effectiveQuestions,
+      originalPrompt,
+      undefined,
+      slots,
+    )
+
+  const [values, setValues] = useState<ClarificationDraftValues>(draft)
 
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setValues(createClarificationDraft(effectiveQuestions, originalPrompt))
+    setValues(draft())
 
     setError(null)
-  }, [originalPrompt, questions])
+  }, [originalPrompt, questions, slots])
 
   const setField = (key: string, value: string) => {
     setValues((prev) => ({ ...prev, [key]: value }))
@@ -94,6 +105,8 @@ export default function AssistantTaskClarificationForm({
         message: "",
 
         questions: effectiveQuestions,
+
+        slots,
       },
 
       values,
@@ -114,7 +127,7 @@ export default function AssistantTaskClarificationForm({
 
   const missingFields = new Set(effectiveQuestions.map((q) => q.field))
 
-  const useDeadlineDatetime = missingFields.has("deadline_at")
+  const useDeadlineDatetime = usesDeadlineDatetime(effectiveQuestions, slots)
 
   return (
     <form className="assistant-details-form" onSubmit={handleSubmit} noValidate>

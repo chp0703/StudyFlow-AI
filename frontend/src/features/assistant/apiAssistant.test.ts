@@ -195,3 +195,21 @@ test("an approved question batch is a plain success, not a task listing", () => 
 
   assert.match(message.text, /Đã xác nhận bộ câu hỏi\./)
 })
+
+test("a clarification reply keeps the server draft slots for the form", () => {
+  const slots = { title: "Ôn Toán rời rạc", estimated_minutes: 120 }
+
+  const reply = {
+    ...base,
+    state: "NEEDS_CLARIFICATION",
+    message: "Mình cần thêm thông tin.",
+    questions: [{ field: "start_at", message: "?", choices: [] }],
+    result: { data: { kind: "ACTION_PRESENTATION", candidate: { slots } } },
+  } as unknown as OrchestratorReply
+
+  assert.deepEqual(replyToMessage(reply, "x").clarification?.slots, slots)
+
+  const bare = { ...reply, result: null } as OrchestratorReply
+
+  assert.equal(replyToMessage(bare, "x").clarification?.slots, undefined)
+})

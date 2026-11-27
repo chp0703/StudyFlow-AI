@@ -34,7 +34,7 @@ class DeepSeekExtractorTests(unittest.TestCase):
         self.assertEqual(self.run_extract(handler), GOOD)
         body = json.loads(seen[0].content)
         self.assertEqual((body["temperature"], body["response_format"]), (0, {"type": "json_object"}))
-        self.assertEqual((body["max_tokens"], body["thinking"]), (1024, {"type": "disabled"}))
+        self.assertEqual((body["max_tokens"], body["thinking"]), (4096, {"type": "enabled"}))
         self.assertEqual(seen[0].headers["Authorization"], "Bearer test-key")
         message = json.loads(body["messages"][1]["content"])
         self.assertEqual(message["message"], "tìm OOP")

@@ -1246,6 +1246,7 @@ export default function Assistant({
         mode="api"
         originalPrompt={entry.clarification.originalPrompt}
         questions={entry.clarification.questions}
+        slots={entry.clarification.slots}
         busy={thinking}
         externalError={clarificationCancelError}
         onSubmitApi={(followUpText) => void sendApi(followUpText)}

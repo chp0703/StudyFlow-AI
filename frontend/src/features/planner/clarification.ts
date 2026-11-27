@@ -1,6 +1,15 @@
-import type { ActionReference, Question } from "../../api/types.ts"
+import type {
+  ActionReference,
+  CandidateTaskFields,
+  Question,
+} from "../../api/types.ts"
 
-import { addCivilDays, civilWeekday, vietnamDate } from "../../utils/date.ts"
+import {
+  addCivilDays,
+  civilWeekday,
+  vietnamClock,
+  vietnamDate,
+} from "../../utils/date.ts"
 
 export type PlannerClarification = {
   source: "api" | "demo"
@@ -12,6 +21,9 @@ export type PlannerClarification = {
   questions: Question[]
 
   reference?: ActionReference
+
+  // Draft the server already extracted; it wins over re-parsing the prompt.
+  slots?: CandidateTaskFields
 }
 
 export type ClarificationDraftValues = Record<string, string>
@@ -228,7 +240,7 @@ function extractTaskTitle(prompt: string): string {
   text = text.replace(/\blm\s+bt\b/giu, "làm bài tập")
 
   text = text.replace(
-    /^(?:thêm|tạo|lên lịch|đặt)\s+(?:công việc|việc|nhiệm vụ|cv)?\s*/iu,
+    /^(?:thêm|tạo|lên lịch|đặt)\s+(?:(?:công việc|việc|nhiệm vụ|cv|task)(?![\p{L}\p{N}]))?\s*/iu,
 
     "",
   )
@@ -252,7 +264,7 @@ function extractTaskTitle(prompt: string): string {
 
   text = text.replace(/\s+/g, " ")
 
-  text = text.replace(/^[,.\-:\s]+|[,.\-:\s]+$/g, "").trim()
+  text = text.replace(/^[,.\-:\s"“”]+|[,.\-:\s"“”]+$/g, "").trim()
 
   return text
 }
@@ -325,15 +337,70 @@ export function extractTaskDraftFromPrompt(
   }
 }
 
+const PRIORITY_BY_SLOT = { 1: "HIGH", 0.5: "MEDIUM", 0.1: "LOW" } as const
+
+// Server slots are UTC instants; the form edits Vietnam civil date + time.
+function instantParts(iso: string | null | undefined) {
+  const instant = iso ? new Date(iso) : null
+  if (!instant || Number.isNaN(instant.getTime())) return null
+  return { date: vietnamDate(instant), time: vietnamClock(instant) }
+}
+
+export function usesDeadlineDatetime(
+  questions: Question[],
+  slots?: CandidateTaskFields,
+): boolean {
+  return (
+    questions.some((q) => q.field === "deadline_at") ||
+    slots?.deadline_precision === "DATETIME"
+  )
+}
+
+function applyServerSlots(
+  values: ClarificationDraftValues,
+  slots: CandidateTaskFields,
+): ClarificationDraftValues {
+  const next = { ...values }
+  if (slots.title?.trim()) next.title = slots.title
+  const start = instantParts(slots.start_at)
+  if (start) {
+    next["start_at.date"] = start.date
+    next["start_at.time"] = start.time
+  }
+  if (slots.deadline_precision === "DATETIME") {
+    const deadline = instantParts(slots.deadline_at)
+    if (deadline) {
+      next["deadline_at.date"] = deadline.date
+      next["deadline_at.time"] = deadline.time
+    }
+    next.deadline_date = ""
+  } else if (slots.deadline_date) {
+    next.deadline_date = slots.deadline_date
+  }
+  if (typeof slots.estimated_minutes === "number")
+    next.estimated_minutes = String(slots.estimated_minutes)
+  if (slots.priority != null) next.priority = PRIORITY_BY_SLOT[slots.priority]
+  if (slots.color) next.color = slots.color.toUpperCase()
+  if (slots.description) next.description = slots.description
+  return next
+}
+
 export function createClarificationDraft(
   questions: Question[],
 
   originalPrompt: string = "",
 
   todayIso: string = vietnamDate(),
+
+  slots?: CandidateTaskFields,
 ): ClarificationDraftValues {
   if (isTaskClarification(questions)) {
-    return extractTaskDraftFromPrompt(originalPrompt, questions, todayIso)
+    const parsed = extractTaskDraftFromPrompt(
+      originalPrompt,
+      questions,
+      todayIso,
+    )
+    return slots ? applyServerSlots(parsed, slots) : parsed
   }
 
   const values: ClarificationDraftValues = {}
@@ -481,7 +548,12 @@ export function formatClarificationFollowUp(
       return { ok: false, error: "Vui lòng chọn hạn hoàn thành." }
     }
 
-    if (missing.has("deadline_at") && (!deadlineAtDate || !deadlineAtTime)) {
+    const datetimeDeadline = usesDeadlineDatetime(
+      clarification.questions,
+      clarification.slots,
+    )
+
+    if (datetimeDeadline && (!deadlineAtDate || !deadlineAtTime)) {
       return {
         ok: false,
 
@@ -535,7 +607,7 @@ export function formatClarificationFollowUp(
       parts.push(`bắt đầu ${formatDdMmYyyy(startDate)} lúc ${startTime}`)
     }
 
-    if (missing.has("deadline_at") && deadlineAtDate && deadlineAtTime) {
+    if (datetimeDeadline && deadlineAtDate && deadlineAtTime) {
       parts.push(`hạn ${formatDdMmYyyy(deadlineAtDate)} lúc ${deadlineAtTime}`)
     } else if (deadlineDate) {
       parts.push(`hạn ${formatDdMmYyyy(deadlineDate)}`)
