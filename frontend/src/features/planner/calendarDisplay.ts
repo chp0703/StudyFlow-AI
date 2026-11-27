@@ -54,6 +54,42 @@ export const displayRangeError = ({ start, end }: CalendarDisplayRange) => {
   return ""
 }
 
+const rangesKey = (userId: string) => `studyflow_display_ranges_${userId}`
+
+export function loadDisplayRanges(userId: string): CalendarDisplayRanges {
+  try {
+    const value = JSON.parse(localStorage.getItem(rangesKey(userId)) ?? "null")
+
+    if (
+      Array.isArray(value) &&
+      value.length === 7 &&
+      value.every(
+        (range) =>
+          range &&
+          typeof range.start === "string" &&
+          typeof range.end === "string" &&
+          !displayRangeError(range),
+      )
+    )
+      return value as unknown as CalendarDisplayRanges
+  } catch {
+    /* Storage may be unavailable. */
+  }
+
+  return DEFAULT_DISPLAY_RANGES
+}
+
+export function saveDisplayRanges(
+  userId: string,
+  ranges: CalendarDisplayRanges,
+): void {
+  try {
+    localStorage.setItem(rangesKey(userId), JSON.stringify(ranges))
+  } catch {
+    /* The visible setting still works for this session. */
+  }
+}
+
 export const displayMinutes = (time: string) => clockMinutes(time) ?? 0
 
 const minuteClock = (minutes: number) =>
@@ -61,25 +97,36 @@ const minuteClock = (minutes: number) =>
 
 export function rangesIncludingNow(
   ranges: CalendarDisplayRanges,
+
   todayIndex: number,
+
   now: number,
 ): CalendarDisplayRanges {
   const range = ranges[todayIndex]
+
   const from = displayMinutes(range.start)
+
   const to = displayMinutes(range.end)
+
   if (now >= from && now < to) return ranges
 
   const span = to - from
+
   const end =
     now < from
       ? Math.min(1440, Math.max(now + 61, span))
       : Math.min(1440, now + 61)
+
   const start = Math.max(0, Math.min(now - 60, end - span))
+
   const next = [...ranges] as CalendarDisplayRange[]
+
   next[todayIndex] = {
     start: minuteClock(start),
+
     end: minuteClock(end),
   }
+
   return next as unknown as CalendarDisplayRanges
 }
 
@@ -95,4 +142,93 @@ export function eventPosition(time: string, range: CalendarDisplayRange) {
   if (start === null || start < from || start >= to) return null
 
   return { top: start - from, visibleMinutes: to - start }
+}
+
+export interface LanePlacement {
+  lane: number
+
+  lanes: number
+}
+
+export interface SpanRange {
+  start: number
+
+  end: number
+}
+
+export interface CalendarSpan {
+  id: string
+
+  start: number
+
+  end: number
+}
+
+// Sự kiện chồng nhau được chia làn cạnh nhau; mỗi cụm chồng nhau chia đều chiều ngang.
+export function eventLanes(
+  spans: readonly CalendarSpan[],
+): Map<string, LanePlacement> {
+  const result = new Map<string, LanePlacement>()
+
+  let cluster: string[] = []
+
+  let laneEnds: number[] = []
+
+  let clusterEnd = -1
+
+  const flush = () => {
+    for (const id of cluster)
+      result.set(id, {
+        lane: result.get(id)?.lane ?? 0,
+        lanes: laneEnds.length,
+      })
+
+    cluster = []
+
+    laneEnds = []
+  }
+
+  for (const span of [...spans].sort(
+    (a, b) => a.start - b.start || a.end - b.end,
+  )) {
+    if (span.start >= clusterEnd) flush()
+
+    let lane = laneEnds.findIndex((end) => end <= span.start)
+
+    if (lane < 0) lane = laneEnds.length
+
+    laneEnds[lane] = span.end
+
+    clusterEnd = cluster.length ? Math.max(clusterEnd, span.end) : span.end
+
+    cluster.push(span.id)
+
+    result.set(span.id, { lane, lanes: 0 })
+  }
+
+  flush()
+
+  return result
+}
+
+// Mở rộng khung giờ của một ngày (theo giờ tròn) để thấy cả các buổi nằm ngoài khung.
+export function rangeCoveringSpans(
+  range: CalendarDisplayRange,
+  spans: readonly SpanRange[],
+): CalendarDisplayRange {
+  const from = Math.min(
+    displayMinutes(range.start),
+    ...spans.map((span) => span.start),
+  )
+
+  const to = Math.max(
+    displayMinutes(range.end),
+    ...spans.map((span) => span.end),
+  )
+
+  return {
+    start: minuteClock(Math.floor(from / 60) * 60),
+
+    end: minuteClock(Math.min(1440, Math.ceil(to / 60) * 60)),
+  }
 }

@@ -84,7 +84,7 @@ class ConstraintTests(unittest.TestCase):
         self.assertIn("GENERATED_BEFORE_AVAILABLE", {issue.code for issue in validate_generated_result(context((base,)), (early_block,))})
 
         late_block = EngineBlock(base.task_id, dt(4, 10), dt(4, 11))
-        self.assertIn("GENERATED_START_MISMATCH", {issue.code for issue in validate_generated_result(context((base,)), (late_block,))})
+        self.assertEqual((), validate_generated_result(context((base,)), (late_block,)))
 
 
 if __name__ == "__main__":

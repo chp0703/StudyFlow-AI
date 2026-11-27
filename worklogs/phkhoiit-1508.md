@@ -901,3 +901,64 @@
 
 - `202611250005_drop_availability_windows.sql` xóa vĩnh viễn mọi khung giờ rảnh đã lưu; chưa chạy pgTAP local.
 - Bộ QA `docs/qa/f1` còn các ca giờ rảnh (F1-FIX-02, 04, 10, 18) cần viết lại.
+## 2026-11-26 — Hoàn tất sửa lỗi QA Feature 1 (`F1-FIX-09`, `F1-FIX-16`, `F1-FIX-17`)
+
+**Mục tiêu:** hoàn tất các hạng mục còn lại của đợt sửa lỗi QA Feature 1 trên nhánh `fix/f1-qa-acceptance`, đồng bộ migration local và kiểm thử toàn diện.
+
+**Đã làm**
+
+- Sửa lỗi cú pháp TypeScript (`TS1005`) tại `sources.test.ts`, `conversationHistory.ts`, `workingTime.ts` và nâng container query trong `planner.css` lên `1200px` (`F1-FIX-17`).
+- Hoàn tất `F1-FIX-09`: bổ sung quy tắc câu ghép (`sáng`/`chiều`/`tối` + tạo task) và câu hỏi rảnh/bận trong `extractor.py`; bổ sung `_window_query_line` trong `chat.py` để đọc kết hợp `list_time_windows` và `StudyBlock` khi trả lời câu hỏi về khung giờ.
+- Hoàn tất `F1-FIX-16` (`CAL-06`): thêm `TASK_COLOR_PALETTE` và `default_task_color` xoay vòng màu mặc định ở cả backend (`workflow_shared.py`, `actions.py`) và frontend (`clarification.ts`).
+- Cập nhật test `test_chat_window_defaults.py`, `17_be01_be02_task_schema_and_vn_timezone.sql` (theo rule deadline `23:59` mới) và `docs/qa/f1/F1_Bang_Nghiem_Thu_Fix.csv`.
+
+**Kết quả**
+
+- `contracts/check_contract.py` PASS (`259 definitions; 9 API paths; 10 tools; 10 entities; 177 fixtures`); `generate_contract_schema_migration.py --check` up to date.
+- Backend unit tests: 220/220 PASS; Frontend: `tsc --noEmit`, 141/141 Node tests và `npm run build` PASS.
+- Database local: `supabase db reset --yes` và `supabase test db` (24 files / 796 tests) PASS.
+
+## 2026-11-27 — Sửa các lỗi QA "Not yet" (F1-FIX-02/07/11/12/14/23/24)
+
+**Mục tiêu:** xử lý các dòng QA còn "Còn lỗi" trên sheet: lỗi hạn mặc định, lỗi tách ngày trong tuần, lỗi hiển thị thẻ chat sau 409, và lịch tuần bị chồng/ẩn buổi.
+
+**Đã làm**
+
+- `backend/app/nlu/extractor.py`: đổi `T24:00` thành 00:00 ngày kế tiếp; bỏ hạn do model tự điền khi câu không có từ khóa hạn; tách "thứ 2 đến thứ 6" thành một intent cho mỗi thứ; "trong 2h" không còn bị hiểu là giờ bắt đầu.
+- `backend/tests/unit/test_extractor.py`: thêm 4 test cho các quy tắc trên.
+- `frontend/src/features/assistant/Assistant.tsx`, `ChatTranscript.tsx`, `conversationHistory.ts`, `types/assistant.ts`: trạng thái `stale` khi 409; mọi thẻ cùng `action_id` cùng hết nút; khôi phục thẻ không tạo bản trùng.
+- `frontend/src/features/assistant/conversationHistory.test.ts`: test cho `setProposalStatus` và restore.
+- `frontend/src/features/planner/calendarDisplay.ts`, `WeekCalendar.tsx`, `calendarDisplay.test.ts`, `styles/planner.css`: chia làn các buổi chồng nhau; nút "N buổi ngoài khung · Hiện" để mở rộng khung giờ của ngày đó.
+
+**Kết quả**
+
+- `python -m unittest discover -s backend/tests/unit -t .`: 224/224 OK.
+- `npx tsc --noEmit`: sạch. `npm run build`: thành công.
+- `node --test src/api/*.test.ts src/features/assistant/*.test.ts src/features/planner/*.test.ts`: 103/103 pass.
+
+**Ghi chú**
+
+- Chưa chạy Codex review: lỗi 401 Invalid API key.
+- Chưa test lại với DeepSeek thật (E01-01, E04-05, E04-08, FIX-12) và chưa kiểm tra giao diện lịch thật.
+- Chưa chạy pgTAP/integration vì không đổi DB hay contract.
+- Chưa xử lý tính năng xóa công việc (ghi chú FIX-11); để PR riêng.
+
+## 2026-11-27 — Rebase PR #81 lên `main` sau khi bỏ giờ rảnh
+
+**Mục tiêu:** đưa các sửa QA F1 lên `main` mới (đã có orchestrator #79 và bỏ giờ rảnh #80) mà không làm mất intent mới hay đưa giờ rảnh trở lại.
+
+**Đã làm**
+
+- Gộp 9 commit của #81 thành 1 rồi rebase lên `main`; mọi xung đột về giờ rảnh giữ phía `main` (khung 06:00–22:00 mặc định, chỉ trừ giờ bận).
+- Giữ của #81: `GET /v1/conversations/{id}/pending`, quy tắc `start_at` linh hoạt, nhãn giờ bận theo giờ gốc (`sourceRange`), test mất mạng gửi lại cùng `Idempotency-Key`.
+- `backend/app/nlu/extractor.py`: câu ghép trong prompt dùng `SET_BUSY_INTERVAL`; câu nói giờ rảnh chỉ giữ `CREATE_TASK`.
+- Migration: trả `202611210001_…` về bản của `main`; generator ghi vào `202611260002_f1_qa_candidate_contract.sql` (sinh lại từ contract đã gộp, có intent orchestrator, không có `SET_AVAILABILITY`).
+- Sửa test theo quy tắc mới: `test_extractor`, `test_chat_window_defaults`, `test_orchestrator_handoffs` (giờ UTC), `test_default_availability` (giờ bận dời buổi học), `WeekCalendar.test.ts`, `workingTime.test.ts`.
+- Đưa bản QA nghiệm thu đã viết lại (PR #84) vào nhánh này.
+
+**Kết quả:** PR #81 (`fix/f1-qa-acceptance`). Unit backend 253/253, `check_contract.py` PASS, `generate_contract_schema_migration.py --check` đạt, `tsc --noEmit` sạch, `node --test` 123/123, `npm run build` đạt, `run_f1_ui_qa.mjs` 5/5.
+
+**Ghi chú**
+
+- Chưa chạy pgTAP, integration và Auto-QA live với DeepSeek.
+- PR #82 và #83 cần rebase lên nhánh mới này.

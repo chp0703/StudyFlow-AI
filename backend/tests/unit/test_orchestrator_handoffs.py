@@ -264,6 +264,7 @@ class AnswerRecommendationDraftTests(unittest.TestCase):
 
         proc = SimpleNamespace(
             step=step, normalize_slots=ActionProcessor.normalize_slots, questions=ActionProcessor.questions,
+            validate_task_slots=ActionProcessor.validate_task_slots,
             workflow_context=lambda *a, **k: {"selected_action": action},
             candidate_review_reply=lambda ctx, stored: (200, {"state": "AWAITING_APPROVAL", "stored": stored}))
         given = {"intents": [{"intent": "CREATE_TASK", "slots": {"start_at": "2026-11-25T08:00:00+07:00"},
@@ -279,7 +280,7 @@ class AnswerRecommendationDraftTests(unittest.TestCase):
         args = calls[0][1]
         self.assertEqual((args["action_id"], args["expected_action_version"], args["expected_candidate_version"]),
                          ("a-1", 3, 2))
-        self.assertEqual(args["candidate_patch"]["start_at"], "2026-11-25T08:00:00+07:00")
+        self.assertEqual(args["candidate_patch"]["start_at"], "2026-11-25T01:00:00.000000Z")
         self.assertEqual(args["candidate_patch"]["title"], "Ôn tập: Số chẵn")
 
 

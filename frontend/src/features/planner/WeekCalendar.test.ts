@@ -100,8 +100,11 @@ test("calendar renders Busy windows and proposals behind exact-time events", asy
     assert.match(html, /Bận 10:00–11:00/)
 
     assert.match(html, /is-proposed-window/)
+
     assert.match(html, /--evt:#6c5ce7/)
+
     assert.match(html, /--evt-ink:color-mix\(in srgb, #6c5ce7 45%, black\)/)
+
     assert.match(html, /Tím · Ôn tập/)
 
     assert.match(html, /data-task-id="task"[^>]*top:60px/)
@@ -114,16 +117,19 @@ test("calendar renders Busy windows and proposals behind exact-time events", asy
 
     assert.doesNotMatch(
       html,
+
       /<button[^>]*class="schedule-time-slot"[^>]*>[^<]+</,
     )
 
     assert.match(
       html,
+
       /class="schedule-time-corner"[\s\S]*aria-label="Tùy chỉnh giờ hiển thị"/,
     )
 
     assert.doesNotMatch(
       html,
+
       /class="calendar-settings-toggle"[^>]*>[^<]*Tùy chỉnh giờ hiển thị/,
     )
 
@@ -220,9 +226,7 @@ test("calendar renders Busy windows and proposals behind exact-time events", asy
       }),
     )
 
-    assert.match(apiHtml, /Bận 10:00–10:15/)
-
-    assert.doesNotMatch(apiHtml, /Bận 09:45/)
+    assert.match(apiHtml, /Bận 09:45–10:15/)
 
     assert.doesNotMatch(apiHtml, /Rảnh/)
   } finally {

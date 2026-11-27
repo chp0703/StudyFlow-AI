@@ -12,7 +12,7 @@ from .chat import ChatProcessor
 from .workflow_ports import Clock, RpcCall, WorkflowError
 from .workflow_shared import (
     AWAITING, DONE_TEXT, FORM_TEXT, INTENT, POLICY_DEFAULT, PRODUCT_TIMEZONE,
-    Terminal, _ok, deadline_instant, end_instant_from_start, reply,
+    Terminal, _ok, deadline_instant, default_task_color, end_instant_from_start, minute_instant, reply,
 )
 
 
@@ -73,9 +73,12 @@ class ActionProcessor:
 
     def prepare(self, ctx, receipt, key, body):
         operation, arguments, conversation = body["operation"], body["arguments"], body["conversation_id"]
+        if operation in ("set_availability", "set_busy_interval") and arguments.get("window"):
+            self.validate_window_order(arguments["window"])
         slots = None
         if operation == "create_task_candidate":
             slots = self.normalize_slots(arguments["slots"])
+            self.validate_task_slots(slots)
             questions = self.questions(slots)
             if questions:
                 return 200, reply(ctx.request_id, "NEEDS_CLARIFICATION", "Cần thêm thông tin để lưu công việc.", questions=questions)
@@ -93,6 +96,21 @@ class ActionProcessor:
         return 200, self.awaiting_reply(ctx, built["presentation"], built["target"])
 
     @staticmethod
+    def validate_window_order(window: dict) -> None:
+        if window.get("recurrence") == "WEEKLY":
+            reversed_window = bool(window.get("start_time") and window.get("end_time") and
+                                   window["start_time"] >= window["end_time"])
+        else:
+            try:
+                reversed_window = bool(window.get("start_at") and window.get("end_at") and
+                                       datetime.fromisoformat(window["start_at"].replace("Z", "+00:00")) >=
+                                       datetime.fromisoformat(window["end_at"].replace("Z", "+00:00")))
+            except (TypeError, ValueError):
+                reversed_window = False
+        if reversed_window:
+            raise Terminal("INVALID_PARAMETER", "Giờ kết thúc phải sau giờ bắt đầu.")
+
+    @staticmethod
     def normalize_slots(raw: dict) -> dict:
         slots = dict(raw)
         slots.pop("course_label", None)
@@ -104,6 +122,11 @@ class ActionProcessor:
             slots["deadline_precision"] = "DATE"
         if slots.get("deadline_precision") == "DATE" and slots.get("deadline_at") is None:
             slots["deadline_at"] = deadline_instant(slots)
+        for field in ("start_at", "available_from_at", "deadline_at"):
+            if slots.get(field) is not None:
+                aligned = minute_instant(slots[field], ceiling=field != "deadline_at")
+                if aligned is not None:
+                    slots[field] = aligned
         if slots.get("start_at") is not None:
             if slots.get("available_from_at") is None:
                 slots["available_from_at"] = slots["start_at"]
@@ -115,7 +138,29 @@ class ActionProcessor:
                 and slots.get("estimated_minutes") is not None
             ):
                 slots["deadline_at"] = end_instant_from_start(slots["start_at"], slots["estimated_minutes"])
+        if not (isinstance(slots.get("color"), str) and slots["color"].strip()):
+            slots["color"] = default_task_color(slots)
         return slots
+
+    @staticmethod
+    def validate_task_slots(slots: dict) -> None:
+        minutes = slots.get("estimated_minutes")
+        if type(minutes) is int and minutes <= 0:
+            raise Terminal("INVALID_PARAMETER", "Thời lượng dự kiến phải lớn hơn 0 phút.", "estimated_minutes")
+        if type(minutes) is int and minutes > 1440:
+            raise Terminal("INVALID_PARAMETER", "Thời lượng dự kiến không được quá 1440 phút.", "estimated_minutes")
+        try:
+            start = datetime.fromisoformat(slots["start_at"].replace("Z", "+00:00")) if slots.get("start_at") else None
+            deadline = datetime.fromisoformat(slots["deadline_at"].replace("Z", "+00:00")) if slots.get("deadline_at") else None
+            available = datetime.fromisoformat(slots["available_from_at"].replace("Z", "+00:00")) if slots.get("available_from_at") else None
+        except (TypeError, ValueError):
+            return
+        if start and deadline and deadline <= start:
+            raise Terminal("INVALID_PARAMETER", "Thời gian bắt đầu phải trước hạn hoàn thành.", "start_at")
+        if available and deadline and available > deadline:
+            raise Terminal("INVALID_PARAMETER", "Thời gian có thể bắt đầu phải trước hạn hoàn thành.", "available_from_at")
+        if start and deadline and type(minutes) is int and (deadline - start).total_seconds() < minutes * 60:
+            raise Terminal("INVALID_PARAMETER", "Khoảng thời gian trước hạn không đủ cho thời lượng dự kiến.", "deadline_at")
 
     @staticmethod
     def report_reply(ctx, report: dict) -> dict:
@@ -163,8 +208,8 @@ class ActionProcessor:
                              conversation_id=conversation)["data"]
         try:
             generated = generate(snapshot, arguments, now=self.clock())
-        except ValueError as exc:  # dữ liệu khung giờ trong snapshot không hợp lệ
-            raise Terminal("INVALID_PARAMETER", f"Dữ liệu giờ rảnh/bận không hợp lệ: {exc}") from None
+        except ValueError as exc:
+            raise Terminal("INVALID_PARAMETER", f"Dữ liệu lập lịch không hợp lệ: {exc}") from None
         if generated.conflicts:
             first = generated.conflicts[0]
             code = "ACTIVE_BLOCK_REQUIRES_REVIEW" if first.code == "ACTIVE_BLOCK_REQUIRES_REVIEW" else "INVALID_PARAMETER"
@@ -276,6 +321,9 @@ class ActionProcessor:
             questions = [{"field": f, "message": prompts.get(f, f"Cần bổ sung {f}."), "choices": []}
                          for f in action["missing_fields"]]
             return 200, reply(ctx.request_id, "NEEDS_CLARIFICATION", "Cần bổ sung thông tin cho task nháp.",
+                              reference={"action_id": action["action_id"], "action_version": action["version"],
+                                         "target_type": "TASK_CANDIDATE", "target_id": stored["candidate"]["candidate_id"],
+                                         "target_version": stored["candidate"]["version"]},
                               questions=questions, result=_ok(ctx.request_id, "DRAFTED", stored))
         candidate = stored["candidate"]
         return 200, self.awaiting_reply(ctx, stored,

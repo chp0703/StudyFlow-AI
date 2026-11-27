@@ -102,7 +102,9 @@ export default function PlannerCommandComposer({
   textareaRef: RefObject<HTMLTextAreaElement | null>
 }) {
   const [expanded, setExpanded] = useState(false)
+
   const [color, setColor] = useState("")
+
   const isTaskCommand = /^(?:tạo|thêm|lên lịch|đặt)(?:\s|$)/iu.test(
     input.trim(),
   )
@@ -116,7 +118,7 @@ export default function PlannerCommandComposer({
   }, [input, textareaRef])
 
   const submit = () => {
-    if (!input.trim() || busy) return
+    if (!input.trim() || input.length > 8000 || busy) return
 
     send(isTaskCommand ? color || undefined : undefined)
   }
@@ -174,6 +176,7 @@ export default function PlannerCommandComposer({
             ref={textareaRef}
             value={input}
             rows={1}
+            maxLength={8000}
             placeholder="Bạn muốn điều chỉnh lịch thế nào?"
             aria-describedby={feedback ? "planner-command-feedback" : undefined}
             aria-expanded={expanded}
@@ -191,7 +194,7 @@ export default function PlannerCommandComposer({
             className="primary planner-command-send"
             type="submit"
             aria-label={busy ? "Đang gửi yêu cầu" : "Gửi yêu cầu"}
-            disabled={!input.trim() || busy}
+            disabled={!input.trim() || input.length > 8000 || busy}
           >
             {busy ? (
               <LoaderCircle

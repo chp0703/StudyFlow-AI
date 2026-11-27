@@ -32,15 +32,18 @@ type Read<T> = { data: T }
 
 type DailyMaterialDeleteData = {
   material_id: string
+
   deleted: true
 }
 
 const SCHEMA = "1.1"
 
 // One function per endpoint of contracts/openapi.yaml; the screens never build URLs themselves.
+
 export function createEndpoints(client: ApiClient) {
   async function allPages<T>(
     path: string,
+
     query: Record<string, string | number | boolean | undefined>,
   ): Promise<T[]> {
     const items: T[] = []
@@ -68,45 +71,61 @@ export function createEndpoints(client: ApiClient) {
     getPreferences: () =>
       client.request<Read<{
         scheduling_policy: Record<string, unknown>
+
         schedule_revision: number
       }>>("GET", "/v1/preferences"),
 
     getCurrentPlan: () =>
       client
+
         .request<Read<PlanView>>("GET", "/v1/plans", {
           query: { view: "CURRENT" },
         })
+
         .then((r) => r.data),
 
     getProposal: (proposalId: string) =>
       client
+
         .request<Read<{ proposal: PlanProposal }>>("GET", "/v1/plans", {
           query: { view: "PROPOSAL", proposal_id: proposalId },
         })
+
         .then((r) => r.data.proposal),
 
     uploadSource: (
       conversationId: string,
+
       filename: string,
+
       mimeType: string,
+
       contentBase64: string,
+
       key?: string,
     ) =>
       client.request<Read<IngestionSource>>("POST", "/v1/sources", {
         body: {
           schema_version: SCHEMA,
+
           conversation_id: conversationId,
+
           filename,
+
           mime_type: mimeType,
+
           content_base64: contentBase64,
         },
+
         idempotencyKey: key,
       }),
 
     getSource: (conversationId: string, sourceId: string) =>
       client.request<Read<IngestionSource>>(
         "GET",
+
         `/v1/sources/${encodeURIComponent(sourceId)}`,
+
         {
           query: { conversation_id: conversationId },
         },
@@ -115,9 +134,12 @@ export function createEndpoints(client: ApiClient) {
     extractSource: (conversationId: string, sourceId: string, key?: string) =>
       client.request<Read<IngestionSource>>(
         "POST",
+
         `/v1/sources/${encodeURIComponent(sourceId)}/extract`,
+
         {
           body: { schema_version: SCHEMA, conversation_id: conversationId },
+
           idempotencyKey: key,
         },
       ),
@@ -162,24 +184,37 @@ export function createEndpoints(client: ApiClient) {
 
     uploadAssessmentMaterial: (
       conversationId: string,
+
       filename: string,
+
       mimeType: "text/plain" | "text/markdown" | "application/pdf",
+
       contentBase64: string,
+
       topics: string[],
+
       key?: string,
     ) =>
       client.request<Read<AssessmentMaterialDetailData>>(
         "POST",
+
         "/v1/assessment/materials",
+
         {
           body: {
             schema_version: SCHEMA,
+
             conversation_id: conversationId,
+
             filename,
+
             mime_type: mimeType,
+
             content_base64: contentBase64,
+
             topics,
           },
+
           idempotencyKey: key,
         },
       ),
@@ -187,7 +222,9 @@ export function createEndpoints(client: ApiClient) {
     getAssessmentMaterial: (conversationId: string, materialId: string) =>
       client.request<Read<AssessmentMaterialDetailData>>(
         "GET",
+
         `/v1/assessment/materials/${encodeURIComponent(materialId)}`,
+
         {
           query: { conversation_id: conversationId },
         },
@@ -195,65 +232,95 @@ export function createEndpoints(client: ApiClient) {
 
     generateQuestionDrafts: (
       conversationId: string,
+
       materialId: string,
+
       topic: string,
+
       questionType: QuestionType,
+
       count: number,
+
       key?: string,
     ) =>
       client.request<OrchestratorReply>("POST", "/v1/assessment/drafts", {
         body: {
           schema_version: SCHEMA,
+
           conversation_id: conversationId,
+
           material_id: materialId,
+
           topic,
+
           question_type: questionType,
+
           count,
         },
+
         idempotencyKey: key,
+
         retry: false,
       }),
 
     listAssessmentQuestions: (
       filters: {
         material_id?: string
+
         topic?: string
+
         status?: QuestionDraftStatus
       } = {},
     ) => allPages<QuestionDraft>("/v1/assessment/questions", filters),
 
     createQuizAttempt: (
       materialId: string,
+
       questionIds: string[],
+
       origin: QuizAttemptOrigin = "MANUAL",
+
       sessionOutcomeId: string | null = null,
+
       key?: string,
     ) =>
       client.request<Read<QuizAttempt>>("POST", "/v1/assessment/attempts", {
         body: {
           schema_version: SCHEMA,
+
           material_id: materialId,
+
           question_ids: questionIds,
+
           origin,
+
           session_outcome_id: sessionOutcomeId,
         },
+
         idempotencyKey: key,
       }),
 
     saveQuizResponse: (
       attemptId: string,
+
       questionId: string,
+
       selectedOptionId: string | null,
+
       key?: string,
     ) =>
       client.request<Read<QuizResponse>>(
         "PUT",
+
         `/v1/assessment/attempts/${encodeURIComponent(attemptId)}/responses/${encodeURIComponent(questionId)}`,
+
         {
           body: {
             schema_version: SCHEMA,
+
             selected_option_id: selectedOptionId,
           },
+
           idempotencyKey: key,
         },
       ),
@@ -261,9 +328,12 @@ export function createEndpoints(client: ApiClient) {
     submitQuizAttempt: (attemptId: string, key?: string) =>
       client.request<Read<QuizAttemptSubmissionData>>(
         "POST",
+
         `/v1/assessment/attempts/${encodeURIComponent(attemptId)}/submit`,
+
         {
           body: { schema_version: SCHEMA },
+
           idempotencyKey: key,
         },
       ),
@@ -271,7 +341,9 @@ export function createEndpoints(client: ApiClient) {
     getTopicStats: (materialId?: string) =>
       client.request<Read<TopicStatsData>>(
         "GET",
+
         "/v1/assessment/topics/stats",
+
         {
           query: materialId ? { material_id: materialId } : {},
         },
@@ -279,261 +351,391 @@ export function createEndpoints(client: ApiClient) {
 
     createRevisionRecommendation: (
       conversationId: string,
+
       materialId: string,
+
       topic: string,
+
       suggestedMinutes: number,
+
       priority: 0.1 | 0.5 | 1,
+
       key?: string,
     ) =>
       client.request<OrchestratorReply>(
         "POST",
+
         "/v1/assessment/recommendations",
+
         {
           body: {
             schema_version: SCHEMA,
+
             conversation_id: conversationId,
+
             material_id: materialId,
+
             topic,
+
             suggested_minutes: suggestedMinutes,
+
             priority,
           },
+
           idempotencyKey: key,
         },
       ),
 
     uploadLearningMaterial: (
       filename: string,
+
       mimeType: DailyLearningMaterial["mime_type"],
+
       contentBase64: string,
+
       courseLabel: string | null,
+
       key: string,
     ) =>
       client
+
         .request<Read<DailyLearningMaterial>>("POST", "/v1/materials", {
           body: {
             schema_version: SCHEMA,
+
             course_label: courseLabel,
+
             filename,
+
             mime_type: mimeType,
+
             content_base64: contentBase64,
           },
+
           idempotencyKey: key,
         })
+
         .then((result) => result.data),
 
     listLearningMaterials: async () => {
       const materials: DailyLearningMaterial[] = []
+
       let cursor: string | undefined
+
       do {
         const result = await client.request<Read<{
           materials: DailyLearningMaterial[]
+
           next_cursor: string | null
         }>>("GET", "/v1/materials", { query: { limit: 20, cursor } })
+
         materials.push(...result.data.materials)
+
         cursor = result.data.next_cursor ?? undefined
       } while (cursor)
+
       return materials
     },
 
     getLearningMaterial: (materialId: string) =>
       client
+
         .request<Read<DailyLearningMaterial>>(
           "GET",
+
           `/v1/materials/${encodeURIComponent(materialId)}`,
         )
+
         .then((result) => result.data),
 
     deleteLearningMaterial: (materialId: string, key: string) =>
       client
+
         .request<Read<DailyMaterialDeleteData>>(
           "DELETE",
+
           `/v1/materials/${encodeURIComponent(materialId)}`,
+
           { idempotencyKey: key },
         )
+
         .then((result) => result.data),
 
     createLearningSession: (
       goal: string,
+
       materialIds: string[],
+
       plannerBlockId: string | null,
+
       key: string,
     ) =>
       client
+
         .request<Read<DailyLearningSession>>("POST", "/v1/learning/sessions", {
           body: {
             schema_version: SCHEMA,
+
             goal,
+
             material_ids: materialIds,
+
             planner_block_id: plannerBlockId,
           },
+
           idempotencyKey: key,
         })
+
         .then((result) => result.data),
 
     getLearningSession: (sessionId: string) =>
       client
+
         .request<Read<{
           session: DailyLearningSession
+
           turns: DailyLearningTurn[]
         }>>("GET", `/v1/learning/sessions/${encodeURIComponent(sessionId)}`)
+
         .then((result) => result.data),
 
     addLearningTurn: (
       sessionId: string,
+
       kind: "ASK" | "HINT",
+
       text: string | undefined,
+
       key: string,
     ) =>
       client
+
         .request<Read<{
           user_turn: DailyLearningTurn
+
           assistant_turn: DailyLearningTurn
         }>>(
           "POST",
+
           `/v1/learning/sessions/${encodeURIComponent(sessionId)}/turns`,
+
           {
             body: {
               schema_version: SCHEMA,
+
               kind,
+
               ...(kind === "ASK" ? { text } : {}),
             },
+
             idempotencyKey: key,
+
             retry: false,
           },
         )
+
         .then((result) => result.data),
 
     prepareLearningSummary: (sessionId: string, key: string) =>
       client
+
         .request<Read<DailyLearningSummaryData>>(
           "POST",
+
           `/v1/learning/sessions/${encodeURIComponent(sessionId)}/summary`,
+
           {
             body: { schema_version: SCHEMA },
+
             idempotencyKey: key,
+
             retry: false,
           },
         )
+
         .then((result) => result.data),
 
     decideLearningOutcome: (
       conversationId: string,
+
       reference: ActionReference,
+
       decision: "APPROVE" | "REJECT",
+
       key: string,
     ) =>
       client.request<OrchestratorReply>("POST", "/v1/decisions", {
         body: {
           schema_version: SCHEMA,
+
           conversation_id: conversationId,
+
           action_reference: reference,
+
           decision,
         },
+
         idempotencyKey: key,
+
         retry: false,
       }),
 
     getLearningPlannerContext: (blockId: string) =>
       client
+
         .request<Read<DailyLearningPlannerContext>>(
           "GET",
+
           `/v1/learning/planner-blocks/${encodeURIComponent(blockId)}/context`,
         )
+
         .then((result) => result.data),
 
     sendMessage: (
       conversationId: string,
+
       text: string = "",
+
       key?: string,
+
       sourceIds?: string[],
     ) =>
       client.request<OrchestratorReply>("POST", "/v1/messages", {
         body: {
           schema_version: SCHEMA,
+
           conversation_id: conversationId,
+
           text,
+
           ...(sourceIds?.length ? { source_ids: sourceIds } : {}),
         },
+
         idempotencyKey: key,
+
+        retry: false,
       }),
+
+    getConversationPending: (conversationId: string) =>
+      client.request<OrchestratorReply | null>(
+        "GET",
+
+        `/v1/conversations/${encodeURIComponent(conversationId)}/pending`,
+      ),
 
     // Busy intervals are the only user-declared time windows; free time is implicit (06:00-22:00).
     prepareBusyInterval: (
       conversationId: string,
+
       arguments_: {
         change_type: "ADD" | "UPDATE" | "ARCHIVE"
+
         window_id: string | null
+
         expected_window_version: number | null
+
         window: Omit<ApiTimeWindow, "window_id" | "version" | "archived_at"> | null
       },
+
       key?: string,
     ) =>
       client.request<OrchestratorReply>("POST", "/v1/actions", {
         body: {
           schema_version: SCHEMA,
+
           conversation_id: conversationId,
           operation: "set_busy_interval",
           arguments: arguments_,
         },
+
         idempotencyKey: key,
       }),
 
     prepareStudyPlan: (
       conversationId: string,
+
       arguments_: {
         generation_scope: {
           start_at: string
+
           end_at: string
+
           selection_mode: "SELECTED_TASKS"
+
           task_ids: string[]
         }
+
         policy_overrides: Record<string, never>
       },
+
       key?: string,
     ) =>
       client.request<OrchestratorReply>("POST", "/v1/actions", {
         body: {
           schema_version: SCHEMA,
+
           conversation_id: conversationId,
+
           operation: "generate_study_plan",
+
           arguments: arguments_,
         },
+
         idempotencyKey: key,
       }),
 
     decide: (
       conversationId: string,
+
       reference: ActionReference,
+
       decision: "APPROVE" | "REJECT",
+
       key?: string,
     ) =>
       client.request<OrchestratorReply>("POST", "/v1/decisions", {
         body: {
           schema_version: SCHEMA,
+
           conversation_id: conversationId,
+
           action_reference: reference,
+
           decision,
         },
+
         idempotencyKey: key,
+
+        retry: false,
       }),
 
     reviewAction: (
       conversationId: string,
+
       actionId: string,
+
       expectedVersion: number,
+
       key?: string,
+
       patch?: CandidateReviewPatch,
     ) =>
       client.request<OrchestratorReply>(
         "POST",
+
         `/v1/actions/${actionId}/review`,
+
         {
           body: {
             schema_version: SCHEMA,
+
             conversation_id: conversationId,
+
             expected_action_version: expectedVersion,
+
             ...(patch ?? {}),
           },
+
           idempotencyKey: key,
         },
       ),

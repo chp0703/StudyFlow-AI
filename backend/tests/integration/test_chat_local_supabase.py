@@ -196,7 +196,7 @@ class ChatHttp(unittest.TestCase):
             self.assertEqual(answered.json()["state"], "AWAITING_APPROVAL", answered.text)
             slots = answered.json()["result"]["data"]["candidate"]["slots"]
             self.assertEqual((slots["title"], slots["start_at"], slots["deadline_date"], slots["estimated_minutes"]),
-                             ("Bài OOP", "2027-03-05T09:00:00+07:00", "2027-03-05", 60))
+                             ("Bài OOP", "2027-03-05T02:00:00.000000Z", "2027-03-05", 60))
             done = self.decide(app, "u2", conversation, answered.json()["action_reference"])
             self.assertEqual(done.status_code, 200, done.text)
             self.assertEqual([t["title"] for t in self.tasks(app, "u2")], ["Bài OOP"])

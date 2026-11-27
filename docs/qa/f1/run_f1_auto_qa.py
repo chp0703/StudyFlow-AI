@@ -850,19 +850,19 @@ def tc_e01_01(s: QaSession) -> TrialOutcome:
     tok, conv = s.new_user(), str(uuid4())
     t0 = time.perf_counter()
     st, r1, _, _ = s.say(tok, conv, "Ngày mai tôi rảnh từ 8h sáng đến 12h trưa.")
-    if st != 200 or not r1.get("action_reference"):
+    if st != 200 or r1.get("state") != "AWAITING_APPROVAL" or not r1.get("action_reference"):
         return TrialOutcome(False, f"Lượt 1 (availability) lỗi: HTTP {st} state={r1.get('state')}", "RC-AGENT")
     s.decide(tok, conv, r1["action_reference"], "APPROVE")
 
     st, r2, _, _ = s.say(tok, conv, "Ngày mai tôi muốn ôn Giải tích lúc 9h sáng trong 60 phút, ưu tiên cao.")
-    if st != 200 or not r2.get("action_reference"):
+    if st != 200 or r2.get("state") != "AWAITING_APPROVAL" or not r2.get("action_reference"):
         return TrialOutcome(False, f"Lượt 2 (create task) lỗi: HTTP {st} state={r2.get('state')} q={r2.get('questions')}", "RC-AGENT")
     if len(s.tasks(tok)) != 0:
         return TrialOutcome(False, "Task bị tự lưu trước khi bấm Xác nhận!", "RC-BACKEND")
     s.decide(tok, conv, r2["action_reference"], "APPROVE")
 
     st, r3, _, _ = s.say(tok, conv, "Hãy lập lịch học cho tuần này.")
-    if st != 200 or not r3.get("action_reference"):
+    if st != 200 or r3.get("state") != "AWAITING_APPROVAL" or not r3.get("action_reference"):
         return TrialOutcome(False, f"Lượt 3 (generate plan) lỗi: HTTP {st} state={r3.get('state')} msg={r3.get('message')}", "RC-BACKEND")
     s.decide(tok, conv, r3["action_reference"], "APPROVE")
 
@@ -886,13 +886,13 @@ def tc_e01_02(s: QaSession) -> TrialOutcome:
     t0 = time.perf_counter()
     s.add_availability(tok, conv, vn_dt(s.now_vn, 1, 7), vn_dt(s.now_vn, 1, 20))
     st, r1, _, _ = s.say(tok, conv, "Ngày mai tôi muốn học Toán lúc 8h sáng trong 2 tiếng, ưu tiên cao.")
-    if st != 200 or not r1.get("action_reference"):
+    if st != 200 or r1.get("state") != "AWAITING_APPROVAL" or not r1.get("action_reference"):
         return TrialOutcome(False, f"Tạo nháp Toán 2h lỗi: HTTP {st} state={r1.get('state')}", "RC-AGENT")
     s.decide(tok, conv, r1["action_reference"], "APPROVE")
 
     st, r2, _, _ = s.say(tok, conv, "Hãy lập lịch học cho tuần này giúp tôi.")
     ms = round((time.perf_counter() - t0) * 1000, 1)
-    if st != 200 or not r2.get("action_reference"):
+    if st != 200 or r2.get("state") != "AWAITING_APPROVAL" or not r2.get("action_reference"):
         return TrialOutcome(False, f"Sinh lịch lỗi: HTTP {st} state={r2.get('state')} msg={r2.get('message')}", "RC-BACKEND", ms)
     conf = ((r2.get("result") or {}).get("data") or {}).get("schedule_confirmation") or {}
     unsched = conf.get("unscheduled_work") or []
@@ -914,7 +914,7 @@ def tc_e01_03(s: QaSession) -> TrialOutcome:
     t0 = time.perf_counter()
     st, r1, _, _ = s.say(tok, conv, "Tôi rảnh mỗi thứ Bảy từ 8h sáng đến 11h trưa.")
     ms = round((time.perf_counter() - t0) * 1000, 1)
-    if st != 200 or not r1.get("action_reference"):
+    if st != 200 or r1.get("state") != "AWAITING_APPROVAL" or not r1.get("action_reference"):
         return TrialOutcome(False, f"Không tạo được nháp giờ rảnh thứ Bảy: HTTP {st} state={r1.get('state')}", "RC-AGENT", ms)
     s.decide(tok, conv, r1["action_reference"], "APPROVE")
     wins = s.windows(tok)
@@ -939,7 +939,7 @@ def tc_e02_01(s: QaSession) -> TrialOutcome:
     b_before = [b for b in s.current_plan(tok)["study_blocks"] if b["task_id"] == t_b["task_id"]]
 
     st, r1, _, _ = s.say(tok, conv, "Ngày mai tôi bận họp nhóm từ 18h đến 19h30.")
-    if st != 200 or not r1.get("action_reference"):
+    if st != 200 or r1.get("state") != "AWAITING_APPROVAL" or not r1.get("action_reference"):
         return TrialOutcome(False, f"Không nhận diện SET_BUSY_INTERVAL: HTTP {st} state={r1.get('state')}", "RC-AGENT")
     s.decide(tok, conv, r1["action_reference"], "APPROVE")
     wins = [w for w in s.windows(tok) if w["kind"] == "BUSY"]
@@ -982,7 +982,7 @@ def tc_e02_03(s: QaSession) -> TrialOutcome:
     t0 = time.perf_counter()
     st, r1, _, _ = s.say(tok, conv, "Cập nhật tùy chọn học tập: mỗi buổi học tối đa 45 phút và nghỉ giữa giờ 15 phút.")
     ms = round((time.perf_counter() - t0) * 1000, 1)
-    if st != 200 or not r1.get("action_reference"):
+    if st != 200 or r1.get("state") != "AWAITING_APPROVAL" or not r1.get("action_reference"):
         return TrialOutcome(False, f"Không nhận diện SET_SCHEDULING_PREFERENCES: HTTP {st} state={r1.get('state')}", "RC-AGENT", ms)
     s.decide(tok, conv, r1["action_reference"], "APPROVE")
     pol = s.preferences(tok)["scheduling_policy"]
@@ -1016,8 +1016,8 @@ def tc_e03_01(s: QaSession) -> TrialOutcome:
     tok, conv = s.new_user(), str(uuid4())
     t0 = time.perf_counter()
     st, r1, _, _ = s.say(tok, conv, "Ngày mai 10h sáng học Sinh học trong 45 phút.")
-    if st != 200 or not r1.get("action_reference"):
-        return TrialOutcome(False, f"Không tạo được nháp để test Hủy: HTTP {st}", "RC-AGENT")
+    if st != 200 or r1.get("state") != "AWAITING_APPROVAL" or not r1.get("action_reference"):
+        return TrialOutcome(False, f"Không tạo được nháp để test Hủy: HTTP {st} state={r1.get('state')} questions={r1.get('questions')}", "RC-AGENT")
     st_r, _dec, _, _ = s.decide(tok, conv, r1["action_reference"], "REJECT")
     st_next, r_next, _, _ = s.say(tok, conv, "Tìm các công việc hiện có.")
     ms = round((time.perf_counter() - t0) * 1000, 1)
@@ -1034,7 +1034,7 @@ def tc_e03_02(s: QaSession) -> TrialOutcome:
     st, prep = s.prepare_action(tok, conv, "set_availability", {
         "change_type": "ARCHIVE", "window_id": w1["window_id"], "expected_window_version": w1["version"], "window": None,
     })
-    if st != 200 or not prep.get("action_reference"):
+    if st != 200 or prep.get("state") != "AWAITING_APPROVAL" or not prep.get("action_reference"):
         return TrialOutcome(False, f"ARCHIVE window prepare lỗi: {st} {prep}", "RC-BACKEND")
     s.decide(tok, conv, prep["action_reference"], "APPROVE")
     remaining = s.windows(tok)
@@ -1060,9 +1060,11 @@ def tc_e04_01(s: QaSession) -> TrialOutcome:
     t0 = time.perf_counter()
     st, r1, _, _ = s.say(tok, conv, "ngay mai hoc Vat Ly luc 14h trong 90 phut uu tien cao")
     ms = round((time.perf_counter() - t0) * 1000, 1)
-    if st != 200 or not r1.get("action_reference"):
+    if st != 200 or r1.get("state") != "AWAITING_APPROVAL" or not r1.get("action_reference"):
         return TrialOutcome(False, f"Không tạo được thẻ chờ duyệt: HTTP {st} state={r1.get('state')} q={r1.get('questions')}", "RC-AGENT", ms)
     slots = (((r1.get("result") or {}).get("data") or {}).get("candidate") or {}).get("slots") or {}
+    if not slots.get("start_at"):
+        return TrialOutcome(False, f"Thiếu start_at: {slots}", "RC-AGENT", ms)
     tomorrow = (s.now_vn + timedelta(days=1)).strftime("%Y-%m-%d")
     d_str, hm = local_hhmm(slots["start_at"])
     if d_str != tomorrow or hm != "14:00" or slots.get("estimated_minutes") != 90 or slots.get("priority") != 1:
@@ -1080,10 +1082,12 @@ def tc_e04_02(s: QaSession) -> TrialOutcome:
     t0 = time.perf_counter()
     st, r1, _, _ = s.say(tok, conv, "lm bt toan mai 9h sang nha, 45p")
     ms = round((time.perf_counter() - t0) * 1000, 1)
-    if st != 200 or not r1.get("action_reference"):
+    if st != 200 or r1.get("state") != "AWAITING_APPROVAL" or not r1.get("action_reference"):
         return TrialOutcome(False, f"Teencode không ra đủ slot: HTTP {st} state={r1.get('state')} q={r1.get('questions')}", "RC-AGENT", ms)
     slots = (((r1.get("result") or {}).get("data") or {}).get("candidate") or {}).get("slots") or {}
     tomorrow = (s.now_vn + timedelta(days=1)).strftime("%Y-%m-%d")
+    if not slots.get("start_at"):
+        return TrialOutcome(False, f"Thiếu start_at: {slots}", "RC-AGENT", ms)
     d_str, hm = local_hhmm(slots["start_at"])
     if d_str != tomorrow or hm != "09:00" or slots.get("estimated_minutes") != 45:
         return TrialOutcome(False, f"Teencode parse sai: {d_str} {hm} ({slots.get('estimated_minutes')}p)", "RC-AGENT", ms)
@@ -1095,9 +1099,11 @@ def tc_e04_04(s: QaSession) -> TrialOutcome:
     t0 = time.perf_counter()
     st, r1, _, _ = s.say(tok, conv, "Học Hóa lúc 8r tối nay trong 1 tiếng rưỡi")
     ms = round((time.perf_counter() - t0) * 1000, 1)
-    if st != 200 or not r1.get("action_reference"):
+    if st != 200 or r1.get("state") != "AWAITING_APPROVAL" or not r1.get("action_reference"):
         return TrialOutcome(False, f"8r tối nay không ra thẻ duyệt: state={r1.get('state')} q={r1.get('questions')}", "RC-AGENT", ms)
     slots = (((r1.get("result") or {}).get("data") or {}).get("candidate") or {}).get("slots") or {}
+    if not slots.get("start_at"):
+        return TrialOutcome(False, f"Thiếu start_at: {slots}", "RC-AGENT", ms)
     _, hm = local_hhmm(slots["start_at"])
     if hm != "20:30" or slots.get("estimated_minutes") != 90:
         return TrialOutcome(False, f"Hùng TC-04 tái hiện: '8r' ra {hm}, thời lượng={slots.get('estimated_minutes')}p (kỳ vọng 20:30, 90p)", "RC-AGENT", ms)
@@ -1109,10 +1115,12 @@ def tc_e04_05(s: QaSession) -> TrialOutcome:
     t0 = time.perf_counter()
     st, r1, _, _ = s.say(tok, conv, "Nộp bài tập Lập trình trước 12h đêm mai, bắt đầu làm lúc 10h kém 15 sáng mai trong 60 phút")
     ms = round((time.perf_counter() - t0) * 1000, 1)
-    if st != 200 or not r1.get("action_reference"):
+    if st != 200 or r1.get("state") != "AWAITING_APPROVAL" or not r1.get("action_reference"):
         return TrialOutcome(False, f"Không ra thẻ duyệt: HTTP {st} state={r1.get('state')}", "RC-AGENT", ms)
     slots = (((r1.get("result") or {}).get("data") or {}).get("candidate") or {}).get("slots") or {}
     tomorrow = (s.now_vn + timedelta(days=1)).strftime("%Y-%m-%d")
+    if not slots.get("start_at"):
+        return TrialOutcome(False, f"Thiếu start_at: {slots}", "RC-AGENT", ms)
     d_start, hm_start = local_hhmm(slots["start_at"])
     if d_start != tomorrow or hm_start != "09:45" or slots.get("estimated_minutes") != 60:
         return TrialOutcome(False, f"10h kém 15 sai: {d_start} {hm_start} ({slots.get('estimated_minutes')}p)", "RC-AGENT", ms)
@@ -1140,7 +1148,7 @@ def tc_e04_08(s: QaSession) -> TrialOutcome:
     tok, conv = s.new_user(), str(uuid4())
     t0 = time.perf_counter()
     st, r, _, _ = s.say(tok, conv, "Tôi rảnh thứ 2 đến thứ 6 hàng tuần từ 7h sáng đến 18h chiều")
-    if st != 200 or not r.get("action_reference"):
+    if st != 200 or r.get("state") != "AWAITING_APPROVAL" or not r.get("action_reference"):
         return TrialOutcome(False, f"Không tạo được giờ rảnh T2-T6: HTTP {st} state={r.get('state')}", "RC-AGENT")
     guard = 0
     while r.get("action_reference") and guard < 7:
@@ -1158,7 +1166,7 @@ def tc_e05_01(s: QaSession) -> TrialOutcome:
     tok, conv = s.new_user(), str(uuid4())
     t0 = time.perf_counter()
     st, r, _, _ = s.say(tok, conv, "Tối nay 19h học Toán 60 phút, 20h30 học Văn 45 phút, sáng mai 9h ôn Anh 90 phút.")
-    if st != 200 or not r.get("action_reference"):
+    if st != 200 or r.get("state") != "AWAITING_APPROVAL" or not r.get("action_reference"):
         return TrialOutcome(False, f"Câu 3 việc lỗi: HTTP {st} state={r.get('state')}", "RC-AGENT")
     guard = 0
     while r.get("action_reference") and guard < 5:
@@ -1280,9 +1288,11 @@ def tc_e08_02(s: QaSession) -> TrialOutcome:
     t0 = time.perf_counter()
     st, r1, _, _ = s.say(tok, conv, "Mai 8h tối học Lịch sử trong 60 phút, à thôi đổi sang 9h tối nha")
     ms = round((time.perf_counter() - t0) * 1000, 1)
-    if st != 200 or not r1.get("action_reference"):
+    if st != 200 or r1.get("state") != "AWAITING_APPROVAL" or not r1.get("action_reference"):
         return TrialOutcome(False, f"Tự đính chính lỗi: HTTP {st} state={r1.get('state')}", "RC-AGENT", ms)
     slots = r1["result"]["data"]["candidate"]["slots"]
+    if not slots.get("start_at"):
+        return TrialOutcome(False, f"Thiếu start_at: {slots}", "RC-AGENT", ms)
     _, hm = local_hhmm(slots["start_at"])
     if hm != "21:00" or slots.get("estimated_minutes") != 60:
         return TrialOutcome(False, f"Lấy sai giờ đính chính: {hm} ({slots.get('estimated_minutes')}p), kỳ vọng 21:00 (60p)", "RC-AGENT", ms)
@@ -1644,7 +1654,7 @@ def main() -> int:
                 env_path = candidate
                 break
     env = load_env_file(env_path)
-    now_vn = datetime.now(VN_TZ).replace(second=0, microsecond=0)
+    now_vn = datetime.now(VN_TZ)
     # Use 10:00 AM today for embedded deterministic clock so "tối nay" (20:30) is always in the future
     if args.mode == "embedded":
         now_vn = now_vn.replace(hour=10, minute=15)

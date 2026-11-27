@@ -114,7 +114,7 @@ select ok(res->>'outcome'='COMMITTED'
  and app_private.matches_contract('confirm_taskResult', res)
  and res#>>'{data,start_at}'='2026-11-06T02:00:00.000000Z'
  and res#>>'{data,available_from_at}'='2026-11-06T02:00:00.000000Z'
- and res#>>'{data,deadline_at}'='2026-11-06T03:30:00.000000Z'
+ and res#>>'{data,deadline_at}'='2026-11-06T16:59:00.000000Z'
  and res#>>'{data,deadline_precision}'='DATETIME'
  and res#>>'{data,deadline_timezone}'='Asia/Ho_Chi_Minh'
  and res#>>'{data,estimated_minutes}'='90'

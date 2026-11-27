@@ -40,7 +40,7 @@ export const emptyDraft = (): Draft => ({
   target: "",
 })
 
-export type WorkflowStatus = "idle" | "awaiting_clarification" | "awaiting_approval" | "review_required" | "cancelled" | "demo_acknowledged" | "approved"
+export type WorkflowStatus = "idle" | "awaiting_clarification" | "awaiting_approval" | "review_required" | "cancelled" | "stale" | "demo_acknowledged" | "approved"
 
 export type Conversation = {
   schemaVersion: 1
@@ -140,13 +140,22 @@ export function setProposalStatus(
 
   status: ActionProposal["status"],
 ): Conversation {
+  // Các thẻ khác của cùng một thao tác (ví dụ thẻ khôi phục sau F5) cũng phải hết nút khi thao tác đã kết thúc.
+  const actionId = conversation.messages.find(
+    (message) => message.id === messageId,
+  )?.proposal?.reference?.action_id
+
   return {
     ...conversation,
 
     updatedAt: new Date().toISOString(),
 
     messages: conversation.messages.map((message) =>
-      message.id === messageId && message.proposal
+      message.proposal &&
+      (message.id === messageId ||
+        (status !== "awaiting_approval" &&
+          status !== "review_required" &&
+          message.proposal.reference?.action_id === actionId))
         ? { ...message, proposal: { ...message.proposal, status } }
         : message,
     ),
@@ -257,6 +266,7 @@ function safeMessage(value: unknown): ChatMessage | null {
 
   if (Array.isArray(value.attachments)) {
     const attachments = value.attachments
+
       .filter(
         (att): att is ChatAttachment =>
           isObject(att) &&
@@ -265,11 +275,16 @@ function safeMessage(value: unknown): ChatMessage | null {
           typeof att.size === "string" &&
           (att.type === "image" || att.type === "file"),
       )
+
       .map((att) => ({
         id: att.id,
+
         name: att.name,
+
         size: att.size,
+
         type: att.type,
+
         ...(typeof att.dataUrl === "string" ? { dataUrl: att.dataUrl } : {}),
       }))
 
@@ -281,6 +296,30 @@ function safeMessage(value: unknown): ChatMessage | null {
 
   if (typeof value.intent === "string")
     message.intent = (value.intent as ChatMessage["intent"])
+
+  if (
+    isObject(value.clarification) &&
+    typeof value.clarification.originalPrompt === "string" &&
+    Array.isArray(value.clarification.questions)
+  ) {
+    const questions = value.clarification.questions.filter(
+      (question): question is ClarificationQuestion =>
+        isObject(question) &&
+        typeof question.field === "string" &&
+        typeof question.message === "string" &&
+        Array.isArray(question.choices),
+    )
+
+    message.clarification = {
+      originalPrompt: value.clarification.originalPrompt,
+
+      questions,
+
+      ...(isReference(value.clarification.reference)
+        ? { reference: value.clarification.reference }
+        : {}),
+    }
+  }
 
   if (
     ["missing_information", "valid_demo_draft"].includes(
@@ -306,9 +345,12 @@ function safeMessage(value: unknown): ChatMessage | null {
         typeof item.value === "string",
     )
 
-    const status = ["cancelled", "demo_acknowledged", "approved"].includes(
-      String(value.proposal.status),
-    )
+    const status = [
+      "cancelled",
+      "stale",
+      "demo_acknowledged",
+      "approved",
+    ].includes(String(value.proposal.status))
       ? value.proposal.status as ActionProposal["status"]
       : "review_required"
 
@@ -323,6 +365,10 @@ function safeMessage(value: unknown): ChatMessage | null {
 
       status,
 
+      ...(typeof value.proposal.approvalError === "string"
+        ? { approvalError: value.proposal.approvalError }
+        : {}),
+
       ...(isReference(value.proposal.reference)
         ? { reference: value.proposal.reference }
         : {}),
@@ -333,6 +379,14 @@ function safeMessage(value: unknown): ChatMessage | null {
 }
 
 // Tin nhắn được khôi phục chỉ là lịch sử. Thao tác chờ duyệt luôn cần xem lại trước.
+
+type ClarificationQuestion = {
+  field: string
+
+  message: string
+
+  choices: []
+}
 
 export function restoreConversation(value: unknown): Conversation | null {
   if (
@@ -361,9 +415,13 @@ export function restoreConversation(value: unknown): Conversation | null {
       ? "review_required"
       : last?.category === "CLARIFICATION"
         ? "awaiting_clarification"
-        : ["idle", "cancelled", "demo_acknowledged", "approved"].includes(
-              String(savedWorkflow.status),
-            )
+        : [
+              "idle",
+              "cancelled",
+              "stale",
+              "demo_acknowledged",
+              "approved",
+            ].includes(String(savedWorkflow.status))
           ? savedWorkflow.status as WorkflowStatus
           : "idle"
 
@@ -433,15 +491,18 @@ export function historyGroup(
   return "Cũ hơn"
 }
 
-const DB_NAME = "studyflow-assistant-history"
-
 export function openHistoryDatabase(
+  userId: string,
+
   factory: IDBFactory | undefined = globalThis.indexedDB,
 ): Promise<IDBDatabase> {
   if (!factory) return Promise.reject(new Error("IndexedDB unavailable"))
 
   return new Promise((resolve, reject) => {
-    const request = factory.open(DB_NAME, HISTORY_SCHEMA_VERSION)
+    const request = factory.open(
+      `studyflow-assistant-history-${userId}`,
+      HISTORY_SCHEMA_VERSION,
+    )
 
     request.onupgradeneeded = () => {
       const db = request.result

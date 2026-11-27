@@ -5,54 +5,104 @@ import type {
   KeyboardEventHandler,
   RefObject,
 } from "react"
+
 import { FileText, Plus, Send, X } from "lucide-react"
+
 import type { ChatAttachment } from "../../types/assistant"
 
 type Props = {
   apiEnabled: boolean
+
   thinking: boolean
+
   isDragging: boolean
+
   setIsDragging: (value: boolean) => void
+
   handleDrop: DragEventHandler<HTMLFormElement>
+
   send: () => void
+
+  retryMessage: string | null
+
+  onRetry: () => void
+
   fileInputRef: RefObject<HTMLInputElement | null>
+
   handleFileAttach: ChangeEventHandler<HTMLInputElement>
+
   hydrated: boolean
+
   attachedFiles: ChatAttachment[]
+
   removeAttachment: (id: string) => void
+
   composerRef: RefObject<HTMLTextAreaElement | null>
+
   input: string
+
   setComposer: (value: string) => void
+
   handlePaste: ClipboardEventHandler<HTMLTextAreaElement>
+
   composition: RefObject<boolean>
+
   onComposerKeyDown: KeyboardEventHandler<HTMLTextAreaElement>
+
   storageMode: "loading" | "persistent" | "memory"
+
   storageError: string
+
   conversationCount: number
+
   exportHistory: () => void
 }
 
 export default function ChatComposer({
   apiEnabled,
+
   thinking,
+
   isDragging,
+
   setIsDragging,
+
   handleDrop,
+
   send,
+
+  retryMessage,
+
+  onRetry,
+
   fileInputRef,
+
   handleFileAttach,
+
   hydrated,
+
   attachedFiles,
+
   removeAttachment,
+
   composerRef,
+
   input,
+
   setComposer,
+
   handlePaste,
+
   composition,
+
   onComposerKeyDown,
+
   storageMode,
+
   storageError,
+
   conversationCount,
+
   exportHistory,
 }: Props) {
   return (
@@ -61,6 +111,7 @@ export default function ChatComposer({
         className={`assistant-composer ${isDragging ? "is-dragging" : ""}`}
         onDragOver={(e) => {
           e.preventDefault()
+
           setIsDragging(true)
         }}
         onDragLeave={() => setIsDragging(false)}
@@ -68,7 +119,7 @@ export default function ChatComposer({
         onSubmit={(event) => {
           event.preventDefault()
 
-          send()
+          if (input.length <= 8000) send()
         }}
       >
         <input
@@ -142,6 +193,7 @@ export default function ChatComposer({
             }}
             onKeyDown={onComposerKeyDown}
             rows={1}
+            maxLength={8000}
             placeholder={
               attachedFiles.length > 0
                 ? "Thêm câu hỏi hoặc ghi chú về tệp đã chọn..."
@@ -156,12 +208,22 @@ export default function ChatComposer({
           )}
         </div>
         <div className="assistant-composer-bottom">
+          {retryMessage && (
+            <button
+              type="button"
+              onClick={onRetry}
+              disabled={thinking || !hydrated}
+            >
+              Gửi lại
+            </button>
+          )}
           <button
             type="submit"
             aria-label="Gửi tin nhắn"
             disabled={
               !hydrated ||
               thinking ||
+              input.length > 8000 ||
               (!input.trim() && attachedFiles.length === 0)
             }
           >

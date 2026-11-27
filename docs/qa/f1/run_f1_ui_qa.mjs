@@ -105,45 +105,50 @@ async function runLayer1Checks() {
     path.join(FRONTEND_DIR, "src", "features", "assistant", "ChatComposer.tsx"),
     "utf8",
   )
-  const has8kLimit = /8000|8_000|MAX_MESSAGE_LENGTH/.test(chatComposerSrc)
+  const plannerComposerSrc = fs.readFileSync(path.join(FRONTEND_DIR, "src", "features", "planner", "PlannerCommandComposer.tsx"), "utf8")
+  const has8kLimit = [chatComposerSrc, plannerComposerSrc].every((source) => /maxLength=\{8000\}/.test(source))
   results.push({
     test_id: "F1-E13-02-UI",
     priority: "P1",
-    title: "ChatComposer chặn quá 8.000 ký tự khớp UserMessage contract [CF-08 / F1-B04]",
+    title: "Cả hai ô lệnh chặn quá 8.000 ký tự [CF-08 / F1-B04]",
     status: has8kLimit ? "PASS" : "BUG",
     root_cause: has8kLimit ? "" : "RC-FE",
     detail: has8kLimit
-      ? "OK: ChatComposer.tsx đã giới hạn 8.000 ký tự"
-      : "CF-08 tái hiện: ChatComposer.tsx thiếu giới hạn 8.000 ký tự (PlannerCommandComposer có nhưng ChatComposer thiếu)",
+      ? "OK: ChatComposer và PlannerCommandComposer giới hạn 8.000 ký tự"
+      : "CF-08 tái hiện: Một trong hai ô lệnh thiếu maxLength 8.000 ký tự",
   })
 
-  // 3. F1-E14-02 / CF-05: sendMessage should disable blind 3x auto-retry on slow LLM 503
+  // 3. F1-E14-02 / CF-05: sendMessage should disable automatic retry on slow LLM 503
   const endpointsSrc = fs.readFileSync(path.join(FRONTEND_DIR, "src", "api", "endpoints.ts"), "utf8")
-  const sendMsgMatch = endpointsSrc.match(/sendMessage\s*:\s*[\s\S]*?\}\),/)
+  const sendMsgMatch = endpointsSrc.match(/sendMessage\s*:\s*[\s\S]*?(?=\n\s+\w+\s*:\s*\()/)
   const hasNoRetry = sendMsgMatch ? /retry\s*:\s*false/.test(sendMsgMatch[0]) : false
   results.push({
     test_id: "F1-E14-02-UI",
     priority: "P1",
-    title: "sendMessage tắt auto-retry mù 3 lần khi LLM timeout 503 [CF-05 / F1-B02]",
+    title: "sendMessage tắt auto-retry khi LLM timeout 503 [CF-05 / F1-B02]",
     status: hasNoRetry ? "PASS" : "BUG",
     root_cause: hasNoRetry ? "" : "RC-FE",
     detail: hasNoRetry
       ? "OK: sendMessage có retry: false"
-      : "CF-05 tái hiện: endpoints.ts sendMessage thiếu retry: false nên client.ts tự bắn lặp 3 request lên LLM khi gặp 503",
+      : "CF-05 tái hiện: endpoints.ts sendMessage thiếu retry: false nên client.ts tự bắn tổng cộng 2 request lên LLM khi gặp 503",
   })
 
   // 4. F1-E11-03 / CF-09: Distinguish Offline network failure from server 503 SERVICE_UNAVAILABLE
   const clientSrc = fs.readFileSync(path.join(FRONTEND_DIR, "src", "api", "client.ts"), "utf8")
-  const mapsOfflineTo503 =
-    /NETWORK_ERROR[\s\S]{0,200}SERVICE_UNAVAILABLE/.test(clientSrc) ||
-    /catch\s*(?:\([^)]*\))?\s*\{[\s\S]{0,240}SERVICE_UNAVAILABLE/.test(clientSrc)
+  const netErrDecl = clientSrc.match(/const NETWORK_ERROR\b[\s\S]*?\n\}/)?.[0] ?? ""
+  const fetchCatch = clientSrc.match(/doFetch\([\s\S]*?catch\s*(?:\([^)]*\))?\s*\{[\s\S]*?\}/)?.[0] ?? ""
+  const hasDistinctNetworkError =
+    /code\s*:\s*["']NETWORK_ERROR["']/.test(netErrDecl) &&
+    !/SERVICE_UNAVAILABLE/.test(netErrDecl) &&
+    !/SERVICE_UNAVAILABLE/.test(fetchCatch) &&
+    /\bNETWORK_ERROR\s*:/.test(clientSrc.match(/const MESSAGES\b[\s\S]*?\n\}/)?.[0] ?? "")
   results.push({
     test_id: "F1-E11-03-UI",
     priority: "P2",
     title: "Phân biệt lỗi rớt mạng Offline với lỗi máy chủ 503 [CF-09 / Hiển TC-12]",
-    status: !mapsOfflineTo503 ? "PASS" : "BUG",
-    root_cause: !mapsOfflineTo503 ? "" : "RC-FE",
-    detail: !mapsOfflineTo503
+    status: hasDistinctNetworkError ? "PASS" : "BUG",
+    root_cause: hasDistinctNetworkError ? "" : "RC-FE",
+    detail: hasDistinctNetworkError
       ? "OK: client.ts tách riêng lỗi mất mạng Offline"
       : "CF-09 tái hiện: client.ts gộp ngoại lệ fetch (Offline) thành mã SERVICE_UNAVAILABLE giống 503",
   })
@@ -163,9 +168,10 @@ async function runLayer1Checks() {
     }
   }
   walk(path.join(FRONTEND_DIR, "src"))
-  const run = spawnSync(process.execPath, ["--experimental-strip-types", "--test", ...testFiles], {
+  const run = spawnSync(process.execPath, ["--experimental-strip-types", "--test", "--test-reporter=tap", "--test-concurrency=1", ...testFiles], {
     cwd: FRONTEND_DIR,
     encoding: "utf8",
+    timeout: 180_000,
   })
   const passLine = (run.stdout || "").match(/# pass (\d+)/)?.[1] ?? "0"
   const failLine = (run.stdout || "").match(/# fail (\d+)/)?.[1] ?? "0"

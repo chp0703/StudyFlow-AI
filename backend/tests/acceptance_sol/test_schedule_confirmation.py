@@ -100,6 +100,21 @@ COMMAND = {
 
 
 class CompleteScheduleConfirmationAcceptance(unittest.TestCase):
+    def test_replan_keeps_future_block_outside_new_scope(self):
+        next_task = "00000000-0000-4000-8000-000000000004"
+        snap = snapshot(
+            windows=[availability(), {**availability("2026-11-11T12:00:00Z", "2026-11-11T14:00:00Z"), "window_id": "00000000-0000-4000-8000-000000000022"}],
+            blocks=(block(BLOCK_A, "2026-11-05T12:00:00Z", "2026-11-05T13:00:00Z"),),
+        )
+        snap["tasks"].append({**task(), "task_id": next_task, "start_at": "2026-11-11T12:00:00Z",
+                              "available_from_at": "2026-11-11T12:00:00Z", "deadline_at": "2026-11-11T15:00:00Z"})
+        cmd = {"generation_scope": {"start_at": "2026-11-11T00:00:00Z", "end_at": "2026-11-12T00:00:00Z",
+                                     "selection_mode": "SELECTED_TASKS", "task_ids": [next_task]}, "policy_overrides": {}}
+        outcome = generate(snap, cmd, now=datetime(2026, 11, 4, tzinfo=timezone.utc), block_id_factory=lambda: FRESH_BLOCK)
+        self.assertEqual((), outcome.conflicts)
+        self.assertIsNotNone(outcome.proposal)
+        self.assertIn(BLOCK_A, [item["block_id"] for item in outcome.proposal["payload"]["study_blocks"]])
+
     def test_confirmation_expands_changed_and_removed_entries(self):
         outcome = generate(
             snapshot(blocks=(
@@ -187,14 +202,8 @@ class CompleteScheduleConfirmationAcceptance(unittest.TestCase):
         }
         outcome = generate(snap, cmd, now=datetime(2026, 11, 5, 7, tzinfo=timezone.utc), block_id_factory=lambda: FRESH_BLOCK)
         confirmation = outcome.proposal["payload"]["schedule_confirmation"]
-        self.assertEqual([TASK], [entry["task_id"] for entry in confirmation["added"]])
-        self.assertEqual([{
-            "task_id": busy_task_id,
-            "task_name": "Học đúng 9 giờ",
-            "color": "#10B981",
-            "unscheduled_minutes": 60,
-            "reason_codes": ["START_TIME_CONFLICT"],
-        }], confirmation["unscheduled_work"])
+        self.assertEqual([TASK, TASK], [entry["task_id"] for entry in confirmation["added"]])
+        self.assertEqual([], confirmation["unscheduled_work"])
 
 
 if __name__ == "__main__":

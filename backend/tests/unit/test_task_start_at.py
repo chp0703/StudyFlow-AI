@@ -131,6 +131,40 @@ class TaskStartAtRequirementTests(unittest.TestCase):
         self.assertNotIn("start_at", slots)
         self.assertEqual(["start_at"], [q["field"] for q in ActionProcessor.questions(slots)])
 
+    def test_normalize_slots_aligns_model_timestamps(self) -> None:
+        slots = ActionProcessor.normalize_slots({
+            "start_at": "2026-11-06T09:00:31+07:00",
+            "deadline_at": "2026-11-06T11:00:31+07:00",
+            "estimated_minutes": 60,
+        })
+        self.assertEqual("2026-11-06T02:01:00.000000Z", slots["start_at"])
+        self.assertEqual(slots["start_at"], slots["available_from_at"])
+        self.assertEqual("2026-11-06T04:00:00.000000Z", slots["deadline_at"])
+
+    def test_default_deadline_covers_day_and_breaks(self) -> None:
+        slots = ActionProcessor.normalize_slots({
+            "start_at": "2026-11-06T08:00:00+07:00", "estimated_minutes": 120,
+            "deadline_precision": "DATETIME",
+        })
+        self.assertEqual("2026-11-06T16:59:00.000000Z", slots["deadline_at"])
+        late = ActionProcessor.normalize_slots({
+            "start_at": "2026-11-06T23:30:00+07:00", "estimated_minutes": 120,
+            "deadline_precision": "DATETIME",
+        })
+        self.assertEqual("2026-11-06T18:40:00.000000Z", late["deadline_at"])
+
+    def test_invalid_duration_and_deadline_fail_before_candidate_write(self) -> None:
+        from backend.app.orchestrator.workflow_shared import Terminal
+        from backend.app.core import contract
+        base = {"start_at": "2026-11-06T10:00:00+07:00", "deadline_at": "2026-11-06T09:00:00+07:00", "estimated_minutes": 60}
+        for override, field in (({"estimated_minutes": 0}, "estimated_minutes"),
+                                ({"estimated_minutes": 1441}, "estimated_minutes"),
+                                ({}, "start_at")):
+            with self.subTest(override=override), self.assertRaises(Terminal) as caught:
+                ActionProcessor.validate_task_slots(ActionProcessor.normalize_slots({**base, **override}))
+            self.assertEqual(field, caught.exception.error["field"])
+        self.assertFalse(contract.is_valid("CandidateTaskFields", {**base, "estimated_minutes": 1441}))
+
     def test_chat_deadline_only_clarification_keeps_asking_start_at_until_supplied(self) -> None:
         rpc = InMemoryWorkflowRpc()
         script = {
@@ -195,7 +229,7 @@ class TaskStartAtRequirementTests(unittest.TestCase):
         )
         self.assertEqual("AWAITING_APPROVAL", ready["state"])
         slots = ready["result"]["data"]["candidate"]["slots"]
-        self.assertEqual("2027-03-05T09:00:00+07:00", slots["start_at"])
+        self.assertEqual("2027-03-05T02:00:00.000000Z", slots["start_at"])
         self.assertEqual("2027-03-05", slots["deadline_date"])
         self.assertEqual(60, slots["estimated_minutes"])
 

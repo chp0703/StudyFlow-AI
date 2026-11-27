@@ -4,7 +4,7 @@ export type IntentCandidate = "SEARCH_TASKS" | "SET_BUSY_INTERVAL" | "SET_SCHEDU
 
 export type ResponseCategory = "MESSAGE" | "CLARIFICATION" | "PROPOSAL" | "UNSUPPORTED" | "ERROR"
 
-export type ApprovalStatus = "awaiting_approval" | "review_required" | "cancelled" | "demo_acknowledged" | "approved"
+export type ApprovalStatus = "awaiting_approval" | "review_required" | "cancelled" | "stale" | "demo_acknowledged" | "approved"
 
 export type AssistantScenario = "task" | "plan" | "view" | "reschedule"
 
@@ -28,6 +28,8 @@ export type ActionProposal = {
   // API mode: the server-issued action this card decides on. Without it the card is a local demo.
 
   reference?: ActionReference
+
+  approvalError?: string
 }
 
 export type ChatAttachment = {
@@ -67,6 +69,8 @@ export type ChatMessage = {
     originalPrompt: string
 
     questions: Question[]
+
+    reference?: ActionReference
   }
 
   error?: {

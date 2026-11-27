@@ -99,12 +99,17 @@ test("POST sends a JSON body and an idempotency key", async () => {
 
 test("DELETE sends an idempotency key without a JSON body", async () => {
   const { client, calls } = setup([json({ data: { deleted: true } })])
+
   await client.request("DELETE", "/v1/materials/mat-1", {
     idempotencyKey: "delete-123456789012",
   })
+
   const headers = calls[0].init.headers as Record<string, string>
+
   assert.equal(headers["Idempotency-Key"], "delete-123456789012")
+
   assert.equal(headers["Content-Type"], "application/json")
+
   assert.equal(calls[0].init.body, undefined)
 })
 
@@ -112,12 +117,15 @@ test("retry false leaves an AI side effect for explicit UI retry", async () => {
   const { client, calls } = setup([
     json(errBody("SERVICE_UNAVAILABLE", true), 503),
   ])
+
   await assert.rejects(
     client.request("POST", "/v1/learning/sessions/s-1/turns", {
       body: { kind: "ASK", text: "x" },
+
       retry: false,
     }),
   )
+
   assert.equal(calls.length, 1)
 })
 
@@ -145,13 +153,13 @@ test("a transient failure is retried once with the same idempotency key", async 
   assert.ok(keys[0].length >= 16)
 })
 
-test("a network failure is retryable and then reported as unavailable", async () => {
+test("a network failure is distinct from a server outage", async () => {
   const { client, calls } = setup([new Error("down"), new Error("down")])
 
   await assert.rejects(
     client.request("GET", "/v1/tasks"),
 
-    (e: ApiError) => e.code === "SERVICE_UNAVAILABLE" && e.status === 0,
+    (e: ApiError) => e.code === "NETWORK_ERROR" && e.status === 0,
   )
 
   assert.equal(calls.length, 2)
@@ -255,24 +263,36 @@ test("weekly window archive prepares an action without approving it", async () =
   const { client, calls } = setup([json({ state: "AWAITING_APPROVAL" })])
   await createEndpoints(client).prepareBusyInterval(
     "conv",
+
     {
       change_type: "ARCHIVE",
+
       window_id: "window-id",
+
       expected_window_version: 3,
+
       window: null,
     },
+
     "key-0123456789abcdef",
   )
+
   assert.equal(calls.length, 1)
+
   assert.equal(calls[0].url, "http://api.test/v1/actions")
+
   assert.deepEqual(JSON.parse(calls[0].init.body as string), {
     schema_version: "1.1",
+
     conversation_id: "conv",
     operation: "set_busy_interval",
     arguments: {
       change_type: "ARCHIVE",
+
       window_id: "window-id",
+
       expected_window_version: 3,
+
       window: null,
     },
   })
@@ -281,82 +301,139 @@ test("weekly window archive prepares an action without approving it", async () =
 test("weekly ADD and UPDATE send exact schema 1.1 arguments and version", async () => {
   const { client, calls } = setup([
     json({ state: "AWAITING_APPROVAL" }),
+
     json({ state: "AWAITING_APPROVAL" }),
   ])
+
   const window = {
     kind: "BUSY" as const,
     label: null,
+
     recurrence: "WEEKLY" as const,
+
     timezone: "Asia/Ho_Chi_Minh",
+
     start_at: null,
+
     end_at: null,
+
     weekday: 1,
+
     start_time: "08:15",
+
     end_time: "11:30",
+
     valid_from: "2026-11-16",
+
     valid_until: null,
   }
+
   const endpoints = createEndpoints(client)
   await endpoints.prepareBusyInterval(
     "conv",
+
     {
       change_type: "ADD",
+
       window_id: null,
+
       expected_window_version: null,
+
       window,
     },
+
     "add-key",
   )
   await endpoints.prepareBusyInterval(
     "conv",
+
     {
       change_type: "UPDATE",
+
       window_id: "server-window",
+
       expected_window_version: 4,
+
       window: { ...window, end_time: "17:45" },
     },
+
     "update-key",
   )
+
   assert.equal(calls.length, 2)
+
   const add = JSON.parse(calls[0].init.body as string)
+
   const update = JSON.parse(calls[1].init.body as string)
+
   assert.equal(add.schema_version, "1.1")
   assert.equal(add.operation, "set_busy_interval")
   assert.deepEqual(add.arguments, {
     change_type: "ADD",
+
     window_id: null,
+
     expected_window_version: null,
+
     window,
   })
+
   assert.equal(update.arguments.window_id, "server-window")
+
   assert.equal(update.arguments.expected_window_version, 4)
+
   assert.equal(update.arguments.window.end_time, "17:45")
 })
 
-test("availability POST retries a network failure with the same idempotency key", async () => {
+test("availability POST waits for an explicit retry with the same idempotency key", async () => {
   const { client, calls } = setup([
     new Error("timeout"),
+
     json({ state: "AWAITING_APPROVAL" }),
   ])
-  await createEndpoints(client).prepareBusyInterval(
-    "conv",
-    {
-      change_type: "ARCHIVE",
-      window_id: "server-window",
-      expected_window_version: 4,
-      window: null,
-    },
-    "same-key",
+
+  const endpoints = createEndpoints(client)
+
+  const send = () =>
+    endpoints.prepareBusyInterval(
+      "conv",
+
+      {
+        change_type: "ARCHIVE",
+
+        window_id: "server-window",
+
+        expected_window_version: 4,
+
+        window: null,
+      },
+
+      "same-key",
+    )
+
+  await assert.rejects(
+    send(),
+    (error: ApiError) => error.code === "NETWORK_ERROR",
   )
+
+  assert.equal(calls.length, 1)
+
+  await send()
+
   assert.equal(calls.length, 2)
+
   assert.equal(
     (calls[0].init.headers as Record<string, string>)["Idempotency-Key"],
+
     "same-key",
   )
+
   assert.equal(
     (calls[1].init.headers as Record<string, string>)["Idempotency-Key"],
+
     "same-key",
   )
+
   assert.equal(calls[0].init.body, calls[1].init.body)
 })
 

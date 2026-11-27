@@ -46,7 +46,7 @@ export function proposalFromReply(
   if (!reply.action_reference || presentation?.kind !== "ACTION_PRESENTATION")
     return null
 
-  const { title, details } = summarize(presentation)
+  const { title, details, approvalError } = summarize(presentation)
 
   const intent = presentation.pending_action.intent as IntentCandidate
 
@@ -56,6 +56,8 @@ export function proposalFromReply(
     title,
 
     details,
+
+    approvalError,
 
     caveat: "",
 
@@ -127,6 +129,10 @@ export function replyToMessage(
         originalPrompt,
 
         questions: reply.questions,
+
+        ...(reply.action_reference
+          ? { reference: reply.action_reference }
+          : {}),
       },
     }
 

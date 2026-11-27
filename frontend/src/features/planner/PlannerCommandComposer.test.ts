@@ -38,6 +38,8 @@ test("composer renders a compact truthful state before focus", async () => {
 
     assert.match(compact, /rows="1"/)
 
+    assert.match(compact, /maxLength="8000"/)
+
     assert.match(compact, /aria-expanded="false"/)
 
     assert.match(compact, /disabled=""/)

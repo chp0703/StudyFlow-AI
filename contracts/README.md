@@ -71,6 +71,7 @@ Schema v1.1 đã có mã lỗi domain; package này thêm đúng bốn mã **tra
 | `POST /v1/messages` | `UserMessage` | `OrchestratorReply` | Hội thoại, trích xuất, hỏi lại; ghi nghiệp vụ chỉ sau quyết định rõ ràng đúng ngữ cảnh |
 | `POST /v1/actions` | `ActionRequest` | `OrchestratorReply` | Đầu vào có cấu trúc từ form: chuẩn bị candidate/TimeWindow/policy/proposal để xem và xác nhận |
 | `POST /v1/actions/{action_id}/review` | `ReviewActionRequest` | `OrchestratorReply` | Khôi phục/xem lại action; không tự duyệt |
+| `GET /v1/conversations/{conversation_id}/pending` | UUID hội thoại | `OrchestratorReply` hoặc `null` | Đọc thao tác đang chờ của đúng người dùng để khôi phục sau khi tải lại trang; không xác nhận |
 | `POST /v1/decisions` | `UserDecision` | `OrchestratorReply` | Quyết định APPROVE/REJECT gắn đúng action và target/version |
 | `GET /v1/tasks` | query, status_filter, page_size, cursor | `search_tasksResult` | Chỉ đọc task cùng user |
 | `GET /v1/time-windows` | kind?, include_archived=false, page_size, cursor | `TimeWindowListResult` | Chỉ đọc; phục vụ form/calendar |

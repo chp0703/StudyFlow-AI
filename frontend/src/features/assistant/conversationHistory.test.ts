@@ -144,7 +144,41 @@ test("groups use the local calendar and storage absence rejects", async () => {
     "Hôm qua",
   )
 
-  await assert.rejects(openHistoryDatabase(undefined), /IndexedDB unavailable/)
+  await assert.rejects(
+    openHistoryDatabase("demo", undefined),
+    /IndexedDB unavailable/,
+  )
+})
+
+test("history database names are isolated by user", () => {
+  const names: string[] = []
+
+  const factory = {
+    open(name: string) {
+      names.push(name)
+
+      return {
+        onupgradeneeded: null,
+        onsuccess: null,
+        onerror: null,
+        onblocked: null,
+      }
+    },
+  } as unknown as IDBFactory
+
+  void openHistoryDatabase("user-a", factory)
+
+  void openHistoryDatabase("user-b", factory)
+
+  void openHistoryDatabase("demo", factory)
+
+  assert.deepEqual(names, [
+    "studyflow-assistant-history-user-a",
+
+    "studyflow-assistant-history-user-b",
+
+    "studyflow-assistant-history-demo",
+  ])
 })
 
 test("attachments are preserved and validated in conversation history", () => {
@@ -153,16 +187,25 @@ test("attachments are preserved and validated in conversation history", () => {
   const withAttachment = appendMessages(base, [
     {
       id: "user-attach-1",
+
       timestamp: "2026-11-04T09:00:00.000Z",
+
       role: "user",
+
       category: "MESSAGE",
+
       text: "Đã gửi tệp bài tập",
+
       attachments: [
         {
           id: "att-1",
+
           name: "baitap.png",
+
           size: "120 KB",
+
           type: "image",
+
           dataUrl: "data:image/png;base64,abc",
         },
       ],
@@ -176,4 +219,45 @@ test("attachments are preserved and validated in conversation history", () => {
   assert.equal(restored?.messages[0].attachments?.[0].name, "baitap.png")
 
   assert.equal(restored?.messages[0].attachments?.[0].type, "image")
+})
+
+test("setProposalStatus settles every card of the same action and stale survives restore", () => {
+  const reference = {
+    action_id: "a1",
+    action_version: 1,
+    target_type: "PENDING_ACTION",
+    target_id: "a1",
+    target_version: 1,
+  } as const
+  const card = (id: string): ChatMessage => ({
+    id,
+    role: "assistant",
+    category: "PROPOSAL",
+    text: "x",
+    timestamp: "2026-11-27T00:00:00.000Z",
+    proposal: {
+      intent: "CREATE_TASK",
+      title: "ôn Sử",
+      caveat: "",
+      details: [],
+      status: "awaiting_approval",
+      reference,
+    },
+  })
+  const base = createConversation("x")
+  const next = setProposalStatus(
+    { ...base, messages: [card("m1"), card("m2")] },
+    "m2",
+    "stale",
+  )
+
+  assert.deepEqual(
+    next.messages.map((m) => m.proposal?.status),
+    ["stale", "stale"],
+  )
+  assert.equal(
+    restoreConversation(JSON.parse(JSON.stringify(next)))?.messages[0].proposal
+      ?.status,
+    "stale",
+  )
 })

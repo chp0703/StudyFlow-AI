@@ -22,6 +22,20 @@ export class ApiError extends Error {
   }
 }
 
+export function isStaleDecisionError(error: unknown): error is ApiError {
+  return (
+    error instanceof ApiError &&
+    (error.status === 404 ||
+      error.status === 409 ||
+      [
+        "STALE_ENTITY_VERSION",
+        "STALE_PROPOSAL",
+        "STALE_PLAN_VERSION",
+        "ENTITY_NOT_FOUND",
+      ].includes(error.code))
+  )
+}
+
 type Query = Record<string, string | number | boolean | string[] | null | undefined>
 
 export type ClientOptions = {
@@ -42,9 +56,11 @@ export type RequestOptions = {
   body?: unknown
 
   // Mutations only. Reuse the same key when the user retries the same action.
+
   idempotencyKey?: string
 
   // Generation requests must not automatically retry model calls.
+
   retry?: boolean
 }
 
@@ -64,9 +80,10 @@ function queryString(query: Query | undefined): string {
 }
 
 const NETWORK_ERROR: ApiErrorBody = {
-  code: "SERVICE_UNAVAILABLE",
+  code: "NETWORK_ERROR",
 
-  message: "Không kết nối được máy chủ.",
+  message:
+    "Không có kết nối mạng hoặc không thể kết nối máy chủ. Hãy kiểm tra mạng rồi thử lại.",
 
   field: null,
 
@@ -74,6 +91,7 @@ const NETWORK_ERROR: ApiErrorBody = {
 }
 
 // Thin fetch wrapper: bearer token, idempotency key, catalog errors, one retry of a transient failure.
+
 export function createApiClient(options: ClientOptions) {
   const doFetch = options.fetchImpl ?? ((...args) => fetch(...args))
 
@@ -85,8 +103,11 @@ export function createApiClient(options: ClientOptions) {
 
       throw new ApiError(401, {
         code: "UNAUTHENTICATED",
+
         message: "Cần đăng nhập.",
+
         field: null,
+
         retryable: false,
       })
     }
@@ -106,9 +127,12 @@ export function createApiClient(options: ClientOptions) {
     try {
       response = await doFetch(
         `${options.baseUrl}${path}${queryString(opts.query)}`,
+
         {
           method,
+
           headers,
+
           body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
         },
       )
@@ -132,16 +156,20 @@ export function createApiClient(options: ClientOptions) {
 
     throw new ApiError(
       response.status,
+
       error ?? { ...NETWORK_ERROR, retryable: response.status >= 500 },
     )
   }
 
   async function request<T>(
     method: "GET" | "POST" | "PUT" | "DELETE",
+
     path: string,
+
     opts: RequestOptions = {},
   ): Promise<T> {
     // A write without a key would not be safe to repeat, so fix one before the first attempt.
+
     const fixed =
       (method === "POST" || method === "PUT" || method === "DELETE") &&
       !opts.idempotencyKey
@@ -154,6 +182,8 @@ export function createApiClient(options: ClientOptions) {
       if (
         !(error instanceof ApiError) ||
         !error.retryable ||
+        (error.code === "NETWORK_ERROR" && method !== "GET") ||
+        globalThis.navigator?.onLine === false ||
         fixed.retry === false
       )
         throw error
@@ -170,6 +200,9 @@ export function createApiClient(options: ClientOptions) {
 export type ApiClient = ReturnType<typeof createApiClient>
 
 const MESSAGES: Record<string, string> = {
+  NETWORK_ERROR:
+    "Không có kết nối mạng hoặc không thể kết nối máy chủ. Hãy kiểm tra mạng rồi thử lại.",
+
   UNAUTHENTICATED: "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.",
 
   SERVICE_UNAVAILABLE: "Dịch vụ tạm thời chưa sẵn sàng. Hãy thử lại sau.",
@@ -204,9 +237,14 @@ const MESSAGES: Record<string, string> = {
 }
 
 // Vietnamese text for an error; the server message is used when it is already user-facing.
+
 export function errorText(error: unknown): string {
-  if (error instanceof ApiError)
+  if (error instanceof ApiError) {
+    if (error.code === "INVALID_PARAMETER" && /[À-ỹ]/u.test(error.message))
+      return error.message
+
     return MESSAGES[error.code] ?? error.message ?? MESSAGES.INTERNAL_ERROR
+  }
 
   return MESSAGES.INTERNAL_ERROR
 }

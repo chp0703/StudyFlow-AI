@@ -34,6 +34,7 @@ class DeepSeekExtractorTests(unittest.TestCase):
         self.assertEqual(self.run_extract(handler), GOOD)
         body = json.loads(seen[0].content)
         self.assertEqual((body["temperature"], body["response_format"]), (0, {"type": "json_object"}))
+        self.assertEqual((body["max_tokens"], body["thinking"]), (1024, {"type": "disabled"}))
         self.assertEqual(seen[0].headers["Authorization"], "Bearer test-key")
         message = json.loads(body["messages"][1]["content"])
         self.assertEqual(message["message"], "tìm OOP")
@@ -64,6 +65,43 @@ class DeepSeekExtractorTests(unittest.TestCase):
         got = self.run_extract(answer(content))["intents"]
         self.assertEqual(got[0]["slots"]["window"]["valid_from"], "2026-11-05")
         self.assertEqual(got[1]["slots"]["view"], "CURRENT")
+
+    def extract_text(self, text, intents, active=None):
+        content = json.dumps({"intents": intents})
+        return extractor(answer(content)).extract(text, now=NOW, timezone="Asia/Ho_Chi_Minh", active=active)["intents"]
+
+    def test_t24_midnight_becomes_next_day(self):
+        task = {"intent": "CREATE_TASK", "slots": {"title": "ôn", "deadline_precision": "DATETIME",
+                                                    "deadline_at": "2026-11-06T24:00:00+07:00"},
+                "raw_expressions": {"deadline_at": "12h đêm mai"}, "ambiguities": []}
+        got = self.extract_text("ôn bài hạn 12h đêm mai", [task])
+        self.assertEqual(got[0]["slots"]["deadline_at"], "2026-11-07T00:00:00+07:00")
+
+    def test_invented_deadline_dropped_unless_user_gave_one(self):
+        def task():
+            return {"intent": "CREATE_TASK", "slots": {"title": "ôn", "start_at": "2026-11-06T09:00:00+07:00",
+                                                        "deadline_precision": "DATETIME", "deadline_at": "2026-11-06T09:00:00+07:00"},
+                    "raw_expressions": {}, "ambiguities": []}
+        self.assertNotIn("deadline_at", self.extract_text("học ôn lúc 9h mai", [task()])[0]["slots"])
+        self.assertIn("deadline_at", self.extract_text("học ôn lúc 9h mai, hạn 9h", [task()])[0]["slots"])
+        self.assertIn("deadline_at", self.extract_text("ngày mai", [task()], active={"intent": "CREATE_TASK"})[0]["slots"])
+
+    def test_weekday_range_expands_to_one_intent_per_day(self):
+        window = {"kind": "BUSY", "recurrence": "WEEKLY", "timezone": "Asia/Ho_Chi_Minh", "weekday": 1,
+                  "start_time": "19:00", "end_time": "21:00"}
+        item = {"intent": "SET_BUSY_INTERVAL", "slots": {"change_type": "ADD", "window": window}, "raw_expressions": {},
+                "ambiguities": [{"code": "AMBIGUOUS", "message": "nhiều thứ", "field": None, "details": {"weekdays": [1, 2, 3, 4, 5]}}]}
+        got = self.extract_text("bận 19h-21h", [item])
+        self.assertEqual([i["slots"]["window"]["weekday"] for i in got], [1, 2, 3, 4, 5])
+        item["ambiguities"] = []
+        got = self.extract_text("thứ 2 đến thứ 6 bận 19h-21h", [item])
+        self.assertEqual([i["slots"]["window"]["weekday"] for i in got], [1, 2, 3, 4, 5])
+
+    def test_duration_after_trong_is_not_a_start_time(self):
+        task = {"intent": "CREATE_TASK", "slots": {"title": "vi tích phân", "estimated_minutes": 120,
+                                                    "start_at": "2026-11-06T02:00:00+07:00"},
+                "raw_expressions": {"estimated_minutes": "trong 2h"}, "ambiguities": []}
+        self.assertNotIn("start_at", self.extract_text("học vi tích phân trong 2h ngày mai", [task])[0]["slots"])
 
     def test_transport_failures_are_unavailable_not_extraction_errors(self):
         def boom(request):
@@ -116,6 +154,19 @@ class DeepSeekExtractorTests(unittest.TestCase):
             }]
         }
         self.assertEqual(self.run_extract(answer(json.dumps(canonical_task))), canonical_task)
+
+    def test_colloquial_task_time_corrects_model_omission_and_half_hour(self):
+        for prompt, raw, expected in (
+            ("Học Hóa lúc 8r tối nay trong 1 tiếng rưỡi", "8r tối nay", "2026-11-05T20:30:00+07:00"),
+            ("lm bt toan mai 9h sang nha, 45p", "mai 9h sang", "2026-11-06T09:00:00+07:00"),
+            ("Học Sinh lúc 10h kém 15 sáng mai", "10h kém 15 sáng mai", "2026-11-06T09:45:00+07:00"),
+        ):
+            with self.subTest(prompt=prompt):
+                extracted = {"intents": [{"intent": "CREATE_TASK", "slots": {"title": "Toán", "estimated_minutes": 45},
+                                          "raw_expressions": {"start_at": raw}, "ambiguities": []}]}
+                result = extractor(answer(json.dumps(extracted))).extract(
+                    prompt, now=NOW, timezone="Asia/Ho_Chi_Minh", active=None)
+                self.assertEqual(result["intents"][0]["slots"]["start_at"], expected)
 
 
 if __name__ == "__main__":
