@@ -14,30 +14,30 @@
 
 | Mã | Yêu cầu | Kết quả hiện tại |
 |---|---|---|
-| FR-01 | Người dùng nhập việc cần làm hoặc giờ bận bằng tiếng Việt tự nhiên (có dấu, không dấu, viết tắt, nhiều việc một câu hoặc tự sửa giờ). Thiếu thông tin thì hệ thống mở biểu mẫu hỏi thêm và chỉ lưu sau khi người dùng bấm Xác nhận. | Chạy đồng bộ giữa khung Chat và trang Lập kế hoạch. Chặn câu nhập quá 8.000 ký tự và xếp hàng đợi nhiều việc trong cùng một câu. |
-| FR-02 | Tự xếp và xếp lại lịch học tuần theo giờ bận và hạn chót của từng người. Mặc định xếp trong khung 06:00 - 22:00 (vẫn nhận giờ sớm hoặc khuya nếu người dùng ghi rõ), ưu tiên hạn gần trước, không đè giờ bận và báo rõ phần còn thiếu chỗ. | Người dùng không phải tự khai báo giờ rảnh trước. Lịch Tuần hiển thị đủ 00:00 - 24:00, có thẻ gọn cho buổi 25 - 45 phút và nút báo buổi nằm ngoài khung giờ đang xem. |
+| FR-01 | Người dùng nhập việc cần làm hoặc giờ bận bằng tiếng Việt tự nhiên (có dấu, không dấu, viết tắt, nhiều việc một câu hoặc tự sửa giờ). Thiếu thông tin thì hệ thống mở biểu mẫu hỏi thêm và chỉ lưu sau khi người dùng bấm (Xác nhận). | Chạy đồng bộ giữa khung Chat và trang Lập kế hoạch. Chặn câu nhập quá 8.000 ký tự và xếp hàng đợi nhiều việc trong cùng một câu. |
+| FR-02 | Tự xếp và xếp lại lịch học tuần theo giờ bận và hạn chót của từng người. Mặc định xếp trong khung 06:00 - 22:00 (vẫn nhận giờ sớm hoặc khuya nếu người dùng ghi rõ), ưu tiên hạn gần trước, không đè giờ bận và báo rõ phần còn thiếu chỗ. | Tự động dùng khung mặc định 06:00 - 22:00 (trừ giờ bận), không bắt người dùng khai báo thêm. Lịch Tuần hiển thị đủ 00:00 - 24:00, có thẻ gọn cho buổi 25 - 45 phút và nút báo buổi nằm ngoài khung giờ đang xem. |
 
 ### 1.2 Yêu cầu phi chức năng
 
 | Mã | Hạng mục | Tiêu chuẩn áp dụng |
 |---|---|---|
-| NFR-01 | Lịch nhất quán và đúng luật | Cùng một đầu vào luôn ra đúng một lịch giống nhau. AI chỉ tách thông tin, không tự ý đổi lịch, đè giờ bận hay xếp trễ hạn. |
-| NFR-02 | Tốc độ phản hồi | Tải lịch và danh sách việc có độ trễ P95 tối đa 1,0 giây; phản hồi chat có P95 tối đa 6,0 giây; bấm Xác nhận hoặc Hủy có P95 tối đa 1,5 giây trong ngưỡng tải hỗ trợ. |
+| NFR-01 | Xếp lịch rule-based nhất quán | Cùng một đầu vào luôn ra đúng một lịch giống nhau. AI chỉ tách thông tin, không tự ý đổi lịch, đè giờ bận hay xếp trễ hạn. |
+| NFR-02 | Tốc độ phản hồi | Tải lịch và danh sách việc có độ trễ P95 tối đa 1,0 giây; phản hồi chat có P95 tối đa 6,0 giây; bấm (Xác nhận) hoặc Hủy có P95 tối đa 1,5 giây trong ngưỡng tải hỗ trợ. |
 | NFR-03 | An toàn dữ liệu khi ghi | Lưu trọn vẹn giao dịch trong cơ sở dữ liệu. Chặn gửi trùng thao tác và báo xung đột (lỗi 409) nếu dữ liệu đã bị đổi trước khi người dùng bấm duyệt. |
 | NFR-04 | Bảo mật và tách tài khoản | Mọi API đều xác thực phiên đăng nhập (JWT), phân quyền tách riêng dữ liệu từng tài khoản ngay trong PostgreSQL (RLS), tách bộ nhớ đệm trình duyệt theo tài khoản và chặn câu lệnh đánh lừa hệ thống. |
 | NFR-05 | Phục hồi trạng thái và tiếng Việt | Tải lại trang (F5) giữ nguyên thẻ chờ duyệt hoặc biểu mẫu đang hỏi thêm. Mất mạng sẽ giữ lại câu đã gõ kèm nút Gửi lại; toàn bộ thông báo dùng tiếng Việt. |
 
 ---
 
-## Chương 2: Đối chiếu SLA (Service Level Agreement) và SLO (Service Level Objective)
+## Chương 2: Đánh giá mức độ đáp ứng SLA (Service Level Agreement) và SLO (Service Level Objective)
 
 | Hạng mục | Cách đo | SLA (Người dùng) | SLO (Nội bộ) | Kết quả đo thực tế | Đánh giá |
 |---|---|---|---|---|---|
 | Tải trang và đọc lịch | Gọi liên tiếp API tải lịch và công việc ở mức 1 - 100 CCU | P95 tối đa 1,5 giây (càng thấp càng tốt) | P95 tối đa 1,0 giây (tới 20 CCU) | 1 CCU: 0,10 giây; 10 CCU: 0,16 giây; 20 CCU: 0,54 giây (40 CCU: 2,20 giây) | Đạt (tới 20 CCU) |
 | Phản hồi chat AI | Đo từ lúc bấm Gửi đến khi hiện đề xuất qua 50 lượt DeepSeek thật và tải 20 CCU | P95 tối đa 8,0 giây (càng thấp càng tốt) | P95 tối đa 6,0 giây | P50 = 1,85 giây; P95 = 4,89 giây; Max = 6,25 giây (20 CCU: P95 = 3,11 giây) | Đạt |
-| Lưu khi bấm Xác nhận hoặc Hủy | Đo trực tiếp API lưu quyết định khi thử toàn luồng và tải 1 - 50 CCU | P95 tối đa 2,0 giây (càng thấp càng tốt) | P95 tối đa 1,5 giây (tới 10 CCU) | Toàn luồng: 0,80 giây; 10 CCU: 0,69 giây (20 CCU: 1,62 giây - vẫn đạt SLA) | Đạt (tới 10 CCU) |
-| Lịch không xung đột | Kiểm tra đè giờ bận, chồng lịch, trễ hạn trên 650 lượt mô phỏng và 34 bài E2E | 0% vi phạm (100% lịch đã lưu hợp lệ) | 0% vi phạm luật cứng | 0% vi phạm qua 500 lượt mô phỏng chuẩn, 150 lượt tải 5 - 200 việc và 34/34 bài E2E | Đạt |
-| Quyền duyệt dữ liệu | Gửi câu chat thường và câu lệnh đánh lừa AI mà không bấm Xác nhận | 0% thay đổi dữ liệu trước khi bấm Xác nhận | 0% thao tác ghi ngoài bước duyệt | 0% ghi trái phép trên toàn bộ kịch bản kiểm thử bảo mật và đánh lừa hệ thống | Đạt |
+| Lưu khi bấm (Xác nhận) hoặc Hủy | Đo trực tiếp API lưu quyết định khi thử toàn luồng và tải 1 - 50 CCU | P95 tối đa 2,0 giây (càng thấp càng tốt) | P95 tối đa 1,5 giây (tới 10 CCU) | Toàn luồng: 0,80 giây; 10 CCU: 0,69 giây (20 CCU: 1,62 giây - vẫn đạt SLA) | Đạt (tới 10 CCU) |
+| Lịch không xung đột | Kiểm tra đè giờ bận, chồng lịch, trễ hạn trên 650 lượt mô phỏng và 34 bài E2E | 0% vi phạm (100% lịch đã lưu hợp lệ) | 0% vi phạm rule-based | 0% vi phạm qua 500 lượt mô phỏng chuẩn, 150 lượt tải 5 - 200 việc và 34/34 bài E2E | Đạt |
+| Quyền duyệt dữ liệu | Gửi câu chat thường và câu lệnh đánh lừa AI mà không bấm (Xác nhận) | 0% thay đổi dữ liệu trước khi bấm (Xác nhận) | 0% thao tác ghi ngoài bước duyệt | 0% ghi trái phép trên toàn bộ kịch bản kiểm thử bảo mật và đánh lừa hệ thống | Đạt |
 | Hiểu tiếng Việt ổn định | Chạy lặp 3 lần độc lập mỗi dạng câu (Pass^3) trên 6 nhóm câu với DeepSeek thật | Tách đúng tối thiểu 90% câu đủ thông tin; câu mơ hồ hỏi lại trước khi lưu | Pass^3 tối thiểu 85% (khoảng 95% mỗi lượt) | 6/6 nhóm đạt 3/3 (18/18 lượt đúng, 100%): chuẩn, không dấu, viết tắt, 8r, 10h kém 15, tự sửa giờ | Đạt |
 | Tách biệt tài khoản | Gọi API với mã phiên sai, đọc chéo đề xuất người khác và đổi tài khoản cùng máy | 0% rò rỉ lịch hoặc bản nháp giữa các tài khoản | 0% truy cập chéo lọt qua | 0% rò rỉ: chặn 100% mã phiên sai (401), chặn truy cập chéo (403/404) và tách cache | Đạt |
 | Tỷ lệ lỗi 5xx và 503 | Thống kê mã lỗi trên 50 lượt toàn luồng và các mức tải đọc, ghi, chat | Tối đa 2,0% (càng thấp càng tốt) | Tối đa 1,0% trong ngưỡng tải hỗ trợ | Toàn luồng: 0/50 (0%); đọc 100 CCU: 0%; chat 20 CCU: 0%; ghi tới 30 CCU: 0% (50 CCU: 1,96%) | Đạt (tới 30 CCU) |
@@ -60,22 +60,22 @@ Lưu ý: SLA không áp dụng khi thiết bị người dùng mất mạng, d�
 | Kiểm thử toàn luồng E2E | Chạy đủ hệ thống thật gồm Backend, Supabase và DeepSeek API (50 lượt chat) | 34/34 đạt (0 lỗi, P95 = 4891,7 ms) |
 | Trình duyệt Chrome | Kiểm tra trực tiếp thẻ buổi học ngắn, nút báo buổi ngoài khung khi cuộn, F5 và biểu mẫu hỏi thêm | Đạt (0 lỗi dữ liệu 422, lỗi máy chủ 5xx hay lỗi giao diện) |
 
-### 3.2 10 kịch bản kiểm thử tiêu biểu gắn với lỗi đã sửa
+### 3.2 10 tình huống kiểm thử tự động tiêu biểu
 
-Trong bộ 34 kịch bản kiểm thử toàn luồng (đạt 34/34), bảng dưới chọn 10 kịch bản tiêu biểu gắn trực tiếp với các lỗi đã sửa; P0 là lỗi nghiêm trọng bắt buộc khắc phục, P1 là lỗi ảnh hưởng lớn đến trải nghiệm.
+Trong 34 tình huống kiểm thử toàn luồng (đạt 34/34), bảng dưới liệt kê 10 tình huống tiêu biểu cùng đầu vào QA đã nhập và kết quả thực tế.
 
-| STT | Mã kịch bản | Lỗi đã sửa | Nội dung kiểm tra | Kết quả đo |
-|---|---|---|---|---|
-| 1 | F1-E01-01 (P0) | F1-FIX-01, 25 | Tạo việc 60 phút, xếp và duyệt lịch mà không khai báo giờ rảnh trước | Đạt 3/3 - Xếp đúng 09:00 - 10:00, hết lỗi 422 do lệch mốc phút. |
-| 2 | F1-E01-02 (P0) | F1-FIX-02 | Tạo việc 120 phút (dài hơn giới hạn 90 phút mỗi buổi) không ghi hạn chót | Đạt 1/1 - Tự lấy hạn 23:59, xếp đủ 120/120 phút (2 buổi). |
-| 3 | F1-E02-02 (P0) | F1-FIX-03 | Xếp lại lịch tuần tới khi tuần này đã có buổi được duyệt | Đạt 1/1 - Tạo lịch mới thành công, giữ nguyên buổi cũ. |
-| 4 | F1-E06-01 (P0) | F1-FIX-04 | Xếp lịch khi có khung giờ bận 09:00 - 10:00 chen giữa | Đạt 1/1 - Không đè giờ bận, tự dời sang khung trống. |
-| 5 | F1-E13-01 (P0) | F1-FIX-05 | Gọi API với mã phiên đăng nhập sai và dùng mã đề xuất của người khác | Đạt 1/1 - Chặn lỗi xác thực (401) và truy cập chéo (403/404), không rò rỉ dữ liệu. |
-| 6 | F1-E08-03 (P0) | F1-FIX-06 | Hủy bản nháp ngay khi hệ thống đang mở biểu mẫu hỏi thêm | Đạt 1/1 - Hủy ngay, mở khóa chat, không bị kẹt lỗi xung đột trạng thái (409). |
-| 7 | F1-E12-02 (P0) | F1-FIX-07 | Gửi hai yêu cầu Xác nhận cùng lúc trên cùng một đề xuất | Đạt 1/1 - Một yêu cầu thành công (200), yêu cầu kia bị từ chối vì dữ liệu đã cũ (409). |
-| 8 | F1-E04-07 (P1) | F1-FIX-08 | Nhập 4 đầu vào sai: 25 giờ, 0 phút, -5 phút, hạn ngày hôm qua | Đạt 1/1 - Chặn cả 4 trường hợp trước bước duyệt, không gây lỗi máy chủ (500). |
-| 9 | F1-E04-04 (P0) | F1-FIX-09 | Câu nói thường ngày "8r tối mai" và "1 tiếng rưỡi" | Đạt 3/3 - Hiểu đúng 20:30 và 90 phút ở cả 3 lần chạy độc lập. |
-| 10 | F1-E14-01 (P1) | F1-FIX-14 | Đo độ trễ và tỷ lệ lỗi quá tải 503 qua 50 lượt chat với DeepSeek thật | Đạt 50/50 - P50 = 1849,4 ms, P95 = 4891,7 ms, 0/50 lỗi 503. |
+| STT | Đầu vào QA kiểm thử (Input) | Mục tiêu kiểm tra | Kết quả thực tế |
+|---|---|---|---|
+| 1 | "Ngày mai tôi muốn ôn Giải tích lúc 9h sáng trong 60 phút, ưu tiên cao.", bấm (Xác nhận), rồi nhập "Hãy lập lịch học cho tuần này.", bấm (Xác nhận) | Tạo việc qua chat và tự xếp đúng khung giờ người dùng chỉ định | Đạt 3/3 - Lưu đúng 1 việc 60 phút (ưu tiên cao) và xếp đúng khung 09:00 - 10:00 ngày mai. |
+| 2 | "Ngày mai tôi muốn học Toán lúc 8h sáng trong 2 tiếng, ưu tiên cao.", bấm (Xác nhận), rồi nhập "Hãy lập lịch học cho tuần này giúp tôi.", bấm (Xác nhận) | Tự tách buổi dài vượt trần 90 phút và gán hạn chót mặc định khi thiếu hạn | Đạt 1/1 - Tự lấy hạn cuối ngày (23:59) và tách thành 2 buổi học nối tiếp đủ 120/120 phút. |
+| 3 | Có sẵn buổi đã duyệt ở tuần này và việc ở tuần tới; nhập "Sắp xếp lại lịch tuần tới.", bấm (Xác nhận) | Xếp lại lịch tuần tới mà không làm xáo trộn lịch tuần hiện tại | Đạt 1/1 - Sinh lịch mới cho tuần tới thành công, giữ nguyên buổi học cũ của tuần này. |
+| 4 | Đã có giờ bận 09:00 - 10:00 ngày mai; tạo việc 60 phút từ 08:00 (hạn 12:00) rồi yêu cầu lập lịch | Tránh tuyệt đối khung giờ bận đã lưu theo nguyên tắc rule-based | Đạt 1/1 - Không xếp đè vào 09:00 - 10:00, chỉ xếp vào khung giờ trống hợp lệ. |
+| 5 | Gửi yêu cầu khi thiếu hoặc sai mã đăng nhập; dùng tài khoản B đọc và duyệt đề xuất của tài khoản A | Bảo mật xác thực phiên đăng nhập và chặn truy cập chéo tài khoản | Đạt 1/1 - Chặn mã sai (401), chặn tài khoản B xem/duyệt lịch tài khoản A (403/404), không rò rỉ. |
+| 6 | "Thêm bài tập Giải tích" (hệ thống mở biểu mẫu hỏi thêm), bấm Hủy, rồi nhập "Tìm các công việc hiện có." | Cho phép hủy giữa bước hỏi thêm để chat tiếp không bị kẹt | Đạt 1/1 - Hủy bản nháp ngay lập tức và trả lời câu kế tiếp bình thường (không kẹt lỗi 409). |
+| 7 | Tạo 1 đề xuất lập lịch rồi gửi đồng thời 2 yêu cầu bấm (Xác nhận) cùng lúc (giả lập 2 tab) | Chặn lưu trùng hoặc ghi đè khi bấm duyệt đồng thời từ nhiều tab | Đạt 1/1 - Đúng 1 yêu cầu thành công (200), yêu cầu kia bị từ chối vì dữ liệu đã cũ (409). |
+| 8 | Lần lượt nhập 4 câu sai: "25h ngày mai", "trong 0 phút", "trong -5 phút", "hạn chót hôm qua" | Kiểm tra và chặn sớm dữ liệu bất hợp lệ trước khi tạo lịch | Đạt 1/1 - Chặn cả 4 trường hợp trước bước lưu, không tạo việc sai và không lỗi máy chủ (500). |
+| 9 | "Học Hóa lúc 8r tối mai trong 1 tiếng rưỡi" (gửi lặp 3 lần độc lập) | Hiểu đúng tiếng Việt khẩu ngữ, viết tắt và thời lượng quy đổi | Đạt 3/3 - Cả 3 lần đều tách chính xác 20:30 ngày mai và thời lượng 90 phút. |
+| 10 | Chuỗi 50 lượt chat tiếng Việt thực tế gọi liên tiếp qua mô hình DeepSeek | Đo tốc độ phản hồi và tỷ lệ lỗi quá tải 503 ở luồng AI thật | Đạt 50/50 - P50 = 1849,4 ms, P95 = 4891,7 ms (dưới ngưỡng 6,0 giây), 0/50 lỗi 503. |
 
 ### 3.3 Mô phỏng bộ lập lịch
 
@@ -115,7 +115,7 @@ Nhóm chạy 500 lượt trên 5 kịch bản chuẩn và 150 lượt thử tả
 | Luồng chat AI | 10 | 10/10 lượt chat | 0,00% | 3,27 | 1867,01 | 3054,30 | Đạt |
 | Luồng chat AI | 20 | 20/20 lượt chat | 0,00% | 5,98 | 2822,21 | 3106,05 | Đạt (Max 3,34s) |
 
-*Chú thích: Thông lượng (req/s) là số yêu cầu HTTP xử lý xong mỗi giây. Ở luồng đọc, req 2xx là số yêu cầu tải danh sách việc, lịch và khung giờ trả thành công trong khoảng 8 giây. Ở luồng ghi và duyệt, mỗi lượt lưu gồm 2 yêu cầu nối tiếp (tạo đề xuất rồi bấm Xác nhận lưu cơ sở dữ liệu, nên đỉnh 13,84 req/s tại 10 CCU tương ứng 6,92 lượt lưu mỗi giây); dấu * là độ trễ đo riêng tại bước bấm Xác nhận. Ở luồng chat AI, mỗi người dùng gửi đồng thời 1 câu tiếng Việt qua DeepSeek thật (lượt chat = phản hồi 200 OK).*
+*Chú thích: Thông lượng (req/s) là số yêu cầu HTTP xử lý xong mỗi giây. Ở luồng đọc, req 2xx là số yêu cầu tải danh sách việc, lịch và khung giờ trả thành công trong khoảng 8 giây. Ở luồng ghi và duyệt, mỗi lượt lưu gồm 2 yêu cầu nối tiếp (tạo đề xuất rồi bấm (Xác nhận) lưu cơ sở dữ liệu, nên đỉnh 13,84 req/s tại 10 CCU tương ứng 6,92 lượt lưu mỗi giây); dấu * là độ trễ đo riêng tại bước bấm (Xác nhận). Ở luồng chat AI, mỗi người dùng gửi đồng thời 1 câu tiếng Việt qua DeepSeek thật (lượt chat = phản hồi 200 OK).*
 
 Với cấu hình 1 worker cục bộ, hệ thống chạy ổn trong SLO tới 20 CCU đọc hoặc chat và 10 CCU ghi; vượt mốc này yêu cầu phải chờ hàng đợi nên P95 tăng nhanh. Khi đưa lên máy chủ nhiều worker, nhóm cần đo lại để xác định ngưỡng tải mới.
 
@@ -129,7 +129,7 @@ Với cấu hình 1 worker cục bộ, hệ thống chạy ổn trong SLO tới 
 |---|---|---|---|
 | Kiểm thử toàn luồng E2E | 33/34 đạt (1 lỗi) | 34/34 đạt (0 lỗi) | 34/34 đạt (0 lỗi) |
 | Độ trễ Chat P50 / P95 / Max (ms) | 2747,8 / 6691,0 / 11139,0 | 1959,9 / 2941,8 / 4064,2 | 1849,4 / 4891,7 / 6245,8 |
-| Độ trễ bấm Xác nhận P95 (ms) | 645,5 | 753,3 | 800,9 |
+| Độ trễ bấm (Xác nhận) P95 (ms) | 645,5 | 753,3 | 800,9 |
 | Hiểu tiếng Việt ổn định (Pass^3) | 6/6 nhóm đạt 3/3 | 6/6 nhóm đạt 3/3 | 6/6 nhóm đạt 3/3 (100%) |
 | Trạng thái lỗi QA | Còn lỗi tốc độ và giao diện | Còn 4 lỗi giao diện Chrome và câu "2h mai" | Đã sửa 25/25 lỗi QA (0 lỗi tồn đọng) |
 
@@ -140,9 +140,9 @@ Với cấu hình 1 worker cục bộ, hệ thống chạy ổn trong SLO tới 
 | Mã lỗi | Lỗi cũ | Cách sửa và kết quả |
 |---|---|---|
 | F1-FIX-14 | Chat phản hồi chậm 6,7 - 11,1 giây (P95 = 6691 ms). | Giảm mức suy luận của model về thấp, bỏ lượt đọc thừa lúc đầu, lưu đệm khóa xác thực JWT và giữ kết nối HTTP mở. P95 giảm còn 2,94 - 4,89 giây. |
-| F1-FIX-06 | Tải lại trang (F5) hoặc đóng hộp thoại hỏi thêm gây kẹt lỗi xung đột 409. | Trả sẵn mã xác nhận ngay ở bước hỏi thêm để hủy được lập tức và tải lại đủ trạng thái từ máy chủ sau F5 (xác minh đạt ở Bảng 3.2). |
+| F1-FIX-06 | Tải lại trang (F5) hoặc đóng hộp thoại hỏi thêm gây kẹt lỗi xung đột 409. | Trả sẵn mã xác nhận ngay ở bước hỏi thêm để hủy được lập tức và tải lại đủ trạng thái từ máy chủ sau F5 (xác minh đạt ở dòng 6 Bảng 3.2). |
 | F1-FIX-12 | Câu "hoc vtp 2h mai" bị tính trùng cả giờ bắt đầu lẫn thời lượng; ô phút tự điền 60 phút. | Chặn tính trùng, để trống ô thời lượng với gợi ý "Ví dụ: 60" và mở biểu mẫu cho người dùng tự sửa (Hình 4.1 - 4.2). |
-| F1-FIX-03 | Xếp lại lịch tuần tới bị lỗi 422; nhắn lúc rạng sáng giờ Việt Nam bị lệch ngày. | Cho phép xếp giờ người dùng ghi ngoài khung 06:00 - 22:00 và gửi đúng múi giờ Việt Nam (+07:00) cho AI (xác minh đạt ở Bảng 3.2). |
+| F1-FIX-03 | Xếp lại lịch tuần tới bị lỗi 422; nhắn lúc rạng sáng giờ Việt Nam bị lệch ngày. | Cho phép xếp giờ người dùng ghi ngoài khung 06:00 - 22:00 và gửi đúng múi giờ Việt Nam (+07:00) cho AI (xác minh đạt ở dòng 3 Bảng 3.2). |
 | F1-FIX-23, 24 | Thẻ buổi học 25 - 45 phút bị cắt chữ; buổi nằm ngoài khung đang xem bị khuất. | Hiển thị thẻ gọn một dòng cho buổi ngắn và ghim nút "2 buổi ngoài khung - Hiện" trên đầu cột ngày (Hình 4.3 - 4.5). |
 
 ![Hình 4.1: Biểu mẫu hỏi thêm khi nhập hoc vtp 2h mai trên Chrome](figures/fig_clarify_2h_mai.png)
@@ -163,9 +163,11 @@ Tính năng 1 đổi một câu tiếng Việt bình thường thành lịch h�
 
 ## Chương 5: Rủi ro tồn đọng và Kế hoạch hành động
 
-Hệ thống đã chạy ổn trong đợt kiểm thử nội bộ, nhưng vẫn còn hai việc cần làm tiếp.
+Hệ thống đã chạy ổn trong đợt kiểm thử nội bộ, nhưng vẫn còn một số giới hạn nhỏ và việc cần hoàn thiện tiếp.
 
-| Việc cần làm | Mức ưu tiên | Phân công | Cách kiểm tra |
-|---|---|---|---|
-| 1. Cho 12 - 20 sinh viên ngoài nhóm dùng thử thật (hiện mới chỉ có thành viên nhóm tự kiểm tra). | Quan trọng | Nguyễn Ngọc Thanh Hương, Nguyễn Trần Minh Khang | Thu đủ 12 - 20 phiếu đánh giá từ sinh viên thật, ghi rõ thời gian làm xong 5 tác vụ cơ bản và điểm đánh giá độ dễ dùng (SUS). |
-| 2. Chạy kiểm thử giao diện tự động mỗi lần cập nhật mã nguồn để tránh sửa mới làm hỏng màn hình cũ. | Quan trọng | Phạm Hùng Khôi, Nguyễn Trần Minh Khang | Mỗi lần cập nhật mã nguồn, hệ thống tự mở trình duyệt kiểm tra 5 màn hình chính (biểu mẫu hỏi thêm, báo mất mạng, bố cục 1366x820, thẻ buổi học ngắn và nút báo buổi ngoài khung) và báo 0 lỗi. |
+| Hạn chế / Việc cần làm | Mức ưu tiên | Hướng xử lý và kiểm tra |
+|---|---|---|
+| 1. Cho 12 - 20 sinh viên ngoài nhóm dùng thử thật (hiện mới chỉ có thành viên nhóm tự kiểm tra). | Quan trọng | Thu đủ 12 - 20 phiếu đánh giá từ sinh viên thật, ghi rõ thời gian làm xong 5 tác vụ cơ bản và điểm đánh giá độ dễ dùng (SUS). |
+| 2. Vùng xem lịch trên màn hình laptop phổ thông (1366x820) hơi bị thu hẹp khi mở đồng thời ô nhập lệnh, thanh đề xuất hoặc hộp thoại hỏi thêm. | Trung bình | Tinh gọn bố cục thanh công cụ và vị trí hộp thoại ở kích thước 1366x820, rồi kiểm tra lại trên trình duyệt bảo đảm vùng lịch thoáng và hiển thị đủ. |
+| 3. Độ trễ phản hồi chat AI và ngưỡng tải đồng thời vẫn còn dư địa cải thiện khi triển khai rộng hơn. | Trung bình | Tinh gọn cấu hình suy luận của mô hình, gộp bước gọi dữ liệu nội bộ và đo lại P95 khi chạy nhiều tiến trình máy chủ. |
+| 4. Tiêu đề công việc tách từ câu chat không dấu hoặc viết tắt vẫn giữ nguyên dạng thô (ví dụ nhập "hoc vtp" chưa tự chuẩn hóa thành "Học VTP") và một số cách diễn đạt như nhắc hạn nộp hoặc hỏi chi tiết lịch ngay trong chat chưa xử lý thật tự nhiên. | Trung bình | Bổ sung bước chuẩn hóa tiêu đề (viết hoa, khôi phục dấu và từ viết tắt phổ biến) và tinh chỉnh phân tách hạn nộp, câu hỏi xem lịch trong bộ phân tích ngôn ngữ. |
