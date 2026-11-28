@@ -15,7 +15,7 @@
 | Mã | Yêu cầu | Kết quả hiện tại |
 |---|---|---|
 | FR-01 | Người dùng nhập việc cần làm hoặc giờ bận bằng tiếng Việt tự nhiên (có dấu, không dấu, viết tắt, nhiều việc một câu hoặc tự sửa giờ). Thiếu thông tin thì hệ thống mở biểu mẫu hỏi thêm và chỉ lưu sau khi người dùng bấm (Xác nhận). | Chạy đồng bộ giữa khung Chat và trang Lập kế hoạch. Chặn câu nhập quá 8.000 ký tự và xếp hàng đợi nhiều việc trong cùng một câu. |
-| FR-02 | Tự xếp và xếp lại lịch học tuần theo giờ bận và hạn chót của từng người. Mặc định xếp trong khung 06:00 - 22:00 (vẫn nhận giờ sớm hoặc khuya nếu người dùng ghi rõ), ưu tiên hạn gần trước, không đè giờ bận và báo rõ phần còn thiếu chỗ. | Tự động dùng khung mặc định 06:00 - 22:00 (trừ giờ bận), không bắt người dùng khai báo thêm. Lịch Tuần hiển thị đủ 00:00 - 24:00, có thẻ gọn cho buổi 25 - 45 phút và nút báo buổi nằm ngoài khung giờ đang xem. |
+| FR-02 | Tự xếp và xếp lại lịch học tuần theo giờ bận và hạn chót của từng người. Mặc định khóa khung cố định 06:00 - 22:00 để tránh tự động xếp buổi học vào giờ khuya hoặc rạng sáng (chỉ mở ngoại lệ nếu người dùng ghi rõ giờ sớm hoặc khuya), ưu tiên hạn gần trước, không đè giờ bận và báo rõ phần còn thiếu chỗ. | Tự động áp dụng khung cố định 06:00 - 22:00 (trừ giờ bận), không tự đẩy lịch vào khung 22:00 - 06:00 và không bắt người dùng khai báo thêm. Lịch Tuần hiển thị đủ 00:00 - 24:00, có thẻ gọn cho buổi 25 - 45 phút và nút báo buổi nằm ngoài khung giờ đang xem. |
 
 ### 1.2 Yêu cầu phi chức năng
 
@@ -62,19 +62,19 @@ Lưu ý: SLA không áp dụng khi thiết bị người dùng mất mạng, d�
 
 ### 3.2 10 tình huống kiểm thử tự động tiêu biểu
 
-Trong 34 tình huống kiểm thử toàn luồng (đạt 34/34), bảng dưới liệt kê 10 tình huống tiêu biểu cùng đầu vào QA đã nhập và kết quả thực tế.
+Trong 34 tình huống kiểm thử toàn luồng (đạt 34/34), nhóm chạy lặp 10 lượt độc lập cho 9 tình huống chức năng - bảo mật tiêu biểu (tổng 90/90 lượt đạt, 120 lượt gọi DeepSeek thật, 0 lỗi 503) cùng 50 lượt đo độ trễ AI liên tiếp.
 
 | STT | Đầu vào QA kiểm thử (Input) | Mục tiêu kiểm tra | Kết quả thực tế |
 |---|---|---|---|
-| 1 | "Ngày mai tôi muốn ôn Giải tích lúc 9h sáng trong 60 phút, ưu tiên cao.", bấm (Xác nhận), rồi nhập "Hãy lập lịch học cho tuần này.", bấm (Xác nhận) | Tạo việc qua chat và tự xếp đúng khung giờ người dùng chỉ định | Đạt 3/3 - Lưu đúng 1 việc 60 phút (ưu tiên cao) và xếp đúng khung 09:00 - 10:00 ngày mai. |
-| 2 | "Ngày mai tôi muốn học Toán lúc 8h sáng trong 2 tiếng, ưu tiên cao.", bấm (Xác nhận), rồi nhập "Hãy lập lịch học cho tuần này giúp tôi.", bấm (Xác nhận) | Tự tách buổi dài vượt trần 90 phút và gán hạn chót mặc định khi thiếu hạn | Đạt 1/1 - Tự lấy hạn cuối ngày (23:59) và tách thành 2 buổi học nối tiếp đủ 120/120 phút. |
-| 3 | Có sẵn buổi đã duyệt ở tuần này và việc ở tuần tới; nhập "Sắp xếp lại lịch tuần tới.", bấm (Xác nhận) | Xếp lại lịch tuần tới mà không làm xáo trộn lịch tuần hiện tại | Đạt 1/1 - Sinh lịch mới cho tuần tới thành công, giữ nguyên buổi học cũ của tuần này. |
-| 4 | Đã có giờ bận 09:00 - 10:00 ngày mai; tạo việc 60 phút từ 08:00 (hạn 12:00) rồi yêu cầu lập lịch | Tránh tuyệt đối khung giờ bận đã lưu theo nguyên tắc rule-based | Đạt 1/1 - Không xếp đè vào 09:00 - 10:00, chỉ xếp vào khung giờ trống hợp lệ. |
-| 5 | Gửi yêu cầu khi thiếu hoặc sai mã đăng nhập; dùng tài khoản B đọc và duyệt đề xuất của tài khoản A | Bảo mật xác thực phiên đăng nhập và chặn truy cập chéo tài khoản | Đạt 1/1 - Chặn mã sai (401), chặn tài khoản B xem/duyệt lịch tài khoản A (403/404), không rò rỉ. |
-| 6 | "Thêm bài tập Giải tích" (hệ thống mở biểu mẫu hỏi thêm), bấm Hủy, rồi nhập "Tìm các công việc hiện có." | Cho phép hủy giữa bước hỏi thêm để chat tiếp không bị kẹt | Đạt 1/1 - Hủy bản nháp ngay lập tức và trả lời câu kế tiếp bình thường (không kẹt lỗi 409). |
-| 7 | Tạo 1 đề xuất lập lịch rồi gửi đồng thời 2 yêu cầu bấm (Xác nhận) cùng lúc (giả lập 2 tab) | Chặn lưu trùng hoặc ghi đè khi bấm duyệt đồng thời từ nhiều tab | Đạt 1/1 - Đúng 1 yêu cầu thành công (200), yêu cầu kia bị từ chối vì dữ liệu đã cũ (409). |
-| 8 | Lần lượt nhập 4 câu sai: "25h ngày mai", "trong 0 phút", "trong -5 phút", "hạn chót hôm qua" | Kiểm tra và chặn sớm dữ liệu bất hợp lệ trước khi tạo lịch | Đạt 1/1 - Chặn cả 4 trường hợp trước bước lưu, không tạo việc sai và không lỗi máy chủ (500). |
-| 9 | "Học Hóa lúc 8r tối mai trong 1 tiếng rưỡi" (gửi lặp 3 lần độc lập) | Hiểu đúng tiếng Việt khẩu ngữ, viết tắt và thời lượng quy đổi | Đạt 3/3 - Cả 3 lần đều tách chính xác 20:30 ngày mai và thời lượng 90 phút. |
+| 1 | "Ngày mai tôi muốn ôn Giải tích lúc 9h sáng trong 60 phút, ưu tiên cao.", bấm (Xác nhận), rồi nhập "Hãy lập lịch học cho tuần này.", bấm (Xác nhận) | Tạo việc qua chat và tự xếp đúng khung giờ người dùng chỉ định | Đạt 10/10 - Cả 10 lượt đều lưu đúng 1 việc 60 phút (ưu tiên cao) và xếp đúng khung 09:00 - 10:00 ngày mai. |
+| 2 | "Ngày mai tôi muốn học Toán lúc 8h sáng trong 2 tiếng, ưu tiên cao.", bấm (Xác nhận), rồi nhập "Hãy lập lịch học cho tuần này giúp tôi.", bấm (Xác nhận) | Tự tách buổi dài vượt trần 90 phút và gán hạn chót mặc định khi thiếu hạn | Đạt 10/10 - Tự lấy hạn cuối ngày (23:59) và tách thành 2 buổi học nối tiếp đủ 120/120 phút ở cả 10 lượt. |
+| 3 | Có sẵn buổi đã duyệt ở tuần này và việc ở tuần tới; nhập "Sắp xếp lại lịch tuần tới.", bấm (Xác nhận) | Xếp lại lịch tuần tới mà không làm xáo trộn lịch tuần hiện tại | Đạt 10/10 - Sinh lịch mới cho tuần tới thành công, giữ nguyên buổi học cũ của tuần này ở cả 10 lượt. |
+| 4 | Đã có giờ bận 09:00 - 10:00 ngày mai; tạo việc 60 phút từ 08:00 (hạn 12:00) rồi yêu cầu lập lịch | Tránh tuyệt đối khung giờ bận đã lưu theo nguyên tắc rule-based | Đạt 10/10 - Không xếp đè vào 09:00 - 10:00, chỉ xếp vào khung giờ trống hợp lệ ở cả 10 lượt. |
+| 5 | Gửi yêu cầu khi thiếu hoặc sai mã đăng nhập; dùng tài khoản B đọc và duyệt đề xuất của tài khoản A | Bảo mật xác thực phiên đăng nhập và chặn truy cập chéo tài khoản | Đạt 10/10 - Chặn mã sai (401), chặn tài khoản B xem/duyệt lịch tài khoản A (403/404), không rò rỉ. |
+| 6 | "Thêm bài tập Giải tích" (hệ thống mở biểu mẫu hỏi thêm), bấm Hủy, rồi nhập "Tìm các công việc hiện có." | Cho phép hủy giữa bước hỏi thêm để chat tiếp không bị kẹt | Đạt 10/10 - Hủy bản nháp ngay lập tức và trả lời câu kế tiếp bình thường (không kẹt lỗi 409). |
+| 7 | Tạo 1 đề xuất lập lịch rồi gửi đồng thời 2 yêu cầu bấm (Xác nhận) cùng lúc (giả lập 2 tab) | Chặn lưu trùng hoặc ghi đè khi bấm duyệt đồng thời từ nhiều tab | Đạt 10/10 - Đúng 1 yêu cầu thành công (200), yêu cầu kia bị từ chối vì dữ liệu đã cũ (409) ở cả 10 lượt. |
+| 8 | Lần lượt nhập 4 câu sai: "25h ngày mai", "trong 0 phút", "trong -5 phút", "hạn chót hôm qua" | Kiểm tra và chặn sớm dữ liệu bất hợp lệ trước khi tạo lịch | Đạt 10/10 - Chặn cả 4 trường hợp trước bước lưu ở cả 10 lượt, không tạo việc sai và không lỗi máy chủ (500). |
+| 9 | "Học Hóa lúc 8r tối mai trong 1 tiếng rưỡi" (gửi lặp 10 lần độc lập) | Hiểu đúng tiếng Việt khẩu ngữ, viết tắt và thời lượng quy đổi | Đạt 10/10 - Cả 10 lần đều tách chính xác 20:30 ngày mai và thời lượng 90 phút. |
 | 10 | Chuỗi 50 lượt chat tiếng Việt thực tế gọi liên tiếp qua mô hình DeepSeek | Đo tốc độ phản hồi và tỷ lệ lỗi quá tải 503 ở luồng AI thật | Đạt 50/50 - P50 = 1849,4 ms, P95 = 4891,7 ms (dưới ngưỡng 6,0 giây), 0/50 lỗi 503. |
 
 ### 3.3 Mô phỏng bộ lập lịch
@@ -140,9 +140,9 @@ Với cấu hình 1 worker cục bộ, hệ thống chạy ổn trong SLO tới 
 | Mã lỗi | Lỗi cũ | Cách sửa và kết quả |
 |---|---|---|
 | F1-FIX-14 | Chat phản hồi chậm 6,7 - 11,1 giây (P95 = 6691 ms). | Giảm mức suy luận của model về thấp, bỏ lượt đọc thừa lúc đầu, lưu đệm khóa xác thực JWT và giữ kết nối HTTP mở. P95 giảm còn 2,94 - 4,89 giây. |
-| F1-FIX-06 | Tải lại trang (F5) hoặc đóng hộp thoại hỏi thêm gây kẹt lỗi xung đột 409. | Trả sẵn mã xác nhận ngay ở bước hỏi thêm để hủy được lập tức và tải lại đủ trạng thái từ máy chủ sau F5 (xác minh đạt ở dòng 6 Bảng 3.2). |
-| F1-FIX-12 | Câu "hoc vtp 2h mai" bị tính trùng cả giờ bắt đầu lẫn thời lượng; ô phút tự điền 60 phút. | Chặn tính trùng, để trống ô thời lượng với gợi ý "Ví dụ: 60" và mở biểu mẫu cho người dùng tự sửa (Hình 4.1 - 4.2). |
-| F1-FIX-03 | Xếp lại lịch tuần tới bị lỗi 422; nhắn lúc rạng sáng giờ Việt Nam bị lệch ngày. | Cho phép xếp giờ người dùng ghi ngoài khung 06:00 - 22:00 và gửi đúng múi giờ Việt Nam (+07:00) cho AI (xác minh đạt ở dòng 3 Bảng 3.2). |
+| F1-FIX-06 | Tải lại trang (F5) hoặc đóng hộp thoại hỏi thêm gây kẹt lỗi xung đột 409. | Trả sẵn mã xác nhận ngay ở bước hỏi thêm để hủy được lập tức và tải lại đủ trạng thái từ máy chủ sau F5 (xác minh đạt 10/10 ở dòng 6 Bảng 3.2). |
+| F1-FIX-12 | Câu "hoc vtp 2h mai" bị tính trùng giờ bắt đầu (02:00 sáng khuya) và thời lượng; ô phút tự điền 60. | Chặn tính trùng, để trống ô phút kèm gợi ý "Ví dụ: 60" và giữ khung tự xếp cố định 06:00 - 22:00 để tránh xếp lịch khuya (Hình 4.1 - 4.2). |
+| F1-FIX-03 | Xếp lại lịch tuần tới bị lỗi 422; nhắn lúc rạng sáng giờ Việt Nam bị lệch ngày. | Khóa khung mặc định 06:00 - 22:00 tránh xếp khuya, vẫn mở ngoại lệ cho giờ ghi rõ và gửi múi giờ +07:00 (đạt 10/10, dòng 3 Bảng 3.2). |
 | F1-FIX-23, 24 | Thẻ buổi học 25 - 45 phút bị cắt chữ; buổi nằm ngoài khung đang xem bị khuất. | Hiển thị thẻ gọn một dòng cho buổi ngắn và ghim nút "2 buổi ngoài khung - Hiện" trên đầu cột ngày (Hình 4.3 - 4.5). |
 
 ![Hình 4.1: Biểu mẫu hỏi thêm khi nhập hoc vtp 2h mai trên Chrome](figures/fig_clarify_2h_mai.png)
